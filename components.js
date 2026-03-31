@@ -865,13 +865,13 @@ function NavButton({
     className: "nav-btn-icon"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: item.icon
-  })), navOpen && /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "nav-btn-label"
-  }, item.label), isGroup && navOpen && /*#__PURE__*/React.createElement("span", {
+  }, item.label), isGroup && /*#__PURE__*/React.createElement("span", {
     className: "nav-parent-chevron " + (layoutOpen ? "open" : "closed")
   }, /*#__PURE__*/React.createElement(Icon, {
     name: layoutOpen ? "chevron-down" : "chevron-right"
-  })), !navOpen && /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "nav-tooltip"
   }, item.label)));
 }
@@ -894,7 +894,6 @@ function AppNav({
   const navItems = PAGES.filter(pg => {
     if (pg.noNav) return false;
     if (!showSubs && pg.parentId) {
-      // In collapsed mode, still show sub-items if their parent is open
       if (pg.parentId === "layout" && layoutOpen) return true;
       return false;
     }
@@ -925,13 +924,13 @@ function AppNav({
     "aria-label": "Main navigation"
   }, /*#__PURE__*/React.createElement("div", {
     className: "nav-section nav-toggle"
-  }, (navOpen || mobile) && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: "nav-toggle-label",
     onClick: () => setPage("home"),
     role: "button",
     tabIndex: 0,
     onKeyDown: e => (e.key === "Enter" || e.key === " ") && setPage("home")
-  }, "HIVE"), (navOpen || mobile) && " ", /*#__PURE__*/React.createElement("span", {
+  }, "HIVE"), /*#__PURE__*/React.createElement("span", {
     className: "nav-menu-icon",
     onClick: handleToggle,
     role: "button",
