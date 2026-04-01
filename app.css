@@ -383,12 +383,15 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .nav-collapsed .nav-btn-label,
-.nav-collapsed .nav-toggle-label,
-.nav-collapsed .nav-parent-chevron {
+.nav-collapsed .nav-toggle-label {
 	max-width: 0;
 	opacity: 0;
 	overflow: hidden;
 	transition: max-width 0.2s ease, opacity 0.05s ease;
+}
+
+.nav-collapsed .nav-parent-chevron {
+	display: none;
 }
 
 /* Collapsed sub-item â€” kill padding and transitions */
@@ -419,6 +422,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 /* â”€â”€ Tooltip (collapsed only) â”€â”€ */
 .nav-btn-wrap {
 	position: relative;
+	width: 100%;
 }
 
 .nav-tooltip {
