@@ -1,19 +1,7 @@
-﻿const C = {
-	s1: "#3d7a9e",
-	s2l: "#506070",
-	s2d: "#73808d",
-	s3l: "#233342",
-	s3d: "#c4b48a",
-	s4l: "#3d7a9e",
-	s4s: "#3d7a9e",
-	offcut: "#73808d",
-	cut: "#506070"
-};
-
-const PAL_CLASSES = {
+﻿const PAL_CLASSES = {
   s1: ["color-s1"],
-  s2: ["color-s1", "color-s1"],
-  s3: ["color-s1", "color-s1"],
+  s2: ["color-s2l", "color-s2d"],
+  s3: ["color-s3l", "color-s3d"],
   s4l: ["color-s4l"],
   s4s: ["color-s4s"]
 };
@@ -55,21 +43,6 @@ const SYSTEMS = [{
   title: "Long-Short",
   subtitle: (s4Long, s4Short) => `long ${s4Long}mm / short ${s4Short}mm`
 }];
-
-// Legend items configuration
-const LEGEND_ITEMS = [{
-  label: "Full panel",
-  colorClass: "color-s1",
-  segType: "full"
-}, {
-  label: "Cut",
-  colorClass: "color-cut",
-  segType: "cut"
-}, {
-  label: "Remainder from prev",
-  colorClass: "color-offcut",
-  segType: "offcut"
-}];
 // Text formatting utilities
 const fmt = {
   mm: (v) => v.toFixed(0),
@@ -108,7 +81,8 @@ var PAGES = [{
   label: "Layout",
   title: "Layout",
   desc: "Choose a layout tool from the submenu.",
-  icon: "layout-template"
+  icon: "layout-template",
+  isParent: true
 }, {
   id: "pattern-layout",
   label: "Pattern Layouts",
@@ -127,7 +101,15 @@ var PAGES = [{
   id: "area",
   label: "Area",
   title: "Area",
-  icon: "square"
+  icon: "square",
+  isParent: true
+}, {
+  id: "concrete",
+  label: "Concrete",
+  title: "Concrete",
+  desc: "Concrete calculator — coming soon",
+  icon: "layer-group",
+  isParent: true
 }];
 
 
