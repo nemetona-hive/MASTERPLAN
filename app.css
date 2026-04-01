@@ -78,13 +78,23 @@ html, body, #root {
 	  
 	/* Font size scale */
 
+	--fs-xs: 11px;
 	--fs-sm: 10px;
 	--fs-md: 13px;
 	--fs-lg: 17px;
+
+	/* Nav font sizes -- edit to tune sidebar independently */
+	--nav-fs-header:  var(--fs-lg);
+	--nav-fs-parent:  var(--fs-md);
+	--nav-fs-sub:     var(--fs-xs);
+	--nav-fs-icon:    var(--fs-lg);
+	--nav-fs-chevron: var(--fs-sm);
+	--nav-fs-tooltip: var(--fs-sm);
  }
 	
 @media (min-width: 2560px) and (min-height: 1440px) {
 	:root {
+		--fs-xs: 13px;
 		--fs-sm: 12px;
 		--fs-md: 15px;
 		--fs-lg: 20px;
@@ -174,37 +184,71 @@ html, .nav, .data-control, .data-preview, .page-scroll {
  * ----------------------------------------------------------
  */
 
+/* â”€â”€ Nav visual system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ *
+ *  HEADER    .nav-toggle          HIVE label + collapse icon
+ *  PARENT    .nav-btn.nav-parent  Layout, Area â€” toggle or navigate
+ *  SUB       .nav-sub-btn         Pattern Layouts, Symmetric Layout
+ *  LEAF      .nav-btn (neither)   Future standalone pages
+ *
+ *  States:
+ *    :hover          parent â†’ bg + white   sub â†’ white only
+ *    .active         primary color + bold
+ *    .active parent  primary color + bold (no bg, no bar)
+ *    .active sub     primary color + bold + short left bar
+ *    .active leaf    primary color + bold + full glow bar + bg tint
+ *    .child-active   parent dimmed with subtle primary tint
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* â”€â”€ Base button â”€â”€ */
 .nav-btn {
 	font-family: var(--sans);
+	font-size: var(--nav-fs-parent);
+	font-weight: 400;
 	display: flex;
 	align-items: center;
-	gap: 9px;
-	padding: 10px 14px;
-	border-radius: 8px;
+	gap: 8px;
+	padding: 8px 12px;
+	border-radius: 6px;
 	border: none;
 	background: transparent;
 	color: var(--color-gray);
-	font-size: var(--fs-lg);
-	font-weight: 400;
 	text-align: left;
 	width: 100%;
-	transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 	position: relative;
+	transition: background 0.15s ease, color 0.15s ease;
 }
 
-.nav-btn:hover {
+/* â”€â”€ Parent button â€” slightly larger, more prominent â”€â”€ */
+.nav-btn.nav-parent {
+	font-size: var(--nav-fs-parent);
+	font-weight: 500;
+	color: color-mix(in srgb, var(--color-gray) 90%, var(--color-white));
+	cursor: pointer;
+}
+
+/* â”€â”€ Hover states â”€â”€ */
+.nav-btn:not(.nav-sub-btn):hover {
 	background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
 	color: var(--color-white);
 }
 
+.nav-sub-btn:hover {
+	color: var(--color-white);
+}
 
+/* â”€â”€ Active â€” shared â”€â”€ */
 .nav-btn.active {
 	font-weight: 600;
-	background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 	color: var(--color-primary);
 }
 
-.nav-btn.active::before {
+/* â”€â”€ Active â€” leaf (no parent, no children) â”€â”€ */
+.nav-btn.active:not(.nav-sub-btn):not(.nav-parent) {
+	background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.nav-btn.active:not(.nav-sub-btn):not(.nav-parent)::before {
 	content: "";
 	position: absolute;
 	left: 0;
@@ -216,31 +260,86 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	box-shadow: 0 0 8px var(--color-primary);
 }
 
-.nav-btn.nav-parent {
-	cursor: pointer;
+/* â”€â”€ Active â€” parent directly active (Area with no child active) â”€â”€ */
+.nav-btn.nav-parent.active:not(.child-active) {
+	color: var(--color-primary);
+	font-weight: 600;
 }
 
+/* â”€â”€ Active â€” sub-item â”€â”€ */
+.nav-sub-btn.active::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 25%;
+	bottom: 25%;
+	width: 2px;
+	background: var(--color-primary);
+	border-radius: 0 3px 3px 0;
+	opacity: 0.8;
+}
+
+/* â”€â”€ Parent with active child â”€â”€ */
 .nav-btn.nav-parent.child-active,
 .nav-btn.nav-parent.child-active:hover {
-	background: transparent;
-	color: var(--color-gray);
+	background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+	color: color-mix(in srgb, var(--color-gray) 80%, var(--color-primary));
 	font-weight: 400;
-	padding-left: 14px;
 }
 
 .nav-btn-icon-only.nav-parent.child-active,
 .nav-btn-icon-only.nav-parent.child-active:hover {
-	padding-left: 0;
+	background: transparent;
 }
 
 .nav-btn.nav-parent.child-active::before {
 	display: none;
 }
 
+/* â”€â”€ Focus ring â”€â”€ */
+.nav-btn:focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: -2px;
+	border-radius: 6px;
+}
+
+/* â”€â”€ Icon â”€â”€ */
+.nav-btn-icon {
+	font-size: var(--nav-fs-icon);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 18px;
+}
+
+/* â”€â”€ Label â”€â”€ */
+.nav-btn-label {
+	font-family: var(--mono);
+	font-size: var(--nav-fs-parent);
+	opacity: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	max-width: 200px;
+	transition: max-width 0.2s ease, opacity 0.1s ease 0.15s;
+}
+
+/* â”€â”€ Sub-item indent + size â”€â”€ */
+.nav-sub-btn {
+	padding-left: 28px;
+	font-size: var(--nav-fs-sub);
+	color: color-mix(in srgb, var(--color-gray) 80%, transparent);
+	overflow: hidden;
+	max-height: 60px;
+	transition: max-height 0.2s ease, opacity 0.2s ease;
+	opacity: 1;
+}
+
+/* â”€â”€ Chevron â”€â”€ */
 .nav-parent-chevron {
 	margin-left: auto;
-	font-size: 0.75em;
-	opacity: 0.5;
+	font-size: var(--nav-fs-chevron);
+	opacity: 0.4;
 	flex-shrink: 0;
 	transition: opacity 0.1s ease 0.15s, transform 0.2s ease;
 }
@@ -249,163 +348,31 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transform: rotate(-90deg);
 }
 
-
-.nav-menu-icon {
-	font-family: var(--mono);
-	font-size: var(--fs-lg);
-	line-height: 1;
-}
-
-.nav-btn-icon {
-	font-family: var(--sans);
-	font-size: 1.2em;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-}
-
-.nav-btn-label {
-	font-family: var(--mono);
-	font-size: inherit;
-	opacity: 1;
-	white-space: nowrap;
-	overflow: hidden;
-	transition: width 0s ease 0.2s, flex 0s ease 0.2s, opacity 0.1s ease 0.15s;
-}
-
-.nav-collapsed .nav-btn-label {
-	opacity: 0;
-	transition: opacity 0.05s ease;
-}
-
+/* â”€â”€ Collapsed state â”€â”€ */
 .nav-btn-icon-only {
 	justify-content: center;
 	padding: 9px 0;
 	gap: 0;
 }
 
-/* Collapsed: shrink and hide label/chevron */
-.nav-collapsed .nav-toggle-label,
-.nav-collapsed .nav-btn-label,
-.nav-collapsed .nav-parent-chevron {
-	width: 0;
-	flex: 0 0 0;
-	min-width: 0;
-	opacity: 0;
-	overflow: hidden;
-	transition: opacity 0.05s ease;
-}
-
 .nav-btn-icon-only.nav-sub-btn {
 	padding-left: 0;
 }
 
-.nav-btn-icon-only .nav-btn-icon {
-	font-family: var(--sans);
-	margin: 0;
-}
-
-.nav-sub-btn {
-	padding-left: 30px;
-	font-size: var(--fs-md);
-}
-
-.nav-sub-btn .nav-btn-icon {
-	font-size: var(--fs-md);
-}
-
-.nav-toggle {
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	user-select: none;
-}
-
-.nav-toggle:hover {
-	color: var(--color-primary);
-}
-
-.nav-toggle-label {
-	font-family: var(--mono);
-	font-size: var(--fs-lg);
-	font-weight: 700;
-	letter-spacing: 0.08em;
-	color: var(--color-white);
-	opacity: 0.9;
-	cursor: pointer;
-	white-space: nowrap;
-	overflow: hidden;
-	transition: opacity 0.1s ease 0.15s;
-}
-
-.nav-collapsed .nav-toggle-label {
+.nav-collapsed .nav-btn-label,
+.nav-collapsed .nav-toggle-label,
+.nav-collapsed .nav-parent-chevron {
+	max-width: 0;
 	opacity: 0;
-	transition: opacity 0.05s ease;
-	pointer-events: none;
+	overflow: hidden;
+	transition: max-width 0.2s ease, opacity 0.05s ease;
 }
 
-.nav-toggle-label:hover {
-	color: var(--color-primary);
-	opacity: 1;
-}
-
-.nav.nav-collapsed {
-	width: 44px;
-	padding: 14px 8px;
-}
-
-.nav {
-	width: 260px;
-	flex-shrink: 0;
-	padding: 14px 10px;
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	overflow-y: auto;
-	scrollbar-width: none;
-	transition: width 0.2s ease;
-}
-
-.nav::-webkit-scrollbar {
-	display: none;
-}
-
-/* Prevent sub-item transitions firing during sidebar width change */
 .nav-collapsed .nav-sub-btn {
 	transition: none;
 }
 
-/* Nav layout sections */
-.nav-items {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	flex: 1;
-}
-
-.nav-bottom {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	margin-top: auto;
-	padding-top: 10px;
-	border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-}
-
-.nav-bottom:empty {
-	display: none;
-}
-
-/* Keyboard focus ring */
-.nav-btn:focus-visible {
-	outline: 2px solid var(--color-primary);
-	outline-offset: -2px;
-	border-radius: 8px;
-}
-
-/* Custom tooltip for collapsed nav */
+/* â”€â”€ Tooltip (collapsed only) â”€â”€ */
 .nav-btn-wrap {
 	position: relative;
 }
@@ -419,7 +386,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	border: 1px solid var(--color-gray-light);
 	color: var(--color-white);
 	font-family: var(--mono);
-	font-size: var(--fs-sm);
+	font-size: var(--nav-fs-tooltip);
 	padding: 4px 10px;
 	border-radius: 6px;
 	white-space: nowrap;
@@ -434,38 +401,108 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	pointer-events: auto;
 }
 
-/* Sub-item slide animation */
-.nav-sub-btn {
+/* â”€â”€ Header (HIVE + toggle icon) â”€â”€ */
+.nav-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	user-select: none;
+	padding: 6px 8px;
+	margin-bottom: 8px;
+	border-radius: 8px;
+	border: 1px solid color-mix(in srgb, var(--color-gray-light) 30%, transparent);
+	background: color-mix(in srgb, var(--color-gray-light) 10%, transparent);
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.nav-toggle:hover {
+	border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.nav-toggle-label {
+	font-family: var(--mono);
+	font-size: var(--nav-fs-header);
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-primary);
+	opacity: 0.8;
+	cursor: pointer;
+	white-space: nowrap;
 	overflow: hidden;
-	max-height: 60px;
-	transition: max-height 0.2s ease, opacity 0.2s ease;
+	max-width: 200px;
+	transition: max-width 0.2s ease, opacity 0.1s ease 0.15s, color 0.15s ease;
+}
+
+.nav-toggle-label:hover {
 	opacity: 1;
 }
 
+.nav-menu-icon {
+	font-size: var(--nav-fs-header);
+	line-height: 1;
+	cursor: pointer;
+	color: var(--color-gray-opa80);
+	padding: 2px 4px;
+	border-radius: 4px;
+	transition: color 0.15s ease, background 0.15s ease;
+	flex-shrink: 0;
+}
+
+.nav-menu-icon:hover {
+	color: var(--color-white);
+	background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+}
+
+/* â”€â”€ Nav structure â”€â”€ */
+.nav.nav-collapsed {
+	width: 44px;
+	padding: 14px 8px;
+}
+
+.nav {
+	width: 260px;
+	flex-shrink: 0;
+	padding: 14px 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	overflow-y: auto;
+	overflow-x: visible;
+	scrollbar-width: none;
+	transition: width 0.2s ease;
+}
+
+.nav::-webkit-scrollbar {
+	display: none;
+}
+
+.nav-items {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+}
+
+.nav-bottom {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: auto;
+	padding-top: 10px;
+	border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+}
+
+.nav-bottom:empty {
+	display: none;
+}
 .nav svg {
 	width: 18px;
 	height: 18px;
 	stroke-width: 2px;
 	stroke: currentColor;
 }
-
-.nav-collapsed .nav-toggle {
-	justify-content: center;
-}
-
-.nav-collapsed .nav-heading {
-	display: none;
-}
-
-.nav-heading {
-	font-family: var(--sans);
-	font-size: var(--fs-lg);
-	font-weight: 800;
-	letter-spacing: -0.01em;
-	text-align: center;
-	color: var(--color-primary);
-}
-
 .nav-section {
 	font-family: var(--mono);
 	font-size: var(--fs-lg);
@@ -834,105 +871,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	color: var(--color-primary);
 	text-align: center;
 }
-
-.data-control .ctrl-leg-item {
-	display: flex;
-	align-items: center;
-	gap: 0px;
-	cursor: pointer;
-	opacity: 0.6;
-	transition: opacity 0.15s;
-}
-
-.data-control .ctrl-leg-item:hover,
-.data-control .ctrl-leg-item.hovered {
-	opacity: 1;
-}
-
-.data-control .ctrl-leg-dot {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	flex: 1;
-	height: 28px;
-	border-radius: 4px;
-	border: 1px solid color-mix(in srgb, var(--color-gray-opa80) 15%, transparent);
-}
-
-.data-control .ctrl-leg-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-white);
-}
-
-.data-control .ctrl-scores {
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-}
-	
-.data-control .ctrl-score {
-	border-radius: 6px;
-	overflow: hidden;
-}
-
-.data-control .ctrl-score-hd {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 5px 9px;
-	cursor: pointer;
-	user-select: none;
-}
-
-.data-control .ctrl-score-hd-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-primary);
-}
-
-.data-control .ctrl-score-hd-val {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	font-weight: 700;
-	color: var(--color-primary);
-}
-
-.data-control .ctrl-score-hd-arr {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-blue);
-	opacity: 0.6;
-	margin-left: 4px;
-}
-	
-.data-control .ctrl-score-dd {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	padding: 5px 9px 7px;
-	border-top: 1px solid color-mix(in srgb, var(--color-gray) 10%, transparent);
-}
-
-.data-control .ctrl-score-dd-row {
-	display: flex;
-	justify-content: space-between;
-}
-
-.data-control .ctrl-score-dd-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-blue);
-}
-
-.data-control .ctrl-score-dd-val {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-primary);
-	font-weight: 600;
-}
-
 /*
  * ----------------------------------------------------------
  * PREVIEW
@@ -1181,7 +1119,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 .home-brand-name {
 	font-family: var(--sans);
-	font-size: clamp(28px, 4vw, 42px);
+	font-size: clamp(var(--fs-lg), 4vw, 2.5rem);
 	font-weight: 800;
 	letter-spacing: -0.02em;
 	color: var(--color-primary);
@@ -1470,4 +1408,3 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		max-width: 100%;
 	}
 }
-.nav { overflow-x: visible; }
