@@ -491,6 +491,15 @@ function SheetHome({
     className: "home-footer"
   }, "NEMETONA HIVE")));
 }
+function SheetConcrete() {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    id: "data-control",
+    className: "data-control"
+  }), /*#__PURE__*/React.createElement("div", {
+    id: "data-preview",
+    className: "data-preview"
+  }));
+}
 function SheetArea({
   sh
 }) {
@@ -808,20 +817,32 @@ function NavButton({
   item,
   navOpen,
   setPage,
-  layoutOpen,
-  setLayoutOpen,
+  openGroups,
+  setOpenGroups,
   onKeyNav
 }) {
-  const isGroup = !item.parentId && PAGES.some(pg => pg.parentId === item.id);
+  const isGroup = item.isParent === true;
+  const hasChildren = PAGES.some(pg => pg.parentId === item.id);
+  const isOpen = isGroup && hasChildren && !!openGroups[item.id];
   const childActive = isGroup && PAGES.some(pg => pg.parentId === item.id && pg.id === page);
   const isActive = isNavPageActive(page, item);
+  const isGroupActive = isGroup && hasChildren && isOpen && (page === "home" || childActive);
   const classes = ["nav-btn"];
-  if (isActive) classes.push("active");
+  if (isActive || isGroupActive) classes.push("active");
   if (isGroup) classes.push("nav-parent");
   if (childActive) classes.push("child-active");
   if (item.parentId) classes.push("nav-sub-btn");
   if (!navOpen) classes.push("nav-btn-icon-only");
-  const handleClick = () => isGroup ? setLayoutOpen(o => !o) : setPage(item.id);
+  const toggleGroup = () => {
+    setOpenGroups(prev => ({
+      ...prev,
+      [item.id]: !prev[item.id]
+    }));
+    setPage("home");
+  };
+  const handleClick = () => {
+    if (isGroup && hasChildren) toggleGroup();else setPage(item.id);
+  };
   const handleKeyDown = e => {
     switch (e.key) {
       case "Enter":
@@ -839,15 +860,24 @@ function NavButton({
         break;
       case "ArrowRight":
         e.preventDefault();
-        if (isGroup && !layoutOpen) setLayoutOpen(true);else onKeyNav("next");
+        if (isGroup && hasChildren && !isOpen) setOpenGroups(prev => ({
+          ...prev,
+          [item.id]: true
+        }));else onKeyNav("next");
         break;
       case "ArrowLeft":
         e.preventDefault();
-        if (isGroup && layoutOpen) setLayoutOpen(false);else onKeyNav("parent");
+        if (isGroup && hasChildren && isOpen) setOpenGroups(prev => ({
+          ...prev,
+          [item.id]: false
+        }));else onKeyNav("parent");
         break;
       case "Escape":
         e.preventDefault();
-        if (isGroup) setLayoutOpen(false);
+        if (isGroup && hasChildren) setOpenGroups(prev => ({
+          ...prev,
+          [item.id]: false
+        }));
         break;
     }
   };
@@ -858,8 +888,8 @@ function NavButton({
     onClick: handleClick,
     onKeyDown: handleKeyDown,
     "aria-current": isActive ? "page" : undefined,
-    "aria-expanded": isGroup ? layoutOpen : undefined,
-    "aria-haspopup": isGroup ? "true" : undefined,
+    "aria-expanded": isGroup && hasChildren ? isOpen : undefined,
+    "aria-haspopup": isGroup && hasChildren ? "true" : undefined,
     tabIndex: 0
   }, /*#__PURE__*/React.createElement("span", {
     className: "nav-btn-icon"
@@ -867,10 +897,10 @@ function NavButton({
     name: item.icon
   })), /*#__PURE__*/React.createElement("span", {
     className: "nav-btn-label"
-  }, item.label), isGroup && /*#__PURE__*/React.createElement("span", {
-    className: "nav-parent-chevron " + (layoutOpen ? "open" : "closed")
+  }, item.label), isGroup && hasChildren && /*#__PURE__*/React.createElement("span", {
+    className: "nav-parent-chevron " + (isOpen ? "open" : "closed")
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: layoutOpen ? "chevron-down" : "chevron-right"
+    name: isOpen ? "chevron-down" : "chevron-right"
   })), /*#__PURE__*/React.createElement("span", {
     className: "nav-tooltip"
   }, item.label)));
@@ -885,19 +915,34 @@ function AppNav({
 }) {
   const mobile = typeof window !== "undefined" && window.innerWidth <= 768;
   const showSubs = mobile ? mobileMenuOpen : navOpen;
-  const [layoutOpen, setLayoutOpen] = React.useState(true);
   const navRef = React.useRef(null);
-  const childActive = PAGES.some(pg => pg.parentId === "layout" && pg.id === page);
+
+  // Per-parent open state — keyed by parent id
+  // Initialize all parents with children as open
+  const initOpenGroups = () => PAGES.reduce((acc, pg) => {
+    if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) acc[pg.id] = true;
+    return acc;
+  }, {});
+  const [openGroups, setOpenGroups] = React.useState(initOpenGroups);
+
+  // Auto-open parent when navigating to a child
   React.useEffect(() => {
-    if (childActive) setLayoutOpen(true);
+    const parent = PAGES.find(pg => pg.id === page);
+    if (parent) return;
+    const parentPage = PAGES.find(pg => PAGES.some(p => p.parentId === pg.id && p.id === page));
+    if (parentPage) setOpenGroups(prev => ({
+      ...prev,
+      [parentPage.id]: true
+    }));
   }, [page]);
   const navItems = PAGES.filter(pg => {
     if (pg.noNav) return false;
     if (!showSubs && pg.parentId) {
-      if (pg.parentId === "layout" && layoutOpen) return true;
-      return false;
+      // In collapsed mode show sub-items only if their parent is open
+      return !!openGroups[pg.parentId];
     }
-    if (pg.parentId === "layout" && !layoutOpen) return false;
+    // In expanded mode hide sub-items if their parent is closed
+    if (pg.parentId && !openGroups[pg.parentId]) return false;
     return true;
   });
   const handleToggle = () => mobile ? setMobileMenuOpen(o => !o) : setNavOpen(o => !o);
@@ -952,8 +997,8 @@ function AppNav({
       setPage(id);
       if (mobile) setMobileMenuOpen(false);
     },
-    layoutOpen: layoutOpen,
-    setLayoutOpen: setLayoutOpen,
+    openGroups: openGroups,
+    setOpenGroups: setOpenGroups,
     onKeyNav: handleKeyNav
   }))), /*#__PURE__*/React.createElement("div", {
     className: "nav-bottom",
@@ -985,6 +1030,12 @@ function MainPageContent({
       page: page,
       setPage: setPage
     }));
+  }
+  if (page === "concrete") {
+    return /*#__PURE__*/React.createElement("div", {
+      id: "main-data",
+      className: "main-data"
+    }, /*#__PURE__*/React.createElement(SheetConcrete, null));
   }
   if (page === "area") {
     return /*#__PURE__*/React.createElement("div", {
