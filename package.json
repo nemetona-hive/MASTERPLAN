@@ -5,7 +5,7 @@
   "main": "components.js",
   "scripts": {
     "build": "type src\\shared.jsx src\\Visualization.jsx src\\Controls.jsx src\\Sheets.jsx src\\Nav.jsx src\\App.jsx | babel --filename components.jsx --out-file components.js",
-    "watch": "babel src/components.jsx --out-file components.js --watch",
+    "watch": "powershell -NoProfile -Command \"$files = 'src\\\\shared.jsx','src\\\\Visualization.jsx','src\\\\Controls.jsx','src\\\\Sheets.jsx','src\\\\Nav.jsx','src\\\\App.jsx'; $times = @{}; foreach($f in $files){ $times[$f] = (Get-Item $f).LastWriteTimeUtc }; cmd /c npm run build; while($true){ Start-Sleep -Milliseconds 400; $changed = $false; foreach($f in $files){ $t = (Get-Item $f).LastWriteTimeUtc; if($t -ne $times[$f]){ $times[$f] = $t; $changed = $true } }; if($changed){ cmd /c npm run build } }\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
