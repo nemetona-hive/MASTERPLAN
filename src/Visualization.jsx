@@ -8,7 +8,7 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
         const isGap = seg.type === "gap";
         const segPalClasses = seg.type === "full" && seg.long === true ? PAL_CLASSES.s4s : palClasses;
         const segClass = getSegmentClass(seg, segPalClasses);
-        const isDimmed = hoveredType && seg.type === hoveredType && !isGap;
+        const isDimmed = hoveredType && seg.type === hoveredType;
         const tc = isGap ? "#ff6666" : "var(--color-white)";
         const bgStyle = isGap ? {
           background: "repeating-linear-gradient(45deg,#ff444433 0,#ff444433 4px,#09101a55 4px,#09101a55 8px)",
@@ -43,7 +43,7 @@ function PanelSummary({ rows, hoveredType, setHoveredType }) {
   );
 }
 
-function LayoutVisualization({ result, hoveredType }) {
+function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
   if (result.meta.visualization === "strip") {
     return (
       <div className="strip">
@@ -71,11 +71,14 @@ function LayoutVisualization({ result, hoveredType }) {
       </div>
     );
   }
+  const orderedRows = (rowStart === "bottom"
+    ? result.rows.map((row, idx) => ({ row, idx })).reverse()
+    : result.rows.map((row, idx) => ({ row, idx })));
   return (
     <div className="sys-rows" style={{ border: "1px solid #233342" }}>
-      {result.rows.map((row, i) => (
+      {orderedRows.map(({ row, idx }, i) => (
         <div key={i} className="sys-row">
-          <span className="sys-row-lbl">R{i + 1}</span>
+          <span className="sys-row-lbl">R{idx + 1}</span>
           <div className="sys-row-vis">
             <PanelRowVis
               segs={row.segs}
@@ -89,7 +92,7 @@ function LayoutVisualization({ result, hoveredType }) {
   );
 }
 
-function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType }) {
+function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top" }) {
   const [open, setOpen] = React.useState(layout.defaultOpen !== false);
   return (
     <div id={"panel-" + layout.id} className="sys-block">
@@ -106,7 +109,7 @@ function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType }) {
           {layout.renderControls && React.createElement(layout.renderControls, { state: layout.getState(), setState: layout.setState })}
           {result.summaryRows.length > 0 && <PanelSummary rows={result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
           {!result.valid && <p className="desc">This layout leaves uncovered gaps and is excluded from best-layout scoring.</p>}
-          {result.rows.length > 0 && <LayoutVisualization result={result} hoveredType={hoveredType} />}
+          {result.rows.length > 0 && <LayoutVisualization result={result} hoveredType={hoveredType} rowStart={rowStart} />}
         </div>
       )}
     </div>
