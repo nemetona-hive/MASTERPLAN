@@ -44,8 +44,9 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) =
 	  const vs = Math.max(x, 0);
 	  const ve = Math.min(x + PL, W);
 	  if (ve > vs) {
-		segs.push({ x: vs, w: ve - vs, type: (x >= 0 && x + PL <= W) ? "full" : "cut", pid });
-		pid++;
+		const isFull = x >= 0 && x + PL <= W;
+		segs.push({ x: vs, w: ve - vs, type: isFull ? "full" : "cut", pid: isFull ? pid : undefined });
+		if (isFull) pid++;
 	  }
 	  x += PL;
 	}
