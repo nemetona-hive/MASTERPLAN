@@ -171,7 +171,7 @@ const PanelRowVis = React.memo(function PanelRowVis({
     const isGap = seg.type === "gap";
     const segPalClasses = seg.type === "full" && seg.long === true ? PAL_CLASSES.s4s : palClasses;
     const segClass = getSegmentClass(seg, segPalClasses);
-    const isDimmed = hoveredType && seg.type === hoveredType && !isGap;
+    const isDimmed = hoveredType && seg.type === hoveredType;
     const tc = isGap ? "#ff6666" : "var(--color-white)";
     const bgStyle = isGap ? {
       background: "repeating-linear-gradient(45deg,#ff444433 0,#ff444433 4px,#09101a55 4px,#09101a55 8px)",
@@ -213,7 +213,8 @@ function PanelSummary({
 }
 function LayoutVisualization({
   result,
-  hoveredType
+  hoveredType,
+  rowStart = "top"
 }) {
   if (result.meta.visualization === "strip") {
     return /*#__PURE__*/React.createElement("div", {
@@ -248,17 +249,27 @@ function LayoutVisualization({
       className: "strip-note"
     }, "\uD83D\uDCA1 Both edge pieces are cut from full panels (2 panels are cut)."));
   }
+  const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
+    row,
+    idx
+  })).reverse() : result.rows.map((row, idx) => ({
+    row,
+    idx
+  }));
   return /*#__PURE__*/React.createElement("div", {
     className: "sys-rows",
     style: {
       border: "1px solid #233342"
     }
-  }, result.rows.map((row, i) => /*#__PURE__*/React.createElement("div", {
+  }, orderedRows.map(({
+    row,
+    idx
+  }, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     className: "sys-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sys-row-lbl"
-  }, "R", i + 1), /*#__PURE__*/React.createElement("div", {
+  }, "R", idx + 1), /*#__PURE__*/React.createElement("div", {
     className: "sys-row-vis"
   }, /*#__PURE__*/React.createElement(PanelRowVis, {
     segs: row.segs,
@@ -272,7 +283,8 @@ function LayoutPanel({
   result,
   hoveredType,
   isBest,
-  setHoveredType
+  setHoveredType,
+  rowStart = "top"
 }) {
   const [open, setOpen] = React.useState(layout.defaultOpen !== false);
   return /*#__PURE__*/React.createElement("div", {
@@ -315,7 +327,8 @@ function LayoutPanel({
     className: "desc"
   }, "This layout leaves uncovered gaps and is excluded from best-layout scoring."), result.rows.length > 0 && /*#__PURE__*/React.createElement(LayoutVisualization, {
     result: result,
-    hoveredType: hoveredType
+    hoveredType: hoveredType,
+    rowStart: rowStart
   })));
 }
 function PreviewSection({
@@ -627,6 +640,7 @@ function SheetSurfaceLayout({
     s4Long,
     s4Short
   } = sh;
+  const rowStart = sh.rowStart || "top";
   const [hoveredType, setHoveredType] = React.useState(null);
   const [materialOpen, setMaterialOpen] = React.useState(true);
   const [surfaceOpen, setSurfaceOpen] = React.useState(true);
@@ -770,7 +784,26 @@ function SheetSurfaceLayout({
       ...st,
       direction: s
     }))
-  }, s)))), /*#__PURE__*/React.createElement(NumInput, {
+  }, s)))), /*#__PURE__*/React.createElement("div", {
+    className: "ctrl-lbl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl"
+  }, "Row order"), /*#__PURE__*/React.createElement("div", {
+    id: "ctrl-row-order",
+    className: "ctrl-btns"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (rowStart === "top" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      rowStart: "top"
+    }))
+  }, "R1 top"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (rowStart === "bottom" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      rowStart: "bottom"
+    }))
+  }, "R1 bottom"))), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-minJ",
     label: "Min remainder (mm)",
     value: minJ,
@@ -802,6 +835,7 @@ function SheetSurfaceLayout({
       result: panel.result,
       hoveredType: hoveredType,
       setHoveredType: setHoveredType,
+      rowStart: rowStart,
       isBest: panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best
     });
   }))));
@@ -927,13 +961,13 @@ function AppNav({
 
   // Auto-open parent when navigating to a child
   React.useEffect(() => {
-    const parent = PAGES.find(pg => pg.id === page);
-    if (parent) return;
-    const parentPage = PAGES.find(pg => PAGES.some(p => p.parentId === pg.id && p.id === page));
-    if (parentPage) setOpenGroups(prev => ({
-      ...prev,
-      [parentPage.id]: true
-    }));
+    const currentPage = PAGES.find(pg => pg.id === page);
+    if (currentPage && currentPage.parentId) {
+      setOpenGroups(prev => ({
+        ...prev,
+        [currentPage.parentId]: true
+      }));
+    }
   }, [page]);
   const navItems = PAGES.filter(pg => {
     if (pg.noNav) return false;
