@@ -110,6 +110,12 @@ var PAGES = [{
   desc: "Concrete calculator — coming soon",
   icon: "layer-group",
   isParent: true
+}, {
+  id: "golden-ratio",
+  label: "Golden Ratio φ",
+  title: "Golden Ratio φ",
+  desc: "Blank tool scaffold — coming soon",
+  icon: "golden-phi"
 }];
 
 
