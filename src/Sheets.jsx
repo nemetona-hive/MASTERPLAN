@@ -51,6 +51,52 @@ function SheetConcrete() {
   );
 }
 
+function SheetNewTool() {
+  const [baseOpen, setBaseOpen] = React.useState(true);
+  const [baseValue, setBaseValue] = React.useState(1000);
+  const PHI = 1.6180339887499;
+  const startValue = baseValue / PHI;
+  const steps = [];
+  let larger = startValue;
+  for (let i = 1; i <= 7; i++) {
+    const smaller = larger / PHI;
+    steps.push({ step: i, larger, smaller });
+    larger = smaller;
+  }
+  const fmtInt = v => Math.round(v).toString();
+  return (
+    <>
+      <div id="data-control" className="data-control">
+        <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
+          <NumInput id="input-base-number" label="Value (mm)" value={baseValue} onChange={setBaseValue} step={10} />
+        </ControlPanel>
+      </div>
+      <div id="data-preview" className="data-preview">
+        <div id="panel-golden-ratio" className="sys-block">
+          <div className="sys-head">
+            <h3 className="sys-title"><Icon name="golden-phi" className="sys-title-icon" /> Golden Ratio phi</h3>
+            <span className="sys-head-sub">phi = 1.6180339887499</span>
+          </div>
+          <div className="section-pad" style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="data-row">
+              <span className="data-row-lbl">Value</span>
+              <span className="data-row-val hi">{fmtInt(baseValue)}</span>
+              <span className="data-row-unit">mm</span>
+            </div>
+            <div style={{ border: "1px solid var(--color-gray)", borderRadius: "6px", overflow: "hidden" }}>
+              {steps.map((item, idx) => (
+                <div key={item.step} style={{ display: "grid", gridTemplateColumns: "56px 1fr", borderTop: idx === 0 ? "none" : "1px solid var(--color-gray)" }}>
+                  <div className="data-row" style={{ borderBottom: "none", borderRight: "1px solid var(--color-gray)" }}><span className="data-row-val">{item.step}</span></div>
+                  <div className="data-row" style={{ borderBottom: "none" }}><span className="data-row-val">{fmtInt(item.larger)}</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 function SheetArea({ sh }) {
   const { W, H, PPi, PLa } = sh;
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
