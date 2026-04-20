@@ -14,6 +14,9 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym }) {
   if (page === "concrete") {
     return <div id="main-data" className="main-data"><SheetConcrete /></div>;
   }
+  if (page === "golden-ratio") {
+    return <div id="main-data" className="main-data"><SheetNewTool /></div>;
+  }
   if (page === "area") {
     return (
       <div id="page-area" className="page-scroll">
