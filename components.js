@@ -1,5 +1,6 @@
 "use strict";
 
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const {
   useState
 } = React;
@@ -74,7 +75,8 @@ function Collapsible({
   open: openProp,
   setOpen: setOpenProp,
   children,
-  variant = "section"
+  variant = "section",
+  className = ""
 }) {
   const [openLocal, setOpenLocal] = React.useState(true);
   const open = setOpenProp ? openProp : openLocal;
@@ -82,7 +84,7 @@ function Collapsible({
   if (variant === "panel") {
     return /*#__PURE__*/React.createElement("div", {
       id: id,
-      className: "control-panel"
+      className: ["control-panel", className].filter(Boolean).join(" ")
     }, /*#__PURE__*/React.createElement("div", {
       className: "panel-head",
       onClick: () => setOpen(!open)
@@ -125,13 +127,15 @@ const ControlPanel = ({
   title,
   open,
   setOpen,
-  children
+  children,
+  className = ""
 }) => /*#__PURE__*/React.createElement(Collapsible, {
   id: id,
   title: title,
   open: open,
   setOpen: setOpen,
-  variant: "panel"
+  variant: "panel",
+  className: className
 }, children);
 function Row({
   label,
@@ -154,6 +158,46 @@ function Row({
   }, value), unit && /*#__PURE__*/React.createElement("span", {
     className: "data-row-unit"
   }, unit));
+}
+
+// Stable visual identity for id-driven cards (A/B/C... + tone buckets)
+function getLinkedCardTone(id) {
+  const key = String(id || "").toLowerCase();
+  const tones = ["a", "b", "c", "d"];
+  if (tones.includes(key)) return key;
+  const hash = key.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return tones[hash % tones.length];
+}
+function getLinkedCardMarker(id) {
+  const match = String(id || "").toUpperCase().match(/[A-Z0-9]/);
+  return match ? match[0] : "X";
+}
+
+// Reusable linked-card interaction:
+// click control card -> matching preview card stays active
+// click elsewhere -> clear active preview
+function useLinkedCardHighlight(groupId) {
+  const [activeId, setActiveId] = React.useState(null);
+  React.useEffect(() => {
+    const onGlobalPointerDown = e => {
+      if (e.target.closest(`[data-link-group="${groupId}"][data-link-role="control"]`)) return;
+      setActiveId(null);
+    };
+    window.addEventListener("pointerdown", onGlobalPointerDown);
+    return () => window.removeEventListener("pointerdown", onGlobalPointerDown);
+  }, [groupId]);
+  const bindControl = id => ({
+    "data-link-group": groupId,
+    "data-link-role": "control",
+    onPointerDown: () => setActiveId(id)
+  });
+  const isActive = id => activeId === id;
+  return {
+    activeId,
+    setActiveId,
+    bindControl,
+    isActive
+  };
 }
 
 // ── Visualization components ──────────────────────────────────────────────────
@@ -518,26 +562,60 @@ function SheetConcrete() {
 }
 function SheetNewTool() {
   const [baseOpen, setBaseOpen] = React.useState(true);
-  const [baseValue, setBaseValue] = React.useState(1000);
-  const [valueLabelSuffix, setValueLabelSuffix] = React.useState("");
-  const [baseOpen2, setBaseOpen2] = React.useState(true);
-  const [baseValue2, setBaseValue2] = React.useState(1000);
-  const [valueLabelSuffix2, setValueLabelSuffix2] = React.useState("");
+  const link = useLinkedCardHighlight("golden-ratio");
+  const [baseItems, setBaseItems] = React.useState([{
+    id: "a",
+    value: 1000,
+    suffix: "",
+    saved: {
+      value: 1000,
+      suffix: ""
+    },
+    savedCommitted: false
+  }, {
+    id: "b",
+    value: 1000,
+    suffix: "",
+    saved: {
+      value: 1000,
+      suffix: ""
+    },
+    savedCommitted: false
+  }, {
+    id: "c",
+    value: 1000,
+    suffix: "",
+    saved: {
+      value: 1000,
+      suffix: ""
+    },
+    savedCommitted: false
+  }]);
   const PHI = 1.6180339887499;
-  const trimmedSuffix = valueLabelSuffix.trim();
-  const trimmedSuffix2 = valueLabelSuffix2.trim();
-  const valueInputLabel = trimmedSuffix ? /*#__PURE__*/React.createElement(React.Fragment, null, "Value (mm) ", /*#__PURE__*/React.createElement("span", {
-    className: "num-lbl-raw"
-  }, trimmedSuffix)) : "Value (mm)";
-  const valueInputLabel2 = trimmedSuffix2 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Value (mm) ", /*#__PURE__*/React.createElement("span", {
-    className: "num-lbl-raw"
-  }, trimmedSuffix2)) : "Value (mm)";
-  const valueRowLabel = trimmedSuffix ? /*#__PURE__*/React.createElement(React.Fragment, null, "Value ", /*#__PURE__*/React.createElement("span", {
-    className: "num-lbl-raw"
-  }, trimmedSuffix)) : "Value";
-  const valueRowLabel2 = trimmedSuffix2 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Value ", /*#__PURE__*/React.createElement("span", {
-    className: "num-lbl-raw"
-  }, trimmedSuffix2)) : "Value";
+  const setItemField = (id, key, value) => {
+    setBaseItems(items => items.map(item => item.id === id ? {
+      ...item,
+      [key]: value
+    } : item));
+  };
+  const saveItem = id => {
+    setBaseItems(items => items.map(item => item.id === id ? {
+      ...item,
+      saved: {
+        value: item.value,
+        suffix: item.suffix
+      },
+      savedCommitted: true
+    } : item));
+  };
+  const resetItem = id => {
+    setBaseItems(items => items.map(item => item.id === id ? {
+      ...item,
+      value: item.saved.value,
+      suffix: item.saved.suffix,
+      savedCommitted: false
+    } : item));
+  };
   const buildSteps = base => {
     const startValue = base / PHI;
     const rows = [];
@@ -553,8 +631,6 @@ function SheetNewTool() {
     }
     return rows;
   };
-  const steps = buildSteps(baseValue);
-  const steps2 = buildSteps(baseValue2);
   const fmtInt = v => Math.round(v).toString();
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     id: "data-control",
@@ -564,155 +640,102 @@ function SheetNewTool() {
     title: "Base Number",
     open: baseOpen,
     setOpen: setBaseOpen
-  }, /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-base-number",
-    label: valueInputLabel,
-    value: baseValue,
-    onChange: setBaseValue,
-    step: 10
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "ctrl-lbl"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ctrl-sublbl"
-  }, "Custom label"), /*#__PURE__*/React.createElement("input", {
-    id: "input-base-label-suffix",
-    className: "num-input ctrl-text-input",
-    type: "text",
-    value: valueLabelSuffix,
-    onChange: e => setValueLabelSuffix(e.target.value),
-    placeholder: "e.g. A, L, Start"
+  }, baseItems.map(item => {
+    const tone = getLinkedCardTone(item.id);
+    const trimmedSuffix = item.suffix.trim();
+    const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
+    const valueInputLabel = trimmedSuffix ? /*#__PURE__*/React.createElement(React.Fragment, null, "Value (mm) ", /*#__PURE__*/React.createElement("span", {
+      className: "num-lbl-raw"
+    }, trimmedSuffix)) : "Value (mm)";
+    return /*#__PURE__*/React.createElement("div", _extends({
+      key: item.id,
+      id: `control-base-number-${item.id}`,
+      className: `control-panel gr-control-card gr-control-card-${tone}${isStored ? " gr-card-saved" : ""}`
+    }, link.bindControl(item.id)), /*#__PURE__*/React.createElement("div", {
+      className: "panel-data"
+    }, /*#__PURE__*/React.createElement(NumInput, {
+      id: `input-base-number-${item.id}`,
+      label: valueInputLabel,
+      value: item.value,
+      onChange: v => setItemField(item.id, "value", v),
+      step: 10
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "ctrl-lbl"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ctrl-sublbl"
+    }, "Custom label"), /*#__PURE__*/React.createElement("input", {
+      id: `input-base-label-suffix-${item.id}`,
+      className: "num-input ctrl-text-input gr-label-input",
+      type: "text",
+      value: item.suffix,
+      onChange: e => setItemField(item.id, "suffix", e.target.value),
+      placeholder: "e.g. A, L, Start"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "ctrl-lbl"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ctrl-sublbl"
+    }, "Entry"), /*#__PURE__*/React.createElement("div", {
+      className: "ctrl-btns"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "ctrl-dir",
+      onClick: () => saveItem(item.id)
+    }, "Save"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "ctrl-dir",
+      onClick: () => resetItem(item.id)
+    }, "Reset")))));
   }))), /*#__PURE__*/React.createElement("div", {
-    id: "control-base-number-2",
-    className: "control-panel"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "panel-head panel-head-spacer",
-    "aria-hidden": "true"
-  }, "\xA0"), /*#__PURE__*/React.createElement("div", {
-    className: "panel-data"
-  }, /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-base-number-2",
-    label: valueInputLabel2,
-    value: baseValue2,
-    onChange: setBaseValue2,
-    step: 10
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "ctrl-lbl"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ctrl-sublbl"
-  }, "Custom label"), /*#__PURE__*/React.createElement("input", {
-    id: "input-base-label-suffix-2",
-    className: "num-input ctrl-text-input",
-    type: "text",
-    value: valueLabelSuffix2,
-    onChange: e => setValueLabelSuffix2(e.target.value),
-    placeholder: "e.g. A, L, Start"
-  }))))), /*#__PURE__*/React.createElement("div", {
     id: "data-preview",
     className: "data-preview"
-  }, /*#__PURE__*/React.createElement("div", {
-    id: "panel-golden-ratio",
-    className: "sys-block"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "sys-head"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "sys-title"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "golden-phi",
-    className: "sys-title-icon"
-  }), " Golden Ratio phi"), /*#__PURE__*/React.createElement("span", {
-    className: "sys-head-sub"
-  }, "phi = 1.6180339887499")), /*#__PURE__*/React.createElement("div", {
-    className: "section-pad",
-    style: {
-      padding: "14px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "data-row"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-lbl"
-  }, valueRowLabel), /*#__PURE__*/React.createElement("span", {
-    className: "data-row-val hi"
-  }, fmtInt(baseValue)), /*#__PURE__*/React.createElement("span", {
-    className: "data-row-unit"
-  }, "mm")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      border: "1px solid var(--color-gray)",
-      borderRadius: "6px",
-      overflow: "hidden"
-    }
-  }, steps.map((item, idx) => /*#__PURE__*/React.createElement("div", {
-    key: item.step,
-    style: {
-      display: "grid",
-      gridTemplateColumns: "56px 1fr",
-      borderTop: idx === 0 ? "none" : "1px solid var(--color-gray)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "data-row",
-    style: {
-      borderBottom: "none",
-      borderRight: "1px solid var(--color-gray)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-val"
-  }, item.step)), /*#__PURE__*/React.createElement("div", {
-    className: "data-row",
-    style: {
-      borderBottom: "none"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-val"
-  }, fmtInt(item.larger)))))))), /*#__PURE__*/React.createElement("div", {
-    id: "panel-golden-ratio-2",
-    className: "sys-block"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "section-pad",
-    style: {
-      padding: "14px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "data-row"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-lbl"
-  }, valueRowLabel2), /*#__PURE__*/React.createElement("span", {
-    className: "data-row-val hi"
-  }, fmtInt(baseValue2)), /*#__PURE__*/React.createElement("span", {
-    className: "data-row-unit"
-  }, "mm")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      border: "1px solid var(--color-gray)",
-      borderRadius: "6px",
-      overflow: "hidden"
-    }
-  }, steps2.map((item, idx) => /*#__PURE__*/React.createElement("div", {
-    key: item.step,
-    style: {
-      display: "grid",
-      gridTemplateColumns: "56px 1fr",
-      borderTop: idx === 0 ? "none" : "1px solid var(--color-gray)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "data-row",
-    style: {
-      borderBottom: "none",
-      borderRight: "1px solid var(--color-gray)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-val"
-  }, item.step)), /*#__PURE__*/React.createElement("div", {
-    className: "data-row",
-    style: {
-      borderBottom: "none"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-val"
-  }, fmtInt(item.larger))))))))));
+  }, baseItems.map((item, idx) => {
+    const tone = getLinkedCardTone(item.id);
+    const trimmedSuffix = item.suffix.trim();
+    const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
+    const valueRowLabel = trimmedSuffix ? /*#__PURE__*/React.createElement(React.Fragment, null, "Value ", /*#__PURE__*/React.createElement("span", {
+      className: "num-lbl-raw"
+    }, trimmedSuffix)) : "Value";
+    const steps = buildSteps(item.value);
+    return /*#__PURE__*/React.createElement("div", {
+      key: item.id,
+      id: `panel-golden-ratio-${item.id}`,
+      className: `sys-block gr-preview-card gr-preview-card-${tone}${isStored ? " gr-card-saved" : ""}${link.isActive(item.id) ? " linked-preview-active" : ""}`
+    }, idx === 0 && /*#__PURE__*/React.createElement("div", {
+      className: "sys-head"
+    }, /*#__PURE__*/React.createElement("h3", {
+      className: "sys-title"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "golden-phi",
+      className: "sys-title-icon"
+    }), " Golden Ratio phi"), /*#__PURE__*/React.createElement("span", {
+      className: "sys-head-sub"
+    }, "phi = 1.6180339887499")), /*#__PURE__*/React.createElement("div", {
+      className: "section-pad gr-section-pad"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "data-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "data-row-lbl"
+    }, valueRowLabel), /*#__PURE__*/React.createElement("span", {
+      className: "data-row-val hi"
+    }, fmtInt(item.value)), /*#__PURE__*/React.createElement("span", {
+      className: "data-row-unit"
+    }, "mm"), /*#__PURE__*/React.createElement("span", {
+      className: "gr-row-marker"
+    }, getLinkedCardMarker(item.id))), /*#__PURE__*/React.createElement("div", {
+      className: "gr-steps-wrap"
+    }, steps.map((stepItem, stepIdx) => /*#__PURE__*/React.createElement("div", {
+      key: stepItem.step,
+      className: "gr-step-row" + (stepIdx === 0 ? " gr-step-row-first" : "")
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "data-row gr-step-cell gr-step-cell-index"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "data-row-val"
+    }, stepItem.step)), /*#__PURE__*/React.createElement("div", {
+      className: "data-row gr-step-cell"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "data-row-val"
+    }, fmtInt(stepItem.larger))))))));
+  })));
 }
 function SheetArea({
   sh
