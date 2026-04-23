@@ -35,13 +35,13 @@ function SLabel({ children }) {
 }
 
 // Single collapsible replaces both Section and ControlPanel
-function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, children, variant = "section" }) {
+function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "" }) {
   const [openLocal, setOpenLocal] = React.useState(true);
   const open    = setOpenProp ? openProp    : openLocal;
   const setOpen = setOpenProp ? setOpenProp : setOpenLocal;
   if (variant === "panel") {
     return (
-      <div id={id} className="control-panel">
+      <div id={id} className={["control-panel", className].filter(Boolean).join(" ")}>
         <div className="panel-head" onClick={() => setOpen(!open)}>
           <span className="sys-head-toggle"><Icon name={open ? "chevron-down" : "chevron-right"} /></span>
           {title}
@@ -63,7 +63,11 @@ function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, chil
 
 // Convenience aliases for readability at call sites
 const Section      = ({ title, bg, children }) => <Collapsible title={title} bg={bg}>{children}</Collapsible>;
-const ControlPanel = ({ id, title, open, setOpen, children }) => <Collapsible id={id} title={title} open={open} setOpen={setOpen} variant="panel">{children}</Collapsible>;
+const ControlPanel = ({ id, title, open, setOpen, children, className = "" }) => (
+  <Collapsible id={id} title={title} open={open} setOpen={setOpen} variant="panel" className={className}>
+    {children}
+  </Collapsible>
+);
 
 function Row({ label, value, unit, hi, hoverType, hoveredType, setHoveredType }) {
   const isHovered = hoverType && hoveredType === hoverType;
@@ -78,4 +82,44 @@ function Row({ label, value, unit, hi, hoverType, hoveredType, setHoveredType })
       {unit && <span className="data-row-unit">{unit}</span>}
     </div>
   );
+}
+
+// Stable visual identity for id-driven cards (A/B/C... + tone buckets)
+function getLinkedCardTone(id) {
+  const key = String(id || "").toLowerCase();
+  const tones = ["a", "b", "c", "d"];
+  if (tones.includes(key)) return key;
+  const hash = key.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return tones[hash % tones.length];
+}
+
+function getLinkedCardMarker(id) {
+  const match = String(id || "").toUpperCase().match(/[A-Z0-9]/);
+  return match ? match[0] : "X";
+}
+
+// Reusable linked-card interaction:
+// click control card -> matching preview card stays active
+// click elsewhere -> clear active preview
+function useLinkedCardHighlight(groupId) {
+  const [activeId, setActiveId] = React.useState(null);
+
+  React.useEffect(() => {
+    const onGlobalPointerDown = e => {
+      if (e.target.closest(`[data-link-group="${groupId}"][data-link-role="control"]`)) return;
+      setActiveId(null);
+    };
+    window.addEventListener("pointerdown", onGlobalPointerDown);
+    return () => window.removeEventListener("pointerdown", onGlobalPointerDown);
+  }, [groupId]);
+
+  const bindControl = id => ({
+    "data-link-group": groupId,
+    "data-link-role": "control",
+    onPointerDown: () => setActiveId(id)
+  });
+
+  const isActive = id => activeId === id;
+
+  return { activeId, setActiveId, bindControl, isActive };
 }
