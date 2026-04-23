@@ -749,6 +749,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	text-transform: uppercase;
 }
 
+.num-lbl-raw {
+	text-transform: none;
+	color: var(--color-white);
+}
+
 .num-row {
 	display: flex;
 	gap: 4px;
@@ -866,6 +871,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	text-transform: uppercase;
 }
 
+.data-control .control-panel .panel-head.panel-head-spacer {
+	visibility: hidden;
+	pointer-events: none;
+}
+
 .data-control .slabel {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
@@ -919,6 +929,28 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	font-size: var(--fs-md);
 	color: var(--color-primary);
 	text-align: center;
+}
+
+/* Text field sized to match NumInput's input area (excluding commit button width) */
+.data-control .ctrl-text-input {
+	width: calc(100% - 36px);
+	flex: 0 0 auto;
+}
+
+#input-base-label-suffix {
+	color: var(--color-white);
+}
+
+#input-base-label-suffix::placeholder {
+	color: var(--color-gray-opa80);
+}
+
+#input-base-label-suffix-2 {
+	color: var(--color-white);
+}
+
+#input-base-label-suffix-2::placeholder {
+	color: var(--color-gray-opa80);
 }
 /*
  * ----------------------------------------------------------
