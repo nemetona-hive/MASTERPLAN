@@ -53,26 +53,32 @@ function SheetConcrete() {
 
 function SheetNewTool() {
   const [baseOpen, setBaseOpen] = React.useState(true);
-  const [baseValue, setBaseValue] = React.useState(1000);
-  const [valueLabelSuffix, setValueLabelSuffix] = React.useState("");
-  const [baseOpen2, setBaseOpen2] = React.useState(true);
-  const [baseValue2, setBaseValue2] = React.useState(1000);
-  const [valueLabelSuffix2, setValueLabelSuffix2] = React.useState("");
+  const link = useLinkedCardHighlight("golden-ratio");
+  const [baseItems, setBaseItems] = React.useState([
+    { id: "a", value: 1000, suffix: "", saved: { value: 1000, suffix: "" }, savedCommitted: false },
+    { id: "b", value: 1000, suffix: "", saved: { value: 1000, suffix: "" }, savedCommitted: false },
+    { id: "c", value: 1000, suffix: "", saved: { value: 1000, suffix: "" }, savedCommitted: false }
+  ]);
   const PHI = 1.6180339887499;
-  const trimmedSuffix = valueLabelSuffix.trim();
-  const trimmedSuffix2 = valueLabelSuffix2.trim();
-  const valueInputLabel = trimmedSuffix
-    ? <>Value (mm) <span className="num-lbl-raw">{trimmedSuffix}</span></>
-    : "Value (mm)";
-  const valueInputLabel2 = trimmedSuffix2
-    ? <>Value (mm) <span className="num-lbl-raw">{trimmedSuffix2}</span></>
-    : "Value (mm)";
-  const valueRowLabel = trimmedSuffix
-    ? <>Value <span className="num-lbl-raw">{trimmedSuffix}</span></>
-    : "Value";
-  const valueRowLabel2 = trimmedSuffix2
-    ? <>Value <span className="num-lbl-raw">{trimmedSuffix2}</span></>
-    : "Value";
+
+  const setItemField = (id, key, value) => {
+    setBaseItems(items => items.map(item => (item.id === id ? { ...item, [key]: value } : item)));
+  };
+
+  const saveItem = id => {
+    setBaseItems(items => items.map(item => (
+      item.id === id ? { ...item, saved: { value: item.value, suffix: item.suffix }, savedCommitted: true } : item
+    )));
+  };
+
+  const resetItem = id => {
+    setBaseItems(items => items.map(item => (
+      item.id === id
+        ? { ...item, value: item.saved.value, suffix: item.saved.suffix, savedCommitted: false }
+        : item
+    )));
+  };
+
   const buildSteps = base => {
     const startValue = base / PHI;
     const rows = [];
@@ -84,83 +90,111 @@ function SheetNewTool() {
     }
     return rows;
   };
-  const steps = buildSteps(baseValue);
-  const steps2 = buildSteps(baseValue2);
   const fmtInt = v => Math.round(v).toString();
   return (
     <>
       <div id="data-control" className="data-control">
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
-          <NumInput id="input-base-number" label={valueInputLabel} value={baseValue} onChange={setBaseValue} step={10} />
-          <div className="ctrl-lbl">
-            <span className="ctrl-sublbl">Custom label</span>
-            <input
-              id="input-base-label-suffix"
-              className="num-input ctrl-text-input"
-              type="text"
-              value={valueLabelSuffix}
-              onChange={e => setValueLabelSuffix(e.target.value)}
-              placeholder="e.g. A, L, Start"
-            />
-          </div>
+          {baseItems.map(item => {
+            const tone = getLinkedCardTone(item.id);
+            const trimmedSuffix = item.suffix.trim();
+            const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
+            const valueInputLabel = trimmedSuffix
+              ? <>Value (mm) <span className="num-lbl-raw">{trimmedSuffix}</span></>
+              : "Value (mm)";
+
+            return (
+              <div
+                key={item.id}
+                id={`control-base-number-${item.id}`}
+                className={`control-panel gr-control-card gr-control-card-${tone}${isStored ? " gr-card-saved" : ""}`}
+                {...link.bindControl(item.id)}
+              >
+                <div className="panel-data">
+                  <NumInput
+                    id={`input-base-number-${item.id}`}
+                    label={valueInputLabel}
+                    value={item.value}
+                    onChange={v => setItemField(item.id, "value", v)}
+                    step={10}
+                  />
+                  <div className="ctrl-lbl">
+                    <span className="ctrl-sublbl">Custom label</span>
+                    <input
+                      id={`input-base-label-suffix-${item.id}`}
+                      className="num-input ctrl-text-input gr-label-input"
+                      type="text"
+                      value={item.suffix}
+                      onChange={e => setItemField(item.id, "suffix", e.target.value)}
+                      placeholder="e.g. A, L, Start"
+                    />
+                  </div>
+                  <div className="ctrl-lbl">
+                    <span className="ctrl-sublbl">Entry</span>
+                    <div className="ctrl-btns">
+                      <button
+                        type="button"
+                        className="ctrl-dir"
+                        onClick={() => saveItem(item.id)}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="ctrl-dir"
+                        onClick={() => resetItem(item.id)}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </ControlPanel>
-        <div id="control-base-number-2" className="control-panel">
-          <div className="panel-head panel-head-spacer" aria-hidden="true">&nbsp;</div>
-          <div className="panel-data">
-          <NumInput id="input-base-number-2" label={valueInputLabel2} value={baseValue2} onChange={setBaseValue2} step={10} />
-          <div className="ctrl-lbl">
-            <span className="ctrl-sublbl">Custom label</span>
-            <input
-              id="input-base-label-suffix-2"
-              className="num-input ctrl-text-input"
-              type="text"
-              value={valueLabelSuffix2}
-              onChange={e => setValueLabelSuffix2(e.target.value)}
-              placeholder="e.g. A, L, Start"
-            />
-          </div>
-          </div>
-        </div>
       </div>
       <div id="data-preview" className="data-preview">
-        <div id="panel-golden-ratio" className="sys-block">
-          <div className="sys-head">
-            <h3 className="sys-title"><Icon name="golden-phi" className="sys-title-icon" /> Golden Ratio phi</h3>
-            <span className="sys-head-sub">phi = 1.6180339887499</span>
-          </div>
-          <div className="section-pad" style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <div className="data-row">
-              <span className="data-row-lbl">{valueRowLabel}</span>
-              <span className="data-row-val hi">{fmtInt(baseValue)}</span>
-              <span className="data-row-unit">mm</span>
-            </div>
-            <div style={{ border: "1px solid var(--color-gray)", borderRadius: "6px", overflow: "hidden" }}>
-              {steps.map((item, idx) => (
-                <div key={item.step} style={{ display: "grid", gridTemplateColumns: "56px 1fr", borderTop: idx === 0 ? "none" : "1px solid var(--color-gray)" }}>
-                  <div className="data-row" style={{ borderBottom: "none", borderRight: "1px solid var(--color-gray)" }}><span className="data-row-val">{item.step}</span></div>
-                  <div className="data-row" style={{ borderBottom: "none" }}><span className="data-row-val">{fmtInt(item.larger)}</span></div>
+        {baseItems.map((item, idx) => {
+          const tone = getLinkedCardTone(item.id);
+          const trimmedSuffix = item.suffix.trim();
+          const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
+          const valueRowLabel = trimmedSuffix
+            ? <>Value <span className="num-lbl-raw">{trimmedSuffix}</span></>
+            : "Value";
+          const steps = buildSteps(item.value);
+
+          return (
+            <div
+              key={item.id}
+              id={`panel-golden-ratio-${item.id}`}
+              className={`sys-block gr-preview-card gr-preview-card-${tone}${isStored ? " gr-card-saved" : ""}${link.isActive(item.id) ? " linked-preview-active" : ""}`}
+            >
+              {idx === 0 && (
+                <div className="sys-head">
+                  <h3 className="sys-title"><Icon name="golden-phi" className="sys-title-icon" /> Golden Ratio phi</h3>
+                  <span className="sys-head-sub">phi = 1.6180339887499</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div id="panel-golden-ratio-2" className="sys-block">
-          <div className="section-pad" style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <div className="data-row">
-              <span className="data-row-lbl">{valueRowLabel2}</span>
-              <span className="data-row-val hi">{fmtInt(baseValue2)}</span>
-              <span className="data-row-unit">mm</span>
-            </div>
-            <div style={{ border: "1px solid var(--color-gray)", borderRadius: "6px", overflow: "hidden" }}>
-              {steps2.map((item, idx) => (
-                <div key={item.step} style={{ display: "grid", gridTemplateColumns: "56px 1fr", borderTop: idx === 0 ? "none" : "1px solid var(--color-gray)" }}>
-                  <div className="data-row" style={{ borderBottom: "none", borderRight: "1px solid var(--color-gray)" }}><span className="data-row-val">{item.step}</span></div>
-                  <div className="data-row" style={{ borderBottom: "none" }}><span className="data-row-val">{fmtInt(item.larger)}</span></div>
+              )}
+              <div className="section-pad gr-section-pad">
+                <div className="data-row">
+                  <span className="data-row-lbl">{valueRowLabel}</span>
+                  <span className="data-row-val hi">{fmtInt(item.value)}</span>
+                  <span className="data-row-unit">mm</span>
+                  <span className="gr-row-marker">{getLinkedCardMarker(item.id)}</span>
                 </div>
-              ))}
+                <div className="gr-steps-wrap">
+                  {steps.map((stepItem, stepIdx) => (
+                    <div key={stepItem.step} className={"gr-step-row" + (stepIdx === 0 ? " gr-step-row-first" : "")}>
+                      <div className="data-row gr-step-cell gr-step-cell-index"><span className="data-row-val">{stepItem.step}</span></div>
+                      <div className="data-row gr-step-cell"><span className="data-row-val">{fmtInt(stepItem.larger)}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </>
   );
