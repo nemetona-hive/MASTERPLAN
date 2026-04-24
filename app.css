@@ -1579,17 +1579,23 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		border-bottom: 1px solid var(--color-gray-light);
 	}
 
-	/* Nav becomes a horizontal scrollable bar */
+	/* Nav becomes a vertical drawer list */
 	.nav {
 		width: 100% !important;
-		flex-direction: row;
-		align-items: center;
-		gap: 4px;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 6px;
 		padding: var(--sp-2) var(--sp-3);
-		overflow-x: auto;
-		overflow-y: hidden;
-		flex-wrap: nowrap;
-		scroll-snap-type: x proximity;
+		overflow-x: hidden;
+		overflow-y: auto;
+		max-height: 56vh;
+		background: color-mix(in srgb, var(--color-darkblue) 92%, transparent);
+	}
+
+	/* Mobile launcher-only nav: hide item lists */
+	.nav-items,
+	.nav-bottom {
+		display: none;
 	}
 
 	.nav.nav-collapsed {
@@ -1597,17 +1603,21 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		padding: var(--sp-2) var(--sp-3);
 	}
 
-	/* nav-items and nav-bottom become horizontal rows */
+	.nav.nav-mobile-open {
+		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+	}
+
+	/* nav-items and nav-bottom become stacked lists */
 	.nav-items,
 	.nav-bottom {
-		flex-direction: row;
-		flex: 0 0 auto;
+		flex-direction: column;
+		flex: 1 1 auto;
 		gap: 4px;
 		margin-top: 0;
-		padding-top: 0;
-		border-top: none;
-		border-left: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-		padding-left: 8px;
+		padding-top: 8px;
+		border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+		border-left: none;
+		padding-left: 0;
 	}
 
 	.nav-bottom:empty {
@@ -1620,23 +1630,24 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		margin-left: 0;
 		margin-bottom: 0;
 		flex-shrink: 0;
+		cursor: pointer;
 	}
 
 	/* Nav buttons: compact, touch-friendly */
 	.nav-btn {
 		padding: 8px 10px;
-		white-space: nowrap;
+		white-space: normal;
 		flex-shrink: 0;
-		width: auto;
+		width: 100%;
 		min-height: 44px;
 		border: 1px solid color-mix(in srgb, var(--color-gray-light) 48%, transparent);
 		background: color-mix(in srgb, var(--color-darkblue) 85%, transparent);
-		scroll-snap-align: start;
+		border-radius: 8px;
 	}
 
-	/* Sub-items indent slightly in horizontal layout */
+	/* Keep hierarchy readable */
 	.nav-sub-btn {
-		padding-left: 6px;
+		padding-left: 22px;
 		max-height: none;
 		opacity: 1;
 	}
@@ -1646,9 +1657,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		display: none;
 	}
 
-	/* Hide chevron in horizontal layout */
-	.nav-parent-chevron {
-		display: none;
+	.nav-menu-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.page-main {
