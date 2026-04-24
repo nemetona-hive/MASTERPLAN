@@ -101,6 +101,12 @@ html, body, #root {
 
 	/* Nav collapsed width */
 	--nav-collapsed-w: 60px;
+
+	/* Spacing scale */
+	--sp-1:  6px;
+	--sp-2: 12px;
+	--sp-3: 16px;
+	--sp-4: 24px;
  }
 	
 @media (min-width: 2560px) and (min-height: 1440px) {
@@ -1567,7 +1573,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 
 	.app {
+		height: 100svh;
 		height: 100dvh;
+		position: fixed;
+		width: 100%;
+		top: 0;
+		left: 0;
 	}
 
 	.app-page {
@@ -1592,7 +1603,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		background: color-mix(in srgb, var(--color-darkblue) 92%, transparent);
 	}
 
-	/* Mobile launcher-only nav: hide item lists */
+	/* Mobile: hide items by default, show when menu is open */
 	.nav-items,
 	.nav-bottom {
 		display: none;
@@ -1607,9 +1618,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
 	}
 
-	/* nav-items and nav-bottom become stacked lists */
-	.nav-items,
-	.nav-bottom {
+	/* Show items only when mobile menu is open */
+	.nav.nav-mobile-open .nav-items,
+	.nav.nav-mobile-open .nav-bottom {
+		display: flex;
 		flex-direction: column;
 		flex: 1 1 auto;
 		gap: 4px;
@@ -1667,6 +1679,24 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
+		position: relative;
+	}
+
+	/* Mobile menu backdrop */
+	.page-main::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.4);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.3s ease;
+		z-index: 999;
+	}
+
+	.app-page.nav-open .page-main::before {
+		opacity: 1;
+		pointer-events: auto;
 	}
 
 	.main-data {
@@ -1674,6 +1704,17 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		flex: 0 0 auto;
 		height: auto;
 		overflow: visible;
+	}
+
+	/* Sticky header for data pages */
+	.main-head {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		background: var(--color-darkblue-light);
+		border-bottom: 1px solid var(--color-gray-light);
+		padding: 12px var(--sp-3) 8px;
+		margin-bottom: 0;
 	}
 
 	.data-control {
@@ -1747,5 +1788,130 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 	.page-inner {
 		max-width: 100%;
+	}
+
+	/* Touch-friendly input controls */
+	input[type="number"],
+	input[type="range"],
+	.num-input {
+		min-height: 44px;
+		font-size: 16px;
+	}
+
+	input[type="number"] {
+		padding: 12px 16px;
+		border-radius: 8px;
+	}
+
+	input[type="range"] {
+		height: 12px;
+	}
+
+	/* Snappier animations on mobile */
+	button,
+	.nav-btn,
+	.nav-parent-chevron {
+		transition-duration: 0.08s;
+	}
+}
+
+/*
+ * ----------------------------------------------------------
+ * LANDSCAPE ORIENTATION
+ * ----------------------------------------------------------
+ * Force mobile layout on landscape small devices (e.g., Galaxy S25)
+ * where width > 768px but device is still small
+ */
+
+@media (max-height: 500px) {
+	.app {
+		height: 100svh;
+		height: 100dvh;
+	}
+
+	.nav {
+		max-height: 50vh;
+		overflow-y: auto;
+	}
+
+	.main-data {
+		flex-direction: column;
+		overflow: visible;
+	}
+
+	.data-control,
+	.data-preview {
+		border-right: none;
+	}
+
+	.data-control {
+		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-gray-light));
+		padding: var(--sp-3);
+		gap: 10px;
+		overflow: visible;
+	}
+
+	.data-preview {
+		flex: 0 0 auto;
+		padding: var(--sp-3);
+		border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 45%, transparent);
+		overflow: visible;
+	}
+}
+
+/*
+ * ----------------------------------------------------------
+ * ULTRA-SMALL DEVICES
+ * ----------------------------------------------------------
+ */
+
+@media (max-width: 360px) {
+	:root {
+		--fs-xs: 12px;
+		--fs-sm: 11px;
+		--fs-md: 14px;
+	}
+
+	.nav-btn {
+		padding: 8px 10px;
+		min-height: 40px;
+	}
+
+	.page-scroll {
+		padding: 12px;
+	}
+
+	.main-head {
+		padding: 10px var(--sp-2) 8px;
+	}
+
+	.main-head .title {
+		font-size: var(--fs-md);
+		margin-bottom: 4px;
+	}
+
+	.main-head .desc {
+		margin-bottom: 12px;
+		font-size: var(--fs-sm);
+	}
+}
+
+/*
+ * ----------------------------------------------------------
+ * ACCESSIBILITY
+ * ----------------------------------------------------------
+ */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	button::after {
+		display: none;
 	}
 }
