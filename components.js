@@ -1219,9 +1219,10 @@ function AppNav({
   navOpen,
   setNavOpen,
   mobileMenuOpen,
-  setMobileMenuOpen
+  setMobileMenuOpen,
+  isMobile
 }) {
-  const mobile = typeof window !== "undefined" && window.innerWidth <= 768;
+  const mobile = isMobile; // Use passed prop instead of calculating
   const showSubs = mobile ? mobileMenuOpen : navOpen;
   const navRef = React.useRef(null);
 
@@ -1229,12 +1230,16 @@ function AppNav({
   // Initialize all parents with children as open
   const initOpenGroups = () => PAGES.reduce((acc, pg) => {
     if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) {
-      const mobileNow = typeof window !== "undefined" && window.innerWidth <= 768;
-      acc[pg.id] = mobileNow ? false : true;
+      acc[pg.id] = mobile ? false : true; // Use mobile prop directly
     }
     return acc;
   }, {});
   const [openGroups, setOpenGroups] = React.useState(initOpenGroups);
+
+  // Reset open groups when device orientation changes (mobile <-> desktop)
+  React.useEffect(() => {
+    setOpenGroups(initOpenGroups());
+  }, [mobile]);
 
   // Auto-open parent when navigating to a child
   React.useEffect(() => {
@@ -1409,8 +1414,11 @@ function MainPageContent({
 }
 function App() {
   const [page, setPageState] = useState(getHashPage);
-  const isMobile = () => typeof window !== "undefined" && window.innerWidth <= 768;
-  const [navOpen, setNavOpen] = React.useState(!isMobile());
+
+  // Track mobile state reactively — updates on resize/rotate
+  const getIsMobile = () => typeof window !== "undefined" && window.innerWidth <= 768;
+  const [isMobile, setIsMobile] = React.useState(getIsMobile);
+  const [navOpen, setNavOpen] = React.useState(!getIsMobile());
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Sync page state with URL hash
@@ -1429,12 +1437,24 @@ function App() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  // Handle resize and orientation changes
   React.useEffect(() => {
     const handler = () => {
-      if (!isMobile()) setMobileMenuOpen(false);
+      const nowMobile = getIsMobile();
+      setIsMobile(nowMobile);
+      // Close menu when rotating/resizing to desktop
+      if (!nowMobile) {
+        setMobileMenuOpen(false);
+        setNavOpen(true); // Reset to expanded for desktop
+      }
     };
     window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+    window.addEventListener("orientationchange", handler);
+    return () => {
+      window.removeEventListener("resize", handler);
+      window.removeEventListener("orientationchange", handler);
+    };
   }, []);
 
   // Enter in any input commits by blurring the field (matches NumInput button intent)
@@ -1518,17 +1538,19 @@ function App() {
     height: "1.36"
   }))), /*#__PURE__*/React.createElement("div", {
     id: "app-page",
-    className: "app-page"
+    className: "app-page" + (mobileMenuOpen ? " nav-open" : "")
   }, /*#__PURE__*/React.createElement(AppNav, {
     page: page,
     setPage: setPage,
     navOpen: navOpen,
     setNavOpen: setNavOpen,
     mobileMenuOpen: mobileMenuOpen,
-    setMobileMenuOpen: setMobileMenuOpen
+    setMobileMenuOpen: setMobileMenuOpen,
+    isMobile: isMobile
   }), /*#__PURE__*/React.createElement("div", {
     id: "page-main",
-    className: "page-main"
+    className: "page-main",
+    onClick: () => mobileMenuOpen && setMobileMenuOpen(false)
   }, /*#__PURE__*/React.createElement(MainPageContent, {
     page: page,
     setPage: setPage,
