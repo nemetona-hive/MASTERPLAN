@@ -1228,17 +1228,17 @@ function AppNav({
 
   // Per-parent open state — keyed by parent id
   // Initialize all parents with children as open
-  const initOpenGroups = () => PAGES.reduce((acc, pg) => {
+  const initOpenGroups = isMob => PAGES.reduce((acc, pg) => {
     if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) {
-      acc[pg.id] = mobile ? false : true; // Use mobile prop directly
+      acc[pg.id] = isMob ? false : true;
     }
     return acc;
   }, {});
-  const [openGroups, setOpenGroups] = React.useState(initOpenGroups);
+  const [openGroups, setOpenGroups] = React.useState(() => initOpenGroups(mobile));
 
-  // Reset open groups when device orientation changes (mobile <-> desktop)
+  // Reinitialize open groups when switching between mobile and desktop
   React.useEffect(() => {
-    setOpenGroups(initOpenGroups());
+    setOpenGroups(initOpenGroups(mobile));
   }, [mobile]);
 
   // Auto-open parent when navigating to a child
@@ -1269,8 +1269,7 @@ function AppNav({
   });
   const handleToggle = () => {
     if (mobile) {
-      setPage("home");
-      setMobileMenuOpen(false);
+      setMobileMenuOpen(o => !o);
       return;
     }
     setNavOpen(o => !o);
@@ -1298,19 +1297,18 @@ function AppNav({
     "aria-label": "Main navigation"
   }, /*#__PURE__*/React.createElement("div", {
     className: "nav-section nav-toggle",
-    onClick: mobile ? () => {
-      setPage("home");
-      setMobileMenuOpen(false);
-    } : undefined,
     role: mobile ? "button" : undefined,
     tabIndex: mobile ? 0 : undefined,
-    onKeyDown: mobile ? e => (e.key === "Enter" || e.key === " ") && (setPage("home"), setMobileMenuOpen(false)) : undefined
+    onKeyDown: mobile ? e => (e.key === "Enter" || e.key === " ") && setMobileMenuOpen(o => !o) : undefined
   }, /*#__PURE__*/React.createElement("span", {
     className: "nav-toggle-label",
-    onClick: () => setPage("home"),
+    onClick: () => {
+      setPage("home");
+      if (mobile) setMobileMenuOpen(false);
+    },
     role: "button",
     tabIndex: 0,
-    onKeyDown: e => (e.key === "Enter" || e.key === " ") && setPage("home")
+    onKeyDown: e => (e.key === "Enter" || e.key === " ") && (setPage("home"), mobile && setMobileMenuOpen(false))
   }, "HIVE"), /*#__PURE__*/React.createElement("span", {
     className: "nav-menu-icon",
     onClick: handleToggle,
