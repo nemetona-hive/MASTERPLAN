@@ -116,6 +116,12 @@ var PAGES = [{
   title: "Golden Ratio φ",
   desc: "Blank tool scaffold — coming soon",
   icon: "golden-phi"
+}, {
+  id: "timesheet",
+  label: "Timesheet",
+  title: "Timesheet",
+  desc: "Calculate and sum work hours",
+  icon: "clock"
 }];
 
 
