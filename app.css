@@ -224,7 +224,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 /* â”€â”€ Nav visual system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  *
  *  HEADER    .nav-toggle          HIVE label + collapse icon
- *  PARENT    .nav-btn.nav-parent  Layout, Area â€” toggle or navigate
+ *  PARENT    .nav-btn.nav-parent  Layout â€” toggle or navigate
  *  SUB       .nav-sub-btn         Pattern Layouts, Symmetric Layout
  *  LEAF      .nav-btn (neither)   Future standalone pages
  *
@@ -297,7 +297,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	box-shadow: 0 0 8px var(--color-primary);
 }
 
-/* â”€â”€ Active â€” parent directly active (Area with no child active) â”€â”€ */
+/* â”€â”€ Active â€” parent directly active (no child active) â”€â”€ */
 .nav-btn.nav-parent.active:not(.child-active) {
 	color: var(--color-primary);
 	font-weight: 600;
@@ -2388,3 +2388,4 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		display: none;
 	}
 }
+
