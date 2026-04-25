@@ -1380,6 +1380,357 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 /*
  * ----------------------------------------------------------
+ * TIMESHEET
+ * ----------------------------------------------------------
+ */
+
+/* Layout ------------------------------------------------------------------ */
+
+.ts-page {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.ts-body {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+	padding: 18px 22px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+/* Tabs -------------------------------------------------------------------- */
+
+.ts-tabs {
+	display: flex;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 6px;
+	overflow: hidden;
+	width: fit-content;
+}
+
+.ts-tab {
+	padding: 6px 16px;
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	background: none;
+	border: none;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	transition: background 0.1s, color 0.1s;
+}
+
+.ts-tab--on {
+	background: var(--color-gray-light);
+	color: var(--color-primary);
+	font-weight: 600;
+}
+
+/* Section card ------------------------------------------------------------ */
+
+.ts-section {
+	background: var(--color-darkblue);
+	border: 1px solid var(--color-gray-light);
+	border-radius: 8px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* Grid -------------------------------------------------------------------- */
+
+.ts-grid-hd,
+.ts-grid-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr 68px 86px 62px 34px;
+	gap: 6px;
+	align-items: center;
+}
+
+.ts-grid-hd {
+	margin-bottom: 2px;
+}
+
+.ts-grid-row {
+	padding: 2px 3px;
+	border-radius: 5px;
+	transition: background 0.08s;
+}
+
+.ts-grid-row--active {
+	background: var(--color-darkblue-light);
+}
+
+.ts-col-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	padding: 0 3px;
+}
+
+/* Input ------------------------------------------------------------------- */
+
+.ts-input {
+	width: 100%;
+	background: transparent;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 4px;
+	color: var(--color-primary);
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	padding: 5px 7px;
+	height: 32px;
+	transition: border-color 0.1s, background 0.1s;
+}
+
+.ts-input:focus {
+	outline: none;
+	border-color: var(--color-gray);
+	background: var(--color-darkblue-light);
+}
+
+.ts-input::placeholder {
+	color: var(--color-gray-light);
+	opacity: 1;
+}
+
+/* Duration / Decimal cells ------------------------------------------------ */
+
+.ts-duration,
+.ts-decimal {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: 500;
+	color: var(--color-primary);
+	padding: 0 3px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+}
+
+.ts-decimal {
+	color: var(--color-gray-opa80);
+}
+
+.ts-duration--error {
+	color: #ff5555;
+	font-weight: 400;
+	font-size: var(--fs-sm);
+}
+
+.ts-duration--warn {
+	color: #d4a24a;
+	font-weight: 400;
+	font-size: var(--fs-sm);
+}
+
+/* Remove button ----------------------------------------------------------- */
+
+.ts-remove {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	flex-shrink: 0;
+	background: none;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 5px;
+	color: var(--color-gray-opa80);
+	font-size: var(--fs-lg);
+	cursor: pointer;
+	transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.ts-remove:hover {
+	background: color-mix(in srgb, #ff4444 12%, var(--color-darkblue));
+	color: #ff6666;
+	border-color: color-mix(in srgb, #ff4444 45%, transparent);
+}
+
+/* Lunch presets ----------------------------------------------------------- */
+
+.ts-pills {
+	display: flex;
+	gap: 5px;
+	flex-wrap: wrap;
+	align-items: center;
+	margin-top: 6px;
+}
+
+.ts-pill-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray);
+}
+
+.ts-pill {
+	font-size: var(--fs-sm);
+	font-family: var(--mono);
+	padding: 3px 9px;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 999px;
+	background: none;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	transition: background 0.1s, color 0.1s;
+}
+
+.ts-pill:hover {
+	background: var(--color-gray-light);
+	color: var(--color-primary);
+}
+
+/* Controls row ------------------------------------------------------------ */
+
+.ts-controls {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.ts-btn {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	padding: 5px 12px;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 5px;
+	background: none;
+	color: var(--color-primary);
+	cursor: pointer;
+	transition: background 0.1s, border-color 0.1s;
+}
+
+.ts-btn:hover {
+	background: var(--color-gray-light);
+}
+
+.ts-btn--muted {
+	color: var(--color-gray-opa80);
+}
+
+
+/* Sum tab row ------------------------------------------------------------- */
+
+.ts-sum-row {
+	display: grid;
+	grid-template-columns: 1fr 34px;
+	gap: 6px;
+	align-items: center;
+}
+
+/* Total bar --------------------------------------------------------------- */
+
+.ts-footer {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	padding: 10px 18px;
+	background: var(--color-darkblue);
+	border-top: 1px solid var(--color-gray-light);
+}
+
+.ts-total-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.ts-total-vals {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+}
+
+.ts-total-val {
+	font-family: var(--mono);
+	font-size: var(--fs-lg);
+	font-weight: 600;
+	color: var(--color-primary);
+}
+
+.ts-total-dec {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	color: var(--color-gray-opa80);
+}
+
+.ts-copy {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	padding: 4px 12px;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 5px;
+	background: none;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.ts-copy:hover {
+	background: var(--color-gray-light);
+	color: var(--color-primary);
+}
+
+.ts-copy--done {
+	color: #6fbf73;
+	border-color: color-mix(in srgb, #6fbf73 50%, transparent);
+}
+
+/* Mobile ------------------------------------------------------------------ */
+
+@media (max-width: 768px), (max-height: 500px) {
+	.ts-body {
+		padding: 12px;
+		gap: 10px;
+	}
+
+	.ts-grid-hd,
+	.ts-grid-row {
+		grid-template-columns: 1fr 1fr 56px 72px 32px;
+		gap: 4px;
+	}
+
+	/* Hide decimal column on narrow screens */
+	.ts-col-dec {
+		display: none;
+	}
+
+	.ts-section {
+		padding: 10px;
+	}
+
+	.ts-input {
+		height: 34px;
+		font-size: 16px; /* prevent iOS zoom */
+		padding: 4px 6px;
+	}
+
+	.ts-remove {
+		width: 32px;
+		height: 34px;
+	}
+
+	.ts-footer {
+		padding: 8px 12px;
+	}
+}
+
+/*
+ * ----------------------------------------------------------
  * HOME
  * ----------------------------------------------------------
  */
