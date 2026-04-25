@@ -1571,10 +1571,60 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 @media (max-width: 768px), (max-height: 500px) {
 	.home-scroll {
 		align-items: flex-start;
-		padding: 24px 16px;
+		padding: 16px 14px;
 	}
+
+	.home-inner {
+		max-width: 100%;
+		gap: 10px;
+	}
+
+	/* Push brand below cards, display it inline and small */
+	.home-brand {
+		order: 10;
+		flex-direction: row;
+		align-items: baseline;
+		gap: 8px;
+		opacity: 0.6;
+	}
+
+	.home-brand-name {
+		font-size: var(--fs-md);
+		letter-spacing: 0.06em;
+	}
+
+	.home-brand-sub {
+		font-size: var(--fs-sm);
+		letter-spacing: 0.15em;
+	}
+
+	.home-footer {
+		order: 11;
+	}
+
+	/* Dividers replaced by gap */
+	.home-divider {
+		display: none;
+	}
+
 	.home-cards {
 		grid-template-columns: 1fr;
+		gap: 8px;
+	}
+
+	.home-card {
+		padding: 11px 13px;
+		gap: 5px;
+		border-radius: 8px;
+	}
+
+	.home-card-icon {
+		font-size: 1.1em;
+	}
+
+	.home-card-arrow {
+		bottom: 10px;
+		right: 12px;
 	}
 }
 
@@ -1587,7 +1637,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 @media (max-width: 768px), (max-height: 500px) {
 
 	:root {
-		--row-h: 28px;
+		--row-h: 22px;
 	}
 
 	.app {
@@ -1742,33 +1792,68 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		margin-bottom: 0;
 	}
 
-	/* Ensure inputs don't zoom the page on iOS */
+	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
 	input[type="number"],
 	input[type="text"],
 	.num-input {
 		font-size: 16px !important;
-		min-height: 44px;
+		min-height: 38px;
+	}
+
+	.data-row {
+		padding: 5px 10px;
 	}
 
 	.data-control {
 		width: 100%;
 		border-right: none;
 		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-gray-light));
-		padding: var(--sp-3);
-		gap: 10px;
+		padding: var(--sp-2) var(--sp-3);
+		gap: 8px;
 		overflow: visible;
+	}
+
+	.data-control .control-panel,
+	.data-control .control-panel .panel-data {
+		gap: 10px;
+	}
+
+	.data-control .gr-control-card .panel-data {
+		gap: 12px;
 	}
 
 	.data-preview {
 		overflow: visible;
 		flex: 0 0 auto;
-		padding: var(--sp-3);
+		padding: var(--sp-2) var(--sp-3);
 		border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 45%, transparent);
-		padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+		padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
 	}
 
 	.data-preview .sys-block {
-		margin-bottom: 18px;
+		margin-bottom: 10px;
+	}
+
+	.data-preview .sys-rows {
+		padding: 5px 4px;
+	}
+
+	.data-preview .strip {
+		height: 28px;
+	}
+
+	.data-preview .strip-note {
+		padding: 7px 10px;
+		line-height: 1.5;
+	}
+
+	.section-pad {
+		padding: var(--sp-2);
+	}
+
+	.panel-body {
+		padding: 10px;
+		gap: 8px;
 	}
 
 	.data-preview .gr-row-marker {
@@ -1781,8 +1866,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	.data-preview .sys-head {
 		flex-wrap: wrap;
 		align-items: flex-start;
-		padding: 8px 10px;
-		gap: 4px 8px;
+		padding: 6px 10px;
+		gap: 3px 8px;
 	}
 
 	.data-preview .sys-title {
@@ -1823,21 +1908,20 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		max-width: 100%;
 	}
 
-	/* Touch-friendly input controls */
 	input[type="number"],
 	input[type="range"],
 	.num-input {
-		min-height: 44px;
+		min-height: 38px;
 		font-size: 16px;
 	}
 
 	input[type="number"] {
-		padding: 12px 16px;
-		border-radius: 8px;
+		padding: 7px 10px;
+		border-radius: 6px;
 	}
 
 	input[type="range"] {
-		height: 12px;
+		height: 10px;
 	}
 
 	/* Snappier animations on mobile */
@@ -1876,6 +1960,24 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	.nav-btn {
 		min-height: 36px;
 		padding: 6px 10px;
+	}
+
+	/* Landscape home: 2-column cards, tighter spacing */
+	.home-scroll {
+		padding: 10px 12px;
+	}
+
+	.home-inner {
+		gap: 8px;
+	}
+
+	.home-cards {
+		grid-template-columns: 1fr 1fr;
+		gap: 6px;
+	}
+
+	.home-card {
+		padding: 9px 11px;
 	}
 }
 
