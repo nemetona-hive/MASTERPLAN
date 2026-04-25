@@ -98,12 +98,6 @@ var PAGES = [{
   icon: "columns-2",
   parentId: "layout"
 }, {
-  id: "area",
-  label: "Area",
-  title: "Area",
-  icon: "square",
-  isParent: true
-}, {
   id: "concrete",
   label: "Concrete",
   title: "Concrete",
