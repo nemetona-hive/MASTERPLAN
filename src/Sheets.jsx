@@ -231,28 +231,6 @@ function SheetNewTool({ grItems: baseItems, setGrItems: setBaseItems }) {
     </>
   );
 }
-function SheetArea({ sh }) {
-  const { W, H, PPi, PLa } = sh;
-  if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
-    return <div className="page-inner"><p className="desc">Select input values - all values must be greater than 0</p></div>;
-  }
-  const grossArea = W * H / 1e6, panelArea = PPi * PLa / 1e6;
-  return (
-    <div className="page-inner">
-      <p className="desc">Linked from Layout page &mdash; change data in Layout view</p>
-      <Section title="Surface dimensions" bg="#09101a">
-        <Row label="Surface width"   value={W}   unit="mm" />
-        <Row label="Surface height"  value={H}   unit="mm" />
-        <Row label="Area"            value={fmt.area(grossArea)} unit="m&sup2;" hi={true} />
-        <Row label="Panel length"    value={PPi} unit="mm" />
-        <Row label="Panel width"     value={PLa} unit="mm" />
-        <Row label="Panel area"      value={fmt.decimals(panelArea, 4)} unit="m&sup2;" />
-        <Row label="Panel direction" value={sh.direction} />
-      </Section>
-    </div>
-  );
-}
-
 function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
   const [surfaceOpen, setSurfaceOpen] = React.useState(true);
