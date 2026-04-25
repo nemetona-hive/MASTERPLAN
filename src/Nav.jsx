@@ -22,7 +22,6 @@ function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, on
 
   const toggleGroup = () => {
     setOpenGroups(prev => ({ ...prev, [item.id]: !prev[item.id] }));
-    setPage("home");
   };
 
   const handleClick = () => {
@@ -85,19 +84,20 @@ function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, on
   );
 }
 
-function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile }) {
-  const mobile = isMobile;  // Use passed prop instead of calculating
-  const showSubs = mobile ? mobileMenuOpen : navOpen;
-  const navRef = React.useRef(null);
-
-  // Per-parent open state — keyed by parent id
-  // Initialize all parents with children as open
-  const initOpenGroups = (isMob) => PAGES.reduce((acc, pg) => {
+function initOpenGroups(isMob) {
+  return PAGES.reduce((acc, pg) => {
     if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) {
-      acc[pg.id] = isMob ? false : true;
+      acc[pg.id] = !isMob;
     }
     return acc;
   }, {});
+}
+
+function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile }) {
+  const mobile = isMobile;
+  const showSubs = mobile ? mobileMenuOpen : navOpen;
+  const navRef = React.useRef(null);
+
   const [openGroups, setOpenGroups] = React.useState(() => initOpenGroups(mobile));
 
   // Reinitialize open groups when switching between mobile and desktop
@@ -146,7 +146,7 @@ function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileM
     if (direction === "next" && idx < btns.length - 1) btns[idx + 1].focus();
     if (direction === "prev" && idx > 0) btns[idx - 1].focus();
     if (direction === "parent") {
-      const parentBtn = btns.find(b => b.classList.contains("nav-parent"));
+      const parentBtn = btns.slice(0, idx).reverse().find(b => b.classList.contains("nav-parent"));
       if (parentBtn) parentBtn.focus();
     }
   };
@@ -160,19 +160,17 @@ function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileM
         {/* Header */}
         <div
           className="nav-section nav-toggle"
-          role={mobile ? "button" : undefined}
-          tabIndex={mobile ? 0 : undefined}
-          onKeyDown={mobile ? e => (e.key === "Enter" || e.key === " ") && setMobileMenuOpen(o => !o) : undefined}
+          role="button"
+          tabIndex={0}
+          onClick={() => { setPage("home"); if (mobile) setMobileMenuOpen(false); }}
+          onKeyDown={e => (e.key === "Enter" || e.key === " ") && (setPage("home"), mobile && setMobileMenuOpen(false))}
         >
-          <span className="nav-toggle-label"
-            onClick={() => { setPage("home"); if (mobile) setMobileMenuOpen(false); }}
+          <span className="nav-toggle-label">HIVE</span>
+          <span className="nav-menu-icon"
+            onClick={e => { e.stopPropagation(); handleToggle(); }}
             role="button" tabIndex={0}
-            onKeyDown={e => (e.key === "Enter" || e.key === " ") && (setPage("home"), mobile && setMobileMenuOpen(false))}>
-            HIVE
-          </span>
-          <span className="nav-menu-icon" onClick={handleToggle}
-            role="button" tabIndex={0} aria-label={mobile ? (mobileMenuOpen ? "Close menu" : "Open menu") : (navOpen ? "Collapse sidebar" : "Expand sidebar")}
-            onKeyDown={e => (e.key === "Enter" || e.key === " ") && handleToggle()}>
+            aria-label={mobile ? (mobileMenuOpen ? "Close menu" : "Open menu") : (navOpen ? "Collapse sidebar" : "Expand sidebar")}
+            onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" || e.key === " ") handleToggle(); }}>
             <Icon name="panel-left-close" />
           </span>
         </div>
