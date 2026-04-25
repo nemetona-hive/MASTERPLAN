@@ -16,6 +16,17 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
   if (page === "concrete") {
     return <div id="main-data" className="main-data"><SheetConcrete /></div>;
   }
+  if (page === "timesheet") {
+    return (
+      <>
+        <div id="main-head" className="main-head">
+          <h2 className="title">{pageMeta?.title}</h2>
+          <p className="desc">{pageMeta?.desc}</p>
+        </div>
+        <div className="page-main-full"><SheetTimesheet /></div>
+      </>
+    );
+  }
   if (page === "golden-ratio") {
     return <div id="main-data" className="main-data"><SheetNewTool grItems={grItems} setGrItems={setGrItems} /></div>;
   }
