@@ -214,7 +214,7 @@ const PanelRowVis = React.memo(function PanelRowVis({
     const l = seg.x / W * 100,
       w = seg.w / W * 100;
     const isGap = seg.type === "gap";
-    const segPalClasses = seg.type === "full" && seg.long === true ? PAL_CLASSES.s4s : palClasses;
+    const segPalClasses = seg.type === "full" && seg.long !== undefined ? seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses;
     const segClass = getSegmentClass(seg, segPalClasses);
     const isDimmed = hoveredType && seg.type === hoveredType;
     const tc = isGap ? "#ff6666" : "var(--color-white)";
@@ -304,7 +304,7 @@ function LayoutVisualization({
   return /*#__PURE__*/React.createElement("div", {
     className: "sys-rows",
     style: {
-      border: "1px solid #233342"
+      border: "1px solid var(--color-gray-light)"
     }
   }, orderedRows.map(({
     row,
@@ -349,18 +349,12 @@ function LayoutPanel({
     className: "sys-title-icon"
   }), " ", layout.title), /*#__PURE__*/React.createElement("span", {
     className: "sys-head-sub"
-  }, result.meta.description || layout.description), /*#__PURE__*/React.createElement("span", {
+  }, layout.description), /*#__PURE__*/React.createElement("span", {
     className: "sys-head-count"
   }, result.stats.total, " pcs ", isBest ? /*#__PURE__*/React.createElement(Icon, {
     name: "best-badge"
   }) : "")), open && /*#__PURE__*/React.createElement("div", {
-    className: "section-pad",
-    style: {
-      padding: "14px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12
-    }
+    className: "panel-body"
   }, layout.renderControls && React.createElement(layout.renderControls, {
     state: layout.getState(),
     setState: layout.setState
@@ -395,34 +389,6 @@ function PreviewSection({
 
 // ── Layout controls & registry ────────────────────────────────────────────────
 
-function S0Controls({
-  state,
-  setState
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-s0-room",
-    label: "Room width (mm)",
-    value: state.roomWidth,
-    onChange: v => setState({
-      roomWidth: v
-    }),
-    step: 10
-  }), /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-s0-panel",
-    label: "Panel width (mm)",
-    value: state.panelWidth,
-    onChange: v => setState({
-      panelWidth: v
-    }),
-    step: 10
-  }));
-}
 function S4Controls({
   state,
   setState
@@ -560,37 +526,12 @@ function SheetConcrete() {
     className: "data-preview"
   }));
 }
-function SheetNewTool() {
+function SheetNewTool({
+  grItems: baseItems,
+  setGrItems: setBaseItems
+}) {
   const [baseOpen, setBaseOpen] = React.useState(true);
   const link = useLinkedCardHighlight("golden-ratio");
-  const [baseItems, setBaseItems] = React.useState([{
-    id: "a",
-    value: "",
-    suffix: "",
-    saved: {
-      value: "",
-      suffix: ""
-    },
-    savedCommitted: false
-  }, {
-    id: "b",
-    value: "",
-    suffix: "",
-    saved: {
-      value: "",
-      suffix: ""
-    },
-    savedCommitted: false
-  }, {
-    id: "c",
-    value: "",
-    suffix: "",
-    saved: {
-      value: "",
-      suffix: ""
-    },
-    savedCommitted: false
-  }]);
   const PHI = 1.6180339887499;
   const setItemField = (id, key, value) => {
     setBaseItems(items => items.map(item => item.id === id ? {
@@ -637,17 +578,14 @@ function SheetNewTool() {
     }));
   };
   const buildSteps = base => {
-    const startValue = base / PHI;
     const rows = [];
-    let larger = startValue;
+    let value = base / PHI;
     for (let i = 1; i <= 7; i++) {
-      const smaller = larger / PHI;
       rows.push({
         step: i,
-        larger,
-        smaller
+        value
       });
-      larger = smaller;
+      value = value / PHI;
     }
     return rows;
   };
@@ -735,7 +673,18 @@ function SheetNewTool() {
   }))), /*#__PURE__*/React.createElement("div", {
     id: "data-preview",
     className: "data-preview"
-  }, baseItems.map((item, idx) => {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "gr-preview-list"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sys-head"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "sys-title"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "golden-phi",
+    className: "sys-title-icon"
+  }), " Golden Ratio phi"), /*#__PURE__*/React.createElement("span", {
+    className: "sys-head-sub"
+  }, "phi = 1.6180339887499")), baseItems.map((item, idx) => {
     const tone = getLinkedCardTone(item.id);
     const trimmedSuffix = item.suffix.trim();
     const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
@@ -749,16 +698,7 @@ function SheetNewTool() {
       key: item.id,
       id: `panel-golden-ratio-${item.id}`,
       className: `sys-block gr-preview-card gr-preview-card-${tone}${isStored ? " gr-card-saved" : ""}${link.isActive(item.id) ? " linked-preview-active" : ""}`
-    }, idx === 0 && /*#__PURE__*/React.createElement("div", {
-      className: "sys-head"
-    }, /*#__PURE__*/React.createElement("h3", {
-      className: "sys-title"
-    }, /*#__PURE__*/React.createElement(Icon, {
-      name: "golden-phi",
-      className: "sys-title-icon"
-    }), " Golden Ratio phi"), /*#__PURE__*/React.createElement("span", {
-      className: "sys-head-sub"
-    }, "phi = 1.6180339887499")), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       className: "section-pad gr-section-pad"
     }, /*#__PURE__*/React.createElement("div", {
       className: "data-row"
@@ -783,8 +723,8 @@ function SheetNewTool() {
       className: "data-row gr-step-cell"
     }, /*#__PURE__*/React.createElement("span", {
       className: "data-row-val"
-    }, fmtInt(stepItem.larger))))))));
-  })));
+    }, fmtInt(stepItem.value))))))));
+  }))));
 }
 function SheetArea({
   sh
@@ -813,28 +753,28 @@ function SheetArea({
     bg: "#09101a"
   }, /*#__PURE__*/React.createElement(Row, {
     label: "Surface width",
-    value: Math.max(0, W),
+    value: W,
     unit: "mm"
   }), /*#__PURE__*/React.createElement(Row, {
     label: "Surface height",
-    value: Math.max(0, H),
+    value: H,
     unit: "mm"
   }), /*#__PURE__*/React.createElement(Row, {
     label: "Area",
-    value: fmt.area(Math.max(0, grossArea)),
+    value: fmt.area(grossArea),
     unit: "m\xB2",
     hi: true
   }), /*#__PURE__*/React.createElement(Row, {
     label: "Panel length",
-    value: Math.max(0, PPi),
+    value: PPi,
     unit: "mm"
   }), /*#__PURE__*/React.createElement(Row, {
     label: "Panel width",
-    value: Math.max(0, PLa),
+    value: PLa,
     unit: "mm"
   }), /*#__PURE__*/React.createElement(Row, {
     label: "Panel area",
-    value: fmt.decimals(Math.max(0, panelArea), 4),
+    value: fmt.decimals(panelArea, 4),
     unit: "m\xB2"
   }), /*#__PURE__*/React.createElement(Row, {
     label: "Panel direction",
@@ -965,7 +905,7 @@ function SheetSurfaceLayout({
     return acc;
   }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
-  const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : 0;
+  const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       id: "data-control",
@@ -1146,7 +1086,6 @@ function NavButton({
       ...prev,
       [item.id]: !prev[item.id]
     }));
-    setPage("home");
   };
   const handleClick = () => {
     if (isGroup && hasChildren) toggleGroup();else setPage(item.id);
@@ -1213,6 +1152,14 @@ function NavButton({
     className: "nav-tooltip"
   }, item.label)));
 }
+function initOpenGroups(isMob) {
+  return PAGES.reduce((acc, pg) => {
+    if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) {
+      acc[pg.id] = !isMob;
+    }
+    return acc;
+  }, {});
+}
 function AppNav({
   page,
   setPage,
@@ -1222,18 +1169,9 @@ function AppNav({
   setMobileMenuOpen,
   isMobile
 }) {
-  const mobile = isMobile; // Use passed prop instead of calculating
+  const mobile = isMobile;
   const showSubs = mobile ? mobileMenuOpen : navOpen;
   const navRef = React.useRef(null);
-
-  // Per-parent open state — keyed by parent id
-  // Initialize all parents with children as open
-  const initOpenGroups = isMob => PAGES.reduce((acc, pg) => {
-    if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) {
-      acc[pg.id] = isMob ? false : true;
-    }
-    return acc;
-  }, {});
   const [openGroups, setOpenGroups] = React.useState(() => initOpenGroups(mobile));
 
   // Reinitialize open groups when switching between mobile and desktop
@@ -1282,7 +1220,7 @@ function AppNav({
     if (direction === "next" && idx < btns.length - 1) btns[idx + 1].focus();
     if (direction === "prev" && idx > 0) btns[idx - 1].focus();
     if (direction === "parent") {
-      const parentBtn = btns.find(b => b.classList.contains("nav-parent"));
+      const parentBtn = btns.slice(0, idx).reverse().find(b => b.classList.contains("nav-parent"));
       if (parentBtn) parentBtn.focus();
     }
   };
@@ -1297,25 +1235,28 @@ function AppNav({
     "aria-label": "Main navigation"
   }, /*#__PURE__*/React.createElement("div", {
     className: "nav-section nav-toggle",
-    role: mobile ? "button" : undefined,
-    tabIndex: mobile ? 0 : undefined,
-    onKeyDown: mobile ? e => (e.key === "Enter" || e.key === " ") && setMobileMenuOpen(o => !o) : undefined
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-toggle-label",
+    role: "button",
+    tabIndex: 0,
     onClick: () => {
       setPage("home");
       if (mobile) setMobileMenuOpen(false);
     },
-    role: "button",
-    tabIndex: 0,
     onKeyDown: e => (e.key === "Enter" || e.key === " ") && (setPage("home"), mobile && setMobileMenuOpen(false))
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nav-toggle-label"
   }, "HIVE"), /*#__PURE__*/React.createElement("span", {
     className: "nav-menu-icon",
-    onClick: handleToggle,
+    onClick: e => {
+      e.stopPropagation();
+      handleToggle();
+    },
     role: "button",
     tabIndex: 0,
     "aria-label": mobile ? mobileMenuOpen ? "Close menu" : "Open menu" : navOpen ? "Collapse sidebar" : "Expand sidebar",
-    onKeyDown: e => (e.key === "Enter" || e.key === " ") && handleToggle()
+    onKeyDown: e => {
+      e.stopPropagation();
+      if (e.key === "Enter" || e.key === " ") handleToggle();
+    }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "panel-left-close"
   }))), /*#__PURE__*/React.createElement("div", {
@@ -1343,6 +1284,8 @@ function AppNav({
 
 // ── App root ──────────────────────────────────────────────────────────────────
 
+const getIsMobile = () => typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+
 // Read page id from URL hash, fallback to "home"
 const getHashPage = () => {
   const hash = window.location.hash.replace("#", "");
@@ -1354,7 +1297,9 @@ function MainPageContent({
   sh,
   setSh,
   sym,
-  setSym
+  setSym,
+  grItems,
+  setGrItems
 }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
   if (page === "home") {
@@ -1376,7 +1321,10 @@ function MainPageContent({
     return /*#__PURE__*/React.createElement("div", {
       id: "main-data",
       className: "main-data"
-    }, /*#__PURE__*/React.createElement(SheetNewTool, null));
+    }, /*#__PURE__*/React.createElement(SheetNewTool, {
+      grItems: grItems,
+      setGrItems: setGrItems
+    }));
   }
   if (page === "area") {
     return /*#__PURE__*/React.createElement("div", {
@@ -1414,7 +1362,6 @@ function App() {
   const [page, setPageState] = useState(getHashPage);
 
   // Track mobile state reactively — updates on resize/rotate
-  const getIsMobile = () => typeof window !== "undefined" && window.innerWidth <= 768;
   const [isMobile, setIsMobile] = React.useState(getIsMobile);
   const [navOpen, setNavOpen] = React.useState(!getIsMobile());
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -1441,10 +1388,11 @@ function App() {
     const handler = () => {
       const nowMobile = getIsMobile();
       setIsMobile(nowMobile);
-      // Close menu when rotating/resizing to desktop
       if (!nowMobile) {
         setMobileMenuOpen(false);
-        setNavOpen(true); // Reset to expanded for desktop
+        setNavOpen(true);
+      } else {
+        setMobileMenuOpen(false); // always close on rotate/resize within mobile
       }
     };
     window.addEventListener("resize", handler);
@@ -1469,6 +1417,7 @@ function App() {
   }, []);
   const [sh, setSh] = useState(DEFAULT_SH);
   const [sym, setSym] = useState(DEFAULT_SYM);
+  const [grItems, setGrItems] = useState(DEFAULT_GR);
   return /*#__PURE__*/React.createElement("div", {
     id: "app",
     className: "app"
@@ -1555,7 +1504,9 @@ function App() {
     sh: sh,
     setSh: setSh,
     sym: sym,
-    setSym: setSym
+    setSym: setSym,
+    grItems: grItems,
+    setGrItems: setGrItems
   }))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
