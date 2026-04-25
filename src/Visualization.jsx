@@ -6,7 +6,9 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
       {segs.map((seg, i) => {
         const l = seg.x / W * 100, w = seg.w / W * 100;
         const isGap = seg.type === "gap";
-        const segPalClasses = seg.type === "full" && seg.long === true ? PAL_CLASSES.s4s : palClasses;
+        const segPalClasses = seg.type === "full" && seg.long !== undefined
+          ? (seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s)
+          : palClasses;
         const segClass = getSegmentClass(seg, segPalClasses);
         const isDimmed = hoveredType && seg.type === hoveredType;
         const tc = isGap ? "#ff6666" : "var(--color-white)";
@@ -75,7 +77,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
     ? result.rows.map((row, idx) => ({ row, idx })).reverse()
     : result.rows.map((row, idx) => ({ row, idx })));
   return (
-    <div className="sys-rows" style={{ border: "1px solid #233342" }}>
+    <div className="sys-rows" style={{ border: "1px solid var(--color-gray-light)" }}>
       {orderedRows.map(({ row, idx }, i) => (
         <div key={i} className="sys-row">
           <span className="sys-row-lbl">R{idx + 1}</span>
@@ -101,11 +103,11 @@ function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowS
         <h3 className="sys-title">
           {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
         </h3>
-        <span className="sys-head-sub">{result.meta.description || layout.description}</span>
+        <span className="sys-head-sub">{layout.description}</span>
         <span className="sys-head-count">{result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
       </div>
       {open && (
-        <div className="section-pad" style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="panel-body">
           {layout.renderControls && React.createElement(layout.renderControls, { state: layout.getState(), setState: layout.setState })}
           {result.summaryRows.length > 0 && <PanelSummary rows={result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
           {!result.valid && <p className="desc">This layout leaves uncovered gaps and is excluded from best-layout scoring.</p>}
