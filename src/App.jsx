@@ -1,12 +1,14 @@
 // ── App root ──────────────────────────────────────────────────────────────────
 
+const getIsMobile = () => typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+
 // Read page id from URL hash, fallback to "home"
 const getHashPage = () => {
   const hash = window.location.hash.replace("#", "");
   return PAGES.some(p => p.id === hash) ? hash : "home";
 };
 
-function MainPageContent({ page, setPage, sh, setSh, sym, setSym }) {
+function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
   if (page === "home") {
     return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} /></div>;
@@ -15,7 +17,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym }) {
     return <div id="main-data" className="main-data"><SheetConcrete /></div>;
   }
   if (page === "golden-ratio") {
-    return <div id="main-data" className="main-data"><SheetNewTool /></div>;
+    return <div id="main-data" className="main-data"><SheetNewTool grItems={grItems} setGrItems={setGrItems} /></div>;
   }
   if (page === "area") {
     return (
@@ -46,7 +48,6 @@ function App() {
   const [page, setPageState]                = useState(getHashPage);
   
   // Track mobile state reactively — updates on resize/rotate
-  const getIsMobile = () => typeof window !== "undefined" && window.innerWidth <= 768;
   const [isMobile, setIsMobile]            = React.useState(getIsMobile);
   const [navOpen, setNavOpen]               = React.useState(!getIsMobile());
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -73,10 +74,11 @@ function App() {
     const handler = () => {
       const nowMobile = getIsMobile();
       setIsMobile(nowMobile);
-      // Close menu when rotating/resizing to desktop
       if (!nowMobile) {
         setMobileMenuOpen(false);
-        setNavOpen(true);  // Reset to expanded for desktop
+        setNavOpen(true);
+      } else {
+        setMobileMenuOpen(false); // always close on rotate/resize within mobile
       }
     };
     window.addEventListener("resize", handler);
@@ -100,8 +102,9 @@ function App() {
     return () => window.removeEventListener("keydown", onEnterCommit, true);
   }, []);
 
-  const [sh,  setSh]  = useState(DEFAULT_SH);
-  const [sym, setSym] = useState(DEFAULT_SYM);
+  const [sh,      setSh]      = useState(DEFAULT_SH);
+  const [sym,     setSym]     = useState(DEFAULT_SYM);
+  const [grItems, setGrItems] = useState(DEFAULT_GR);
 
   return (
     <div id="app" className="app">
@@ -131,7 +134,8 @@ function App() {
           mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile} />
         <div id="page-main" className="page-main"
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
-        <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym} />
+        <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
+          grItems={grItems} setGrItems={setGrItems} />
         </div>
       </div>
     </div>
