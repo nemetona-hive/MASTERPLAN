@@ -77,12 +77,12 @@ html, body, #root {
 	--row-h:       33px;
 	  
 	/* Typography scale */
-	--fs-xs:  10px;
-	--fs-sm:  12px;
-	--fs-md:  14px;
-	--fs-lg:  18px;
-	--fs-xl:  24px;
-	--fs-xxl: 32px;
+	--fs-xs:  9px;
+	--fs-sm:  10px;
+	--fs-md:  13px;
+	--fs-lg:  17px;
+	--fs-xl:  22px;
+	--fs-xxl: 28px;
 
 	--fw-reg:   400;
 	--fw-med:   500;
@@ -125,12 +125,12 @@ body {
 
 @media (min-width: 2560px) and (min-height: 1440px) {
 	:root {
-		--fs-xs:  12px;
-		--fs-sm:  14px;
-		--fs-md:  16px;
-		--fs-lg:  22px;
-		--fs-xl:  28px;
-		--fs-xxl: 36px;
+		--fs-xs:  11px;
+		--fs-sm:  12px;
+		--fs-md:  15px;
+		--fs-lg:  20px;
+		--fs-xl:  26px;
+		--fs-xxl: 32px;
 	}
 }
 
