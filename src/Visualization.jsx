@@ -69,7 +69,9 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
             </div>
           ))}
         </div>
-        <div className="strip-note">&#128161; Both edge pieces are cut from full panels (2 panels are cut).</div>
+        <div className="strip-note">
+          &#128161; {result.stats.cut === 0 ? "No panels are cut (perfect fit)." : result.stats.cut === 1 ? "1 edge piece is cut from a full panel (1 panel is cut)." : "Both edge pieces are cut from full panels (2 panels are cut)."}
+        </div>
       </div>
     );
   }
