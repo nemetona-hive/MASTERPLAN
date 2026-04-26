@@ -133,18 +133,18 @@ function SheetTimesheet() {
               return (
                 <div key={row.id}
                   className={"ts-grid-row" + (row.id === activeRowId ? " ts-grid-row--active" : "")}>
-                  <input className="ts-input" type="text" placeholder="9, 9:30, 0930"
+                  <input className="num-input ts-input" type="text" placeholder="9, 9:30, 0930"
                     value={row.start}
                     ref={el => { startRefs.current[row.id] = el; }}
                     onFocus={() => setActiveRowId(row.id)}
                     onChange={e => updateCalcRow(row.id, 'start', e.target.value)}
                     onBlur={e => formatTimeInput(row.id, 'start', e.target.value)} />
-                  <input className="ts-input" type="text" placeholder="17, 17:30"
+                  <input className="num-input ts-input" type="text" placeholder="17, 17:30"
                     value={row.end}
                     onFocus={() => setActiveRowId(row.id)}
                     onChange={e => updateCalcRow(row.id, 'end', e.target.value)}
                     onBlur={e => formatTimeInput(row.id, 'end', e.target.value)} />
-                  <input className="ts-input" type="text" placeholder=".30"
+                  <input className="num-input ts-input" type="text" placeholder=".30"
                     value={row.lunch}
                     onFocus={() => setActiveRowId(row.id)}
                     onKeyDown={e => handleLunchTab(e, idx)}
@@ -155,7 +155,7 @@ function SheetTimesheet() {
                      res.status === 'warn'  ? " ts-duration--warn"  : "")
                   }>{res.dur}</div>
                   <div className="ts-decimal ts-col-dec">{res.dec}</div>
-                  <button className="ts-remove" tabIndex={-1}
+                  <button className="num-btn ts-remove" tabIndex={-1}
                     onClick={() => removeCalcRow(row.id)}>×</button>
                 </div>
               );
