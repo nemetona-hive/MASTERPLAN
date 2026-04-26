@@ -5,7 +5,7 @@ const { useState } = React;
 
 function Icon({ name, className = "" }) {
   const faClass = ICONS[name] || "fa-solid fa-circle-question";
-  return <i className={[faClass, className].filter(Boolean).join(" ")} style={{ display: "inline-flex", alignItems: "center" }} />;
+  return <i className={[faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")} />;
 }
 
 function NumInput({ id, label, value, onChange, step = 1, min = 1, unit }) {
@@ -24,7 +24,7 @@ function NumInput({ id, label, value, onChange, step = 1, min = 1, unit }) {
           onChange={e => setLocal(e.target.value)}
           onKeyDown={e => e.key === "Enter" && commit()}
           onBlur={commit} />
-        {unit && <span className="data-row-unit" style={{ display: "flex", alignItems: "center", margin: "0 4px" }}>{unit}</span>}
+        {unit && <span className="data-row-unit num-unit-span">{unit}</span>}
         <button className="num-btn" onClick={commit}><Icon name="corner-down-left" /></button>
       </div>
     </div>
