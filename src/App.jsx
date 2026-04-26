@@ -30,6 +30,9 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
   if (page === "golden-ratio") {
     return <div id="main-data" className="main-data"><SheetNewTool grItems={grItems} setGrItems={setGrItems} /></div>;
   }
+  if (page === "pipe-wrap") {
+    return <PipeWrapCalculator />;
+  }
   if (pageMeta) {
     const content = page === "symmetric-layout"
       ? <SheetSymmetricLayout sym={sym} setSym={setSym} />
