@@ -71,10 +71,10 @@ const getSegmentClass = (seg, segPalClasses) => {
 
 var PAGES = [{
   id: "home",
-  label: "HIVE",
+  label: "Home",
   title: "HIVE",
   desc: "",
-  icon: "layout-template",
+  icon: "home",
   noNav: true
 }, {
   id: "layout",
