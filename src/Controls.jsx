@@ -2,7 +2,7 @@
 
 function S4Controls({ state, setState }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="u-flex-col-gap12">
       <NumInput id="input-s4long"  label="Long (mm)"  value={state.s4Long}  onChange={v => setState({ s4Long: v })}  step={10} />
       <NumInput id="input-s4short" label="Short (mm)" value={state.s4Short} onChange={v => setState({ s4Short: v })} step={10} />
     </div>
