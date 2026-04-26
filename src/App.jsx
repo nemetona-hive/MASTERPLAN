@@ -144,21 +144,14 @@ function App() {
       </div>
       <div id="app-page" className={"app-page" + (mobileMenuOpen ? " nav-open" : "")}>
         <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpen}
-          mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile} />
+          mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile}
+          theme={theme} setTheme={setTheme} />
         <div id="page-main" className="page-main"
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} />
         </div>
       </div>
-      {DEV_MODE && (
-        <button
-          onClick={() => setTheme(getNextTheme(theme))}
-          className="dev-theme-btn"
-        >
-          {THEMES[theme]?.icon} {THEMES[theme]?.label}
-        </button>
-      )}
     </div>
   );
 }
