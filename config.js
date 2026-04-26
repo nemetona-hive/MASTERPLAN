@@ -108,7 +108,7 @@ var PAGES = [{
   id: "golden-ratio",
   label: "Golden Ratio φ",
   title: "Golden Ratio φ",
-  desc: "Blank tool scaffold — coming soon",
+  desc: "Small is to big as big is to Whole",
   icon: "golden-phi"
 }, {
   id: "timesheet",
