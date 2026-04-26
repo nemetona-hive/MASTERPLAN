@@ -14,8 +14,7 @@ function S2Controls({ state, setState }) {
     <div className="ctrl-lbl">
       <span className="ctrl-sublbl">Offset (&times;PL)</span>
       <input id="input-offset" type="range" min={0.1} max={0.9} step={0.05} value={state.offset}
-        onChange={e => setState({ offset: +e.target.value })}
-        style={{ accentColor: "var(--color-primary)", width: "100%", height: "6px", borderRadius: "3px", appearance: "none" }} />
+        onChange={e => setState({ offset: +e.target.value })} />
       <span className="ctrl-range-val">{fmt.decimals(state.offset, 2)}</span>
     </div>
   );
