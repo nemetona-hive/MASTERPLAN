@@ -995,7 +995,7 @@ function SheetHome({
     className: "home-divider"
   }), /*#__PURE__*/React.createElement("div", {
     className: "home-footer"
-  }, "NEMETONA HIVE")));
+  }, "NEMETONA HIVE motiveited corporeited")));
 }
 function SheetConcrete() {
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
