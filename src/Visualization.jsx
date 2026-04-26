@@ -60,7 +60,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
             </div>
           );
         })}
-        <div className="strip-legend" style={{ marginTop: "10px" }}>
+        <div className="strip-legend strip-legend-mt">
           {[["Edge piece", `${fmt.mm(result.meta.edgeWidth)}mm`, "color-edge"],
             ["Full panel", `${result.meta.panelWidth}mm`, "color-sys1"]].map(([label, value, color]) => (
             <div key={label} className="strip-legend-item">
@@ -79,7 +79,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
     ? result.rows.map((row, idx) => ({ row, idx })).reverse()
     : result.rows.map((row, idx) => ({ row, idx })));
   return (
-    <div className="sys-rows" style={{ border: "1px solid var(--color-gray-light)" }}>
+    <div className="sys-rows sys-rows-border">
       {orderedRows.map(({ row, idx }, i) => (
         <div key={i} className="sys-row">
           <span className="sys-row-lbl">R{idx + 1}</span>
