@@ -673,7 +673,7 @@ function SheetTimesheet() {
       key: row.id,
       className: "ts-grid-row" + (row.id === activeRowId ? " ts-grid-row--active" : "")
     }, /*#__PURE__*/React.createElement("input", {
-      className: "ts-input",
+      className: "num-input ts-input",
       type: "text",
       placeholder: "9, 9:30, 0930",
       value: row.start,
@@ -684,7 +684,7 @@ function SheetTimesheet() {
       onChange: e => updateCalcRow(row.id, 'start', e.target.value),
       onBlur: e => formatTimeInput(row.id, 'start', e.target.value)
     }), /*#__PURE__*/React.createElement("input", {
-      className: "ts-input",
+      className: "num-input ts-input",
       type: "text",
       placeholder: "17, 17:30",
       value: row.end,
@@ -692,7 +692,7 @@ function SheetTimesheet() {
       onChange: e => updateCalcRow(row.id, 'end', e.target.value),
       onBlur: e => formatTimeInput(row.id, 'end', e.target.value)
     }), /*#__PURE__*/React.createElement("input", {
-      className: "ts-input",
+      className: "num-input ts-input",
       type: "text",
       placeholder: ".30",
       value: row.lunch,
@@ -704,7 +704,7 @@ function SheetTimesheet() {
     }, res.dur), /*#__PURE__*/React.createElement("div", {
       className: "ts-decimal ts-col-dec"
     }, res.dec), /*#__PURE__*/React.createElement("button", {
-      className: "ts-remove",
+      className: "num-btn ts-remove",
       tabIndex: -1,
       onClick: () => removeCalcRow(row.id)
     }, "\xD7"));
