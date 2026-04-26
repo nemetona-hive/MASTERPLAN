@@ -76,17 +76,29 @@ html, body, #root {
 	--sans:        'IBM Plex Sans', sans-serif;
 	--row-h:       33px;
 	  
-	/* Font size scale */
+	/* Typography scale */
+	--fs-xs:  10px;
+	--fs-sm:  12px;
+	--fs-md:  14px;
+	--fs-lg:  18px;
+	--fs-xl:  24px;
+	--fs-xxl: 32px;
 
-	--fs-xs: 11px;
-	--fs-sm: 10px;
-	--fs-md: 13px;
-	--fs-lg: 17px;
+	--fw-reg:   400;
+	--fw-med:   500;
+	--fw-semi:  600;
+	--fw-bold:  700;
+	--fw-black: 800;
+
+	--lh-none:    1;
+	--lh-tight:   1.25;
+	--lh-base:    1.5;
+	--lh-relaxed: 1.75;
 
 	/* Nav font sizes -- edit to tune sidebar independently */
 	--nav-fs-header:  var(--fs-lg);
 	--nav-fs-parent:  var(--fs-md);
-	--nav-fs-sub:     var(--fs-xs);
+	--nav-fs-sub:     var(--fs-sm);
 	--nav-fs-icon:    var(--fs-lg);
 	--nav-fs-chevron: var(--fs-sm);
 	--nav-fs-tooltip: var(--fs-sm);
@@ -113,10 +125,12 @@ body {
 
 @media (min-width: 2560px) and (min-height: 1440px) {
 	:root {
-		--fs-xs: 13px;
-		--fs-sm: 12px;
-		--fs-md: 15px;
-		--fs-lg: 20px;
+		--fs-xs:  12px;
+		--fs-sm:  14px;
+		--fs-md:  16px;
+		--fs-lg:  22px;
+		--fs-xl:  28px;
+		--fs-xxl: 36px;
 	}
 }
 
@@ -138,6 +152,23 @@ body {
 .color-cut { background: var(--color-gray); }
 .color-edge { background: var(--color-primary); }
 .color-sys1 { background: var(--color-blue); }
+
+/* Typography Utilities */
+.u-fs-xs  { font-size: var(--fs-xs); }
+.u-fs-sm  { font-size: var(--fs-sm); }
+.u-fs-md  { font-size: var(--fs-md); }
+.u-fs-lg  { font-size: var(--fs-lg); }
+.u-fs-xl  { font-size: var(--fs-xl); }
+.u-fs-xxl { font-size: var(--fs-xxl); }
+
+.u-fw-reg   { font-weight: var(--fw-reg); }
+.u-fw-med   { font-weight: var(--fw-med); }
+.u-fw-semi  { font-weight: var(--fw-semi); }
+.u-fw-bold  { font-weight: var(--fw-bold); }
+.u-fw-black { font-weight: var(--fw-black); }
+
+.u-mono { font-family: var(--mono); }
+.u-sans { font-family: var(--sans); }
 
 /*
  * ----------------------------------------------------------
@@ -300,7 +331,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .nav-btn {
 	font-family: var(--sans);
 	font-size: var(--nav-fs-parent);
-	font-weight: 400;
+	font-weight: var(--fw-reg);
 	display: flex;
 	align-items: center;
 	gap: var(--sp-2);
@@ -318,7 +349,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 /* â”€â”€ Parent button â€” slightly larger, more prominent â”€â”€ */
 .nav-btn.nav-parent {
 	font-size: var(--nav-fs-parent);
-	font-weight: 500;
+	font-weight: var(--fw-med);
 	color: color-mix(in srgb, var(--color-gray) 90%, var(--color-white));
 	cursor: pointer;
 }
@@ -335,7 +366,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 /* â”€â”€ Active â€” shared â”€â”€ */
 .nav-btn.active {
-	font-weight: 500;
+	font-weight: var(--fw-med);
 	color: var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
@@ -343,7 +374,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 /* â”€â”€ Parent with active child â”€â”€ */
 .nav-btn.nav-parent.child-active {
 	color: var(--color-white);
-	font-weight: 500;
+	font-weight: var(--fw-med);
 }
 
 /* â”€â”€ Focus ring â”€â”€ */
@@ -508,7 +539,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .nav-toggle-label {
 	font-family: var(--mono);
 	font-size: var(--nav-fs-header);
-	font-weight: 700;
+	font-weight: var(--fw-bold);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--color-primary);
@@ -675,7 +706,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .main-head .title {
 	font-family: var(--sans);
 	font-size: var(--fs-lg);
-	font-weight: 800;
+	font-weight: var(--fw-black);
 	margin-bottom: 6px;
 	color: var(--color-primary);
 }
@@ -737,7 +768,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	padding: 7px 14px;
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	font-weight: 700;
+	font-weight: var(--fw-bold);
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: var(--color-gray-opa80);
@@ -868,12 +899,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 .data-row-val
 {
-	font-weight: 600;
+	font-weight: var(--fw-semi);
 	color: var(--color-primary);
 }
 
 .data-row-val.hi {
-	font-weight: 700;
+	font-weight: var(--fw-bold);
 	color: var(--color-primary);
 }
 
@@ -965,7 +996,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	border-color: var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 	color: var(--color-primary);
-	font-weight: 600;
+	font-weight: var(--fw-semi);
 }
 
 .ctrl-range-val {
@@ -1430,7 +1461,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .ts-tab--on {
 	background: var(--color-gray-light);
 	color: var(--color-primary);
-	font-weight: 600;
+	font-weight: var(--fw-semi);
 }
 
 /* Section card ------------------------------------------------------------ */
@@ -1495,7 +1526,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .ts-decimal {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	font-weight: 500;
+	font-weight: var(--fw-med);
 	color: var(--color-primary);
 	padding: 0 3px;
 	height: 32px;
@@ -1637,7 +1668,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .ts-total-val {
 	font-family: var(--mono);
 	font-size: var(--fs-lg);
-	font-weight: 600;
+	font-weight: var(--fw-semi);
 	color: var(--color-primary);
 }
 
@@ -1740,10 +1771,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .home-brand-name {
 	font-family: var(--sans);
 	font-size: clamp(var(--fs-lg), 4vw, 2.5rem);
-	font-weight: 800;
+	font-weight: var(--fw-black);
 	letter-spacing: -0.02em;
 	color: var(--color-primary);
-	line-height: 1;
+	line-height: var(--lh-none);
 }
 
 .home-brand-sub {
@@ -1861,16 +1892,16 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .home-card-title {
 	font-family: var(--sans);
 	font-size: var(--fs-md);
-	font-weight: 700;
+	font-weight: var(--fw-bold);
 	color: var(--color-white);
-	line-height: 1.2;
+	line-height: var(--lh-tight);
 }
 
 .home-card-desc {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
 	color: var(--color-gray-opa80);
-	line-height: 1.5;
+	line-height: var(--lh-base);
 	flex: 1;
 }
 
@@ -2479,6 +2510,18 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	display: inline-flex;
 	align-items: center;
 }
+
+.u-flex-col { display: flex; flex-direction: column; }
+.u-flex-row { display: flex; flex-direction: row; align-items: center; }
+
+.u-gap-05 { gap: var(--sp-05); }
+.u-gap-1 { gap: var(--sp-1); }
+.u-gap-2 { gap: var(--sp-2); }
+.u-gap-3 { gap: var(--sp-3); }
+.u-gap-4 { gap: var(--sp-4); }
+.u-gap-5 { gap: var(--sp-5); }
+.u-gap-6 { gap: var(--sp-6); }
+.u-gap-7 { gap: var(--sp-7); }
 
 .u-flex-col-gap12 {
 	display: flex;
