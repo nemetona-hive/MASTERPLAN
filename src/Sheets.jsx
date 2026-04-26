@@ -4,12 +4,12 @@ function SheetHome({ page, setPage }) {
   const cards = PAGES.filter(pg => !pg.noNav && !pg.parentId);
   return (
     <div className="home-scroll">
-      <div className="home-inner">
+      <Stack className="home-inner" gap={3}>
 
-        <div className="home-brand">
+        <Stack className="home-brand" gap={1}>
           <div className="home-brand-name">NEMETONA</div>
           <div className="home-brand-sub">MASTERPLAN</div>
-        </div>
+        </Stack>
 
         <div className="home-divider" />
 
@@ -20,15 +20,17 @@ function SheetHome({ page, setPage }) {
             const firstChild = PAGES.find(p => p.parentId === pg.id);
             const target = firstChild ? firstChild.id : pg.id;
             return (
-              <button key={pg.id}
+              <Stack key={pg.id}
+                as="button"
                 className={"home-card" + (isActive ? " home-card-active" : "")}
+                gap={3}
                 onClick={() => setPage(target)}
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && setPage(target)}>
                 <span className="home-card-icon"><Icon name={pg.icon} /></span>
                 <span className="home-card-title">{pg.title}</span>
                 <span className="home-card-desc">{pg.desc}</span>
                 <span className="home-card-arrow"><Icon name="chevron-right" /></span>
-              </button>
+              </Stack>
             );
           })}
         </div>
@@ -37,7 +39,7 @@ function SheetHome({ page, setPage }) {
 
         <div className="home-footer">NEMETONA HIVE</div>
 
-      </div>
+      </Stack>
     </div>
   );
 }
@@ -51,7 +53,7 @@ function SheetConcrete() {
   );
 }
 
-function SheetNewTool({ grItems: baseItems, setGrItems: setBaseItems }) {
+function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
   const [baseOpen, setBaseOpen] = React.useState(true);
   const link = useLinkedCardHighlight("golden-ratio");
   const PHI = 1.6180339887499;
@@ -100,133 +102,135 @@ function SheetNewTool({ grItems: baseItems, setGrItems: setBaseItems }) {
     <>
       <div id="data-control" className="data-control">
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
-          {baseItems.map(item => {
+          <Stack gap={2}>
+            {baseItems.map(item => {
+              const tone = getLinkedCardTone(item.id);
+              const trimmedSuffix = item.suffix.trim();
+              const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
+              const valueInputLabel = trimmedSuffix
+                ? <>Value (mm) <span className="num-lbl-raw">{trimmedSuffix}</span></>
+                : "Value (mm)";
+
+              return (
+                <div
+                  key={item.id}
+                  id={`control-base-number-${item.id}`}
+                  className={`control-panel gr-control-card gr-control-card-${tone}${isStored ? " gr-card-saved" : ""}`}
+                  {...link.bindControl(item.id)}
+                >
+                  <Stack className="panel-data" gap={3}>
+                    <Stack gap={1} className="num-wrap">
+                      <span className="num-lbl">{valueInputLabel}</span>
+                      <div className="num-row">
+                        <input
+                          id={`input-base-number-field-${item.id}`}
+                          className="num-input"
+                          type="number"
+                          value={item.value}
+                          min={1}
+                          step={10}
+                          onChange={e => setItemField(item.id, "value", e.target.value)}
+                          onBlur={() => commitBaseValue(item.id)}
+                        />
+                        <button type="button" className="num-btn" onClick={() => commitBaseValue(item.id)}>
+                          <Icon name="corner-down-left" />
+                        </button>
+                      </div>
+                    </Stack>
+                    <Stack gap={1} className="ctrl-lbl">
+                      <span className="ctrl-sublbl">Custom label</span>
+                      <div className="num-row">
+                        <input
+                          id={`input-base-label-suffix-${item.id}`}
+                          className="num-input gr-label-input"
+                          type="text"
+                          value={item.suffix}
+                          onChange={e => setItemField(item.id, "suffix", e.target.value)}
+                          placeholder="e.g. A, L, Start"
+                        />
+                        <button
+                          type="button"
+                          className="num-btn"
+                          onClick={() => {
+                            const input = document.getElementById(`input-base-label-suffix-${item.id}`);
+                            if (input instanceof HTMLInputElement) input.blur();
+                          }}
+                        >
+                          <Icon name="corner-down-left" />
+                        </button>
+                      </div>
+                    </Stack>
+                    <Stack gap={1} className="ctrl-lbl">
+                      <span className="ctrl-sublbl">Entry</span>
+                      <Stack direction="row" gap={1} className="ctrl-btns">
+                        <button
+                          type="button"
+                          className="ctrl-dir"
+                          onClick={() => saveItem(item.id)}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          className="ctrl-dir"
+                          onClick={() => resetItem(item.id)}
+                        >
+                          Reset
+                        </button>
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                </div>
+              );
+            })}
+          </Stack>
+        </ControlPanel>
+      </div>
+      <div id="data-preview" className="data-preview">
+        <Stack className="gr-preview-list" gap={3}>
+          <Stack className="sys-head" gap={1}>
+            <h3 className="sys-title"><Icon name="golden-phi" className="sys-title-icon" /> Golden Ratio phi</h3>
+            <span className="sys-head-sub">phi = 1.6180339887499</span>
+          </Stack>
+          {baseItems.map((item, idx) => {
             const tone = getLinkedCardTone(item.id);
             const trimmedSuffix = item.suffix.trim();
             const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
-            const valueInputLabel = trimmedSuffix
-              ? <>Value (mm) <span className="num-lbl-raw">{trimmedSuffix}</span></>
-              : "Value (mm)";
+            const numericValue = Number(item.value);
+            const hasValidValue = String(item.value).trim() !== "" && Number.isFinite(numericValue) && numericValue >= 1;
+            const valueRowLabel = trimmedSuffix
+              ? <>Value <span className="num-lbl-raw">{trimmedSuffix}</span></>
+              : "Value";
+            const steps = hasValidValue ? buildSteps(numericValue) : [];
 
             return (
               <div
                 key={item.id}
-                id={`control-base-number-${item.id}`}
-                className={`control-panel gr-control-card gr-control-card-${tone}${isStored ? " gr-card-saved" : ""}`}
-                {...link.bindControl(item.id)}
+                id={`panel-golden-ratio-${item.id}`}
+                className={`sys-block gr-preview-card gr-preview-card-${tone}${isStored ? " gr-card-saved" : ""}${link.isActive(item.id) ? " linked-preview-active" : ""}`}
               >
-                <div className="panel-data">
-                  <label id={`input-base-number-${item.id}`} className="num-wrap">
-                    <span className="num-lbl">{valueInputLabel}</span>
-                    <div className="num-row">
-                      <input
-                        id={`input-base-number-field-${item.id}`}
-                        className="num-input"
-                        type="number"
-                        value={item.value}
-                        min={1}
-                        step={10}
-                        onChange={e => setItemField(item.id, "value", e.target.value)}
-                        onBlur={() => commitBaseValue(item.id)}
-                      />
-                      <button type="button" className="num-btn" onClick={() => commitBaseValue(item.id)}>
-                        <Icon name="corner-down-left" />
-                      </button>
-                    </div>
-                  </label>
-                  <div className="ctrl-lbl">
-                    <span className="ctrl-sublbl">Custom label</span>
-                    <div className="num-row">
-                      <input
-                        id={`input-base-label-suffix-${item.id}`}
-                        className="num-input gr-label-input"
-                        type="text"
-                        value={item.suffix}
-                        onChange={e => setItemField(item.id, "suffix", e.target.value)}
-                        placeholder="e.g. A, L, Start"
-                      />
-                      <button
-                        type="button"
-                        className="num-btn"
-                        onClick={() => {
-                          const input = document.getElementById(`input-base-label-suffix-${item.id}`);
-                          if (input instanceof HTMLInputElement) input.blur();
-                        }}
-                      >
-                        <Icon name="corner-down-left" />
-                      </button>
-                    </div>
+                <Stack className="section-pad gr-section-pad" gap={3}>
+                  <div className="data-row">
+                    <span className="data-row-lbl">{valueRowLabel}</span>
+                    <span className="data-row-val hi">{hasValidValue ? fmtInt(numericValue) : "-"}</span>
+                    <span className="data-row-unit">mm</span>
+                    <span className="gr-row-marker">{getLinkedCardMarker(item.id)}</span>
                   </div>
-                  <div className="ctrl-lbl">
-                    <span className="ctrl-sublbl">Entry</span>
-                    <div className="ctrl-btns">
-                      <button
-                        type="button"
-                        className="ctrl-dir"
-                        onClick={() => saveItem(item.id)}
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        className="ctrl-dir"
-                        onClick={() => resetItem(item.id)}
-                      >
-                        Reset
-                      </button>
+                  {hasValidValue && (
+                    <div className="gr-steps-wrap">
+                      {steps.map((stepItem, stepIdx) => (
+                        <div key={stepItem.step} className={"gr-step-row" + (stepIdx === 0 ? " gr-step-row-first" : "")}>
+                          <div className="data-row gr-step-cell gr-step-cell-index"><span className="data-row-val">{stepItem.step}</span></div>
+                          <div className="data-row gr-step-cell"><span className="data-row-val">{fmtInt(stepItem.value)}</span></div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                </div>
+                  )}
+                </Stack>
               </div>
             );
           })}
-        </ControlPanel>
-      </div>
-      <div id="data-preview" className="data-preview">
-        <div className="gr-preview-list">
-        <div className="sys-head">
-          <h3 className="sys-title"><Icon name="golden-phi" className="sys-title-icon" /> Golden Ratio phi</h3>
-          <span className="sys-head-sub">phi = 1.6180339887499</span>
-        </div>
-        {baseItems.map((item, idx) => {
-          const tone = getLinkedCardTone(item.id);
-          const trimmedSuffix = item.suffix.trim();
-          const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
-          const numericValue = Number(item.value);
-          const hasValidValue = String(item.value).trim() !== "" && Number.isFinite(numericValue) && numericValue >= 1;
-          const valueRowLabel = trimmedSuffix
-            ? <>Value <span className="num-lbl-raw">{trimmedSuffix}</span></>
-            : "Value";
-          const steps = hasValidValue ? buildSteps(numericValue) : [];
-
-          return (
-            <div
-              key={item.id}
-              id={`panel-golden-ratio-${item.id}`}
-              className={`sys-block gr-preview-card gr-preview-card-${tone}${isStored ? " gr-card-saved" : ""}${link.isActive(item.id) ? " linked-preview-active" : ""}`}
-            >
-              <div className="section-pad gr-section-pad">
-                <div className="data-row">
-                  <span className="data-row-lbl">{valueRowLabel}</span>
-                  <span className="data-row-val hi">{hasValidValue ? fmtInt(numericValue) : "-"}</span>
-                  <span className="data-row-unit">mm</span>
-                  <span className="gr-row-marker">{getLinkedCardMarker(item.id)}</span>
-                </div>
-                {hasValidValue && (
-                  <div className="gr-steps-wrap">
-                    {steps.map((stepItem, stepIdx) => (
-                      <div key={stepItem.step} className={"gr-step-row" + (stepIdx === 0 ? " gr-step-row-first" : "")}>
-                        <div className="data-row gr-step-cell gr-step-cell-index"><span className="data-row-val">{stepItem.step}</span></div>
-                        <div className="data-row gr-step-cell"><span className="data-row-val">{fmtInt(stepItem.value)}</span></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        </div>
+        </Stack>
       </div>
     </>
   );
@@ -244,21 +248,23 @@ function SheetSymmetricLayout({ sym, setSym }) {
   const result = layout.compute();
   return (
     <>
-      <div id="data-control" className="data-control">
+      <Stack id="data-control" className="data-control" gap={3}>
         <ControlPanel id="control-sym-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen}>
-          <NumInput id="input-sym-room-width"  label="Room width (mm)"  value={sym.roomWidth}  onChange={v => setSym(s => ({ ...s, roomWidth: v }))}  step={10} />
-          <NumInput id="input-sym-panel-width" label="Panel width (mm)" value={sym.panelWidth} onChange={v => setSym(s => ({ ...s, panelWidth: v }))} step={10} />
-          <div className="ctrl-lbl">
-            <span className="ctrl-sublbl">Layout style</span>
-            <div className="ctrl-btns">
-              <button className={"ctrl-dir " + (sym.oneFullEdge ? "on" : "")}
-                onClick={() => setSym(s => ({ ...s, oneFullEdge: true }))}>Asymmetric</button>
-              <button className={"ctrl-dir " + (!sym.oneFullEdge ? "on" : "")}
-                onClick={() => setSym(s => ({ ...s, oneFullEdge: false }))}>Symmetric</button>
-            </div>
-          </div>
+          <Stack gap={3}>
+            <NumInput id="input-sym-room-width"  label="Room width (mm)"  value={sym.roomWidth}  onChange={v => setSym(s => ({ ...s, roomWidth: v }))}  step={10} />
+            <NumInput id="input-sym-panel-width" label="Panel width (mm)" value={sym.panelWidth} onChange={v => setSym(s => ({ ...s, panelWidth: v }))} step={10} />
+            <Stack gap={1} className="ctrl-lbl">
+              <span className="ctrl-sublbl">Layout style</span>
+              <Stack direction="row" gap={1} className="ctrl-btns">
+                <button className={"ctrl-dir " + (sym.oneFullEdge ? "on" : "")}
+                  onClick={() => setSym(s => ({ ...s, oneFullEdge: true }))}>Asymmetric</button>
+                <button className={"ctrl-dir " + (!sym.oneFullEdge ? "on" : "")}
+                  onClick={() => setSym(s => ({ ...s, oneFullEdge: false }))}>Symmetric</button>
+              </Stack>
+            </Stack>
+          </Stack>
         </ControlPanel>
-      </div>
+      </Stack>
       <div id="data-preview" className="data-preview">
         <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} />
       </div>
@@ -297,14 +303,18 @@ function SheetSurfaceLayout({ sh, setSh }) {
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return (
       <>
-        <div id="data-control" className="data-control">
-          <SLabel>Material Specification</SLabel>
-          <NumInput id="input-PPi" label="Length (mm)" value={Math.max(1, PPi)} onChange={set("PPi")} step={10} />
-          <NumInput id="input-PLa" label="Width (mm)"  value={Math.max(1, PLa)} onChange={set("PLa")} step={10} />
-          <SLabel>Surface Area</SLabel>
-          <NumInput id="input-W" label="Width (mm)"  value={Math.max(1, W)} onChange={set("W")} step={10} />
-          <NumInput id="input-H" label="Height (mm)" value={Math.max(1, H)} onChange={set("H")} step={10} />
-        </div>
+        <Stack id="data-control" className="data-control" gap={3}>
+          <Stack gap={1}>
+            <SLabel>Material Specification</SLabel>
+            <NumInput id="input-PPi" label="Length (mm)" value={Math.max(1, PPi)} onChange={set("PPi")} step={10} />
+            <NumInput id="input-PLa" label="Width (mm)"  value={Math.max(1, PLa)} onChange={set("PLa")} step={10} />
+          </Stack>
+          <Stack gap={1}>
+            <SLabel>Surface Area</SLabel>
+            <NumInput id="input-W" label="Width (mm)"  value={Math.max(1, W)} onChange={set("W")} step={10} />
+            <NumInput id="input-H" label="Height (mm)" value={Math.max(1, H)} onChange={set("H")} step={10} />
+          </Stack>
+        </Stack>
         <div id="data-preview" className="data-preview">
           <p className="desc">Select all input values - all must be greater than 0!</p>
         </div>
@@ -313,39 +323,45 @@ function SheetSurfaceLayout({ sh, setSh }) {
   }
   return (
     <>
-      <div id="data-control" className="data-control">
+      <Stack id="data-control" className="data-control" gap={3}>
         <ControlPanel id="control-material" title="Material Specification" open={materialOpen} setOpen={setMaterialOpen}>
-          <NumInput id="input-PPi" label="Length (mm)" value={PPi} onChange={set("PPi")} step={10} />
-          <NumInput id="input-PLa" label="Width (mm)"  value={PLa} onChange={set("PLa")} step={10} />
+          <Stack gap={3}>
+            <NumInput id="input-PPi" label="Length (mm)" value={PPi} onChange={set("PPi")} step={10} />
+            <NumInput id="input-PLa" label="Width (mm)"  value={PLa} onChange={set("PLa")} step={10} />
+          </Stack>
         </ControlPanel>
         <ControlPanel id="control-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen}>
-          <NumInput id="input-W" label="Width (mm)"  value={W} onChange={set("W")} step={10} />
-          <NumInput id="input-H" label="Height (mm)" value={H} onChange={set("H")} step={10} />
+          <Stack gap={3}>
+            <NumInput id="input-W" label="Width (mm)"  value={W} onChange={set("W")} step={10} />
+            <NumInput id="input-H" label="Height (mm)" value={H} onChange={set("H")} step={10} />
+          </Stack>
         </ControlPanel>
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
-          <div className="ctrl-lbl">
-            <span className="ctrl-sublbl">Direction</span>
-            <div id="ctrl-direction" className="ctrl-btns">
-              {["V", "H"].map(s => (
-                <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, direction: s }))}>{s}</button>
-              ))}
-            </div>
-          </div>
-          <div className="ctrl-lbl">
-            <span className="ctrl-sublbl">Row order</span>
-            <div id="ctrl-row-order" className="ctrl-btns">
-              <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>R1 top</button>
-              <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>R1 bottom</button>
-            </div>
-          </div>
-          <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
-          <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
-            onChange={v => setSh(s => ({ ...s, startOff: Math.min(v, Math.max(1, PPi) - 1) }))} step={10} min={0} />
+          <Stack gap={3}>
+            <Stack gap={1} className="ctrl-lbl">
+              <span className="ctrl-sublbl">Direction</span>
+              <Stack id="ctrl-direction" direction="row" gap={1} className="ctrl-btns">
+                {["V", "H"].map(s => (
+                  <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
+                    onClick={() => setSh(st => ({ ...st, direction: s }))}>{s}</button>
+                ))}
+              </Stack>
+            </Stack>
+            <Stack gap={1} className="ctrl-lbl">
+              <span className="ctrl-sublbl">Row order</span>
+              <Stack id="ctrl-row-order" direction="row" gap={1} className="ctrl-btns">
+                <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
+                  onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>R1 top</button>
+                <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
+                  onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>R1 bottom</button>
+              </Stack>
+            </Stack>
+            <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
+            <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
+              onChange={v => setSh(s => ({ ...s, startOff: Math.min(v, Math.max(1, PPi) - 1) }))} step={10} min={0} />
+          </Stack>
         </ControlPanel>
-      </div>
+      </Stack>
       <div id="data-preview" className="data-preview">
         <PreviewSection id="pattern-layouts" title="Pattern Layouts"
           description="Compare row-based layouts that share the same surface and material settings.">
