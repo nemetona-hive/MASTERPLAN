@@ -123,7 +123,7 @@ function PipeWrapCalculator() {
       <div className="page-inner">
 
         {/* ── header ── */}
-        <div className="main-head" style={{ padding: "0 0 0", marginBottom: 22 }}>
+        <div className="main-head pw-head-adj">
           <div className="title">Pipe wrap calculator</div>
           <div className="desc">Material length needed to wrap around a pipe</div>
         </div>
@@ -135,7 +135,7 @@ function PipeWrapCalculator() {
           </div>
           <div className="section-body">
             <div className="section-pad">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+              <div className="pw-grid-2col">
 
                 <NumInput
                   id="input-pipeDiam"
@@ -157,13 +157,12 @@ function PipeWrapCalculator() {
               </div>
 
               {/* presets */}
-              <div className="num-lbl" style={{ marginBottom: 8 }}>Pipe diameter presets</div>
+              <div className="num-lbl pw-preset-label">Pipe diameter presets</div>
               <div className="ctrl-btns">
                 {PRESETS.map(p => (
                   <button
                     key={p}
                     className={`ctrl-dir${pipeDiam === p ? " on" : ""}`}
-                    style={{ flex: 1, padding: "6px 0", fontSize: "var(--fs-md)" }}
                     onClick={() => setPipeDiam(p)}
                   >
                     Ø {p}
@@ -183,47 +182,33 @@ function PipeWrapCalculator() {
             <div className="section-pad">
 
               {/* overlap */}
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+              <div className="pw-adj-row mb">
                 <button
                   onClick={() => setOverlap(prev => Math.min(200, prev + 5))}
-                  style={{
-                    fontFamily:"var(--mono)", fontSize:"var(--fs-sm)",
-                    background:"color-mix(in srgb, var(--color-blue) 18%, transparent)",
-                    color:"var(--color-blue)",
-                    border:"1px solid color-mix(in srgb, var(--color-blue) 45%, transparent)",
-                    borderRadius:4, padding:"1px 7px", flexShrink:0, width:22, textAlign:"center",
-                    cursor:"pointer"
-                  }}
+                  className="pw-adj-btn pw-adj-btn-overlap"
                 >+</button>
-                <span className="ctrl-sublbl" style={{ width:160, flexShrink:0 }}>Overlap / extra (mm)</span>
+                <span className="ctrl-sublbl pw-adj-label">Overlap / extra (mm)</span>
                 <input
                   type="range" min={0} max={200} step={5} value={overlap}
-                  style={{ flex:1 }}
+                  className="pw-adj-range"
                   onChange={e => setOverlap(Number(e.target.value))}
                 />
-                <span className="ctrl-range-val" style={{ minWidth:36, textAlign:"right" }}>{overlap}</span>
+                <span className="ctrl-range-val pw-adj-val">{overlap}</span>
               </div>
 
               {/* gap */}
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div className="pw-adj-row">
                 <button
                   onClick={() => setGap(prev => Math.min(200, prev + 5))}
-                  style={{
-                    fontFamily:"var(--mono)", fontSize:"var(--fs-sm)",
-                    background:"color-mix(in srgb, var(--color-gray-opa80) 18%, transparent)",
-                    color:"var(--color-gray-opa80)",
-                    border:"1px solid color-mix(in srgb, var(--color-gray-opa80) 45%, transparent)",
-                    borderRadius:4, padding:"1px 7px", flexShrink:0, width:22, textAlign:"center",
-                    cursor:"pointer"
-                  }}
+                  className="pw-adj-btn pw-adj-btn-gap"
                 >−</button>
-                <span className="ctrl-sublbl" style={{ width:160, flexShrink:0 }}>Gap / cutout (mm)</span>
+                <span className="ctrl-sublbl pw-adj-label">Gap / cutout (mm)</span>
                 <input
                   type="range" min={0} max={200} step={5} value={gap}
-                  style={{ flex:1 }}
+                  className="pw-adj-range"
                   onChange={e => setGap(Number(e.target.value))}
                 />
-                <span className="ctrl-range-val" style={{ minWidth:36, textAlign:"right" }}>{gap}</span>
+                <span className="ctrl-range-val pw-adj-val">{gap}</span>
               </div>
 
             </div>
@@ -237,7 +222,7 @@ function PipeWrapCalculator() {
           </div>
           <div className="section-body">
 
-            <div style={{ borderBottom:"1px solid var(--color-gray)" }}>
+            <div className="pw-res-wrap">
               <div className="data-row">
                 <span className="data-row-lbl">Outer diameter</span>
                 <span className="data-row-val">{outer.toFixed(1)}</span>
@@ -248,7 +233,7 @@ function PipeWrapCalculator() {
                 <span className="data-row-val">{base.toFixed(1)}</span>
                 <span className="data-row-unit">mm</span>
               </div>
-              <div className="data-row" style={{ borderBottom:"none" }}>
+              <div className="data-row pw-res-row-last">
                 <span className="data-row-lbl">Final length needed</span>
                 <span className="data-row-val hi">{total.toFixed(1)}</span>
                 <span className="data-row-unit">mm</span>
@@ -256,17 +241,17 @@ function PipeWrapCalculator() {
             </div>
 
             {/* diagram */}
-            <div style={{ padding:"14px 16px" }}>
+            <div className="pw-diag-wrap">
               <svg
                 ref={svgRef}
                 viewBox="0 0 420 180"
                 width="100%"
-                style={{ display:"block" }}
+                className="pw-diag-svg"
               />
             </div>
 
-            <div style={{ padding:"0 16px 14px" }}>
-              <span style={{ fontFamily:"var(--mono)", fontSize:"var(--fs-sm)", color:"var(--color-gray-opa80)" }}>
+            <div className="pw-formula-wrap">
+              <span className="pw-formula-text">
                 formula: π × (pipe Ø + 2 × thickness) + overlap − gap
               </span>
             </div>
