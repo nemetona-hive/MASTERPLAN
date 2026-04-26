@@ -11,6 +11,7 @@ const SOURCES = [
   "src/Controls.jsx",
   "src/utils/timesheet.js",
   "src/components/Timesheet.jsx",
+  "src/components/PipeWrapCalculator.jsx",
   "src/Sheets.jsx",
   "src/Nav.jsx",
   "themes.js",
