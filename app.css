@@ -2417,6 +2417,13 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	margin-bottom: 16px;
 }
 
+@media (max-width: 480px) {
+	.pw-grid-2col {
+		grid-template-columns: 1fr;
+		gap: var(--sp-3);
+	}
+}
+
 .pw-preset-label {
 	margin-bottom: 8px;
 }
