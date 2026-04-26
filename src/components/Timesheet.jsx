@@ -110,82 +110,77 @@ function SheetTimesheet() {
 
   return (
     <div className="ts-page">
-
-      <div className="ts-body">
-
-
+      <Stack className="ts-body" gap={3}>
         {/* ── Calculate tab ────────────────────────────────────────────────── */}
-        <div className="ts-section">
-            <div className="ts-grid-hd">
-              <span className="ts-col-lbl">Start</span>
-              <span className="ts-col-lbl">End</span>
-              <span className="ts-col-lbl">Lunch</span>
-              <span className="ts-col-lbl">Duration</span>
-              <span className="ts-col-lbl ts-col-dec">Decimal</span>
-              <span />
-            </div>
+        <Stack className="ts-section" gap={1}>
+          <div className="ts-grid-hd">
+            <span className="ts-col-lbl">Start</span>
+            <span className="ts-col-lbl">End</span>
+            <span className="ts-col-lbl">Lunch</span>
+            <span className="ts-col-lbl">Duration</span>
+            <span className="ts-col-lbl ts-col-dec">Decimal</span>
+            <span />
+          </div>
 
-            {calcRows.map((row, idx) => {
-              const res = calcResults[idx];
-              return (
-                <div key={row.id}
-                  className={"ts-grid-row" + (row.id === activeRowId ? " ts-grid-row--active" : "")}>
-                  <input className="num-input ts-input" type="text" placeholder="9, 9:30, 0930"
-                    value={row.start}
-                    ref={el => { startRefs.current[row.id] = el; }}
-                    onFocus={() => setActiveRowId(row.id)}
-                    onChange={e => updateCalcRow(row.id, 'start', e.target.value)}
-                    onBlur={e => formatTimeInput(row.id, 'start', e.target.value)} />
-                  <input className="num-input ts-input" type="text" placeholder="17, 17:30"
-                    value={row.end}
-                    onFocus={() => setActiveRowId(row.id)}
-                    onChange={e => updateCalcRow(row.id, 'end', e.target.value)}
-                    onBlur={e => formatTimeInput(row.id, 'end', e.target.value)} />
-                  <input className="num-input ts-input" type="text" placeholder=".30"
-                    value={row.lunch}
-                    onFocus={() => setActiveRowId(row.id)}
-                    onKeyDown={e => handleLunchTab(e, idx)}
-                    onChange={e => updateCalcRow(row.id, 'lunch', e.target.value)} />
-                  <div className={
-                    "ts-duration" +
-                    (res.status === 'error' ? " ts-duration--error" :
-                     res.status === 'warn'  ? " ts-duration--warn"  : "")
-                  }>{res.dur}</div>
-                  <div className="ts-decimal ts-col-dec">{res.dec}</div>
-                  <button className="num-btn ts-remove" tabIndex={-1}
-                    onClick={() => removeCalcRow(row.id)}>×</button>
-                </div>
-              );
-            })}
-
-            <div className="ts-pills">
-              <span className="ts-pill-lbl">Lunch:</span>
-              {LUNCH_PRESETS.map(([label, val]) => (
-                <button key={val} className="ts-pill"
-                  onClick={() => applyLunchPreset(val)}>{label}</button>
-              ))}
-            </div>
-
-            <div className="ts-controls">
-              <button className="ts-btn" onClick={addCalcRow}>+ Add row</button>
-              <button className="ts-btn ts-btn--muted" onClick={clearCalc}>Clear all</button>
-            </div>
-
-            <div className="ts-footer">
-              <span className="ts-total-lbl">Total</span>
-              <div className="ts-total-vals">
-                <span className="ts-total-val">{fmtHHMM(calcTotalMins)}</span>
-                <span className="ts-total-dec">= {fmtDecimal(calcTotalMins)}</span>
-                <button className={"ts-copy" + (copied ? " ts-copy--done" : "")}
-                  onClick={handleCopy}>
-                  {copied ? 'Copied!' : 'Copy decimal'}
-                </button>
+          {calcRows.map((row, idx) => {
+            const res = calcResults[idx];
+            return (
+              <div key={row.id}
+                className={"ts-grid-row" + (row.id === activeRowId ? " ts-grid-row--active" : "")}>
+                <input className="num-input ts-input" type="text" placeholder="9, 9:30, 0930"
+                  value={row.start}
+                  ref={el => { startRefs.current[row.id] = el; }}
+                  onFocus={() => setActiveRowId(row.id)}
+                  onChange={e => updateCalcRow(row.id, 'start', e.target.value)}
+                  onBlur={e => formatTimeInput(row.id, 'start', e.target.value)} />
+                <input className="num-input ts-input" type="text" placeholder="17, 17:30"
+                  value={row.end}
+                  onFocus={() => setActiveRowId(row.id)}
+                  onChange={e => updateCalcRow(row.id, 'end', e.target.value)}
+                  onBlur={e => formatTimeInput(row.id, 'end', e.target.value)} />
+                <input className="num-input ts-input" type="text" placeholder=".30"
+                  value={row.lunch}
+                  onFocus={() => setActiveRowId(row.id)}
+                  onKeyDown={e => handleLunchTab(e, idx)}
+                  onChange={e => updateCalcRow(row.id, 'lunch', e.target.value)} />
+                <div className={
+                  "ts-duration" +
+                  (res.status === 'error' ? " ts-duration--error" :
+                   res.status === 'warn'  ? " ts-duration--warn"  : "")
+                }>{res.dur}</div>
+                <div className="ts-decimal ts-col-dec">{res.dec}</div>
+                <button className="num-btn ts-remove" tabIndex={-1}
+                  onClick={() => removeCalcRow(row.id)}>×</button>
               </div>
-            </div>
-        </div>
+            );
+          })}
 
-      </div>
+          <Stack direction="row" gap={1} className="ts-pills">
+            <span className="ts-pill-lbl">Lunch:</span>
+            {LUNCH_PRESETS.map(([label, val]) => (
+              <button key={val} className="ts-pill"
+                onClick={() => applyLunchPreset(val)}>{label}</button>
+            ))}
+          </Stack>
 
+          <Stack direction="row" gap={2} className="ts-controls">
+            <button className="ts-btn" onClick={addCalcRow}>+ Add row</button>
+            <button className="ts-btn ts-btn--muted" onClick={clearCalc}>Clear all</button>
+          </Stack>
+
+          <Stack direction="row" gap={3} className="ts-footer">
+            <span className="ts-total-lbl">Total</span>
+            <Stack direction="row" gap={3} className="ts-total-vals">
+              <span className="ts-total-val">{fmtHHMM(calcTotalMins)}</span>
+              <span className="ts-total-dec">= {fmtDecimal(calcTotalMins)}</span>
+              <button className={"ts-copy" + (copied ? " ts-copy--done" : "")}
+                onClick={handleCopy}>
+                {copied ? 'Copied!' : 'Copy decimal'}
+              </button>
+            </Stack>
+          </Stack>
+        </Stack>
+      </Stack>
     </div>
   );
 }
