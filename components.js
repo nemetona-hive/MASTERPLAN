@@ -292,7 +292,7 @@ function LayoutVisualization({
       className: "strip-legend-lbl"
     }, label, " (", value, ")")))), /*#__PURE__*/React.createElement("div", {
       className: "strip-note"
-    }, "\uD83D\uDCA1 Both edge pieces are cut from full panels (2 panels are cut)."));
+    }, "\uD83D\uDCA1 ", result.stats.cut === 0 ? "No panels are cut (perfect fit)." : result.stats.cut === 1 ? "1 edge piece is cut from a full panel (1 panel is cut)." : "Both edge pieces are cut from full panels (2 panels are cut)."));
   }
   const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
     row,
@@ -1043,7 +1043,25 @@ function SheetSymmetricLayout({
       panelWidth: v
     })),
     step: 10
-  }))), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ctrl-lbl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl"
+  }, "Layout style"), /*#__PURE__*/React.createElement("div", {
+    className: "ctrl-btns"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (sym.oneFullEdge ? "on" : ""),
+    onClick: () => setSym(s => ({
+      ...s,
+      oneFullEdge: true
+    }))
+  }, "Asymmetric"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (!sym.oneFullEdge ? "on" : ""),
+    onClick: () => setSym(s => ({
+      ...s,
+      oneFullEdge: false
+    }))
+  }, "Symmetric"))))), /*#__PURE__*/React.createElement("div", {
     id: "data-preview",
     className: "data-preview"
   }, /*#__PURE__*/React.createElement(LayoutPanel, {
