@@ -124,3 +124,42 @@ function useLinkedCardHighlight(groupId) {
 
   return { activeId, setActiveId, bindControl, isActive };
 }
+
+/**
+ * Primitive layout component to enforce spacing scale
+ * @param {1|2|3|4|5|6|7|0.5} gap - Spacing level from scale
+ * @param {"column"|"row"} direction - Flex direction
+ */
+function Stack({ children, gap = 2, direction = "column", className = "", style = {}, as: Tag = "div", ...props }) {
+  const gClass = `u-gap-${String(gap).replace('.', '')}`;
+  const dClass = `u-flex-${direction === "row" ? "row" : "col"}`;
+  return (
+    <Tag className={[dClass, gClass, className].filter(Boolean).join(" ")} style={style} {...props}>
+      {children}
+    </Tag>
+  );
+}
+
+/**
+ * Text Typography component
+ * @param {"xs"|"sm"|"md"|"lg"|"xl"|"xxl"} size - Font size level
+ * @param {"reg"|"med"|"semi"|"bold"|"black"} weight - Font weight level
+ * @param {"sans"|"mono"} variant - Font family variant
+ */
+function Text({ children, size, weight, variant, color, className = "", style = {}, as: Tag = "span", ...props }) {
+  const classes = [
+    size && `u-fs-${size}`,
+    weight && `u-fw-${weight}`,
+    variant && `u-${variant}`,
+    className
+  ].filter(Boolean).join(" ");
+
+  const s = { ...style };
+  if (color) s.color = color;
+
+  return (
+    <Tag className={classes} style={s} {...props}>
+      {children}
+    </Tag>
+  );
+}
