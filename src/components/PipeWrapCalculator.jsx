@@ -120,13 +120,13 @@ function PipeWrapCalculator() {
 
   return (
     <div className="page-scroll">
-      <div className="page-inner">
+      <Stack className="page-inner" gap={5}>
 
         {/* ── header ── */}
-        <div className="main-head pw-head-adj">
+        <Stack className="main-head pw-head-adj" gap={1}>
           <div className="title">Pipe wrap calculator</div>
           <div className="desc">Material length needed to wrap around a pipe</div>
-        </div>
+        </Stack>
 
         {/* ── inputs ── */}
         <div className="section">
@@ -134,9 +134,8 @@ function PipeWrapCalculator() {
             <span>Dimensions</span>
           </div>
           <div className="section-body">
-            <div className="section-pad">
+            <Stack className="section-pad" gap={3}>
               <div className="pw-grid-2col">
-
                 <NumInput
                   id="input-pipeDiam"
                   label="Pipe outer diameter"
@@ -157,19 +156,21 @@ function PipeWrapCalculator() {
               </div>
 
               {/* presets */}
-              <div className="num-lbl pw-preset-label">Pipe diameter presets</div>
-              <div className="ctrl-btns">
-                {PRESETS.map(p => (
-                  <button
-                    key={p}
-                    className={`ctrl-dir${pipeDiam === p ? " on" : ""}`}
-                    onClick={() => setPipeDiam(p)}
-                  >
-                    Ø {p}
-                  </button>
-                ))}
-              </div>
-            </div>
+              <Stack gap={2}>
+                <div className="num-lbl pw-preset-label">Pipe diameter presets</div>
+                <Stack direction="row" gap={1} className="ctrl-btns">
+                  {PRESETS.map(p => (
+                    <button
+                      key={p}
+                      className={`ctrl-dir${pipeDiam === p ? " on" : ""}`}
+                      onClick={() => setPipeDiam(p)}
+                    >
+                      Ø {p}
+                    </button>
+                  ))}
+                </Stack>
+              </Stack>
+            </Stack>
           </div>
         </div>
 
@@ -179,10 +180,10 @@ function PipeWrapCalculator() {
             <span>Adjustments</span>
           </div>
           <div className="section-body">
-            <div className="section-pad">
+            <Stack className="section-pad" gap={3}>
 
               {/* overlap */}
-              <div className="pw-adj-row mb">
+              <Stack direction="row" gap={3} className="pw-adj-row">
                 <button
                   onClick={() => setOverlap(prev => Math.min(200, prev + 5))}
                   className="pw-adj-btn pw-adj-btn-overlap"
@@ -194,10 +195,10 @@ function PipeWrapCalculator() {
                   onChange={e => setOverlap(Number(e.target.value))}
                 />
                 <span className="ctrl-range-val pw-adj-val">{overlap}</span>
-              </div>
+              </Stack>
 
               {/* gap */}
-              <div className="pw-adj-row">
+              <Stack direction="row" gap={3} className="pw-adj-row">
                 <button
                   onClick={() => setGap(prev => Math.min(200, prev + 5))}
                   className="pw-adj-btn pw-adj-btn-gap"
@@ -209,9 +210,9 @@ function PipeWrapCalculator() {
                   onChange={e => setGap(Number(e.target.value))}
                 />
                 <span className="ctrl-range-val pw-adj-val">{gap}</span>
-              </div>
+              </Stack>
 
-            </div>
+            </Stack>
           </div>
         </div>
 
@@ -223,21 +224,9 @@ function PipeWrapCalculator() {
           <div className="section-body">
 
             <div className="pw-res-wrap">
-              <div className="data-row">
-                <span className="data-row-lbl">Outer diameter</span>
-                <span className="data-row-val">{outer.toFixed(1)}</span>
-                <span className="data-row-unit">mm</span>
-              </div>
-              <div className="data-row">
-                <span className="data-row-lbl">Base wrap length</span>
-                <span className="data-row-val">{base.toFixed(1)}</span>
-                <span className="data-row-unit">mm</span>
-              </div>
-              <div className="data-row pw-res-row-last">
-                <span className="data-row-lbl">Final length needed</span>
-                <span className="data-row-val hi">{total.toFixed(1)}</span>
-                <span className="data-row-unit">mm</span>
-              </div>
+              <Row label="Outer diameter" value={outer.toFixed(1)} unit="mm" />
+              <Row label="Base wrap length" value={base.toFixed(1)} unit="mm" />
+              <Row label="Final length needed" value={total.toFixed(1)} unit="mm" hi />
             </div>
 
             {/* diagram */}
@@ -259,7 +248,7 @@ function PipeWrapCalculator() {
           </div>
         </div>
 
-      </div>
+      </Stack>
     </div>
   );
 }
