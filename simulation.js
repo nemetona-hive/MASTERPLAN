@@ -156,8 +156,8 @@ const computeS2 = sh => computeStandard(sh, 2, sh.offset,  "s2");
 const computeS3 = sh => computeStandard(sh, 3, 0,          "s3");
 
 function computeS4(sh) {
-  const { W, H, PLa, direction, minJ, s4Long, s4Short } = sh;
-  if (W <= 0 || H <= 0 || PLa <= 0 || s4Long <= 0 || s4Short <= 0) return emptyLayoutResult();
+  const { W, H, PPi, PLa, direction, minJ, s4Long, s4Short } = sh;
+  if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0 || s4Long <= 0 || s4Short <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
   const rows = simulateS4(sW, vSym ? W : H, PLa, s4Long, s4Short, minJ, vSym);
@@ -165,15 +165,27 @@ function computeS4(sh) {
   const gaps = nGap(rows);
   const totalGapWidth = gapWidth(rows);
   const valid = gaps === 0;
+
+  // Count long and short pieces separately (full + cut each consume one panel of that size).
+  // Multiple panels can come from one stock piece (PPi), so divide accordingly.
+  const countByLong = isLong => rows.reduce((a, r) =>
+	a + r.segs.filter(s => (s.type === "full" || s.type === "cut") && s.long === isLong).length, 0);
+  const nL        = countByLong(true);
+  const nS        = countByLong(false);
+  const perStockL = Math.max(1, Math.floor(PPi / s4Long));
+  const perStockS = Math.max(1, Math.floor(PPi / s4Short));
+  const stockPcs  = Math.ceil(nL / perStockL) + Math.ceil(nS / perStockS);
+
   const L = SUMMARY_LABELS.s4;
   return {
 	valid, rows, stats,
 	summaryRows: [
-	  { label: L.full,     value: stats.full,              unit: "pcs", hi: true, hoverType: "full" },
-	  { label: L.cut,      value: stats.cut,               unit: "pcs", hoverType: "cut" },
-	  { label: L.total,    value: stats.total,             unit: "pcs", hi: true },
-	  { label: L.gaps,     value: gaps,                    unit: "pcs", hoverType: "gap" },
-	  { label: L.gapWidth, value: fmt.decimal(totalGapWidth), unit: "mm", hoverType: "gap" },
+	  { label: L.stock,    value: stockPcs,                   unit: "pcs", hi: true },
+	  { label: L.full,     value: stats.full,                 unit: "pcs", hi: true, hoverType: "full" },
+	  { label: L.cut,      value: stats.cut,                  unit: "pcs", hoverType: "cut" },
+	  { label: L.total,    value: stats.total,                unit: "pcs", hi: true },
+	  { label: L.gaps,     value: gaps,                       unit: "pcs", hoverType: "gap" },
+	  { label: L.gapWidth, value: fmt.decimal(totalGapWidth), unit: "mm",  hoverType: "gap" },
 	  { label: L.status,   value: valid ? "Valid" : "Invalid", unit: valid ? "" : L.statusInvalid, hi: !valid }
 	],
 	meta: { width: sW, visualization: "rows", s4: true }
