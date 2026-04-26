@@ -2,21 +2,21 @@
 
 function S4Controls({ state, setState }) {
   return (
-    <div className="u-flex-col-gap12">
+    <Stack gap={3}>
       <NumInput id="input-s4long"  label="Long (mm)"  value={state.s4Long}  onChange={v => setState({ s4Long: v })}  step={10} />
       <NumInput id="input-s4short" label="Short (mm)" value={state.s4Short} onChange={v => setState({ s4Short: v })} step={10} />
-    </div>
+    </Stack>
   );
 }
 
 function S2Controls({ state, setState }) {
   return (
-    <div className="ctrl-lbl">
+    <Stack direction="row" gap={2} className="ctrl-lbl">
       <span className="ctrl-sublbl">Offset (&times;PL)</span>
       <input id="input-offset" type="range" min={0.1} max={0.9} step={0.05} value={state.offset}
         onChange={e => setState({ offset: +e.target.value })} />
       <span className="ctrl-range-val">{fmt.decimals(state.offset, 2)}</span>
-    </div>
+    </Stack>
   );
 }
 
