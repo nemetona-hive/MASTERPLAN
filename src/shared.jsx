@@ -8,7 +8,7 @@ function Icon({ name, className = "" }) {
   return <i className={[faClass, className].filter(Boolean).join(" ")} style={{ display: "inline-flex", alignItems: "center" }} />;
 }
 
-function NumInput({ id, label, value, onChange, step = 1, min = 1 }) {
+function NumInput({ id, label, value, onChange, step = 1, min = 1, unit }) {
   const [local, setLocal] = React.useState(String(value));
   React.useEffect(() => { setLocal(String(value)); }, [value]);
   const commit = () => {
@@ -17,16 +17,17 @@ function NumInput({ id, label, value, onChange, step = 1, min = 1 }) {
     else setLocal(String(value));
   };
   return (
-    <label id={id} className="num-wrap">
+    <div id={id} className="num-wrap">
       <span className="num-lbl">{label}</span>
       <div className="num-row">
         <input className="num-input" type="number" value={local} min={min} step={step}
           onChange={e => setLocal(e.target.value)}
           onKeyDown={e => e.key === "Enter" && commit()}
           onBlur={commit} />
+        {unit && <span className="data-row-unit" style={{ display: "flex", alignItems: "center", margin: "0 4px" }}>{unit}</span>}
         <button className="num-btn" onClick={commit}><Icon name="corner-down-left" /></button>
       </div>
-    </label>
+    </div>
   );
 }
 
