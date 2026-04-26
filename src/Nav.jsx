@@ -114,7 +114,7 @@ function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileM
   }, [page]);
 
   const navItems = PAGES.filter(pg => {
-    if (pg.noNav) return false;
+    if (pg.noNav && pg.id !== "home") return false;
     if (mobile) {
       // Mobile closed state: show parent-level items only.
       if (!mobileMenuOpen) return !pg.parentId;
