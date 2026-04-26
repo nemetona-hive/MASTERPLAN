@@ -144,15 +144,48 @@ function makeStats(rows) {
 }
 
 function computeS0(state) {
-  const { roomWidth, panelWidth } = state;
+  const { roomWidth, panelWidth, oneFullEdge } = state;
   if (roomWidth <= 0 || panelWidth <= 0) return emptyLayoutResult();
+  
+  const L = SUMMARY_LABELS.s0;
+  
+  if (oneFullEdge) {
+    const finalFullCount = Math.floor(roomWidth / panelWidth);
+    const remainder = roomWidth - (finalFullCount * panelWidth);
+    const fullPanels = Array.from({ length: Math.max(0, finalFullCount) }, (_, i) => ({ w: panelWidth, type: "full", pid: i }));
+    const segs = [...fullPanels];
+    let cutCount = 0;
+    if (remainder > 0) {
+      segs.push({ w: remainder, type: "edge" });
+      cutCount = 1;
+    }
+    const totalToBuy = Math.max(0, finalFullCount) + cutCount;
+    const layoutLength = (Math.max(0, finalFullCount) * panelWidth) + remainder;
+    const roomGap = Math.abs(roomWidth - layoutLength);
+    
+    return {
+      valid: true,
+      rows: [{ segs }],
+      stats: { full: Math.max(0, finalFullCount), cut: cutCount, total: totalToBuy },
+      summaryRows: [
+        { label: L.fullPanels,   value: Math.max(0, finalFullCount),  unit: "pcs", hi: true, hoverType: "full" },
+        { label: "Last piece width", value: fmt.decimal(Math.max(0, remainder)), unit: "mm", hi: true, hoverType: "edge" },
+        { label: L.cutEdge,      value: cutCount.toString(),          unit: "pcs", hoverType: "edge" },
+        { label: L.totalToBuy,   value: totalToBuy,   unit: "pcs", hi: true },
+        { label: L.layoutLength, value: layoutLength, unit: "mm" },
+        { label: L.roomGap,      value: fmt.decimal(roomGap), unit: "mm" }
+      ],
+      meta: { edgeWidth: remainder, panelWidth, roomWidth, visualization: "strip" }
+    };
+  }
+
   const { edgeWidth, finalFullCount } = symEdge(Number(roomWidth), Number(panelWidth));
   const fullPanels = Array.from({ length: Math.max(0, finalFullCount) }, (_, i) => ({ w: panelWidth, type: "full", pid: i }));
   const segs = [{ w: edgeWidth, type: "edge" }, ...fullPanels, { w: edgeWidth, type: "edge" }];
   const totalToBuy = Math.max(0, finalFullCount) + 2;
   const layoutLength = (Math.max(0, finalFullCount) * panelWidth) + (2 * edgeWidth);
   const roomGap = Math.abs(roomWidth - layoutLength);
-  const L = SUMMARY_LABELS.s0;
+  
   return {
 	valid: true,
 	rows: [{ segs }],
