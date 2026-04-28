@@ -7,6 +7,13 @@ function PipeWrapCalculator() {
   const [gap, setGap]         = React.useState(0);
   const svgRef = React.useRef(null);
 
+  const { onChange: protectedOverlapChange, onTouchStart: overlapTouchStart, onTouchMove: overlapTouchMove } = useProtectedRangeSlider(
+    e => setOverlap(Number(e.target.value))
+  );
+  const { onChange: protectedGapChange, onTouchStart: gapTouchStart, onTouchMove: gapTouchMove } = useProtectedRangeSlider(
+    e => setGap(Number(e.target.value))
+  );
+
   const outer = pipeDiam + 2 * matThick;
   const base  = Math.PI * outer;
   const total = Math.max(0, base + overlap - gap);
@@ -192,7 +199,9 @@ function PipeWrapCalculator() {
                 <input
                   type="range" min={0} max={200} step={5} value={overlap}
                   className="pw-adj-range"
-                  onChange={e => setOverlap(Number(e.target.value))}
+                  onChange={protectedOverlapChange}
+                  onTouchStart={overlapTouchStart}
+                  onTouchMove={overlapTouchMove}
                 />
                 <span className="ctrl-range-val pw-adj-val">{overlap}</span>
               </Stack>
@@ -207,7 +216,9 @@ function PipeWrapCalculator() {
                 <input
                   type="range" min={0} max={200} step={5} value={gap}
                   className="pw-adj-range"
-                  onChange={e => setGap(Number(e.target.value))}
+                  onChange={protectedGapChange}
+                  onTouchStart={gapTouchStart}
+                  onTouchMove={gapTouchMove}
                 />
                 <span className="ctrl-range-val pw-adj-val">{gap}</span>
               </Stack>
