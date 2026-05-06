@@ -572,13 +572,6 @@ function PreviewSection({
   return /*#__PURE__*/React.createElement(Stack, {
     gap: 3
   }, /*#__PURE__*/React.createElement(Stack, {
-    className: "preview-head",
-    gap: 1
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "layout-section-title"
-  }, title), /*#__PURE__*/React.createElement("p", {
-    className: "layout-section-desc"
-  }, description)), /*#__PURE__*/React.createElement(Stack, {
     className: "preview-data",
     gap: 3
   }, children));
@@ -2905,14 +2898,7 @@ function MainPageContent({
     });
     wrapperClass = "main-data";
   }
-  return /*#__PURE__*/React.createElement(React.Fragment, null, pageMeta && /*#__PURE__*/React.createElement("div", {
-    id: "main-head",
-    className: "main-head"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "title"
-  }, pageMeta.title || pageMeta.label), /*#__PURE__*/React.createElement("p", {
-    className: "desc"
-  }, pageMeta.desc)), /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: wrapperClass
   }, content));
 }
