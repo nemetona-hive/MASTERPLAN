@@ -816,27 +816,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	overflow: visible;
 }
 
-/* HEAD */
 
-.main-head {
-	padding: 16px 22px 0;
-	flex-shrink: 0;
-}
-
-.main-head .title {
-	font-family: var(--sans);
-	font-size: var(--fs-lg);
-	font-weight: var(--fw-black);
-	margin-bottom: 6px;
-	color: var(--color-primary);
-}
-
-.main-head .desc {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-gray-opa80);
-	margin-bottom: 22px;
-}
 
 /* DATA */
 
@@ -1449,11 +1429,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	overflow-y: auto;
 }
 
-.data-preview .preview-head {
-	margin-bottom: 14px;
-	padding-bottom: 8px;
-	border-bottom: 1px solid var(--color-gray-light);
-}
+
 
 .data-preview .preview-data {
 	display: flex;
@@ -1461,19 +1437,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	gap: 0;
 }
 
-.data-preview .layout-section-title {
-	font-family: var(--sans);
-	font-size: var(--fs-lg);
-	font-weight: 700;
-	color: var(--color-primary);
-}
 
-.data-preview .layout-section-desc {
-	margin-top: 4px;
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
-}
 	
 .data-preview .sys-block {
 	margin-bottom: var(--sp-5);
@@ -2476,16 +2440,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		overflow: visible;
 	}
 
-	/* Sticky header for data pages */
-	.main-head {
-		position: sticky;
-		top: 0;
-		z-index: 10;
-		background: var(--color-darkblue-light);
-		border-bottom: 1px solid var(--color-gray-light);
-		padding: 12px var(--sp-3) 8px;
-		margin-bottom: 0;
-	}
+
 
 	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
 	/* Modern mobile touch targets: 44px min height for controls */
@@ -2704,19 +2659,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		padding: 12px;
 	}
 
-	.main-head {
-		padding: 10px var(--sp-2) 8px;
-	}
 
-	.main-head .title {
-		font-size: var(--fs-md);
-		margin-bottom: 4px;
-	}
-
-	.main-head .desc {
-		margin-bottom: 12px;
-		font-size: var(--fs-sm);
-	}
 }
 
 /*
