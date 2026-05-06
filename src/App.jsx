@@ -37,12 +37,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
 
   return (
     <>
-      {pageMeta && (
-        <div id="main-head" className="main-head">
-          <h2 className="title">{pageMeta.title || pageMeta.label}</h2>
-          <p className="desc">{pageMeta.desc}</p>
-        </div>
-      )}
+
       <div className={wrapperClass}>{content}</div>
     </>
   );
