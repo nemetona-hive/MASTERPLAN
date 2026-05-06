@@ -123,10 +123,6 @@ function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowS
 function PreviewSection({ id, title, description, children }) {
   return (
     <Stack gap={3}>
-      <Stack className="preview-head" gap={1}>
-        <h3 className="layout-section-title">{title}</h3>
-        <p className="layout-section-desc">{description}</p>
-      </Stack>
       <Stack className="preview-data" gap={3}>{children}</Stack>
     </Stack>
   );
