@@ -153,17 +153,17 @@ var PAGES = [{
   desc: "Self-levelling compound — calculate bags, mass and total price from area and layer thickness.",
   icon: "layer-group"
 }, {
-  id: "golden-ratio",
-  label: "Golden Ratio φ",
-  title: "Golden Ratio φ",
-  desc: "Generate phi-based proportion sequences from any base value. Up to 4 parallel series.",
-  icon: "golden-phi"
-}, {
   id: "pipe-wrap",
   label: "Pipe Wrap",
   title: "Pipe Wrap Calculator",
   desc: "Material length to wrap around a pipe. Overlap and gap adjustments with live SVG diagram.",
   icon: "ring"
+}, {
+  id: "golden-ratio",
+  label: "Golden Ratio φ",
+  title: "Golden Ratio φ",
+  desc: "Generate phi-based proportion sequences from any base value. Up to 4 parallel series.",
+  icon: "golden-phi"
 }, {
   id: "timesheet",
   label: "Timesheet",
