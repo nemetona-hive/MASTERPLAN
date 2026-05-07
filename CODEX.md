@@ -149,13 +149,22 @@ Best layout = fewest total pieces among valid results.
 
 ## Local Static Defaults (Dev environment only)
 
-When running the application locally, a specialized persistence mechanism allows saving UI state (presets, defaults) directly back into the source code (`config.js`).
+Implemented system for saving selected UI state back into static source defaults while running locally.
 
-- `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost` or `127.0.0.1`.
-- `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
-- Currently utilized by:
-  - **Concrete Calculator**: To persist product presets.
-  - **Golden Ratio Tool**: To persist saved value series.
+- Run with `npm run dev`; this starts `scripts/local-dev-server.js`.
+- Open `http://localhost:3000`; direct `file://` usage cannot save source files.
+- `canSaveStaticDefaults()`: Returns `true` on `localhost` or `127.0.0.1`.
+- `saveStaticDefaults(key, value)`: Sends a POST request to `/api/save-defaults`.
+- The local server accepts only allow-listed keys and rewrites matching constants in `config.js`.
+- GitHub Pages has no Node server, so save buttons are hidden and committed `config.js` values act as static defaults.
+- After local saves, run `npm run build` so `components.js` reflects `src/`, then commit/push `config.js` and `components.js` as needed.
+
+Current save keys:
+
+| Key | Constant | Used by |
+|---|---|---|
+| `concretePresets` | `DEFAULT_CONCRETE_PRESETS` | Concrete product presets |
+| `goldenRatioDefaults` | `DEFAULT_GR` | Golden Ratio saved/default rows |
 
 ## Theme system
 
