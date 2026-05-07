@@ -57,10 +57,59 @@ function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
     return rows;
   };
   const fmtInt = v => Math.round(v).toString();
+
+  const normalizeGoldenRatioDefaults = items => items.map(item => ({
+    id: item.id,
+    value: item.value,
+    suffix: item.suffix,
+    saved: {
+      value: item.value,
+      suffix: item.suffix
+    },
+    savedCommitted: String(item.value).trim() !== ""
+  }));
+
+  const [saveStatus, setSaveStatus] = React.useState("");
+  
+  const saveGoldenRatioDefaults = async () => {
+    setSaveStatus("saving");
+    try {
+      if (typeof saveStaticDefaults !== "undefined") {
+        const nextDefaults = normalizeGoldenRatioDefaults(baseItems);
+        await saveStaticDefaults("goldenRatioDefaults", nextDefaults);
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus(""), 2500);
+      }
+    } catch (err) {
+      console.error(err);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(""), 3500);
+    }
+  };
+
   return (
     <>
       <div id="data-control" className="data-control">
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
+          {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
+            <div style={{ padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" }}>
+              <button 
+                className={"ctrl-dir on" + (saveStatus === "saved" ? " pw-preset-flash" : "")} 
+                onClick={saveGoldenRatioDefaults}
+                disabled={saveStatus === "saving"}
+              >
+                {saveStatus === "saving" ? (
+                  <>Saving...</>
+                ) : saveStatus === "saved" ? (
+                  <><Icon name="check" /> Saved Defaults</>
+                ) : saveStatus === "error" ? (
+                  <>Error Saving</>
+                ) : (
+                  <><Icon name="check" /> Save Defaults</>
+                )}
+              </button>
+            </div>
+          )}
           <Stack gap={2}>
             {baseItems.map(item => {
               const tone = getLinkedCardTone(item.id);
