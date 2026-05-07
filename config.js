@@ -201,6 +201,44 @@ const DEFAULT_GR = [
   { id: "c", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }
 ];
 
+const DEFAULT_CONCRETE_PRESETS = [
+  {
+    name: "weber S-100",
+    rate: 2,
+    bagKg: 25,
+    bagPrice: 4
+  },
+  {
+    name: "weberfloor 200 RAPID",
+    rate: 1.7,
+    bagKg: 20,
+    bagPrice: 15
+  },
+  {
+    name: "mira x-plan",
+    rate: "1.7",
+    bagKg: "25",
+    bagPrice: "20"
+  }
+];
+
+const canSaveStaticDefaults = () =>
+  typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+
+async function saveStaticDefaults(key, value) {
+  const res = await fetch("/api/save-defaults", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value })
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  return res.json();
+}
+
 const SUMMARY_LABELS = {
   s0: {
     fullPanels:    "Number of full panels",
