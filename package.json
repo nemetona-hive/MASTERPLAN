@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/build-components.js",
     "watch": "node scripts/watch-components.js",
+    "dev": "node scripts/local-dev-server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
