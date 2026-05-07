@@ -112,7 +112,7 @@ function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
   );
 }
 
-function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = false }) {
+function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = false, onFocus }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const [committed, setCommitted] = React.useState(false);
   const commitTimer = React.useRef(null);
@@ -155,7 +155,8 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = f
           step={step}
           onChange={e => setLocal(e.target.value)}
           onKeyDown={e => e.key === "Enter" && commit()}
-          onBlur={() => commit()} />
+          onBlur={() => commit()}
+          onFocus={onFocus} />
         <button
           className="num-btn"
           type="button"
