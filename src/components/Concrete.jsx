@@ -50,11 +50,12 @@ function SheetConcrete() {
   const saveConcreteDefaults = async () => {
     setPresetSaveStatus("saving");
     try {
-      if (typeof saveStaticDefaults !== "undefined") {
-        await saveStaticDefaults("concretePresets", presets);
-        setPresetSaveStatus("saved");
-        setTimeout(() => setPresetSaveStatus(""), 2500);
+      if (typeof saveStaticDefaults === "undefined") {
+        throw new Error("saveStaticDefaults is not available");
       }
+      await saveStaticDefaults("concretePresets", presets);
+      setPresetSaveStatus("saved");
+      setTimeout(() => setPresetSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setPresetSaveStatus("error");
