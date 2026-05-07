@@ -53,6 +53,9 @@ and is available as globals — do NOT import them.
 | `getDescription(id, sh)` | Human-readable description for a layout system |
 | `getSegmentClass(seg, palClasses)` | Returns CSS class for a row segment |
 | `THEMES` | Theme definitions (name, label, icon, colors map of CSS vars) |
+| `DEFAULT_CONCRETE_PRESETS` | Initial product list for Concrete calculator (name, rate, bagKg, bagPrice) |
+| `canSaveStaticDefaults()` | Boolean check for local dev environment |
+| `saveStaticDefaults(key, value)` | API call to persist config changes to disk during development |
 | `getThemeOrder()` | Ordered list of theme keys |
 | `getNextTheme(current)` | Next theme name in rotation |
 | `applyTheme(name)` | Applies a theme's CSS custom properties to `documentElement` |
@@ -144,6 +147,16 @@ Best layout = fewest total pieces among valid results.
 - `isMobile` state in App.jsx drives nav behavior reactively on resize/rotate
 - `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
 
+## Local Static Defaults (Dev environment only)
+
+When running the application locally, a specialized persistence mechanism allows saving UI state (presets, defaults) directly back into the source code (`config.js`).
+
+- `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost` or `127.0.0.1`.
+- `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
+- Currently utilized by:
+  - **Concrete Calculator**: To persist product presets.
+  - **Golden Ratio Tool**: To persist saved value series.
+
 ## Theme system
 
 Defined in `themes.js` (loaded as global, not inside `src/`).
@@ -165,10 +178,11 @@ Cards use tone system (a/b/c/d) for visual identity.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
 - Buttons use the "Premium Glow" interaction language — subtle box-shadows and color-mix transitions.
 - No CSS-in-JS except inline style for dynamic values; use className strings
+- Local persistence uses `saveStaticDefaults` for dev-mode configuration updates.
 - CSS class names follow BEM-ish patterns: block, block-element, modifier
 
 ## What does NOT exist yet (possible future work)
 
 - Export / print functionality
-- Persistence (no localStorage)
+- User Persistence (no localStorage or database for end-users)
 - Unit tests
