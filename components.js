@@ -136,7 +136,8 @@ function NumInput({
   step = 1,
   min = 0,
   unit,
-  req = false
+  req = false,
+  onFocus
 }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const [committed, setCommitted] = React.useState(false);
@@ -180,7 +181,8 @@ function NumInput({
     step: step,
     onChange: e => setLocal(e.target.value),
     onKeyDown: e => e.key === "Enter" && commit(),
-    onBlur: () => commit()
+    onBlur: () => commit(),
+    onFocus: onFocus
   }), /*#__PURE__*/React.createElement("button", {
     className: "num-btn",
     type: "button",
@@ -1068,6 +1070,8 @@ function SheetConcrete() {
   const flashTimerRef = React.useRef(null);
   const noteTimerRef = React.useRef(null);
   const fieldTimerRef = React.useRef(null);
+  const rateInputRef = React.useRef(null);
+  const [showRatePresets, setShowRatePresets] = React.useState(false);
 
   // Product presets (quick fill)
   const [presets, setPresets] = React.useState([{
@@ -1146,10 +1150,19 @@ function SheetConcrete() {
     setBagPrice(v);
     setActivePreset(null);
   };
-  React.useEffect(() => () => {
-    clearTimeout(flashTimerRef.current);
-    clearTimeout(noteTimerRef.current);
-    clearTimeout(fieldTimerRef.current);
+  React.useEffect(() => {
+    const handleClickOutside = e => {
+      if (rateInputRef.current && !rateInputRef.current.contains(e.target)) {
+        setShowRatePresets(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      clearTimeout(flashTimerRef.current);
+      clearTimeout(noteTimerRef.current);
+      clearTimeout(fieldTimerRef.current);
+    };
   }, []);
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -1337,7 +1350,9 @@ function SheetConcrete() {
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
   }, /*#__PURE__*/React.createElement("div", {
-    className: fieldFlash ? "num-input-flash" : ""
+    className: "num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : ""),
+    ref: rateInputRef,
+    onClick: () => setShowRatePresets(true)
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-slf-rate",
     label: "Consumption (kg/m\xB2\xB7mm)",
@@ -1345,8 +1360,35 @@ function SheetConcrete() {
     min: 0.1,
     step: 0.1,
     onChange: handleRateChange,
-    req: hasAnyInput && !rate
-  }))), /*#__PURE__*/React.createElement("div", {
+    req: hasAnyInput && !rate,
+    onFocus: () => setShowRatePresets(true)
+  }), showRatePresets && /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-dropdown"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-header"
+  }, "Quick Presets"), /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-list"
+  }, presets.map((p, idx) => {
+    if (!p.name) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      className: "rate-preset-item" + (activePreset === idx ? " active" : ""),
+      onMouseDown: e => {
+        e.preventDefault();
+        e.stopPropagation();
+        applyPreset(p, idx);
+        setShowRatePresets(false);
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rate-preset-info"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-name"
+    }, p.name), /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-meta"
+    }, p.bagKg, "kg \xB7 ", p.bagPrice, "\u20AC")), /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-val"
+    }, p.rate, " ", /*#__PURE__*/React.createElement("small", null, "kg")));
+  }))))), /*#__PURE__*/React.createElement("div", {
     className: "concrete-split-divider"
   }), /*#__PURE__*/React.createElement(Stack, {
     gap: 3
