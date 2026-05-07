@@ -1074,7 +1074,7 @@ function SheetConcrete() {
   const [showRatePresets, setShowRatePresets] = React.useState(false);
 
   // Product presets (quick fill)
-  const [presets, setPresets] = React.useState([{
+  const [presets, setPresets] = React.useState(() => (typeof DEFAULT_CONCRETE_PRESETS !== "undefined" ? DEFAULT_CONCRETE_PRESETS : [{
     name: "weber S-100",
     rate: 2,
     bagKg: 25,
@@ -1089,7 +1089,24 @@ function SheetConcrete() {
     rate: "",
     bagKg: "",
     bagPrice: ""
-  }]);
+  }]).map(p => ({
+    ...p
+  })));
+  const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+  const saveConcreteDefaults = async () => {
+    setPresetSaveStatus("saving");
+    try {
+      if (typeof saveStaticDefaults !== "undefined") {
+        await saveStaticDefaults("concretePresets", presets);
+        setPresetSaveStatus("saved");
+        setTimeout(() => setPresetSaveStatus(""), 2500);
+      }
+    } catch (err) {
+      console.error(err);
+      setPresetSaveStatus("error");
+      setTimeout(() => setPresetSaveStatus(""), 3500);
+    }
+  };
   const resetAll = () => {
     setAreaManual("");
     setLenMm("");
@@ -1487,7 +1504,15 @@ function SheetConcrete() {
     onClick: addPreset
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "plus"
-  }), " Add Row")), /*#__PURE__*/React.createElement("div", {
+  }), " Add Row"), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : ""),
+    onClick: saveConcreteDefaults,
+    disabled: presetSaveStatus === "saving"
+  }, presetSaveStatus === "saving" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Saving...") : presetSaveStatus === "saved" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Saved Defaults") : presetSaveStatus === "error" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Error Saving") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Save Defaults"))), /*#__PURE__*/React.createElement("div", {
     className: "pw-formula-text",
     style: {
       opacity: 0.7
@@ -2092,6 +2117,32 @@ function SheetGoldenRatio({
     return rows;
   };
   const fmtInt = v => Math.round(v).toString();
+  const normalizeGoldenRatioDefaults = items => items.map(item => ({
+    id: item.id,
+    value: item.value,
+    suffix: item.suffix,
+    saved: {
+      value: item.value,
+      suffix: item.suffix
+    },
+    savedCommitted: String(item.value).trim() !== ""
+  }));
+  const [saveStatus, setSaveStatus] = React.useState("");
+  const saveGoldenRatioDefaults = async () => {
+    setSaveStatus("saving");
+    try {
+      if (typeof saveStaticDefaults !== "undefined") {
+        const nextDefaults = normalizeGoldenRatioDefaults(baseItems);
+        await saveStaticDefaults("goldenRatioDefaults", nextDefaults);
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus(""), 2500);
+      }
+    } catch (err) {
+      console.error(err);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(""), 3500);
+    }
+  };
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     id: "data-control",
     className: "data-control"
@@ -2100,7 +2151,21 @@ function SheetGoldenRatio({
     title: "Base Number",
     open: baseOpen,
     setOpen: setBaseOpen
-  }, /*#__PURE__*/React.createElement(Stack, {
+  }, typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)",
+      display: "flex",
+      justifyContent: "flex-end"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir on" + (saveStatus === "saved" ? " pw-preset-flash" : ""),
+    onClick: saveGoldenRatioDefaults,
+    disabled: saveStatus === "saving"
+  }, saveStatus === "saving" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Saving...") : saveStatus === "saved" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Saved Defaults") : saveStatus === "error" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Error Saving") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Save Defaults"))), /*#__PURE__*/React.createElement(Stack, {
     gap: 2
   }, baseItems.map(item => {
     const tone = getLinkedCardTone(item.id);
