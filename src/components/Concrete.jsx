@@ -34,11 +34,33 @@ function SheetConcrete() {
   const [showRatePresets, setShowRatePresets] = React.useState(false);
 
   // Product presets (quick fill)
-  const [presets, setPresets] = React.useState([
-    { name: "weber S-100", rate: 2, bagKg: 25, bagPrice: 4 },
-    { name: "weberfloor 200 RAPID", rate: 1.7, bagKg: 20, bagPrice: 15 },
-    { name: "", rate: "", bagKg: "", bagPrice: "" }
-  ]);
+  const [presets, setPresets] = React.useState(() =>
+    (typeof DEFAULT_CONCRETE_PRESETS !== "undefined"
+      ? DEFAULT_CONCRETE_PRESETS
+      : [
+          { name: "weber S-100", rate: 2, bagKg: 25, bagPrice: 4 },
+          { name: "weberfloor 200 RAPID", rate: 1.7, bagKg: 20, bagPrice: 15 },
+          { name: "", rate: "", bagKg: "", bagPrice: "" }
+        ]
+    ).map(p => ({ ...p }))
+  );
+
+  const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+
+  const saveConcreteDefaults = async () => {
+    setPresetSaveStatus("saving");
+    try {
+      if (typeof saveStaticDefaults !== "undefined") {
+        await saveStaticDefaults("concretePresets", presets);
+        setPresetSaveStatus("saved");
+        setTimeout(() => setPresetSaveStatus(""), 2500);
+      }
+    } catch (err) {
+      console.error(err);
+      setPresetSaveStatus("error");
+      setTimeout(() => setPresetSaveStatus(""), 3500);
+    }
+  };
   
   const resetAll = () => {
     setAreaManual("");
@@ -391,6 +413,23 @@ function SheetConcrete() {
                   <button className="ctrl-dir" onClick={addPreset}>
                     <Icon name="plus" /> Add Row
                   </button>
+                  {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
+                    <button 
+                      className={"ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : "")} 
+                      onClick={saveConcreteDefaults}
+                      disabled={presetSaveStatus === "saving"}
+                    >
+                      {presetSaveStatus === "saving" ? (
+                        <>Saving...</>
+                      ) : presetSaveStatus === "saved" ? (
+                        <><Icon name="check" /> Saved Defaults</>
+                      ) : presetSaveStatus === "error" ? (
+                        <>Error Saving</>
+                      ) : (
+                        <><Icon name="check" /> Save Defaults</>
+                      )}
+                    </button>
+                  )}
                 </Stack>
 
                 <div className="pw-formula-text" style={{ opacity: 0.7 }}>
