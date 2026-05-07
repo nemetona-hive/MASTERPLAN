@@ -29,6 +29,9 @@ function SheetConcrete() {
   const flashTimerRef  = React.useRef(null);
   const noteTimerRef   = React.useRef(null);
   const fieldTimerRef  = React.useRef(null);
+  const rateInputRef   = React.useRef(null);
+
+  const [showRatePresets, setShowRatePresets] = React.useState(false);
 
   // Product presets (quick fill)
   const [presets, setPresets] = React.useState([
@@ -86,10 +89,19 @@ function SheetConcrete() {
   const handleBagKgChange    = v => { setBagKg(v);    setActivePreset(null); };
   const handleBagPriceChange = v => { setBagPrice(v); setActivePreset(null); };
 
-  React.useEffect(() => () => {
-    clearTimeout(flashTimerRef.current);
-    clearTimeout(noteTimerRef.current);
-    clearTimeout(fieldTimerRef.current);
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (rateInputRef.current && !rateInputRef.current.contains(e.target)) {
+        setShowRatePresets(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      clearTimeout(flashTimerRef.current);
+      clearTimeout(noteTimerRef.current);
+      clearTimeout(fieldTimerRef.current);
+    };
   }, []);
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -236,8 +248,50 @@ function SheetConcrete() {
                 <div className="concrete-split-wrap section-pad">
                   {/* Left: Consumption */}
                   <Stack gap={3}>
-                    <div className={fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-slf-rate" label="Consumption (kg/m²·mm)" value={rate} min={0.1} step={0.1} onChange={handleRateChange} req={hasAnyInput && !rate} />
+                    <div 
+                      className={"num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : "")}
+                      ref={rateInputRef}
+                      onClick={() => setShowRatePresets(true)}
+                    >
+                      <NumInput 
+                        id="input-slf-rate" 
+                        label="Consumption (kg/m²·mm)" 
+                        value={rate} 
+                        min={0.1} 
+                        step={0.1} 
+                        onChange={handleRateChange} 
+                        req={hasAnyInput && !rate}
+                        onFocus={() => setShowRatePresets(true)}
+                      />
+                      
+                      {showRatePresets && (
+                        <div className="rate-presets-dropdown">
+                          <div className="rate-presets-header">Quick Presets</div>
+                          <div className="rate-presets-list">
+                            {presets.map((p, idx) => {
+                              if (!p.name) return null;
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className={"rate-preset-item" + (activePreset === idx ? " active" : "")}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    applyPreset(p, idx);
+                                    setShowRatePresets(false);
+                                  }}
+                                >
+                                  <div className="rate-preset-info">
+                                    <span className="rate-preset-name">{p.name}</span>
+                                    <span className="rate-preset-meta">{p.bagKg}kg · {p.bagPrice}€</span>
+                                  </div>
+                                  <span className="rate-preset-val">{p.rate} <small>kg</small></span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </Stack>
 
