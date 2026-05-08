@@ -62,14 +62,46 @@ html, body, #root {
 }
 
 :root {
-	--color-primary:		 #c4b48a;
-	--color-darkblue:		 #09101a;
-	--color-darkblue-light:	 #131923;
-	--color-gray:			 #506070;
-	--color-gray-light:		 #233342;
-	--color-gray-opa80:		 #73808d;
-	--color-blue:			 #3d7a9e;
-	--color-white:			 #fff;
+	/* Semantic Theme Tokens */
+	--bg: #0b1117;
+	--surface-1: #111a22;
+	--surface-2: #17232d;
+	--surface-hover: #1d2b36;
+	--border: #263846;
+	--border-strong: #365064;
+
+	--text: #d7dde2;
+	--text-muted: #92a1ad;
+	--text-subtle: #667684;
+
+	--brand: #d0bd86;
+	--accent: #4fa3c7;
+	--accent-2: #79b88f;
+
+	--success: #72bf83;
+	--warning: #d9a441;
+	--danger: #ef6b73;
+
+	/* System & Visualization Tokens */
+	--sys-s0: #d0bd86;
+	--sys-s1: #4fa3c7;
+	--sys-s2: #8da0ad;
+	--sys-s3: #79b88f;
+	--sys-s4: #b48ed8;
+
+	--viz-cut: #9aa8b3;
+	--viz-offcut: #6e7f8c;
+	--viz-edge: #d0bd86;
+
+	/* Legacy variables mapped to semantic tokens */
+	--color-primary: var(--brand);
+	--color-darkblue: var(--bg);
+	--color-darkblue-light: var(--surface-1);
+	--color-gray: var(--text-subtle);
+	--color-gray-light: var(--border);
+	--color-gray-opa80: var(--text-muted);
+	--color-blue: var(--accent);
+	--color-white: var(--text);
 	
 
 	--mono:        'JetBrains Mono', monospace;
@@ -119,8 +151,8 @@ html, body, #root {
  }
 
 body {
-	background: var(--color-darkblue);
-	color: var(--color-gray);
+	background: var(--bg);
+	color: var(--text-muted);
 	font-family: var(--sans);
 }
 
@@ -141,18 +173,18 @@ body {
  * ----------------------------------------------------------
  */
 
-.color-s0 { background: var(--color-primary); }
-.color-s1 { background: var(--color-blue); }
-.color-s2l { background: var(--color-gray); }
-.color-s2d { background: var(--color-gray-opa80); }
-.color-s3l { background: var(--color-gray-light); }
-.color-s3d { background: var(--color-primary); }
-.color-s4l { background: var(--color-blue); }
-.color-s4s { background: var(--color-blue); }
-.color-offcut { background: var(--color-gray-opa80); }
-.color-cut { background: var(--color-gray); }
-.color-edge { background: var(--color-primary); }
-.color-sys1 { background: var(--color-blue); }
+.color-s0 { background: var(--sys-s0); }
+.color-s1 { background: var(--sys-s1); }
+.color-s2l { background: var(--sys-s2); }
+.color-s2d { background: color-mix(in srgb, var(--sys-s2) 60%, transparent); }
+.color-s3l { background: color-mix(in srgb, var(--sys-s3) 60%, transparent); }
+.color-s3d { background: var(--sys-s3); }
+.color-s4l { background: var(--sys-s4); }
+.color-s4s { background: color-mix(in srgb, var(--sys-s4) 60%, transparent); }
+.color-offcut { background: var(--viz-offcut); }
+.color-cut { background: var(--viz-cut); }
+.color-edge { background: var(--viz-edge); }
+.color-sys1 { background: var(--sys-s1); }
 
 /* Typography Utilities */
 .u-fs-xs  { font-size: var(--fs-xs); }
@@ -2184,8 +2216,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	gap: var(--sp-3);
 	padding: 22px 20px;
 	border-radius: 12px;
-	border: 1px solid color-mix(in srgb, var(--color-gray-light) 60%, transparent);
-	background: var(--color-darkblue);
+	border: 1px solid var(--border);
+	background: var(--surface-1);
 	color: var(--color-gray);
 	cursor: pointer;
 	text-align: left;
