@@ -201,6 +201,29 @@ const DEFAULT_GR = [
   { id: "c", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }
 ];
 
+const DEFAULT_MATERIAL_PRESETS = [
+  {
+    name: "OSB-3 1250x2500",
+    length: 2500,
+    width: 1250
+  },
+  {
+    name: "Large Format 600×600",
+    length: 600,
+    width: 600
+  },
+  {
+    name: "Plank 1200×200",
+    length: 1200,
+    width: 200
+  },
+  {
+    name: "Herringbone 600×300",
+    length: 600,
+    width: 300
+  }
+];
+
 const DEFAULT_CONCRETE_PRESETS = [
   {
     name: "weber S-100",
