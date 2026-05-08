@@ -137,7 +137,8 @@ function NumInput({
   min = 0,
   unit,
   req = false,
-  onFocus
+  onFocus,
+  labelIcon
 }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const [committed, setCommitted] = React.useState(false);
@@ -169,7 +170,10 @@ function NumInput({
     className: "num-wrap"
   }, /*#__PURE__*/React.createElement("span", {
     className: "num-lbl"
-  }, label), /*#__PURE__*/React.createElement("div", {
+  }, label, labelIcon && /*#__PURE__*/React.createElement(Icon, {
+    name: labelIcon,
+    className: "num-lbl-icon"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "num-row"
   }, /*#__PURE__*/React.createElement("input", {
     id: id,
@@ -2648,6 +2652,7 @@ function SheetSurfaceLayout({
     }, /*#__PURE__*/React.createElement(NumInput, {
       id: "input-PLa",
       label: "Width (mm)",
+      labelIcon: "arrow-h",
       value: Math.max(1, PLa),
       onChange: set("PLa"),
       step: 10
@@ -2665,6 +2670,7 @@ function SheetSurfaceLayout({
     }, /*#__PURE__*/React.createElement(NumInput, {
       id: "input-PPi",
       label: "Length (mm)",
+      labelIcon: "arrow-v",
       value: Math.max(1, PPi),
       onChange: set("PPi"),
       step: 10
@@ -2679,12 +2685,14 @@ function SheetSurfaceLayout({
     }, /*#__PURE__*/React.createElement(SLabel, null, "Surface Area"), /*#__PURE__*/React.createElement(NumInput, {
       id: "input-W",
       label: "Width (mm)",
+      labelIcon: "arrow-h",
       value: Math.max(1, W),
       onChange: set("W"),
       step: 10
     }), /*#__PURE__*/React.createElement(NumInput, {
       id: "input-H",
-      label: "Height (mm)",
+      label: "Length (mm)",
+      labelIcon: "arrow-v",
       value: Math.max(1, H),
       onChange: set("H"),
       step: 10
@@ -2715,6 +2723,7 @@ function SheetSurfaceLayout({
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-PLa",
     label: "Width (mm)",
+    labelIcon: "arrow-h",
     value: PLa,
     onChange: set("PLa"),
     step: 10,
@@ -2737,6 +2746,7 @@ function SheetSurfaceLayout({
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-PPi",
     label: "Length (mm)",
+    labelIcon: "arrow-v",
     value: PPi,
     onChange: set("PPi"),
     step: 10,
@@ -2768,12 +2778,14 @@ function SheetSurfaceLayout({
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-W",
     label: "Width (mm)",
+    labelIcon: "arrow-h",
     value: W,
     onChange: set("W"),
     step: 10
   }), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-H",
-    label: "Height (mm)",
+    label: "Length (mm)",
+    labelIcon: "arrow-v",
     value: H,
     onChange: set("H"),
     step: 10
