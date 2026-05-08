@@ -71,6 +71,12 @@ function SheetHome({ page, setPage, theme, setTheme }) {
               className={"theme-item" + (theme === id ? " active" : "")}
               onClick={() => selectTheme(id)}
             >
+              <span className="theme-swatches" style={{ display: 'flex', gap: '2px', marginRight: '6px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: THEMES[id].colors['--bg'] }}></span>
+                <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: THEMES[id].colors['--surface-1'] }}></span>
+                <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: THEMES[id].colors['--brand'] }}></span>
+                <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: THEMES[id].colors['--accent'] }}></span>
+              </span>
               <span className="theme-item-icon">{THEMES[id].icon}</span>
               <span className="theme-item-label">{THEMES[id].label}</span>
             </button>
