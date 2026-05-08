@@ -2027,6 +2027,41 @@ function SheetHome({
     className: "theme-item" + (theme === id ? " active" : ""),
     onClick: () => selectTheme(id)
   }, /*#__PURE__*/React.createElement("span", {
+    className: "theme-swatches",
+    style: {
+      display: 'flex',
+      gap: '2px',
+      marginRight: '6px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: '12px',
+      height: '12px',
+      borderRadius: '50%',
+      background: THEMES[id].colors['--bg']
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: '12px',
+      height: '12px',
+      borderRadius: '50%',
+      background: THEMES[id].colors['--surface-1']
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: '12px',
+      height: '12px',
+      borderRadius: '50%',
+      background: THEMES[id].colors['--brand']
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: '12px',
+      height: '12px',
+      borderRadius: '50%',
+      background: THEMES[id].colors['--accent']
+    }
+  })), /*#__PURE__*/React.createElement("span", {
     className: "theme-item-icon"
   }, THEMES[id].icon), /*#__PURE__*/React.createElement("span", {
     className: "theme-item-label"
@@ -2869,84 +2904,6 @@ function AppNav({
   }, "Theme: ", THEMES[theme]?.label))))));
 }
 
-/**
- * THEME DEFINITIONS
- * ─────────────────────────────────────────────────────────────
- * Define all themes here. Each theme is a map of CSS variable names
- * to color values. These are applied dynamically via document.documentElement.
- * 
- * To add a new theme:
- * 1. Add a new object below with a unique key
- * 2. Include all color variables you want to override
- * 3. The theme will automatically be available in the toggle button
- */
-
-const THEMES = {
-  navi: {
-    name: 'navi',
-    label: 'Navi',
-    icon: '◇',
-    colors: {
-      '--color-darkblue': '#09101a',
-      '--color-darkblue-light': '#131923',
-      '--color-gray': '#506070',
-      '--color-gray-light': '#233342',
-      '--color-gray-opa80': '#73808d',
-      '--color-blue': '#3d7a9e',
-      '--color-white': '#fff'
-    }
-  },
-  hybrid: {
-    name: 'hybrid',
-    label: 'Hybrid',
-    icon: '⟐',
-    colors: {
-      '--color-darkblue': '#1c1c1e',
-      '--color-darkblue-light': '#2c2c2e',
-      '--color-gray-light': '#3a3a3c',
-      '--color-gray': '#636366',
-      '--color-gray-opa80': '#92a4ae',
-      '--color-blue': '#4a90a8',
-      '--color-primary': '#c4b48a',
-      '--color-white': '#ffffff'
-    }
-  }
-};
-
-/**
- * Get ordered list of theme names
- */
-const getThemeOrder = () => Object.keys(THEMES);
-
-/**
- * Get the next theme in the sequence
- */
-const getNextTheme = currentTheme => {
-  const order = getThemeOrder();
-  const currentIndex = order.indexOf(currentTheme);
-  const nextIndex = (currentIndex + 1) % order.length;
-  return order[nextIndex];
-};
-
-/**
- * Apply theme by name
- */
-const applyTheme = themeName => {
-  const theme = THEMES[themeName];
-  if (!theme) {
-    console.warn(`Theme "${themeName}" not found. Available themes:`, getThemeOrder());
-    return;
-  }
-
-  // Apply colors to CSS custom properties
-  Object.entries(theme.colors).forEach(([key, value]) => {
-    document.documentElement.style.setProperty(key, value);
-  });
-
-  // Store current theme for reference
-  document.documentElement.setAttribute('data-theme', themeName);
-};
-
 // ── App root ──────────────────────────────────────────────────────────────────
 
 const getIsMobile = () => typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
@@ -3019,7 +2976,14 @@ function App() {
   const [isMobile, setIsMobile] = React.useState(getIsMobile);
   const [navOpen, setNavOpen] = React.useState(!getIsMobile());
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [theme, setTheme] = useState("navi");
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem("theme");
+      return saved && THEMES[saved] ? saved : "naviPro";
+    } catch {
+      return "naviPro";
+    }
+  });
 
   // Sync page state with URL hash
   const setPage = id => {
@@ -3071,6 +3035,9 @@ function App() {
     return () => window.removeEventListener("keydown", onEnterCommit, true);
   }, []);
   React.useEffect(() => {
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {}
     applyTheme(theme);
   }, [theme]);
   const [sh, setSh] = useState(DEFAULT_SH);
