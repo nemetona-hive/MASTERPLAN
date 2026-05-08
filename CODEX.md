@@ -28,12 +28,12 @@ and is available as globals — do NOT import them.
 10. components/SymmetricLayout.jsx → SheetSymmetricLayout
 11. components/SurfaceLayout.jsx → SheetSurfaceLayout
 12. Nav.jsx                    → isNavPageActive, NavButton, initOpenGroups, AppNav
-13. themes.js                  → THEMES, getThemeOrder, getNextTheme, applyTheme
-14. App.jsx                    → MainPageContent, App, ReactDOM.createRoot
+13. App.jsx                    → MainPageContent, App, ReactDOM.createRoot
 ```
 
 `components.jsx` is the manifest — it documents order but contains no logic.
 **Never add logic to components.jsx.**
+Note: `themes.js` is loaded directly in `index.html` to ensure themes apply early before React renders.
 
 ## Key globals (defined outside src/, treat as read-only)
 
@@ -149,30 +149,21 @@ Best layout = fewest total pieces among valid results.
 
 ## Local Static Defaults (Dev environment only)
 
-Implemented system for saving selected UI state back into static source defaults while running locally.
+When running the application locally, a specialized persistence mechanism allows saving UI state (presets, defaults) directly back into the source code (`config.js`).
 
-- Run with `npm run dev`; this starts `scripts/local-dev-server.js`.
-- Open `http://localhost:3000`; direct `file://` usage cannot save source files.
-- `canSaveStaticDefaults()`: Returns `true` on `localhost` or `127.0.0.1`.
-- `saveStaticDefaults(key, value)`: Sends a POST request to `/api/save-defaults`.
-- The local server accepts only allow-listed keys and rewrites matching constants in `config.js`.
-- GitHub Pages has no Node server, so save buttons are hidden and committed `config.js` values act as static defaults.
-- After local saves, run `npm run build` so `components.js` reflects `src/`, then commit/push `config.js` and `components.js` as needed.
-
-Current save keys:
-
-| Key | Constant | Used by |
-|---|---|---|
-| `concretePresets` | `DEFAULT_CONCRETE_PRESETS` | Concrete product presets |
-| `goldenRatioDefaults` | `DEFAULT_GR` | Golden Ratio saved/default rows |
+- `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost` or `127.0.0.1`.
+- `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
+- Currently utilized by:
+  - **Concrete Calculator**: To persist product presets.
+  - **Golden Ratio Tool**: To persist saved value series.
 
 ## Theme system
 
 Defined in `themes.js` (loaded as global, not inside `src/`).
 - `THEMES` object maps theme keys to `{ name, label, icon, colors }` where `colors` is CSS var → value
 - `applyTheme(name)` sets CSS custom properties on `:root` and a `data-theme` attribute
-- App.jsx holds `theme` state (default: `"navi"`), applies via `useEffect`
-- To add a theme: add entry to `THEMES` in `themes.js` — it auto-rotates via `getNextTheme`
+- App.jsx holds `theme` state (default: `"naviPro"`, persisted to `localStorage`), applies via `useEffect`
+- To add a theme: add entry to `THEMES` in `themes.js`
 
 ## Golden Ratio tool
 
@@ -193,5 +184,5 @@ Cards use tone system (a/b/c/d) for visual identity.
 ## What does NOT exist yet (possible future work)
 
 - Export / print functionality
-- User Persistence (no localStorage or database for end-users)
+- Advanced User Persistence (localStorage is only used for theme choice, no database for end-users)
 - Unit tests
