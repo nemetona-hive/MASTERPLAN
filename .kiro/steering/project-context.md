@@ -156,6 +156,7 @@ When running the application locally, a specialized persistence mechanism allows
 - Currently utilized by:
   - **Concrete Calculator**: To persist product presets.
   - **Golden Ratio Tool**: To persist saved value series.
+  - **Pattern Layouts**: To persist material dimension presets.
 
 ## Theme system
 
