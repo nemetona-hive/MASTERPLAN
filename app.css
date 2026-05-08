@@ -961,6 +961,16 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	color: var(--color-primary);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-1);
+}
+
+.num-lbl-icon {
+	font-size: var(--fs-md);
+	opacity: 0.7;
+	text-transform: none;
+	letter-spacing: 0;
 }
 
 .num-lbl-raw {
