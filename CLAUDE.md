@@ -28,12 +28,12 @@ and is available as globals — do NOT import them.
 10. components/SymmetricLayout.jsx → SheetSymmetricLayout
 11. components/SurfaceLayout.jsx → SheetSurfaceLayout
 12. Nav.jsx                    → isNavPageActive, NavButton, initOpenGroups, AppNav
-13. themes.js                  → THEMES, getThemeOrder, getNextTheme, applyTheme
-14. App.jsx                    → MainPageContent, App, ReactDOM.createRoot
+13. App.jsx                    → MainPageContent, App, ReactDOM.createRoot
 ```
 
 `components.jsx` is the manifest — it documents order but contains no logic.
 **Never add logic to components.jsx.**
+Note: `themes.js` is loaded directly in `index.html` to ensure themes apply early before React renders.
 
 ## Key globals (defined outside src/, treat as read-only)
 
@@ -162,8 +162,8 @@ When running the application locally, a specialized persistence mechanism allows
 Defined in `themes.js` (loaded as global, not inside `src/`).
 - `THEMES` object maps theme keys to `{ name, label, icon, colors }` where `colors` is CSS var → value
 - `applyTheme(name)` sets CSS custom properties on `:root` and a `data-theme` attribute
-- App.jsx holds `theme` state (default: `"navi"`), applies via `useEffect`
-- To add a theme: add entry to `THEMES` in `themes.js` — it auto-rotates via `getNextTheme`
+- App.jsx holds `theme` state (default: `"naviPro"`, persisted to `localStorage`), applies via `useEffect`
+- To add a theme: add entry to `THEMES` in `themes.js`
 
 ## Golden Ratio tool
 
@@ -184,5 +184,5 @@ Cards use tone system (a/b/c/d) for visual identity.
 ## What does NOT exist yet (possible future work)
 
 - Export / print functionality
-- User Persistence (no localStorage or database for end-users)
+- Advanced User Persistence (localStorage is only used for theme choice, no database for end-users)
 - Unit tests
