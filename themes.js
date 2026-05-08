@@ -11,35 +11,57 @@
  */
 
 const THEMES = {
-  navi: {
-    name: 'navi',
-    label: 'Navi',
+  naviPro: {
+    name: 'naviPro',
+    label: 'Navi Pro',
     icon: '◇',
     colors: {
-      '--color-darkblue':       '#09101a',
-      '--color-darkblue-light': '#131923',
-      '--color-gray':           '#506070',
-      '--color-gray-light':     '#233342',
-      '--color-gray-opa80':     '#73808d',
-      '--color-blue':           '#3d7a9e',
-      '--color-white':          '#fff',
+      '--bg': '#0b1117',
+      '--surface-1': '#111a22',
+      '--surface-2': '#17232d',
+      '--surface-hover': '#1d2b36',
+      '--border': '#263846',
+      '--text': '#d7dde2',
+      '--text-muted': '#92a1ad',
+      '--brand': '#d0bd86',
+      '--accent': '#4fa3c7',
+      '--accent-2': '#79b88f',
     },
   },
-  hybrid: {
-    name:  'hybrid',
-    label: 'Hybrid',
-    icon:  '⟐',
+  graphite: {
+    name: 'graphite',
+    label: 'Graphite',
+    icon: '⟐',
     colors: {
-      '--color-darkblue':       '#1c1c1e',
-      '--color-darkblue-light': '#2c2c2e',
-      '--color-gray-light':     '#3a3a3c',
-      '--color-gray':           '#636366',
-      '--color-gray-opa80':     '#92a4ae',
-      '--color-blue':           '#4a90a8',
-      '--color-primary':        '#c4b48a',
-      '--color-white':          '#ffffff',
+      '--bg': '#18191b',
+      '--surface-1': '#222427',
+      '--surface-2': '#2b2e32',
+      '--surface-hover': '#34383d',
+      '--border': '#41464d',
+      '--text': '#e1e3e6',
+      '--text-muted': '#a0a7af',
+      '--brand': '#d2bd83',
+      '--accent': '#56a7c2',
+      '--accent-2': '#84b782',
     }
   },
+  verdant: {
+    name: 'verdant',
+    label: 'Verdant',
+    icon: '⎈',
+    colors: {
+      '--bg': '#07110f',
+      '--surface-1': '#0e1c19',
+      '--surface-2': '#142822',
+      '--surface-hover': '#1a332b',
+      '--border': '#28483e',
+      '--text': '#d8e3de',
+      '--text-muted': '#94a9a1',
+      '--brand': '#d4bd80',
+      '--accent': '#55b6a4',
+      '--accent-2': '#7ca9d8',
+    }
+  }
 };
 
 /**
