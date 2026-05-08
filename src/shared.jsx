@@ -112,7 +112,7 @@ function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
   );
 }
 
-function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = false, onFocus }) {
+function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = false, onFocus, labelIcon }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const [committed, setCommitted] = React.useState(false);
   const commitTimer = React.useRef(null);
@@ -143,7 +143,7 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = f
 
   return (
     <div className="num-wrap">
-      <span className="num-lbl">{label}</span>
+      <span className="num-lbl">{label}{labelIcon && <Icon name={labelIcon} className="num-lbl-icon" />}</span>
       <div className="num-row">
         <input
           id={id}
