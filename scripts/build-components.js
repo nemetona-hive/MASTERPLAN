@@ -18,7 +18,6 @@ const SOURCES = [
   "src/components/SymmetricLayout.jsx",
   "src/components/SurfaceLayout.jsx",
   "src/Nav.jsx",
-  "themes.js",
   "src/App.jsx"
 ];
 const OUT_FILE = "components.js";
