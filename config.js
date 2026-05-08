@@ -44,7 +44,10 @@ const ICONS = {
   "refresh-cw": "fa-solid fa-arrows-rotate",
   // Lock / Unlock
   "lock": "fa-solid fa-lock",
-  "unlock": "fa-solid fa-lock-open"
+  "unlock": "fa-solid fa-lock-open",
+  // Dimension arrows
+  "arrow-h": "fa-solid fa-arrows-left-right",
+  "arrow-v": "fa-solid fa-arrows-up-down"
 };
 
 const PAL_CLASSES = {
