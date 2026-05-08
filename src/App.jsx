@@ -52,7 +52,14 @@ function App() {
   const [isMobile, setIsMobile]            = React.useState(getIsMobile);
   const [navOpen, setNavOpen]               = React.useState(!getIsMobile());
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [theme, setTheme]                   = useState("navi");
+  const [theme, setTheme]                   = useState(() => {
+    try {
+      const saved = localStorage.getItem("theme");
+      return saved && THEMES[saved] ? saved : "naviPro";
+    } catch {
+      return "naviPro";
+    }
+  });
 
   // Sync page state with URL hash
   const setPage = id => {
@@ -105,6 +112,7 @@ function App() {
   }, []);
 
   React.useEffect(() => {
+    try { localStorage.setItem("theme", theme); } catch {}
     applyTheme(theme);
   }, [theme]);
 
