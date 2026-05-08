@@ -50,16 +50,16 @@ const THEMES = {
     label: 'Verdant',
     icon: '⎈',
     colors: {
-      '--bg': '#07110f',
-      '--surface-1': '#0e1c19',
-      '--surface-2': '#142822',
-      '--surface-hover': '#1a332b',
-      '--border': '#28483e',
-      '--text': '#d8e3de',
-      '--text-muted': '#94a9a1',
-      '--brand': '#d4bd80',
-      '--accent': '#55b6a4',
-      '--accent-2': '#7ca9d8',
+      '--bg': '#f0f4f2',
+      '--surface-1': '#ffffff',
+      '--surface-2': '#e6ebe9',
+      '--surface-hover': '#f6f9f8',
+      '--border': '#ccd4d1',
+      '--text': '#1a2622',
+      '--text-muted': '#4e615b',
+      '--brand': '#9e813a',
+      '--accent': '#1c7b69',
+      '--accent-2': '#327396',
     }
   }
 };
