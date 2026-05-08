@@ -59,35 +59,35 @@ const PAL_CLASSES = {
 const SYSTEMS = [{
   id: 0,
   label: "S0",
-  color: "#c4b48a",
+  color: "var(--sys-s0)",
   icon: "s0",
   title: "Symmetric layout",
   subtitle: "equal edge pieces, full pieces in center"
 }, {
   id: 1,
   label: "S1",
-  color: "#3d7a9e",
+  color: "var(--sys-s1)",
   icon: "s1",
   title: "Straight layout",
   subtitle: "remainder carries over to next row"
 }, {
   id: 2,
   label: "S2",
-  color: "#73808d",
+  color: "var(--sys-s2)",
   icon: "s2",
   title: "Shifted layout",
   subtitle: (offset) => `offset ${offset.toFixed(2)} \xD7 panel length`
 }, {
   id: 3,
   label: "S3",
-  color: "#c4b48a",
+  color: "var(--sys-s3)",
   icon: "s3",
   title: "Stepped layout",
   subtitle: "offset +\u2153 per row (0 \u2192 \u2153 \u2192 \u2154 \u2192 0\u2026)"
 }, {
   id: 4,
   label: "S4",
-  color: "#3d7a9e",
+  color: "var(--sys-s4)",
   icon: "s4",
   title: "Long-Short",
   subtitle: (s4Long, s4Short) => `long ${s4Long}mm / short ${s4Short}mm`
