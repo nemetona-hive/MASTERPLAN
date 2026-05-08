@@ -967,7 +967,7 @@ function SheetTimesheet() {
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       height: '1px',
-      background: 'var(--color-gray-opa10)',
+      background: 'var(--divider-subtle)',
       margin: 'var(--sp-2) 0'
     }
   }), /*#__PURE__*/React.createElement(Stack, {
