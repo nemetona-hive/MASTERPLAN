@@ -139,18 +139,18 @@ function SheetSurfaceLayout({ sh, setSh }) {
           <Stack gap={1}>
             <SLabel>Material Specification</SLabel>
             <div ref={widWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-PLa" label="Width (mm)"  value={Math.max(1, PLa)} onChange={set("PLa")} step={10} />
+              <NumInput id="input-PLa" label="Width (mm)"  labelIcon="arrow-h" value={Math.max(1, PLa)} onChange={set("PLa")} step={10} />
               {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
             </div>
             <div ref={lenWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-PPi" label="Length (mm)" value={Math.max(1, PPi)} onChange={set("PPi")} step={10} />
+              <NumInput id="input-PPi" label="Length (mm)" labelIcon="arrow-v" value={Math.max(1, PPi)} onChange={set("PPi")} step={10} />
               {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
             </div>
           </Stack>
           <Stack gap={1}>
             <SLabel>Surface Area</SLabel>
-            <NumInput id="input-W" label="Width (mm)"  value={Math.max(1, W)} onChange={set("W")} step={10} />
-            <NumInput id="input-H" label="Height (mm)" value={Math.max(1, H)} onChange={set("H")} step={10} />
+            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={Math.max(1, W)} onChange={set("W")} step={10} />
+            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={Math.max(1, H)} onChange={set("H")} step={10} />
           </Stack>
         </Stack>
         <div id="data-preview" className="data-preview">
@@ -168,6 +168,7 @@ function SheetSurfaceLayout({ sh, setSh }) {
               <NumInput
                 id="input-PLa"
                 label="Width (mm)"
+                labelIcon="arrow-h"
                 value={PLa}
                 onChange={set("PLa")}
                 step={10}
@@ -179,6 +180,7 @@ function SheetSurfaceLayout({ sh, setSh }) {
               <NumInput
                 id="input-PPi"
                 label="Length (mm)"
+                labelIcon="arrow-v"
                 value={PPi}
                 onChange={set("PPi")}
                 step={10}
@@ -195,8 +197,8 @@ function SheetSurfaceLayout({ sh, setSh }) {
         </ControlPanel>
         <ControlPanel id="control-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen}>
           <Stack gap={3}>
-            <NumInput id="input-W" label="Width (mm)"  value={W} onChange={set("W")} step={10} />
-            <NumInput id="input-H" label="Height (mm)" value={H} onChange={set("H")} step={10} />
+            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={W} onChange={set("W")} step={10} />
+            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={H} onChange={set("H")} step={10} />
           </Stack>
         </ControlPanel>
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
