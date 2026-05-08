@@ -6,7 +6,7 @@
  * ============================================================ */
 const ICONS = {
   // UI Actions
-  "corner-down-left": "fa-solid fa-arrow-rotate-right",       // Confirm / Enter button
+  "corner-down-left": "fa-solid fa-check",                      // Confirm / Enter button
   "check": "fa-solid fa-check",                     // Commit confirmation flash
   "home": "fa-solid fa-compass-drafting",           // Home icon
 
