@@ -13,7 +13,8 @@ const ROOT_DIR = path.join(__dirname, '..');
 // ==========================================
 const DEFAULT_WRITES = {
   concretePresets: "DEFAULT_CONCRETE_PRESETS",
-  goldenRatioDefaults: "DEFAULT_GR"
+  goldenRatioDefaults: "DEFAULT_GR",
+  materialPresets: "DEFAULT_MATERIAL_PRESETS"
 };
 
 const toStringField = value => value == null ? "" : String(value);
@@ -83,9 +84,28 @@ function validateGoldenRatioDefaults(value) {
   });
 }
 
+function validateMaterialPresets(value) {
+  if (!Array.isArray(value)) {
+    throwValidationError("materialPresets must be an array");
+  }
+
+  return value.map((preset, idx) => {
+    if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
+      throwValidationError(`materialPresets[${idx}] must be an object`);
+    }
+
+    return {
+      name: toStringField(preset.name),
+      length: toNumberOrBlank(preset.length),
+      width: toNumberOrBlank(preset.width)
+    };
+  });
+}
+
 const DEFAULT_VALIDATORS = {
   concretePresets: validateConcretePresets,
-  goldenRatioDefaults: validateGoldenRatioDefaults
+  goldenRatioDefaults: validateGoldenRatioDefaults,
+  materialPresets: validateMaterialPresets
 };
 
 // Robust bracket matcher to safely replace constant values
