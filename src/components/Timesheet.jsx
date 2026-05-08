@@ -203,7 +203,7 @@ function SheetTimesheet() {
                     })}
                   </Stack>
 
-                  <div style={{height: '1px', background: 'var(--color-gray-opa10)', margin: 'var(--sp-2) 0'}} />
+                  <div style={{height: '1px', background: 'var(--divider-subtle)', margin: 'var(--sp-2) 0'}} />
 
                   {/* Controls */}
                   <Stack gap={4}>
