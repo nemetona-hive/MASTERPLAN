@@ -103,6 +103,14 @@ html, body, #root {
 	--color-blue: var(--accent);
 	--color-white: var(--text);
 	
+	--color-bg: var(--bg);
+	--color-text: var(--text);
+	--color-gray-opa10: color-mix(in srgb, var(--text-muted) 10%, transparent);
+
+	/* Dividers */
+	--divider-subtle: color-mix(in srgb, var(--text-muted) 12%, transparent);
+	--divider: color-mix(in srgb, var(--border) 70%, transparent);
+	
 
 	--mono:        'JetBrains Mono', monospace;
 	--sans:        'IBM Plex Sans', sans-serif;
@@ -2950,8 +2958,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	padding: 2px 4px;
 	border: 1px solid var(--color-gray-light);
 	border-radius: 4px;
-	background: var(--color-bg);
-	color: var(--color-text);
+	background: var(--bg);
+	color: var(--text);
 }
 
 /* Ensure the sliders and controls align vertically */
