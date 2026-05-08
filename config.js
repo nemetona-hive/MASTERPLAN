@@ -150,7 +150,7 @@ var PAGES = [{
   id: "concrete",
   label: "Concrete",
   title: "Concrete",
-  desc: "Self-levelling compound — calculate bags, mass and total price from area and layer thickness.",
+  desc: "Select product — calculate bags, mass and total price from area and layer thickness.",
   icon: "layer-group"
 }, {
   id: "pipe-wrap",
@@ -175,22 +175,22 @@ var PAGES = [{
 
 // Default application state — edit initial values here
 const DEFAULT_SH = {
-  W:         5600,
-  H:         2500,
-  PPi:       2400,
-  PLa:        300,
-  offset:     0.5,
+  W: 5600,
+  H: 2500,
+  PPi: 2400,
+  PLa: 300,
+  offset: 0.5,
   direction: "H",
-  rowStart:  "bottom",
-  minJ:       100,
-  startOff:     0,
-  s4Long:    2400,
-  s4Short:   1200
+  rowStart: "bottom",
+  minJ: 100,
+  startOff: 0,
+  s4Long: 2400,
+  s4Short: 1200
 };
 
 const DEFAULT_SYM = {
-  roomWidth:  2500,
-  panelWidth:  300,
+  roomWidth: 2500,
+  panelWidth: 300,
   oneFullEdge: false,
   customFirstPieceWidth: null
 };
@@ -241,33 +241,33 @@ async function saveStaticDefaults(key, value) {
 
 const SUMMARY_LABELS = {
   s0: {
-    fullPanels:    "Number of full panels",
-    edgeWidth:     "Edge piece width",
-    cutEdge:       "Cut edge panels",
-    totalToBuy:    "TOTAL panels to buy",
-    layoutLength:  "Total layout length",
-    roomGap:       "Gap from room"
+    fullPanels: "Number of full panels",
+    edgeWidth: "Edge piece width",
+    cutEdge: "Cut edge panels",
+    totalToBuy: "TOTAL panels to buy",
+    layoutLength: "Total layout length",
+    roomGap: "Gap from room"
   },
   s1s2s3: {
-    full:          "Full panels",
-    cut:           "Cut panels",
-    remainder:     "Remainder from prev",
-    total:         "Material pieces (full length)",
-    placed:        "Total panels placed",
-    gaps:          "Uncovered gaps",
-    gapWidth:      "Gap width total",
-    status:        "Status",
+    full: "Full panels",
+    cut: "Cut panels",
+    remainder: "Remainder from prev",
+    total: "Material pieces (full length)",
+    placed: "Total panels placed",
+    gaps: "Uncovered gaps",
+    gapWidth: "Gap width total",
+    status: "Status",
     statusInvalid: "increase min remainder or adjust panel size"
   },
   s4: {
-    full:          "Full panels",
-    cut:           "Cut panels",
-    remainder:     "Remainder from prev",
-    total:         "Total panels placed",
-    stock:         "Material pieces (full length)",
-    gaps:          "Uncovered gaps",
-    gapWidth:      "Gap width total",
-    status:        "Status",
+    full: "Full panels",
+    cut: "Cut panels",
+    remainder: "Remainder from prev",
+    total: "Total panels placed",
+    stock: "Material pieces (full length)",
+    gaps: "Uncovered gaps",
+    gapWidth: "Gap width total",
+    status: "Status",
     statusInvalid: "increase cut size or adjust lengths"
   }
 };
