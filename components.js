@@ -2430,6 +2430,64 @@ function SheetSymmetricLayout({
     isBest: false
   })));
 }
+function MaterialPresetDropdown({
+  anchorRef,
+  presets,
+  activePreset,
+  onApply,
+  field
+}) {
+  const [pos, setPos] = React.useState({
+    top: 0,
+    left: 0,
+    width: 0
+  });
+  React.useLayoutEffect(() => {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      setPos({
+        top: r.bottom + window.scrollY + 4,
+        left: r.left + window.scrollX,
+        width: r.width
+      });
+    }
+  }, [anchorRef]);
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-dropdown",
+    style: {
+      position: "absolute",
+      top: pos.top,
+      left: pos.left,
+      width: pos.width,
+      zIndex: 9999
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-header"
+  }, "Material Presets"), /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-list"
+  }, presets.map((p, idx) => {
+    if (!p.name) return null;
+    const displayVal = field === "width" ? p.width : p.length;
+    const displayUnit = field === "width" ? "w" : "l";
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      className: "rate-preset-item" + (activePreset === idx ? " active" : ""),
+      onMouseDown: e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onApply(p, idx);
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rate-preset-info"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-name"
+    }, p.name), /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-meta"
+    }, p.width, " \xD7 ", p.length, " mm")), /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-val"
+    }, displayVal, /*#__PURE__*/React.createElement("small", null, displayUnit)));
+  }))), document.body);
+}
 function SheetSurfaceLayout({
   sh,
   setSh
@@ -2451,10 +2509,86 @@ function SheetSurfaceLayout({
   const [materialOpen, setMaterialOpen] = React.useState(true);
   const [surfaceOpen, setSurfaceOpen] = React.useState(true);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
-  const set = k => v => setSh(s => ({
-    ...s,
-    [k]: v
-  }));
+
+  // ── Material presets ───────────────────────────────────────────────────────
+  const [presets, setPresets] = React.useState(() => (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : [{
+    name: "",
+    length: 300,
+    width: 300
+  }]).map(p => ({
+    ...p
+  })));
+  const [activePreset, setActivePreset] = React.useState(null);
+  const [flashIdx, setFlashIdx] = React.useState(null);
+  const [showLenDropdown, setShowLenDropdown] = React.useState(false);
+  const [showWidDropdown, setShowWidDropdown] = React.useState(false);
+  const [showModal, setShowModal] = React.useState(false);
+  const [fieldFlash, setFieldFlash] = React.useState(false);
+  const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+  const flashTimerRef = React.useRef(null);
+  const fieldTimerRef = React.useRef(null);
+  const lenWrapRef = React.useRef(null);
+  const widWrapRef = React.useRef(null);
+  React.useEffect(() => {
+    const onClickOutside = e => {
+      if (lenWrapRef.current && !lenWrapRef.current.contains(e.target)) setShowLenDropdown(false);
+      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      clearTimeout(flashTimerRef.current);
+      clearTimeout(fieldTimerRef.current);
+    };
+  }, []);
+  const applyPreset = (p, idx) => {
+    setSh(s => ({
+      ...s,
+      PPi: p.length,
+      PLa: p.width
+    }));
+    setActivePreset(idx);
+    setShowLenDropdown(false);
+    setShowWidDropdown(false);
+    clearTimeout(flashTimerRef.current);
+    setFlashIdx(idx);
+    flashTimerRef.current = setTimeout(() => setFlashIdx(null), 1200);
+    clearTimeout(fieldTimerRef.current);
+    setFieldFlash(true);
+    fieldTimerRef.current = setTimeout(() => setFieldFlash(false), 900);
+  };
+  const updatePreset = (idx, field, val) => {
+    const next = [...presets];
+    next[idx] = {
+      ...next[idx],
+      [field]: val
+    };
+    setPresets(next);
+  };
+  const addPreset = () => setPresets([...presets, {
+    name: "",
+    length: "",
+    width: ""
+  }]);
+  const saveMaterialDefaults = async () => {
+    setPresetSaveStatus("saving");
+    try {
+      await saveStaticDefaults("materialPresets", presets);
+      setPresetSaveStatus("saved");
+      setTimeout(() => setPresetSaveStatus(""), 2500);
+    } catch (err) {
+      console.error(err);
+      setPresetSaveStatus("error");
+      setTimeout(() => setPresetSaveStatus(""), 3500);
+    }
+  };
+  const set = k => v => {
+    setSh(s => ({
+      ...s,
+      [k]: v
+    }));
+    setActivePreset(null);
+  };
   const setS2PanelState = patch => setSh(s => ({
     ...s,
     offset: patch.offset !== undefined ? patch.offset : s.offset
@@ -2506,19 +2640,41 @@ function SheetSurfaceLayout({
       gap: 3
     }, /*#__PURE__*/React.createElement(Stack, {
       gap: 1
-    }, /*#__PURE__*/React.createElement(SLabel, null, "Material Specification"), /*#__PURE__*/React.createElement(NumInput, {
-      id: "input-PPi",
-      label: "Length (mm)",
-      value: Math.max(1, PPi),
-      onChange: set("PPi"),
-      step: 10
-    }), /*#__PURE__*/React.createElement(NumInput, {
+    }, /*#__PURE__*/React.createElement(SLabel, null, "Material Specification"), /*#__PURE__*/React.createElement("div", {
+      ref: widWrapRef,
+      style: {
+        position: "relative"
+      }
+    }, /*#__PURE__*/React.createElement(NumInput, {
       id: "input-PLa",
       label: "Width (mm)",
       value: Math.max(1, PLa),
       onChange: set("PLa"),
       step: 10
-    })), /*#__PURE__*/React.createElement(Stack, {
+    }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+      anchorRef: widWrapRef,
+      presets: presets,
+      activePreset: activePreset,
+      onApply: applyPreset,
+      field: "width"
+    })), /*#__PURE__*/React.createElement("div", {
+      ref: lenWrapRef,
+      style: {
+        position: "relative"
+      }
+    }, /*#__PURE__*/React.createElement(NumInput, {
+      id: "input-PPi",
+      label: "Length (mm)",
+      value: Math.max(1, PPi),
+      onChange: set("PPi"),
+      step: 10
+    }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+      anchorRef: lenWrapRef,
+      presets: presets,
+      activePreset: activePreset,
+      onApply: applyPreset,
+      field: "length"
+    }))), /*#__PURE__*/React.createElement(Stack, {
       gap: 1
     }, /*#__PURE__*/React.createElement(SLabel, null, "Surface Area"), /*#__PURE__*/React.createElement(NumInput, {
       id: "input-W",
@@ -2550,19 +2706,59 @@ function SheetSurfaceLayout({
     setOpen: setMaterialOpen
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
+  }, /*#__PURE__*/React.createElement("div", {
+    className: fieldFlash ? "num-input-flash" : "",
+    ref: widWrapRef,
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-PLa",
+    label: "Width (mm)",
+    value: PLa,
+    onChange: set("PLa"),
+    step: 10,
+    onFocus: () => {
+      setShowWidDropdown(true);
+      setShowLenDropdown(false);
+    }
+  }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    anchorRef: widWrapRef,
+    presets: presets,
+    activePreset: activePreset,
+    onApply: applyPreset,
+    field: "width"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: fieldFlash ? "num-input-flash" : "",
+    ref: lenWrapRef,
+    style: {
+      position: "relative"
+    }
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-PPi",
     label: "Length (mm)",
     value: PPi,
     onChange: set("PPi"),
-    step: 10
-  }), /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-PLa",
-    label: "Width (mm)",
-    value: PLa,
-    onChange: set("PLa"),
-    step: 10
-  }))), /*#__PURE__*/React.createElement(ControlPanel, {
+    step: 10,
+    onFocus: () => {
+      setShowLenDropdown(true);
+      setShowWidDropdown(false);
+    }
+  }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    anchorRef: lenWrapRef,
+    presets: presets,
+    activePreset: activePreset,
+    onApply: applyPreset,
+    field: "length"
+  })), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir",
+    style: {
+      marginTop: "var(--sp-1)"
+    },
+    onClick: () => setShowModal(true)
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "plus"
+  }), " Manage Presets"))), /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-surface",
     title: "Surface Area",
     open: surfaceOpen,
@@ -2658,7 +2854,106 @@ function SheetSurfaceLayout({
       rowStart: rowStart,
       isBest: panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best
     });
-  }))));
+  }))), showModal && /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal-overlay",
+    onMouseDown: e => {
+      if (e.target === e.currentTarget) setShowModal(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal-head"
+  }, /*#__PURE__*/React.createElement("span", null, "Manage Material Presets"), /*#__PURE__*/React.createElement("button", {
+    className: "mp-modal-close",
+    onClick: () => setShowModal(false)
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "minus"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal-body"
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 4
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 3
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-preset-header",
+    style: {
+      gridTemplateColumns: "2.2fr 1fr 1fr 84px"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "Product Name"), /*#__PURE__*/React.createElement("span", null, "Width mm"), /*#__PURE__*/React.createElement("span", null, "Length mm"), /*#__PURE__*/React.createElement("span", null, "\xA0")), presets.map((p, idx) => /*#__PURE__*/React.createElement("div", {
+    key: idx,
+    className: "pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-preset-fields",
+    style: {
+      gridTemplateColumns: "2.2fr 1fr 1fr 84px"
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "pw-preset-lbl-hide"
+  }, "Product Name"), /*#__PURE__*/React.createElement("input", {
+    id: `mat-preset-name-${idx}`,
+    name: `mat-preset-name-${idx}`,
+    type: "text",
+    className: "num-input",
+    placeholder: "e.g. Standard Tile 300\xD7300",
+    value: p.name,
+    onChange: e => updatePreset(idx, "name", e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "pw-preset-lbl-hide"
+  }, "Width mm"), /*#__PURE__*/React.createElement("input", {
+    id: `mat-preset-wid-${idx}`,
+    name: `mat-preset-wid-${idx}`,
+    type: "number",
+    className: "num-input",
+    value: p.width,
+    onChange: e => updatePreset(idx, "width", e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "pw-preset-lbl-hide"
+  }, "Length mm"), /*#__PURE__*/React.createElement("input", {
+    id: `mat-preset-len-${idx}`,
+    name: `mat-preset-len-${idx}`,
+    type: "number",
+    className: "num-input",
+    value: p.length,
+    onChange: e => updatePreset(idx, "length", e.target.value)
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "num-wrap",
+    style: {
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-preset-lbl-hide"
+  }, "\xA0"), activePreset === idx ? /*#__PURE__*/React.createElement("div", {
+    className: "pw-preset-badge"
+  }, "active") : /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir on pw-preset-apply" + (flashIdx === idx ? " pw-preset-flash" : ""),
+    onClick: () => applyPreset(p, idx),
+    title: "Apply these values to the calculator"
+  }, flashIdx === idx ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Applied") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Apply"))))))), /*#__PURE__*/React.createElement(Stack, {
+    direction: "row",
+    gap: 2
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir",
+    onClick: addPreset
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "plus"
+  }), " Add Row"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : ""),
+    onClick: saveMaterialDefaults,
+    disabled: presetSaveStatus === "saving"
+  }, presetSaveStatus === "saving" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Saving...") : presetSaveStatus === "saved" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Saved Defaults") : presetSaveStatus === "error" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Error Saving") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: "check"
+  }), " Save Defaults"))), /*#__PURE__*/React.createElement("div", {
+    className: "pw-formula-text",
+    style: {
+      opacity: 0.7
+    }
+  }, "Fill preset data above and click \"Apply\" to update the calculator, or \"Save Defaults\" to persist."))))));
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
