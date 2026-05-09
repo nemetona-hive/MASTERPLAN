@@ -54,6 +54,7 @@ Note: `themes.js` is loaded directly in `index.html` to ensure themes apply earl
 | `getSegmentClass(seg, palClasses)` | Returns CSS class for a row segment |
 | `THEMES` | Theme definitions (name, label, icon, colors map of CSS vars) |
 | `DEFAULT_CONCRETE_PRESETS` | Initial product list for Concrete calculator (name, rate, bagKg, bagPrice) |
+| `DEFAULT_MATERIAL_PRESETS` | Initial material list for Surface Layout (name, length, width) |
 | `canSaveStaticDefaults()` | Boolean check for local dev environment |
 | `saveStaticDefaults(key, value)` | API call to persist config changes to disk during development |
 | `getThemeOrder()` | Ordered list of theme keys |
@@ -87,20 +88,22 @@ Page render is handled in `MainPageContent` in App.jsx — add new pages there.
 Nav items come from `PAGES` global — add new pages in config (outside src/).
 
 Current pages: `home`, `layout` (parent), `pattern-layout`, `symmetric-layout`,
-`self-leveling-floor`, `golden-ratio`, `pipe-wrap`, `timesheet`.
+`concrete`, `golden-ratio`, `pipe-wrap`, `timesheet`.
 
 ## UI components (from shared.jsx)
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange step min unit />` — controlled number input with commit-on-blur
+- `<NumInput id label value onChange step min unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle; uses `useProtectedRangeSlider` for mobile touch-scroll protection. Starts locked; click row or tap lock icon to unlock.
 - `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
 - `<Section title bg>` — collapsible section for preview area
-- `<Collapsible>` — base for both Section and ControlPanel (variant="section"|"panel")
-- `<Row label value unit hi hoverType hoveredType setHoveredType />` — data display row
+- `<DetailSection title open>` — collapsible section for secondary information or management UI
+- `<Collapsible>` — base for Section, ControlPanel, and DetailSection (variant="section"|"panel"|"detail")
+- `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<SLabel>` — simple label div for section headings in controls
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
+- `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
 - `.seg-group` — Container for exclusive mode-switch toggles; provides a unified border/boundary for grouped buttons.
 - `.pill-btn` — Minimalist, rounded buttons used for quick-select presets.
 - `.ctrl-dir` / `.ts-btn` — Standardized button styles with "premium glow" hover/active feedback. Standalone buttons use `var(--fs-md)` while segmented controls are bumped for legibility.
@@ -155,6 +158,7 @@ When running the application locally, a specialized persistence mechanism allows
 - `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
 - Currently utilized by:
   - **Concrete Calculator**: To persist product presets.
+  - **Surface Layout**: To persist material presets.
   - **Golden Ratio Tool**: To persist saved value series.
 
 ## Theme system
