@@ -1,6 +1,6 @@
 // ── Visualization components ──────────────────────────────────────────────────
 
-const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hoveredType, showLabels = true, orientation = "horizontal" }) {
+const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hoveredType, showLabels = true, orientation = "horizontal", alwaysShowLabels = false }) {
   const isVertical = orientation === "vertical";
   return (
     <div className={"panel-row" + (isVertical ? " panel-row-v" : "")}>
@@ -28,7 +28,7 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
               ? { top: `${l}%`, height: `${w}%`, left: 0, width: "100%", ...bgStyle }
               : { left: `${l}%`, width: `${w}%`, ...bgStyle }}
             title={titleText}>
-            {showLabels && w > 4 && <span className="panel-seg-lbl" style={{ color: tc }}>
+            {showLabels && (alwaysShowLabels || w > 4) && <span className="panel-seg-lbl" style={{ color: tc }}>
               {isGap ? `\u2205${Math.round(seg.w)}` : Math.round(seg.w)}
               {seg.sourceId && <span className="source-marker">{seg.type === "offcut" ? `${seg.sourceId}'` : seg.sourceId}</span>}
             </span>}
@@ -38,6 +38,8 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
     </div>
   );
 });
+
+const LARGE_LAYOUT_PREVIEW_THRESHOLD = 32;
 
 function PanelSummary({ rows, hoveredType, setHoveredType }) {
   return (
@@ -72,7 +74,7 @@ function groupAdjacentRows(rowsWithIndexes) {
   return groups;
 }
 
-function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
+function LayoutVisualization({ result, hoveredType, rowStart = "top", maxHeight = 420, alwaysShowLabels = false }) {
   if (result.meta.visualization === "strip") {
     return (
       <div className="strip">
@@ -118,7 +120,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
 
   const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
   const showRowText = !isV && orderedRows.length <= 12;
-  const showSegmentText = orderedRows.length <= 10;
+  const showSegmentText = alwaysShowLabels || orderedRows.length <= 10;
   const rowGroups = groupAdjacentRows(orderedRows);
   const visualRows = orderedRows.map(item => ({
     signature: `${item.idx}-${rowSignature(item.row)}`,
@@ -149,7 +151,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
           </div>
         )}
 
-        <Stack className="sys-rows sys-rows-border" gap={0} style={{ gridColumn: showRowText ? 2 : 1, gridRow: 1, justifySelf: "stretch", width: "100%", minWidth: 0, aspectRatio: chartAspectRatio, maxHeight: "420px", flexDirection: isV ? "row" : "column" }}>
+        <Stack className="sys-rows sys-rows-border" gap={0} style={{ gridColumn: showRowText ? 2 : 1, gridRow: 1, justifySelf: "stretch", width: "100%", minWidth: 0, aspectRatio: chartAspectRatio, maxHeight: `${maxHeight}px`, flexDirection: isV ? "row" : "column" }}>
           {visualRows.map((group, i) => {
             return (
               <div key={group.signature} className="sys-row" style={{ flexGrow: group.height }}>
@@ -160,7 +162,8 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
                     palClasses={result.meta.s4 && result.meta.useS4Colors ? (group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s) : result.meta.palClasses || PAL_CLASSES.s1}
                     hoveredType={hoveredType}
                     showLabels={showSegmentText}
-                    orientation={isV ? "vertical" : "horizontal"} />
+                    orientation={isV ? "vertical" : "horizontal"}
+                    alwaysShowLabels={alwaysShowLabels} />
                 </div>
               </div>
             );
@@ -186,11 +189,12 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
   );
 }
 
-function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp }) {
+function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp, onLargePreview }) {
   const [openLocal, setOpenLocal] = React.useState(layout.defaultOpen !== false);
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
+  const canLargePreview = onLargePreview && result.rows.length > 0;
   return (
     <div id={"panel-" + layout.id} className="sys-block">
       <div className="sys-head" onClick={noToggle ? undefined : () => setOpen(!isOpen)} style={noToggle ? { cursor: "default" } : {}}>
@@ -199,7 +203,14 @@ function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowS
           {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
         </h3>
         <span className="sys-head-sub">{layout.description}</span>
-        <span className="sys-head-count">{result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
+        <div className="sys-head-actions" onClick={e => e.stopPropagation()}>
+          {canLargePreview && (
+            <button type="button" className="ts-btn ts-btn--muted" onClick={() => onLargePreview(layout, result)}>
+              Large preview
+            </button>
+          )}
+          <span className="sys-head-count">{result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
+        </div>
       </div>
       {isOpen && (
         <Stack className="panel-body" gap={2}>
