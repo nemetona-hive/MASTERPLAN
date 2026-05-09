@@ -62,55 +62,38 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) =
   return rows;
 };
 
-function simulateS4(W, H, PP, PLong, PShort, minJ, vSym) {
-  if (W <= 0 || H <= 0 || PP <= 0 || PLong <= 0 || PShort <= 0) return [];
+function simulateS4(W, H, PP, PLong, minJ, vSym) {
+  if (W <= 0 || H <= 0 || PP <= 0 || PLong <= 0) return [];
   const heights = mkRowHeights(H, PP, vSym);
   const rows = [];
-  let carryW = 0;        // offcut length carried from previous row
-  let carryIsLong = false;
+
+  const fullCount = Math.floor(W / PLong);
+  const shortPiece = W - fullCount * PLong; // 0 means no short piece needed
 
   for (let i = 0; i < heights.length; i++) {
-	const h = heights[i];
-	const startsLong = i % 2 === 0;
-	const segs = [];
-	let x = 0, pid = 0;
-	let nextIsLong = startsLong;
+    const h = heights[i];
+    const segs = [];
+    let x = 0, pid = 0;
+    const startsWithShort = (i % 2 === 1) && shortPiece > 0;
 
-	if (vSym) carryW = 0;  // symmetric rows are independent
+    if (startsWithShort) {
+      segs.push({ x, w: shortPiece, type: "cut", long: false });
+      x += shortPiece;
+    }
 
-	// Place offcut carried from the previous row
-	if (carryW > 0) {
-	  const offcutW = Math.min(carryW, W);
-	  segs.push({ x: 0, w: offcutW, type: "offcut", long: carryIsLong });
-	  x = offcutW;
-	  carryW = carryW > W ? carryW - W : 0;
-	  nextIsLong = !carryIsLong;  // alternate from the offcut type
-	  if (x >= W) {
-		rows.push({ segs, h, long: startsLong });
-		continue;
-	  }
-	}
+    while (x + PLong <= W) {
+      segs.push({ x, w: PLong, type: "full", pid, long: true });
+      x += PLong;
+      pid++;
+    }
 
-	let cutDone = false;
-	while (x < W) {
-	  const PL = nextIsLong ? PLong : PShort;
-	  if (x + PL <= W) {
-		segs.push({ x, w: PL, type: "full", pid, long: nextIsLong });
-		x += PL; pid++;
-		nextIsLong = !nextIsLong;
-	  } else {
-		const rem = W - x;
-		if (rem > 0) segs.push({ x, w: rem, type: rem >= minJ ? "cut" : "gap", pid, long: nextIsLong });
-		const newCarry = PL - rem;
-		carryW = newCarry >= minJ ? newCarry : 0;
-		carryIsLong = nextIsLong;
-		cutDone = true;
-		break;
-	  }
-	}
-	if (!cutDone) carryW = 0;
+    // For even rows, short piece goes at the end
+    if (!startsWithShort && shortPiece > 0 && x < W) {
+      const rem = W - x;
+      segs.push({ x, w: rem, type: "cut", long: false });
+    }
 
-	rows.push({ segs, h, long: startsLong });
+    rows.push({ segs, h });
   }
   return rows;
 }
@@ -249,39 +232,33 @@ const computeS2 = sh => computeStandard(sh, 2, sh.offset,  "s2");
 const computeS3 = sh => computeStandard(sh, 3, 0,          "s3");
 
 function computeS4(sh) {
-  const { W, H, PPi, PLa, direction, minJ, s4Long, s4Short } = sh;
-  if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0 || s4Long <= 0 || s4Short <= 0) return emptyLayoutResult();
+  const { W, H, PPi, PLa, direction, minJ, s4Long } = sh;
+  if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0 || s4Long <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
-  const rows = simulateS4(sW, vSym ? W : H, PLa, s4Long, s4Short, minJ, vSym);
+  const sH = vSym ? W : H;
+  const rows = simulateS4(sW, sH, PLa, s4Long, minJ, vSym);
   const stats = makeStats(rows);
-  const gaps = nGap(rows);
-  const totalGapWidth = gapWidth(rows);
-  const valid = gaps === 0;
+  const shortPiece = sW - Math.floor(sW / s4Long) * s4Long;
+  const fullCount  = Math.floor(sW / s4Long);
 
-  // Count long and short pieces separately (full + cut each consume one panel of that size).
-  // Multiple panels can come from one stock piece (PPi), so divide accordingly.
-  const countByLong = isLong => rows.reduce((a, r) =>
-	a + r.segs.filter(s => (s.type === "full" || s.type === "cut") && s.long === isLong).length, 0);
-  const nL        = countByLong(true);
-  const nS        = countByLong(false);
-  const perStockL = Math.max(1, Math.floor(PPi / s4Long));
-  const perStockS = Math.max(1, Math.floor(PPi / s4Short));
-  const stockPcs  = Math.ceil(nL / perStockL) + Math.ceil(nS / perStockS);
+  // Stock pieces: each full long comes from one stock piece (PPi)
+  // Short pieces are cut from the same stock piece as the last long in each row
+  const nLong = rows.reduce((a, r) => a + r.segs.filter(s => s.type === "full").length, 0);
+  const nShort = rows.reduce((a, r) => a + r.segs.filter(s => s.type === "cut").length, 0);
+  const perStock = Math.max(1, Math.floor(PPi / s4Long));
+  const stockPcs = Math.ceil(nLong / perStock) + (shortPiece > 0 ? Math.ceil(nShort / Math.max(1, Math.floor(PPi / shortPiece))) : 0);
 
   const L = SUMMARY_LABELS.s4;
   return {
-	valid, rows, stats,
-	summaryRows: [
-	  { label: L.stock,     value: stockPcs,                              unit: "pcs", hi: true },
-	  { label: L.total,     value: stats.full + stats.cut + nOffcut(rows), unit: "pcs", hi: true },
-	  { label: L.full,      value: stats.full,                            unit: "pcs", hoverType: "full" },
-	  { label: L.cut,       value: stats.cut,                             unit: "pcs", hoverType: "cut" },
-	  { label: L.remainder, value: nOffcut(rows),                         unit: "pcs", hoverType: "offcut" },
-	  { label: L.gaps,      value: gaps,                                  unit: "pcs", hoverType: "gap" },
-	  { label: L.gapWidth,  value: fmt.decimal(totalGapWidth),            unit: "mm",  hoverType: "gap" },
-	  { label: L.status,    value: valid ? "Valid" : "Invalid", unit: valid ? "" : L.statusInvalid, hi: !valid }
-	],
-	meta: { width: sW, visualization: "rows", s4: true }
+    valid: true, rows, stats,
+    summaryRows: [
+      { label: "Long piece",  value: fmt.decimal(s4Long),                                        unit: "mm",  hi: true },
+      { label: "Short piece", value: shortPiece > 0 ? fmt.decimal(shortPiece) : "none",          unit: shortPiece > 0 ? "mm" : "", hi: true },
+      { label: L.stock,       value: stockPcs,                                                    unit: "pcs", hi: true },
+      { label: L.full,        value: stats.full,                                                  unit: "pcs", hoverType: "full" },
+      { label: L.cut,         value: stats.cut,                                                   unit: "pcs", hoverType: "cut" }
+    ],
+    meta: { width: sW, visualization: "rows", s4: true }
   };
 }
