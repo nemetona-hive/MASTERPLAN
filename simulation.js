@@ -22,6 +22,16 @@ const mkRowHeights = (H, PP, vSym) => {
   return [...Array(count - 1).fill(PP), H - (count - 1) * PP];
 };
 
+function getSourceId(index) {
+  let id = "";
+  let i = index;
+  while (i >= 0) {
+    id = String.fromCharCode(65 + (i % 26)) + id;
+    i = Math.floor(i / 26) - 1;
+  }
+  return id;
+}
+
 const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) => {
   if (W <= 0 || H <= 0 || PP <= 0 || PL <= 0) return [];
   // Safety cap: prevent runaway loops with extreme values
@@ -30,6 +40,8 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) =
   const startRemainder = startOff > 0 ? Math.max(0, Math.min(startOff, PL)) : 0;
   const rows = [];
   let remainder = startRemainder;
+  let cutIndex = 0;
+  let activeSourceId = null;
   for (let i = 0; i < heights.length; i++) {
 	if (vSym) remainder = startRemainder;
 	const off = sys === 1 ? 0 : sys === 2 ? (i % 2 === 1 ? offset * PL : 0) : (i % 3) * (PL / 3);
@@ -38,7 +50,7 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) =
 	if (remainder > 0) {
 	  const vs = Math.max(x, 0);
 	  const ve = Math.min(x + remainder, W);
-	  if (ve > vs) segs.push({ x: vs, w: ve - vs, type: "offcut" });
+	  if (ve > vs) segs.push({ x: vs, w: ve - vs, type: "offcut", sourceId: activeSourceId });
 	  x += remainder;
 	}
 	let pid = 0;
@@ -49,7 +61,12 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) =
 		const isFull = x >= 0 && x + PL <= W;
 		const cutW  = ve - vs;
 		const type  = isFull ? "full" : (cutW >= minJ ? "cut" : "gap");
-		segs.push({ x: vs, w: cutW, type, pid: isFull ? pid : undefined });
+		let sourceId;
+		if (type === "cut") {
+		  activeSourceId = getSourceId(cutIndex++);
+		  sourceId = activeSourceId;
+		}
+		segs.push({ x: vs, w: cutW, type, pid: isFull ? pid : undefined, sourceId });
 		if (isFull) pid++;
 	  }
 	  x += PL;
