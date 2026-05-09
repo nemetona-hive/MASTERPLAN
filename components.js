@@ -468,7 +468,8 @@ const PanelRowVis = React.memo(function PanelRowVis({
   palClasses,
   hoveredType,
   showLabels = true,
-  orientation = "horizontal"
+  orientation = "horizontal",
+  alwaysShowLabels = false
 }) {
   const isVertical = orientation === "vertical";
   return /*#__PURE__*/React.createElement("div", {
@@ -502,7 +503,7 @@ const PanelRowVis = React.memo(function PanelRowVis({
         ...bgStyle
       },
       title: titleText
-    }, showLabels && w > 4 && /*#__PURE__*/React.createElement("span", {
+    }, showLabels && (alwaysShowLabels || w > 4) && /*#__PURE__*/React.createElement("span", {
       className: "panel-seg-lbl",
       style: {
         color: tc
@@ -512,6 +513,7 @@ const PanelRowVis = React.memo(function PanelRowVis({
     }, seg.type === "offcut" ? `${seg.sourceId}'` : seg.sourceId)));
   }));
 });
+const LARGE_LAYOUT_PREVIEW_THRESHOLD = 32;
 function PanelSummary({
   rows,
   hoveredType,
@@ -554,7 +556,9 @@ function groupAdjacentRows(rowsWithIndexes) {
 function LayoutVisualization({
   result,
   hoveredType,
-  rowStart = "top"
+  rowStart = "top",
+  maxHeight = 420,
+  alwaysShowLabels = false
 }) {
   if (result.meta.visualization === "strip") {
     return /*#__PURE__*/React.createElement("div", {
@@ -613,7 +617,7 @@ function LayoutVisualization({
   const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
   const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
   const showRowText = !isV && orderedRows.length <= 12;
-  const showSegmentText = orderedRows.length <= 10;
+  const showSegmentText = alwaysShowLabels || orderedRows.length <= 10;
   const rowGroups = groupAdjacentRows(orderedRows);
   const visualRows = orderedRows.map(item => ({
     signature: `${item.idx}-${rowSignature(item.row)}`,
@@ -665,7 +669,7 @@ function LayoutVisualization({
       width: "100%",
       minWidth: 0,
       aspectRatio: chartAspectRatio,
-      maxHeight: "420px",
+      maxHeight: `${maxHeight}px`,
       flexDirection: isV ? "row" : "column"
     }
   }, visualRows.map((group, i) => {
@@ -683,7 +687,8 @@ function LayoutVisualization({
       palClasses: result.meta.s4 && result.meta.useS4Colors ? group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
       hoveredType: hoveredType,
       showLabels: showSegmentText,
-      orientation: isV ? "vertical" : "horizontal"
+      orientation: isV ? "vertical" : "horizontal",
+      alwaysShowLabels: alwaysShowLabels
     })));
   })), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -748,12 +753,14 @@ function LayoutPanel({
   rowStart = "top",
   noToggle = false,
   open: openProp,
-  setOpen: setOpenProp
+  setOpen: setOpenProp,
+  onLargePreview
 }) {
   const [openLocal, setOpenLocal] = React.useState(layout.defaultOpen !== false);
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const isOpen = noToggle ? true : isControlled ? openProp : openLocal;
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
+  const canLargePreview = onLargePreview && result.rows.length > 0;
   return /*#__PURE__*/React.createElement("div", {
     id: "panel-" + layout.id,
     className: "sys-block"
@@ -774,11 +781,18 @@ function LayoutPanel({
     className: "sys-title-icon"
   }), " ", layout.title), /*#__PURE__*/React.createElement("span", {
     className: "sys-head-sub"
-  }, layout.description), /*#__PURE__*/React.createElement("span", {
+  }, layout.description), /*#__PURE__*/React.createElement("div", {
+    className: "sys-head-actions",
+    onClick: e => e.stopPropagation()
+  }, canLargePreview && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ts-btn ts-btn--muted",
+    onClick: () => onLargePreview(layout, result)
+  }, "Large preview"), /*#__PURE__*/React.createElement("span", {
     className: "sys-head-count"
   }, result.stats.total, " pcs ", isBest ? /*#__PURE__*/React.createElement(Icon, {
     name: "best-badge"
-  }) : "")), isOpen && /*#__PURE__*/React.createElement(Stack, {
+  }) : ""))), isOpen && /*#__PURE__*/React.createElement(Stack, {
     className: "panel-body",
     gap: 2
   }, layout.renderControls && React.createElement(layout.renderControls, {
@@ -2734,8 +2748,14 @@ function SheetSurfaceLayout({
   const [showLenDropdown, setShowLenDropdown] = React.useState(false);
   const [showWidDropdown, setShowWidDropdown] = React.useState(false);
   const [showModal, setShowModal] = React.useState(false);
+  const [largePreview, setLargePreview] = React.useState(null);
   const [fieldFlash, setFieldFlash] = React.useState(false);
   const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+  const openLargePreview = (layout, result) => setLargePreview({
+    layout,
+    result
+  });
+  const closeLargePreview = () => setLargePreview(null);
   const flashTimerRef = React.useRef(null);
   const fieldTimerRef = React.useRef(null);
   const lenWrapRef = React.useRef(null);
@@ -3106,6 +3126,7 @@ function SheetSurfaceLayout({
         ...s,
         [id]: v
       })),
+      onLargePreview: openLargePreview,
       isBest: panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best
     });
   }))), showModal && /*#__PURE__*/React.createElement("div", {
@@ -3207,7 +3228,37 @@ function SheetSurfaceLayout({
     style: {
       opacity: 0.7
     }
-  }, "Fill preset data above and click \"Apply\" to update the calculator, or \"Save Defaults\" to persist."))))));
+  }, "Fill preset data above and click \"Apply\" to update the calculator, or \"Save Defaults\" to persist."))))), largePreview && /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal-overlay",
+    onMouseDown: e => {
+      if (e.target === e.currentTarget) closeLargePreview();
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal mp-modal-large"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal-head"
+  }, /*#__PURE__*/React.createElement("span", null, "Large layout preview \u2014 ", largePreview.layout.title), /*#__PURE__*/React.createElement("button", {
+    className: "mp-modal-close",
+    onClick: closeLargePreview
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "minus"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mp-modal-body"
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 4
+  }, largePreview.result.summaryRows.length > 0 && /*#__PURE__*/React.createElement(PanelSummary, {
+    rows: largePreview.result.summaryRows,
+    hoveredType: hoveredType,
+    setHoveredType: setHoveredType
+  }), /*#__PURE__*/React.createElement("div", {
+    className: `large-layout-vis-wrap data-preview`
+  }, /*#__PURE__*/React.createElement(LayoutVisualization, {
+    result: largePreview.result,
+    hoveredType: hoveredType,
+    rowStart: rowStart,
+    maxHeight: 760,
+    alwaysShowLabels: true
+  })))))));
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
