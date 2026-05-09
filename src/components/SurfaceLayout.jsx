@@ -112,6 +112,8 @@ function SheetSurfaceLayout({ sh, setSh }) {
   };
 
   const set = k => v => { setSh(s => ({ ...s, [k]: v })); setActivePreset(null); };
+  const setMat = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(5000, Number(v) || 100)) })); setActivePreset(null); };
+  const setSurf = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); };
   const setS2PanelState = patch => setSh(s => ({ ...s, offset:  patch.offset  !== undefined ? patch.offset  : s.offset }));
   const setS4PanelState = patch => setSh(s => ({ ...s,
     s4Long:  patch.s4Long  !== undefined ? patch.s4Long  : s.s4Long,
@@ -139,18 +141,18 @@ function SheetSurfaceLayout({ sh, setSh }) {
           <Stack gap={1}>
             <SLabel>Material Specification</SLabel>
             <div ref={widWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-PLa" label="Width (mm)"  labelIcon="arrow-h" value={Math.max(1, PLa)} onChange={set("PLa")} step={10} />
+              <NumInput id="input-PLa" label="Width (mm)"  labelIcon="arrow-h" min={100} value={Math.max(100, PLa)} onChange={setMat("PLa")} step={10} />
               {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
             </div>
             <div ref={lenWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-PPi" label="Length (mm)" labelIcon="arrow-v" value={Math.max(1, PPi)} onChange={set("PPi")} step={10} />
+              <NumInput id="input-PPi" label="Length (mm)" labelIcon="arrow-v" min={100} value={Math.max(100, PPi)} onChange={setMat("PPi")} step={10} />
               {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
             </div>
           </Stack>
           <Stack gap={1}>
             <SLabel>Surface Area</SLabel>
-            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={Math.max(1, W)} onChange={set("W")} step={10} />
-            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={Math.max(1, H)} onChange={set("H")} step={10} />
+            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={Math.max(100, W)} onChange={setSurf("W")} step={10} />
+            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={Math.max(100, H)} onChange={setSurf("H")} step={10} />
           </Stack>
         </Stack>
         <div id="data-preview" className="data-preview">
@@ -162,7 +164,7 @@ function SheetSurfaceLayout({ sh, setSh }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
-        <ControlPanel id="control-material" title="Material Specification" open={materialOpen} setOpen={setMaterialOpen}>
+        <ControlPanel id="control-material" title="Material Specification" open={materialOpen} setOpen={setMaterialOpen} noToggle>
           <Stack gap={3}>
             <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
               <NumInput
@@ -170,8 +172,9 @@ function SheetSurfaceLayout({ sh, setSh }) {
                 label="Width (mm)"
                 labelIcon="arrow-h"
                 value={PLa}
-                onChange={set("PLa")}
+                onChange={setMat("PLa")}
                 step={10}
+                min={100}
                 onFocus={() => { setShowWidDropdown(true); setShowLenDropdown(false); }}
               />
               {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
@@ -182,8 +185,9 @@ function SheetSurfaceLayout({ sh, setSh }) {
                 label="Length (mm)"
                 labelIcon="arrow-v"
                 value={PPi}
-                onChange={set("PPi")}
+                onChange={setMat("PPi")}
                 step={10}
+                min={100}
                 onFocus={() => { setShowLenDropdown(true); setShowWidDropdown(false); }}
               />
               {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
@@ -195,10 +199,17 @@ function SheetSurfaceLayout({ sh, setSh }) {
             )}
           </Stack>
         </ControlPanel>
-        <ControlPanel id="control-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen}>
+        <ControlPanel id="control-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen} noToggle>
           <Stack gap={3}>
-            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={W} onChange={set("W")} step={10} />
-            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={H} onChange={set("H")} step={10} />
+            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
+            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
+            <button
+              className="ctrl-dir"
+              style={{ width: "100%", marginTop: "var(--sp-1)" }}
+              onClick={() => setSh(s => ({ ...s, W: DEFAULT_SH.W, H: DEFAULT_SH.H }))}
+            >
+              <Icon name="refresh-cw" /> Reset
+            </button>
           </Stack>
         </ControlPanel>
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
