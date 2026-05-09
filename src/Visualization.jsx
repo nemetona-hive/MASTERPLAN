@@ -1,6 +1,6 @@
 // ── Visualization components ──────────────────────────────────────────────────
 
-const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hoveredType }) {
+const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hoveredType, showLabels = true }) {
   return (
     <div className="panel-row">
       {segs.map((seg, i) => {
@@ -19,14 +19,15 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
         } : undefined;
         const titleText = isGap
           ? `${Math.round(seg.w)}mm \u2014 gap`
-          : `${Math.round(seg.w)}mm \u2014 ${seg.type === "offcut" ? "remainder from prev" : seg.type === "cut" ? "cut" : seg.type === "edge" ? "edge piece" : "full panel"}`;
+          : `${Math.round(seg.w)}mm \u2014 ${seg.type === "offcut" ? "remainder from prev" : seg.type === "cut" ? "cut" : seg.type === "edge" ? "edge piece" : "full panel"}` + (seg.sourceId ? ` (source: ${seg.sourceId})` : "");
         return (
           <div key={i}
             className={"panel-seg " + (!isGap ? segClass : "") + (isDimmed ? " seg-highlight" : "")}
             style={{ left: `${l}%`, width: `${w}%`, ...bgStyle }}
             title={titleText}>
-            {w > 4 && <span className="panel-seg-lbl" style={{ color: tc }}>
+            {showLabels && w > 4 && <span className="panel-seg-lbl" style={{ color: tc }}>
               {isGap ? `\u2205${Math.round(seg.w)}` : Math.round(seg.w)}
+              {seg.sourceId && <span className="source-marker">{seg.type === "offcut" ? `${seg.sourceId}'` : seg.sourceId}</span>}
             </span>}
           </div>
         );
@@ -44,6 +45,26 @@ function PanelSummary({ rows, hoveredType, setHoveredType }) {
       ))}
     </>
   );
+}
+
+function rowSignature(row) {
+  return row.segs
+    .map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0].join(":"))
+    .join("|") + (row.long ? "-L" : "-S");
+}
+
+function groupAdjacentRows(rowsWithIndexes) {
+  const groups = [];
+  rowsWithIndexes.forEach(item => {
+    const signature = rowSignature(item.row);
+    const last = groups[groups.length - 1];
+    if (last && last.signature === signature) {
+      last.items.push(item);
+    } else {
+      groups.push({ signature, items: [item] });
+    }
+  });
+  return groups;
 }
 
 function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
@@ -92,35 +113,83 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
     : `${horzTotal} mm — panel ${horzPanel} mm`;
   const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
 
+  const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
+  const showRowText = orderedRows.length <= 12;
+  const showSegmentText = orderedRows.length <= 10;
+  const rowGroups = groupAdjacentRows(orderedRows);
+
   return (
-    <Stack gap={1}>
+    <Stack gap={0}>
       <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "stretch" }}>
-        {/* Vertical legend — left side, rotated */}
+        {/* Labels Column — Left Side */}
+        {showRowText && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {rowGroups.map((group, i) => {
+              const count = group.items.length;
+              const startR = group.items[0].idx + 1;
+              const endR = group.items[count - 1].idx + 1;
+              const label = count > 1 
+                ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)} ×${count}` 
+                : `R${startR}`;
+              return (
+                <div key={i} style={{ flexGrow: count, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                  <span className="sys-row-lbl-outer">{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <Stack className="sys-rows sys-rows-border" gap={0} style={{ flex: 1, aspectRatio: chartAspectRatio, maxHeight: "420px" }}>
+          {rowGroups.map((group, i) => {
+            const count = group.items.length;
+            
+            return (
+              <div key={i} className="sys-row" style={{ flexGrow: count }}>
+                <div className="sys-row-vis">
+                  <PanelRowVis
+                    segs={group.items[0].row.segs}
+                    W={result.meta.width}
+                    palClasses={result.meta.s4 && result.meta.useS4Colors ? (group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s) : result.meta.palClasses || PAL_CLASSES.s1}
+                    hoveredType={hoveredType}
+                    showLabels={showSegmentText} />
+                </div>
+              </div>
+            );
+          })}
+        </Stack>
+
+        {/* Vertical legend — Right side, rotated */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "18px" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-1)", writingMode: "vertical-rl", transform: "rotate(180deg)", fontFamily: "var(--mono)", fontSize: "var(--fs-sm)", color: "var(--color-gray-opa80)", whiteSpace: "nowrap" }}>
-            <Icon name="arrow-v" style={{ writingMode: "horizontal-tb", transform: "rotate(180deg)", fontSize: "var(--fs-sm)", color: "var(--color-primary)" }} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-1)", writingMode: "vertical-rl", fontFamily: "var(--mono)", fontSize: "var(--fs-md)", color: "var(--color-gray-opa80)", whiteSpace: "nowrap" }}>
+            <Icon name="arrow-v" style={{ writingMode: "horizontal-tb", fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
             <span>{vertLabel}</span>
           </div>
         </div>
-        <Stack className="sys-rows sys-rows-border" gap={0} style={{ flex: 1 }}>
-          {orderedRows.map(({ row, idx }, i) => (
-            <div key={i} className="sys-row">
-              <span className="sys-row-lbl">R{idx + 1}</span>
-              <div className="sys-row-vis">
-                <PanelRowVis
-                  segs={row.segs}
-                  W={result.meta.width}
-                  palClasses={result.meta.s4 && result.meta.useS4Colors ? (row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s) : result.meta.palClasses || PAL_CLASSES.s1}
-                  hoveredType={hoveredType} />
-              </div>
-            </div>
-          ))}
-        </Stack>
       </div>
-      {/* Horizontal legend — below rows */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-1)", paddingLeft: "32px", fontFamily: "var(--mono)", fontSize: "var(--fs-sm)", color: "var(--color-gray-opa80)" }}>
-        <Icon name="arrow-h" style={{ fontSize: "var(--fs-sm)", color: "var(--color-primary)" }} />
-        <span>{horzLabel}</span>
+
+      {/* Horizontal legend — Mirrored layout to align with sys-rows border */}
+      <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
+        {/* Left padding/spacer for labels */}
+        {showRowText && (
+          <div style={{ visibility: "hidden", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 0 }}>
+             <span className="sys-row-lbl-outer">R8-R8 ×8</span> {/* Representative width */}
+          </div>
+        )}
+
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--sp-1)", fontFamily: "var(--mono)", fontSize: "var(--fs-md)", color: "var(--color-gray-opa80)" }}>
+          <Icon name="arrow-h" style={{ fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
+          <span>{horzLabel}</span>
+          <Icon name="arrow-h" style={{ fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
+        </div>
+
+        {/* Right padding/spacer for vertical legend */}
+        <div style={{ visibility: "hidden", pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", minWidth: "18px" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-1)", writingMode: "vertical-rl" }}>
+            <Icon name="arrow-v" style={{ fontSize: "var(--fs-md)" }} />
+            <span>0000 mm</span>
+          </div>
+        </div>
       </div>
     </Stack>
   );
