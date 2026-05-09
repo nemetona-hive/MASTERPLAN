@@ -180,8 +180,8 @@ var PAGES = [{
 const DEFAULT_SH = {
   W: 5600,
   H: 2500,
-  PPi: 2400,
-  PLa: 300,
+  PPi: 2500,
+  PLa: 1250,
   offset: 0.5,
   direction: "H",
   rowStart: "bottom",
