@@ -467,10 +467,12 @@ const PanelRowVis = React.memo(function PanelRowVis({
   W,
   palClasses,
   hoveredType,
-  showLabels = true
+  showLabels = true,
+  orientation = "horizontal"
 }) {
+  const isVertical = orientation === "vertical";
   return /*#__PURE__*/React.createElement("div", {
-    className: "panel-row"
+    className: "panel-row" + (isVertical ? " panel-row-v" : "")
   }, segs.map((seg, i) => {
     const l = seg.x / W * 100,
       w = seg.w / W * 100;
@@ -488,7 +490,13 @@ const PanelRowVis = React.memo(function PanelRowVis({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "panel-seg " + (!isGap ? segClass : "") + (isDimmed ? " seg-highlight" : ""),
-      style: {
+      style: isVertical ? {
+        top: `${l}%`,
+        height: `${w}%`,
+        left: 0,
+        width: "100%",
+        ...bgStyle
+      } : {
         left: `${l}%`,
         width: `${w}%`,
         ...bgStyle
@@ -597,18 +605,21 @@ function LayoutVisualization({
     direction
   } = result.meta;
   const isV = direction === "V";
-  // In H mode: horizontal axis = W (panel length PPi runs along it), vertical = H (row height PLa)
-  // In V mode: axes swap — horizontal axis = H, vertical = W; PPi runs vertically, PLa horizontally
-  const horzTotal = isV ? surfaceH : surfaceW;
-  const vertTotal = isV ? surfaceW : surfaceH;
+  const horzTotal = surfaceW;
+  const vertTotal = surfaceH;
   const horzPanel = isV ? PLa : PPi;
   const vertPanel = isV ? PPi : PLa;
   const horzLabel = isS4 ? `${horzTotal} mm — long ${s4Long} mm` : `${horzTotal} mm — panel ${horzPanel} mm`;
   const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
   const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
-  const showRowText = orderedRows.length <= 12;
+  const showRowText = !isV && orderedRows.length <= 12;
   const showSegmentText = orderedRows.length <= 10;
   const rowGroups = groupAdjacentRows(orderedRows);
+  const visualRows = orderedRows.map(item => ({
+    signature: rowSignature(item.row),
+    items: [item],
+    height: Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1
+  }));
   return /*#__PURE__*/React.createElement(Stack, {
     gap: 0
   }, /*#__PURE__*/React.createElement("div", {
@@ -654,9 +665,10 @@ function LayoutVisualization({
       width: "100%",
       minWidth: 0,
       aspectRatio: chartAspectRatio,
-      maxHeight: "420px"
+      maxHeight: "420px",
+      flexDirection: isV ? "row" : "column"
     }
-  }, rowGroups.map((group, i) => {
+  }, visualRows.map((group, i) => {
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "sys-row",
@@ -670,7 +682,8 @@ function LayoutVisualization({
       W: result.meta.width,
       palClasses: result.meta.s4 && result.meta.useS4Colors ? group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
       hoveredType: hoveredType,
-      showLabels: showSegmentText
+      showLabels: showSegmentText,
+      orientation: isV ? "vertical" : "horizontal"
     })));
   })), /*#__PURE__*/React.createElement("div", {
     style: {
