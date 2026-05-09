@@ -1,8 +1,9 @@
 // ── Visualization components ──────────────────────────────────────────────────
 
-const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hoveredType, showLabels = true }) {
+const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hoveredType, showLabels = true, orientation = "horizontal" }) {
+  const isVertical = orientation === "vertical";
   return (
-    <div className="panel-row">
+    <div className={"panel-row" + (isVertical ? " panel-row-v" : "")}>
       {segs.map((seg, i) => {
         const l = seg.x / W * 100, w = seg.w / W * 100;
         const isGap = seg.type === "gap";
@@ -23,7 +24,9 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
         return (
           <div key={i}
             className={"panel-seg " + (!isGap ? segClass : "") + (isDimmed ? " seg-highlight" : "")}
-            style={{ left: `${l}%`, width: `${w}%`, ...bgStyle }}
+            style={isVertical
+              ? { top: `${l}%`, height: `${w}%`, left: 0, width: "100%", ...bgStyle }
+              : { left: `${l}%`, width: `${w}%`, ...bgStyle }}
             title={titleText}>
             {showLabels && w > 4 && <span className="panel-seg-lbl" style={{ color: tc }}>
               {isGap ? `\u2205${Math.round(seg.w)}` : Math.round(seg.w)}
@@ -104,10 +107,8 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
     : result.rows.map((row, idx) => ({ row, idx })));
   const { surfaceW, surfaceH, PPi, PLa, s4Long, s4: isS4, direction } = result.meta;
   const isV = direction === "V";
-  // In H mode: horizontal axis = W (panel length PPi runs along it), vertical = H (row height PLa)
-  // In V mode: axes swap — horizontal axis = H, vertical = W; PPi runs vertically, PLa horizontally
-  const horzTotal = isV ? surfaceH : surfaceW;
-  const vertTotal = isV ? surfaceW : surfaceH;
+  const horzTotal = surfaceW;
+  const vertTotal = surfaceH;
   const horzPanel = isV ? PLa : PPi;
   const vertPanel = isV ? PPi : PLa;
   const horzLabel = isS4
@@ -116,9 +117,14 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
   const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
 
   const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
-  const showRowText = orderedRows.length <= 12;
+  const showRowText = !isV && orderedRows.length <= 12;
   const showSegmentText = orderedRows.length <= 10;
   const rowGroups = groupAdjacentRows(orderedRows);
+  const visualRows = orderedRows.map(item => ({
+    signature: rowSignature(item.row),
+    items: [item],
+    height: Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1
+  }));
 
   return (
     <Stack gap={0}>
@@ -142,8 +148,8 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
           </div>
         )}
 
-        <Stack className="sys-rows sys-rows-border" gap={0} style={{ gridColumn: showRowText ? 2 : 1, gridRow: 1, justifySelf: "stretch", width: "100%", minWidth: 0, aspectRatio: chartAspectRatio, maxHeight: "420px" }}>
-          {rowGroups.map((group, i) => {
+        <Stack className="sys-rows sys-rows-border" gap={0} style={{ gridColumn: showRowText ? 2 : 1, gridRow: 1, justifySelf: "stretch", width: "100%", minWidth: 0, aspectRatio: chartAspectRatio, maxHeight: "420px", flexDirection: isV ? "row" : "column" }}>
+          {visualRows.map((group, i) => {
             return (
               <div key={i} className="sys-row" style={{ flexGrow: group.height }}>
                 <div className="sys-row-vis">
@@ -152,7 +158,8 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
                     W={result.meta.width}
                     palClasses={result.meta.s4 && result.meta.useS4Colors ? (group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s) : result.meta.palClasses || PAL_CLASSES.s1}
                     hoveredType={hoveredType}
-                    showLabels={showSegmentText} />
+                    showLabels={showSegmentText}
+                    orientation={isV ? "vertical" : "horizontal"} />
                 </div>
               </div>
             );
