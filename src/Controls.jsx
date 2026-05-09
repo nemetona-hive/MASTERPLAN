@@ -3,8 +3,7 @@
 function S4Controls({ state, setState }) {
   return (
     <Stack gap={3}>
-      <NumInput id="input-s4long"  label="Long (mm)"  value={state.s4Long}  onChange={v => setState({ s4Long: v })}  step={10} />
-      <NumInput id="input-s4short" label="Short (mm)" value={state.s4Short} onChange={v => setState({ s4Short: v })} step={10} />
+      <NumInput id="input-s4long" label="Long piece (mm)" value={state.s4Long} onChange={v => setState({ s4Long: v })} step={10} />
     </Stack>
   );
 }
