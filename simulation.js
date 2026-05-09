@@ -219,11 +219,13 @@ function computeStandard(sh, sysNum, offset, palKey) {
 	  { label: L.full,      value: stats.full,                             unit: "pcs", hoverType: "full" },
 	  { label: L.cut,       value: stats.cut,                              unit: "pcs", hoverType: "cut" },
 	  { label: L.remainder, value: nOffcut(rows),                          unit: "pcs", hoverType: "offcut" },
-	  { label: L.gaps,      value: gaps,                                   unit: "pcs", hoverType: "gap" },
-	  { label: L.gapWidth,  value: fmt.decimal(totalGapWidth),             unit: "mm",  hoverType: "gap" },
-	  { label: L.status,    value: valid ? "Valid" : "Invalid", unit: valid ? "" : L.statusInvalid, hi: !valid }
+	  ...(gaps > 0 ? [
+	    { label: L.gaps,      value: gaps,                                   unit: "pcs", hoverType: "gap" },
+	    { label: L.gapWidth,  value: fmt.decimal(totalGapWidth),             unit: "mm",  hoverType: "gap" },
+	  ] : []),
+	  { label: valid ? L.status : "Uncovered gaps \u2014 increase min remainder or adjust panel size.", value: valid ? "Valid" : "Invalid", unit: "", hi: !valid, danger: !valid }
 	],
-	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey] }
+	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey], surfaceW: sh.W, surfaceH: sh.H, PPi: sh.PPi, PLa: sh.PLa, direction: sh.direction }
   };
 }
 
@@ -259,6 +261,6 @@ function computeS4(sh) {
       { label: L.full,        value: stats.full,                                                  unit: "pcs", hoverType: "full" },
       { label: L.cut,         value: stats.cut,                                                   unit: "pcs", hoverType: "cut" }
     ],
-    meta: { width: sW, visualization: "rows", s4: true, useS4Colors: s4Long !== PPi }
+    meta: { width: sW, visualization: "rows", s4: true, useS4Colors: s4Long !== PPi, surfaceW: sh.W, surfaceH: sh.H, PPi: sh.PPi, PLa: sh.PLa, s4Long, direction: sh.direction }
   };
 }
