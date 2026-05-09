@@ -473,7 +473,8 @@ const PanelRowVis = React.memo(function PanelRowVis({
     const l = seg.x / W * 100,
       w = seg.w / W * 100;
     const isGap = seg.type === "gap";
-    const segPalClasses = seg.type === "full" && seg.long !== undefined ? seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses;
+    const isS4Palette = palClasses === PAL_CLASSES.s4l || palClasses === PAL_CLASSES.s4s;
+    const segPalClasses = isS4Palette && seg.type === "full" && seg.long !== undefined ? seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses;
     const segClass = getSegmentClass(seg, segPalClasses);
     const isDimmed = hoveredType && seg.type === hoveredType;
     const tc = isGap ? "#ff6666" : "var(--color-white)";
@@ -575,7 +576,7 @@ function LayoutVisualization({
   }, /*#__PURE__*/React.createElement(PanelRowVis, {
     segs: row.segs,
     W: result.meta.width,
-    palClasses: result.meta.s4 ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
+    palClasses: result.meta.s4 && result.meta.useS4Colors ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
     hoveredType: hoveredType
   })))));
 }
