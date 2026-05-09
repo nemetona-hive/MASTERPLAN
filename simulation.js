@@ -24,6 +24,8 @@ const mkRowHeights = (H, PP, vSym) => {
 
 const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) => {
   if (W <= 0 || H <= 0 || PP <= 0 || PL <= 0) return [];
+  // Safety cap: prevent runaway loops with extreme values
+  if (W / PL > 2000 || H / PP > 2000) return [];
   const heights = mkRowHeights(H, PP, vSym);
   const startRemainder = startOff > 0 ? Math.max(0, Math.min(startOff, PL)) : 0;
   const rows = [];
