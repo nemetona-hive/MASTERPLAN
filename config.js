@@ -93,7 +93,7 @@ const SYSTEMS = [{
   color: "var(--sys-s4)",
   icon: "s4",
   title: "Long-Short",
-  subtitle: (s4Long, s4Short) => `long ${s4Long}mm / short ${s4Short}mm`
+  subtitle: (s4Long) => `long ${s4Long}mm / short auto`
 }];
 // Text formatting utilities
 const fmt = {
@@ -109,7 +109,7 @@ const getDescription = (id, sh) => {
   const sub = sys.subtitle;
   if (typeof sub === "function") {
     if (id === "s2") return sub(sh.offset || 0);
-    if (id === "s4") return sub(sh.s4Long, sh.s4Short);
+    if (id === "s4") return sub(sh.s4Long);
   }
   return sub || "";
 };
@@ -187,8 +187,7 @@ const DEFAULT_SH = {
   rowStart: "bottom",
   minJ: 100,
   startOff: 0,
-  s4Long: 2400,
-  s4Short: 1200
+  s4Long: 2400
 };
 
 const DEFAULT_SYM = {
