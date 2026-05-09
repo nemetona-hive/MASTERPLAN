@@ -2593,6 +2593,19 @@ function SheetSurfaceLayout({
     }));
     setActivePreset(null);
   };
+  const setMat = k => v => {
+    setSh(s => ({
+      ...s,
+      [k]: Math.max(100, Math.min(5000, Number(v) || 100))
+    }));
+    setActivePreset(null);
+  };
+  const setSurf = k => v => {
+    setSh(s => ({
+      ...s,
+      [k]: Math.max(100, Math.min(50000, Number(v) || 100))
+    }));
+  };
   const setS2PanelState = patch => setSh(s => ({
     ...s,
     offset: patch.offset !== undefined ? patch.offset : s.offset
@@ -2653,8 +2666,9 @@ function SheetSurfaceLayout({
       id: "input-PLa",
       label: "Width (mm)",
       labelIcon: "arrow-h",
-      value: Math.max(1, PLa),
-      onChange: set("PLa"),
+      min: 100,
+      value: Math.max(100, PLa),
+      onChange: setMat("PLa"),
       step: 10
     }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
       anchorRef: widWrapRef,
@@ -2671,8 +2685,9 @@ function SheetSurfaceLayout({
       id: "input-PPi",
       label: "Length (mm)",
       labelIcon: "arrow-v",
-      value: Math.max(1, PPi),
-      onChange: set("PPi"),
+      min: 100,
+      value: Math.max(100, PPi),
+      onChange: setMat("PPi"),
       step: 10
     }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
       anchorRef: lenWrapRef,
@@ -2686,15 +2701,15 @@ function SheetSurfaceLayout({
       id: "input-W",
       label: "Width (mm)",
       labelIcon: "arrow-h",
-      value: Math.max(1, W),
-      onChange: set("W"),
+      value: Math.max(100, W),
+      onChange: setSurf("W"),
       step: 10
     }), /*#__PURE__*/React.createElement(NumInput, {
       id: "input-H",
       label: "Length (mm)",
       labelIcon: "arrow-v",
-      value: Math.max(1, H),
-      onChange: set("H"),
+      value: Math.max(100, H),
+      onChange: setSurf("H"),
       step: 10
     }))), /*#__PURE__*/React.createElement("div", {
       id: "data-preview",
@@ -2711,7 +2726,8 @@ function SheetSurfaceLayout({
     id: "control-material",
     title: "Material Specification",
     open: materialOpen,
-    setOpen: setMaterialOpen
+    setOpen: setMaterialOpen,
+    noToggle: true
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
   }, /*#__PURE__*/React.createElement("div", {
@@ -2725,8 +2741,9 @@ function SheetSurfaceLayout({
     label: "Width (mm)",
     labelIcon: "arrow-h",
     value: PLa,
-    onChange: set("PLa"),
+    onChange: setMat("PLa"),
     step: 10,
+    min: 100,
     onFocus: () => {
       setShowWidDropdown(true);
       setShowLenDropdown(false);
@@ -2748,8 +2765,9 @@ function SheetSurfaceLayout({
     label: "Length (mm)",
     labelIcon: "arrow-v",
     value: PPi,
-    onChange: set("PPi"),
+    onChange: setMat("PPi"),
     step: 10,
+    min: 100,
     onFocus: () => {
       setShowLenDropdown(true);
       setShowWidDropdown(false);
@@ -2772,7 +2790,8 @@ function SheetSurfaceLayout({
     id: "control-surface",
     title: "Surface Area",
     open: surfaceOpen,
-    setOpen: setSurfaceOpen
+    setOpen: setSurfaceOpen,
+    noToggle: true
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
   }, /*#__PURE__*/React.createElement(NumInput, {
@@ -2780,16 +2799,29 @@ function SheetSurfaceLayout({
     label: "Width (mm)",
     labelIcon: "arrow-h",
     value: W,
-    onChange: set("W"),
+    onChange: setSurf("W"),
     step: 10
   }), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-H",
     label: "Length (mm)",
     labelIcon: "arrow-v",
     value: H,
-    onChange: set("H"),
+    onChange: setSurf("H"),
     step: 10
-  }))), /*#__PURE__*/React.createElement(ControlPanel, {
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir",
+    style: {
+      width: "100%",
+      marginTop: "var(--sp-1)"
+    },
+    onClick: () => setSh(s => ({
+      ...s,
+      W: DEFAULT_SH.W,
+      H: DEFAULT_SH.H
+    }))
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "refresh-cw"
+  }), " Reset"))), /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-settings",
     title: "Settings",
     open: settingsOpen,
