@@ -243,16 +243,16 @@ const Section = (props) => <Collapsible {...props} />;
 const ControlPanel = (props) => <Collapsible {...props} variant="panel" />;
 const DetailSection = (props) => <Collapsible {...props} variant="detail" />;
 
-function Row({ label, value, unit, hi, hoverType, hoveredType, setHoveredType }) {
+function Row({ label, value, unit, hi, danger, hoverType, hoveredType, setHoveredType }) {
   const isHovered = hoverType && hoveredType === hoverType;
   return (
     <div className="data-row">
       <span
-        className={"data-row-lbl" + (hoverType ? " hoverable" : "") + (isHovered ? " hovered" : "")}
+        className={"data-row-lbl" + (hoverType ? " hoverable" : "") + (isHovered ? " hovered" : "") + (danger ? " data-row-danger" : "")}
         onMouseEnter={hoverType && setHoveredType ? () => setHoveredType(hoverType) : undefined}
         onMouseLeave={hoverType && setHoveredType ? () => setHoveredType(null) : undefined}
       >{label}</span>
-      <span className={hi ? "data-row-val hi" : "data-row-val"}>{value}</span>
+      <span className={(hi ? "data-row-val hi" : "data-row-val") + (danger ? " data-row-danger" : "")}>{value}</span>
       {unit && <span className="data-row-unit">{unit}</span>}
     </div>
   );
