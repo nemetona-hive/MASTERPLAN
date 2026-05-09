@@ -466,7 +466,8 @@ const PanelRowVis = React.memo(function PanelRowVis({
   segs,
   W,
   palClasses,
-  hoveredType
+  hoveredType,
+  showLabels = true
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "panel-row"
@@ -483,7 +484,7 @@ const PanelRowVis = React.memo(function PanelRowVis({
       background: "repeating-linear-gradient(45deg,#ff444433 0,#ff444433 4px,#09101a55 4px,#09101a55 8px)",
       border: "1px dashed #ff4444"
     } : undefined;
-    const titleText = isGap ? `${Math.round(seg.w)}mm \u2014 gap` : `${Math.round(seg.w)}mm \u2014 ${seg.type === "offcut" ? "remainder from prev" : seg.type === "cut" ? "cut" : seg.type === "edge" ? "edge piece" : "full panel"}`;
+    const titleText = isGap ? `${Math.round(seg.w)}mm \u2014 gap` : `${Math.round(seg.w)}mm \u2014 ${seg.type === "offcut" ? "remainder from prev" : seg.type === "cut" ? "cut" : seg.type === "edge" ? "edge piece" : "full panel"}` + (seg.sourceId ? ` (source: ${seg.sourceId})` : "");
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "panel-seg " + (!isGap ? segClass : "") + (isDimmed ? " seg-highlight" : ""),
@@ -493,12 +494,14 @@ const PanelRowVis = React.memo(function PanelRowVis({
         ...bgStyle
       },
       title: titleText
-    }, w > 4 && /*#__PURE__*/React.createElement("span", {
+    }, showLabels && w > 4 && /*#__PURE__*/React.createElement("span", {
       className: "panel-seg-lbl",
       style: {
         color: tc
       }
-    }, isGap ? `\u2205${Math.round(seg.w)}` : Math.round(seg.w)));
+    }, isGap ? `\u2205${Math.round(seg.w)}` : Math.round(seg.w), seg.sourceId && /*#__PURE__*/React.createElement("span", {
+      className: "source-marker"
+    }, seg.type === "offcut" ? `${seg.sourceId}'` : seg.sourceId)));
   }));
 });
 function PanelSummary({
@@ -517,6 +520,25 @@ function PanelSummary({
     hoveredType: hoveredType,
     setHoveredType: setHoveredType
   })));
+}
+function rowSignature(row) {
+  return row.segs.map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0].join(":")).join("|") + (row.long ? "-L" : "-S");
+}
+function groupAdjacentRows(rowsWithIndexes) {
+  const groups = [];
+  rowsWithIndexes.forEach(item => {
+    const signature = rowSignature(item.row);
+    const last = groups[groups.length - 1];
+    if (last && last.signature === signature) {
+      last.items.push(item);
+    } else {
+      groups.push({
+        signature,
+        items: [item]
+      });
+    }
+  });
+  return groups;
 }
 function LayoutVisualization({
   result,
@@ -580,15 +602,66 @@ function LayoutVisualization({
   const vertPanel = isV ? PPi : PLa;
   const horzLabel = isS4 ? `${horzTotal} mm — long ${s4Long} mm` : `${horzTotal} mm — panel ${horzPanel} mm`;
   const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
+  const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
+  const showRowText = orderedRows.length <= 12;
+  const showSegmentText = orderedRows.length <= 10;
+  const rowGroups = groupAdjacentRows(orderedRows);
   return /*#__PURE__*/React.createElement(Stack, {
-    gap: 1
+    gap: 0
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: "var(--sp-2)",
       alignItems: "stretch"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, showRowText && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 0
+    }
+  }, rowGroups.map((group, i) => {
+    const count = group.items.length;
+    const startR = group.items[0].idx + 1;
+    const endR = group.items[count - 1].idx + 1;
+    const label = count > 1 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)} ×${count}` : `R${startR}`;
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        flexGrow: count,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sys-row-lbl-outer"
+    }, label));
+  })), /*#__PURE__*/React.createElement(Stack, {
+    className: "sys-rows sys-rows-border",
+    gap: 0,
+    style: {
+      flex: 1,
+      aspectRatio: chartAspectRatio,
+      maxHeight: "420px"
+    }
+  }, rowGroups.map((group, i) => {
+    const count = group.items.length;
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "sys-row",
+      style: {
+        flexGrow: count
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sys-row-vis"
+    }, /*#__PURE__*/React.createElement(PanelRowVis, {
+      segs: group.items[0].row.segs,
+      W: result.meta.width,
+      palClasses: result.meta.s4 && result.meta.useS4Colors ? group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
+      hoveredType: hoveredType,
+      showLabels: showSegmentText
+    })));
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -602,9 +675,8 @@ function LayoutVisualization({
       alignItems: "center",
       gap: "var(--sp-1)",
       writingMode: "vertical-rl",
-      transform: "rotate(180deg)",
       fontFamily: "var(--mono)",
-      fontSize: "var(--fs-sm)",
+      fontSize: "var(--fs-md)",
       color: "var(--color-gray-opa80)",
       whiteSpace: "nowrap"
     }
@@ -612,48 +684,71 @@ function LayoutVisualization({
     name: "arrow-v",
     style: {
       writingMode: "horizontal-tb",
-      transform: "rotate(180deg)",
-      fontSize: "var(--fs-sm)",
+      fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
-  }), /*#__PURE__*/React.createElement("span", null, vertLabel))), /*#__PURE__*/React.createElement(Stack, {
-    className: "sys-rows sys-rows-border",
-    gap: 0,
-    style: {
-      flex: 1
-    }
-  }, orderedRows.map(({
-    row,
-    idx
-  }, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "sys-row"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sys-row-lbl"
-  }, "R", idx + 1), /*#__PURE__*/React.createElement("div", {
-    className: "sys-row-vis"
-  }, /*#__PURE__*/React.createElement(PanelRowVis, {
-    segs: row.segs,
-    W: result.meta.width,
-    palClasses: result.meta.s4 && result.meta.useS4Colors ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
-    hoveredType: hoveredType
-  })))))), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, vertLabel)))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
+      gap: "var(--sp-2)",
+      alignItems: "center"
+    }
+  }, showRowText && /*#__PURE__*/React.createElement("div", {
+    style: {
+      visibility: "hidden",
+      pointerEvents: "none",
+      display: "flex",
+      flexDirection: "column",
+      gap: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sys-row-lbl-outer"
+  }, "R8-R8 \xD78"), " "), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: "flex",
       alignItems: "center",
+      justifyContent: "center",
       gap: "var(--sp-1)",
-      paddingLeft: "32px",
       fontFamily: "var(--mono)",
-      fontSize: "var(--fs-sm)",
+      fontSize: "var(--fs-md)",
       color: "var(--color-gray-opa80)"
     }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "arrow-h",
     style: {
-      fontSize: "var(--fs-sm)",
+      fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
-  }), /*#__PURE__*/React.createElement("span", null, horzLabel)));
+  }), /*#__PURE__*/React.createElement("span", null, horzLabel), /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow-h",
+    style: {
+      fontSize: "var(--fs-md)",
+      color: "var(--color-primary)"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      visibility: "hidden",
+      pointerEvents: "none",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: "18px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "var(--sp-1)",
+      writingMode: "vertical-rl"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow-v",
+    style: {
+      fontSize: "var(--fs-md)"
+    }
+  }), /*#__PURE__*/React.createElement("span", null, "0000 mm")))));
 }
 function LayoutPanel({
   layout,
