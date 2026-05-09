@@ -8,7 +8,7 @@ const getHashPage = () => {
   return PAGES.some(p => p.id === hash) ? hash : "home";
 };
 
-function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme }) {
+function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
@@ -31,7 +31,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
     content = <SheetSymmetricLayout sym={sym} setSym={setSym} />;
     wrapperClass = "main-data";
   } else if (pageMeta) {
-    content = <SheetSurfaceLayout sh={sh} setSh={setSh} />;
+    content = <SheetSurfaceLayout sh={sh} setSh={setSh} panelOpen={panelOpen} setPanelOpen={setPanelOpen} />;
     wrapperClass = "main-data";
   }
 
@@ -119,6 +119,7 @@ function App() {
   const [sh,      setSh]      = useState(DEFAULT_SH);
   const [sym,     setSym]     = useState(DEFAULT_SYM);
   const [grItems, setGrItems] = useState(DEFAULT_GR);
+  const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
   return (
     <div id="app" className="app">
@@ -150,7 +151,8 @@ function App() {
         <div id="page-main" className="page-main"
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
-          grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme} />
+          grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
+          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} />
         </div>
       </div>
     </div>
