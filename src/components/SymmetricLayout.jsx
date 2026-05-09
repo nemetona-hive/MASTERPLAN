@@ -1,6 +1,29 @@
 function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
   const [surfaceOpen, setSurfaceOpen] = React.useState(true);
+
+  // ── Material presets (shared with pattern layouts) ─────────────────────────
+  const presets = React.useMemo(() =>
+    (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : []).filter(p => p.name),
+  []);
+  const [activePreset,     setActivePreset]     = React.useState(null);
+  const [showWidDropdown,  setShowWidDropdown]  = React.useState(false);
+  const widWrapRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const onClickOutside = e => {
+      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const applyPreset = (p, idx) => {
+    setSym(s => ({ ...s, panelWidth: p.width }));
+    setActivePreset(idx);
+    setShowWidDropdown(false);
+  };
+
   const layout = {
     id: "s0", title: "Symmetric layout", description: "Equal edge pieces, full pieces in center",
     defaultOpen: true, renderControls: null, icon: "s0",
@@ -12,10 +35,27 @@ function SheetSymmetricLayout({ sym, setSym }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
-        <ControlPanel id="control-sym-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen}>
+        <ControlPanel id="control-sym-surface" title="Inputs" open={surfaceOpen} setOpen={setSurfaceOpen} noToggle>
           <Stack gap={3}>
-            <NumInput id="input-sym-room-width"  label="Room width (mm)"  value={sym.roomWidth}  onChange={v => setSym(s => ({ ...s, roomWidth: v }))}  step={10} />
-            <NumInput id="input-sym-panel-width" label="Panel width (mm)" value={sym.panelWidth} onChange={v => setSym(s => ({ ...s, panelWidth: v }))} step={10} />
+            <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth} onChange={v => setSym(s => ({ ...s, roomWidth: Math.max(100, Math.min(50000, Number(v) || 100)) }))} step={10} min={100} />
+            <div ref={widWrapRef} style={{ position: "relative" }}>
+              <NumInput
+                id="input-sym-panel-width"
+                label="Product width (mm)"
+                value={sym.panelWidth}
+                onChange={v => { setSym(s => ({ ...s, panelWidth: Math.max(100, Math.min(5000, Number(v) || 100)) })); setActivePreset(null); }}
+                step={10}
+                min={100}
+                onFocus={() => setShowWidDropdown(true)}
+              />
+              {showWidDropdown && presets.length > 0 && (
+                <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />
+              )}
+            </div>
+          </Stack>
+        </ControlPanel>
+        <ControlPanel id="control-sym-settings" title="Settings" noToggle>
+          <Stack gap={3}>
             <Stack gap={1} className="ctrl-lbl">
               <span className="ctrl-sublbl">Layout style</span>
               <div className="seg-group">
@@ -26,13 +66,13 @@ function SheetSymmetricLayout({ sym, setSym }) {
               </div>
             </Stack>
             {sym.oneFullEdge && (
-              <NumInput id="input-sym-custom-first" label="First piece width (mm)" value={sym.customFirstPieceWidth ?? ""} onChange={v => setSym(s => ({ ...s, customFirstPieceWidth: v }))} step={10} />
+              <NumInput id="input-sym-custom-first" label="First piece width (mm)" value={sym.customFirstPieceWidth ?? ""} onChange={v => setSym(s => ({ ...s, customFirstPieceWidth: Math.max(0, Math.min(50000, Number(v) || 0)) }))} step={10} min={0} />
             )}
           </Stack>
         </ControlPanel>
       </Stack>
       <div id="data-preview" className="data-preview">
-        <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} />
+        <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} noToggle />
       </div>
     </>
   );
