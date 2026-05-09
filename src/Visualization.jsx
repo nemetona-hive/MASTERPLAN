@@ -96,19 +96,22 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
   );
 }
 
-function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top" }) {
-  const [open, setOpen] = React.useState(layout.defaultOpen !== false);
+function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp }) {
+  const [openLocal, setOpenLocal] = React.useState(layout.defaultOpen !== false);
+  const isControlled = openProp !== undefined && setOpenProp !== undefined;
+  const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
+  const setOpen = isControlled ? setOpenProp : setOpenLocal;
   return (
     <div id={"panel-" + layout.id} className="sys-block">
-      <div className="sys-head" onClick={() => setOpen(!open)}>
-        <span className="sys-head-toggle"><Icon name={open ? "chevron-down" : "chevron-right"} /></span>
+      <div className="sys-head" onClick={noToggle ? undefined : () => setOpen(!isOpen)} style={noToggle ? { cursor: "default" } : {}}>
+        {!noToggle && <span className="sys-head-toggle"><Icon name={isOpen ? "chevron-down" : "chevron-right"} /></span>}
         <h3 className="sys-title">
           {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
         </h3>
         <span className="sys-head-sub">{layout.description}</span>
         <span className="sys-head-count">{result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
       </div>
-      {open && (
+      {isOpen && (
         <Stack className="panel-body" gap={2}>
           {layout.renderControls && React.createElement(layout.renderControls, { state: layout.getState(), setState: layout.setState })}
           {result.summaryRows.length > 0 && <PanelSummary rows={result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
