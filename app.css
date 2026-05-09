@@ -1707,6 +1707,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	border-bottom: 1px solid color-mix(in srgb, var(--color-darkblue) 30%, transparent);
 }
 
+.data-preview .panel-row-v {
+	width: 100%;
+	border-bottom: 0;
+	border-right: 1px solid color-mix(in srgb, var(--color-darkblue) 30%, transparent);
+}
+
 @media (max-width: 700px) {
 	.data-preview .sys-rows {
 		min-height: 72px;
