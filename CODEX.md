@@ -5,8 +5,9 @@ Hosted on GitHub Pages at: https://nemetona-hive.github.io/MASTERPLAN/
 
 ## Architecture
 
-**No bundler / no npm.** JSX files are concatenated by a custom build script
-into a single output file. React and ReactDOM are loaded from CDN.
+**No bundler.** JSX files are concatenated by a custom build script
+into a single output file. Run `npm.cmd run build` on Windows, or `npm run build`
+when the shell permits npm scripts. React and ReactDOM are loaded from CDN.
 All global state (config, constants, compute functions) lives outside `src/`
 and is available as globals — do NOT import them.
 
@@ -142,6 +143,10 @@ Best layout = fewest total pieces among valid results.
 - Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`
 - Gap segments get red hatched styling; others get palette classes from PAL_CLASSES
 - `hoveredType` cross-highlights between summary rows and visualization segments
+- Pattern layout chart geometry must render real physical rows/columns, not grouped rows.
+- `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.
+- In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.
+- In `direction === "H"`, rows render horizontally and segment positions use `left`/`width`.
 
 ## Mobile / responsive
 
@@ -179,6 +184,9 @@ Cards use tone system (a/b/c/d) for visual identity.
 
 - `useState` destructured from React at top of shared.jsx — use directly
 - All other React hooks via `React.useXxx`
+- After editing files under `src/`, run `npm.cmd run build` so `components.js` is regenerated.
+- Treat `components.js` as generated output; do not hand-edit it except for emergency inspection/debugging.
+- If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
 - Buttons use the "Premium Glow" interaction language — subtle box-shadows and color-mix transitions.
 - No CSS-in-JS except inline style for dynamic values; use className strings
