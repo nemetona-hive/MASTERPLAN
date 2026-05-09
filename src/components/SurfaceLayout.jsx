@@ -1,43 +1,5 @@
-function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field }) {
-  const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
-
-  React.useLayoutEffect(() => {
-    if (anchorRef.current) {
-      const r = anchorRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
-    }
-  }, [anchorRef]);
-
-  return ReactDOM.createPortal(
-    <div className="rate-presets-dropdown" style={{ position: "absolute", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}>
-      <div className="rate-presets-header">Material Presets</div>
-      <div className="rate-presets-list">
-        {presets.map((p, idx) => {
-          if (!p.name) return null;
-          const displayVal = field === "width" ? p.width : p.length;
-          const displayUnit = field === "width" ? "w" : "l";
-          return (
-            <div
-              key={idx}
-              className={"rate-preset-item" + (activePreset === idx ? " active" : "")}
-              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
-            >
-              <div className="rate-preset-info">
-                <span className="rate-preset-name">{p.name}</span>
-                <span className="rate-preset-meta">{p.width} × {p.length} mm</span>
-              </div>
-              <span className="rate-preset-val">{displayVal}<small>{displayUnit}</small></span>
-            </div>
-          );
-        })}
-      </div>
-    </div>,
-    document.body
-  );
-}
-
-function SheetSurfaceLayout({ sh, setSh }) {
-  const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, s4Short } = sh;
+function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
+  const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long } = sh;
   const rowStart = sh.rowStart || "top";
   const [hoveredType, setHoveredType] = React.useState(null);
   const [materialOpen, setMaterialOpen] = React.useState(true);
@@ -116,10 +78,9 @@ function SheetSurfaceLayout({ sh, setSh }) {
   const setSurf = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); };
   const setS2PanelState = patch => setSh(s => ({ ...s, offset:  patch.offset  !== undefined ? patch.offset  : s.offset }));
   const setS4PanelState = patch => setSh(s => ({ ...s,
-    s4Long:  patch.s4Long  !== undefined ? patch.s4Long  : s.s4Long,
-    s4Short: patch.s4Short !== undefined ? patch.s4Short : s.s4Short
+    s4Long: patch.s4Long !== undefined ? patch.s4Long : s.s4Long
   }));
-  const stateGetters = { s1: () => ({}), s2: () => ({ offset }), s3: () => ({}), s4: () => ({ s4Long, s4Short }) };
+  const stateGetters = { s1: () => ({}), s2: () => ({ offset }), s3: () => ({}), s4: () => ({ s4Long }) };
   const stateSetters = { s1: () => {}, s2: setS2PanelState, s3: () => {}, s4: setS4PanelState };
   const layoutRegistry = LAYOUT_REGISTRY.map(sys => ({
     ...sys,
@@ -151,8 +112,8 @@ function SheetSurfaceLayout({ sh, setSh }) {
           </Stack>
           <Stack gap={1}>
             <SLabel>Surface Area</SLabel>
-            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={Math.max(100, W)} onChange={setSurf("W")} step={10} />
-            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={Math.max(100, H)} onChange={setSurf("H")} step={10} />
+            <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={Math.max(100, W)} onChange={setSurf("W")} step={10} />
+            <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={Math.max(100, H)} onChange={setSurf("H")} step={10} />
           </Stack>
         </Stack>
         <div id="data-preview" className="data-preview">
@@ -199,10 +160,10 @@ function SheetSurfaceLayout({ sh, setSh }) {
             )}
           </Stack>
         </ControlPanel>
-        <ControlPanel id="control-surface" title="Surface Area" open={surfaceOpen} setOpen={setSurfaceOpen} noToggle>
+        <ControlPanel id="control-surface" title="Inputs" open={surfaceOpen} setOpen={setSurfaceOpen} noToggle>
           <Stack gap={3}>
-            <NumInput id="input-W" label="Width (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
-            <NumInput id="input-H" label="Length (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
+            <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
+            <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
             <button
               className="ctrl-dir"
               style={{ width: "100%", marginTop: "var(--sp-1)" }}
@@ -248,6 +209,8 @@ function SheetSurfaceLayout({ sh, setSh }) {
               <LayoutPanel key={id} layout={panel.layout} result={panel.result}
                 hoveredType={hoveredType} setHoveredType={setHoveredType}
                 rowStart={rowStart}
+                open={panelOpen[id]}
+                setOpen={v => setPanelOpen(s => ({ ...s, [id]: v }))}
                 isBest={panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best} />
             );
           })}
