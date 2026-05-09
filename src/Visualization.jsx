@@ -22,7 +22,7 @@ const PanelRowVis = React.memo(function PanelRowVis({ segs, W, palClasses, hover
           ? `${Math.round(seg.w)}mm \u2014 gap`
           : `${Math.round(seg.w)}mm \u2014 ${seg.type === "offcut" ? "remainder from prev" : seg.type === "cut" ? "cut" : seg.type === "edge" ? "edge piece" : "full panel"}` + (seg.sourceId ? ` (source: ${seg.sourceId})` : "");
         return (
-          <div key={i}
+          <div key={`${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.long || ''}-${seg.sourceId || ''}`}
             className={"panel-seg " + (!isGap ? segClass : "") + (isDimmed ? " seg-highlight" : "")}
             style={isVertical
               ? { top: `${l}%`, height: `${w}%`, left: 0, width: "100%", ...bgStyle }
@@ -121,7 +121,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
   const showSegmentText = orderedRows.length <= 10;
   const rowGroups = groupAdjacentRows(orderedRows);
   const visualRows = orderedRows.map(item => ({
-    signature: rowSignature(item.row),
+    signature: `${item.idx}-${rowSignature(item.row)}`,
     items: [item],
     height: Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1
   }));
@@ -140,7 +140,8 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
                 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)} ×${count}` 
                 : `R${startR}`;
               return (
-                <div key={i} style={{ flexGrow: group.height, flexBasis: 0, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                <div key={group.signature}
+                  style={{ flexGrow: group.height, flexBasis: 0, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                   <span className="sys-row-lbl-outer">{label}</span>
                 </div>
               );
@@ -151,7 +152,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
         <Stack className="sys-rows sys-rows-border" gap={0} style={{ gridColumn: showRowText ? 2 : 1, gridRow: 1, justifySelf: "stretch", width: "100%", minWidth: 0, aspectRatio: chartAspectRatio, maxHeight: "420px", flexDirection: isV ? "row" : "column" }}>
           {visualRows.map((group, i) => {
             return (
-              <div key={i} className="sys-row" style={{ flexGrow: group.height }}>
+              <div key={group.signature} className="sys-row" style={{ flexGrow: group.height }}>
                 <div className="sys-row-vis">
                   <PanelRowVis
                     segs={group.items[0].row.segs}
