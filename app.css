@@ -3593,3 +3593,16 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   overflow-y: auto;
   flex: 1;
 }
+
+/* Invalid layout note */
+.layout-invalid-note {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  color: var(--danger);
+  opacity: 0.8;
+  padding: var(--sp-1) 0;
+}
+
+.data-row-danger {
+  color: var(--danger) !important;
+}
