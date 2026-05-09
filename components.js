@@ -293,6 +293,7 @@ function Row({
   value,
   unit,
   hi,
+  danger,
   hoverType,
   hoveredType,
   setHoveredType
@@ -301,11 +302,11 @@ function Row({
   return /*#__PURE__*/React.createElement("div", {
     className: "data-row"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "data-row-lbl" + (hoverType ? " hoverable" : "") + (isHovered ? " hovered" : ""),
+    className: "data-row-lbl" + (hoverType ? " hoverable" : "") + (isHovered ? " hovered" : "") + (danger ? " data-row-danger" : ""),
     onMouseEnter: hoverType && setHoveredType ? () => setHoveredType(hoverType) : undefined,
     onMouseLeave: hoverType && setHoveredType ? () => setHoveredType(null) : undefined
   }, label), /*#__PURE__*/React.createElement("span", {
-    className: hi ? "data-row-val hi" : "data-row-val"
+    className: (hi ? "data-row-val hi" : "data-row-val") + (danger ? " data-row-danger" : "")
   }, value), unit && /*#__PURE__*/React.createElement("span", {
     className: "data-row-unit"
   }, unit));
@@ -511,6 +512,7 @@ function PanelSummary({
     value: row.value,
     unit: row.unit,
     hi: row.hi,
+    danger: row.danger,
     hoverType: row.hoverType,
     hoveredType: hoveredType,
     setHoveredType: setHoveredType
@@ -560,9 +562,66 @@ function LayoutVisualization({
     row,
     idx
   }));
+  const {
+    surfaceW,
+    surfaceH,
+    PPi,
+    PLa,
+    s4Long,
+    s4: isS4,
+    direction
+  } = result.meta;
+  const isV = direction === "V";
+  // In H mode: horizontal axis = W (panel length PPi runs along it), vertical = H (row height PLa)
+  // In V mode: axes swap — horizontal axis = H, vertical = W; PPi runs vertically, PLa horizontally
+  const horzTotal = isV ? surfaceH : surfaceW;
+  const vertTotal = isV ? surfaceW : surfaceH;
+  const horzPanel = isV ? PLa : PPi;
+  const vertPanel = isV ? PPi : PLa;
+  const horzLabel = isS4 ? `${horzTotal} mm — long ${s4Long} mm` : `${horzTotal} mm — panel ${horzPanel} mm`;
+  const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
   return /*#__PURE__*/React.createElement(Stack, {
+    gap: 1
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: "var(--sp-2)",
+      alignItems: "stretch"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: "18px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "var(--sp-1)",
+      writingMode: "vertical-rl",
+      transform: "rotate(180deg)",
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--color-gray-opa80)",
+      whiteSpace: "nowrap"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow-v",
+    style: {
+      writingMode: "horizontal-tb",
+      transform: "rotate(180deg)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--color-primary)"
+    }
+  }), /*#__PURE__*/React.createElement("span", null, vertLabel))), /*#__PURE__*/React.createElement(Stack, {
     className: "sys-rows sys-rows-border",
-    gap: 0
+    gap: 0,
+    style: {
+      flex: 1
+    }
   }, orderedRows.map(({
     row,
     idx
@@ -578,7 +637,23 @@ function LayoutVisualization({
     W: result.meta.width,
     palClasses: result.meta.s4 && result.meta.useS4Colors ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
     hoveredType: hoveredType
-  })))));
+  })))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--sp-1)",
+      paddingLeft: "32px",
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--color-gray-opa80)"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow-h",
+    style: {
+      fontSize: "var(--fs-sm)",
+      color: "var(--color-primary)"
+    }
+  }), /*#__PURE__*/React.createElement("span", null, horzLabel)));
 }
 function LayoutPanel({
   layout,
@@ -629,9 +704,7 @@ function LayoutPanel({
     rows: result.summaryRows,
     hoveredType: hoveredType,
     setHoveredType: setHoveredType
-  }), !result.valid && /*#__PURE__*/React.createElement("p", {
-    className: "desc"
-  }, "This layout leaves uncovered gaps and is excluded from best-layout scoring."), result.rows.length > 0 && /*#__PURE__*/React.createElement(LayoutVisualization, {
+  }), result.rows.length > 0 && /*#__PURE__*/React.createElement(LayoutVisualization, {
     result: result,
     hoveredType: hoveredType,
     rowStart: rowStart
