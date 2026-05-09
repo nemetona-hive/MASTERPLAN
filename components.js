@@ -522,19 +522,22 @@ function PanelSummary({
   })));
 }
 function rowSignature(row) {
-  return row.segs.map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0].join(":")).join("|") + (row.long ? "-L" : "-S");
+  return row.segs.map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0, seg.sourceId || ""].join(":")).join("|") + (row.long ? "-L" : "-S") + `-H${Math.round(row.h || 0)}`;
 }
 function groupAdjacentRows(rowsWithIndexes) {
   const groups = [];
   rowsWithIndexes.forEach(item => {
     const signature = rowSignature(item.row);
     const last = groups[groups.length - 1];
+    const rowHeight = Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1;
     if (last && last.signature === signature) {
       last.items.push(item);
+      last.height += rowHeight;
     } else {
       groups.push({
         signature,
-        items: [item]
+        items: [item],
+        height: rowHeight
       });
     }
   });
@@ -610,7 +613,8 @@ function LayoutVisualization({
     gap: 0
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
+      display: "grid",
+      gridTemplateColumns: showRowText ? "max-content minmax(0, 1fr) max-content" : "minmax(0, 1fr) max-content",
       gap: "var(--sp-2)",
       alignItems: "stretch"
     }
@@ -618,7 +622,9 @@ function LayoutVisualization({
     style: {
       display: "flex",
       flexDirection: "column",
-      gap: 0
+      gap: 0,
+      gridColumn: 1,
+      gridRow: 1
     }
   }, rowGroups.map((group, i) => {
     const count = group.items.length;
@@ -628,7 +634,9 @@ function LayoutVisualization({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        flexGrow: count,
+        flexGrow: group.height,
+        flexBasis: 0,
+        minHeight: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-end"
@@ -640,17 +648,20 @@ function LayoutVisualization({
     className: "sys-rows sys-rows-border",
     gap: 0,
     style: {
-      flex: 1,
+      gridColumn: showRowText ? 2 : 1,
+      gridRow: 1,
+      justifySelf: "stretch",
+      width: "100%",
+      minWidth: 0,
       aspectRatio: chartAspectRatio,
       maxHeight: "420px"
     }
   }, rowGroups.map((group, i) => {
-    const count = group.items.length;
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "sys-row",
       style: {
-        flexGrow: count
+        flexGrow: group.height
       }
     }, /*#__PURE__*/React.createElement("div", {
       className: "sys-row-vis"
@@ -663,6 +674,8 @@ function LayoutVisualization({
     })));
   })), /*#__PURE__*/React.createElement("div", {
     style: {
+      gridColumn: showRowText ? 3 : 2,
+      gridRow: 1,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -687,25 +700,10 @@ function LayoutVisualization({
       fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
-  }), /*#__PURE__*/React.createElement("span", null, vertLabel)))), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, vertLabel))), /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
-      gap: "var(--sp-2)",
-      alignItems: "center"
-    }
-  }, showRowText && /*#__PURE__*/React.createElement("div", {
-    style: {
-      visibility: "hidden",
-      pointerEvents: "none",
-      display: "flex",
-      flexDirection: "column",
-      gap: 0
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sys-row-lbl-outer"
-  }, "R8-R8 \xD78"), " "), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
+      gridColumn: showRowText ? 2 : 1,
+      gridRow: 2,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -726,29 +724,7 @@ function LayoutVisualization({
       fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      visibility: "hidden",
-      pointerEvents: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      minWidth: "18px"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "var(--sp-1)",
-      writingMode: "vertical-rl"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "arrow-v",
-    style: {
-      fontSize: "var(--fs-md)"
-    }
-  }), /*#__PURE__*/React.createElement("span", null, "0000 mm")))));
+  }))));
 }
 function LayoutPanel({
   layout,
