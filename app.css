@@ -1660,34 +1660,58 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 	
 .data-preview .sys-rows {
+	display: flex;
+	flex-direction: column;
 	background: var(--color-darkblue);
-	border-radius: 0 0 6px 6px;
+	border-radius: 6px;
 	padding: 8px 6px;
+	min-height: 96px;
 }
 
 .data-preview .sys-row {
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	gap: var(--sp-1);
+	flex: 1 1 0;
+	min-height: 0;
 }
 
-.data-preview .sys-row-lbl {
+.data-preview .sys-row-lbl-outer {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	color: var(--color-blue);
-	width: 22px;
-	text-align: right;
-	flex-shrink: 0;
+	font-weight: var(--fw-bold);
+	color: var(--color-white);
+	background: color-mix(in srgb, var(--color-darkblue) 75%, transparent);
+	padding: 4px 10px;
+	border-radius: 6px;
+	border: 1px solid color-mix(in srgb, var(--color-white) 15%, transparent);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	white-space: nowrap;
+	text-align: center;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+	opacity: 0.95;
 }
 
 .data-preview .sys-row-vis {
+	position: relative;
 	flex: 1;
+	min-width: 0;
+	min-height: 0;
 }
 
 .data-preview .panel-row {
 	position: relative;
-	height: var(--row-h);
+	height: 100%;
+	min-height: 0;
 	border-bottom: 1px solid color-mix(in srgb, var(--color-darkblue) 30%, transparent);
+}
+
+@media (max-width: 700px) {
+	.data-preview .sys-rows {
+		min-height: 72px;
+		max-height: 260px;
+	}
 }
 
 .data-preview .panel-seg {
@@ -1709,6 +1733,24 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .data-preview .panel-seg-lbl {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.data-preview .source-marker {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 3px;
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--color-darkblue) 40%, transparent);
+	font-size: var(--fs-xs);
+	font-weight: var(--fw-bold);
+	color: var(--color-white);
+	border: 1px solid color-mix(in srgb, var(--color-white) 30%, transparent);
 }
 
 .data-preview .strip {
@@ -3289,6 +3331,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 .sys-rows-border {
 	border: 1px solid var(--color-gray-light);
+	border-radius: 6px;
 }
 
 /* Concrete Side-by-Side Layout */
