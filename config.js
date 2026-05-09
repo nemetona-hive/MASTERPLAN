@@ -211,9 +211,9 @@ const DEFAULT_MATERIAL_PRESETS = [
     width: 1250
   },
   {
-    name: "Large Format 600×600",
-    length: 600,
-    width: 600
+    name: "KIPSPLAAT",
+    length: 2600,
+    width: 1200
   },
   {
     name: "Plank 1200×200",
