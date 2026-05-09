@@ -400,6 +400,64 @@ function Text({
     style: s
   }, props), children);
 }
+function MaterialPresetDropdown({
+  anchorRef,
+  presets,
+  activePreset,
+  onApply,
+  field
+}) {
+  const [pos, setPos] = React.useState({
+    top: 0,
+    left: 0,
+    width: 0
+  });
+  React.useLayoutEffect(() => {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      setPos({
+        top: r.bottom + window.scrollY + 4,
+        left: r.left + window.scrollX,
+        width: r.width
+      });
+    }
+  }, [anchorRef]);
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-dropdown",
+    style: {
+      position: "absolute",
+      top: pos.top,
+      left: pos.left,
+      width: pos.width,
+      zIndex: 9999
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-header"
+  }, "Material Presets"), /*#__PURE__*/React.createElement("div", {
+    className: "rate-presets-list"
+  }, presets.map((p, idx) => {
+    if (!p.name) return null;
+    const displayVal = field === "width" ? p.width : p.length;
+    const displayUnit = field === "width" ? "w" : "l";
+    return /*#__PURE__*/React.createElement("div", {
+      key: idx,
+      className: "rate-preset-item" + (activePreset === idx ? " active" : ""),
+      onMouseDown: e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onApply(p, idx);
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rate-preset-info"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-name"
+    }, p.name), /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-meta"
+    }, p.width, " \xD7 ", p.length, " mm")), /*#__PURE__*/React.createElement("span", {
+      className: "rate-preset-val"
+    }, displayVal, /*#__PURE__*/React.createElement("small", null, displayUnit)));
+  }))), document.body);
+}
 
 // ── Visualization components ──────────────────────────────────────────────────
 
@@ -527,19 +585,28 @@ function LayoutPanel({
   hoveredType,
   isBest,
   setHoveredType,
-  rowStart = "top"
+  rowStart = "top",
+  noToggle = false,
+  open: openProp,
+  setOpen: setOpenProp
 }) {
-  const [open, setOpen] = React.useState(layout.defaultOpen !== false);
+  const [openLocal, setOpenLocal] = React.useState(layout.defaultOpen !== false);
+  const isControlled = openProp !== undefined && setOpenProp !== undefined;
+  const isOpen = noToggle ? true : isControlled ? openProp : openLocal;
+  const setOpen = isControlled ? setOpenProp : setOpenLocal;
   return /*#__PURE__*/React.createElement("div", {
     id: "panel-" + layout.id,
     className: "sys-block"
   }, /*#__PURE__*/React.createElement("div", {
     className: "sys-head",
-    onClick: () => setOpen(!open)
-  }, /*#__PURE__*/React.createElement("span", {
+    onClick: noToggle ? undefined : () => setOpen(!isOpen),
+    style: noToggle ? {
+      cursor: "default"
+    } : {}
+  }, !noToggle && /*#__PURE__*/React.createElement("span", {
     className: "sys-head-toggle"
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: open ? "chevron-down" : "chevron-right"
+    name: isOpen ? "chevron-down" : "chevron-right"
   })), /*#__PURE__*/React.createElement("h3", {
     className: "sys-title"
   }, layout.icon && /*#__PURE__*/React.createElement(Icon, {
@@ -551,7 +618,7 @@ function LayoutPanel({
     className: "sys-head-count"
   }, result.stats.total, " pcs ", isBest ? /*#__PURE__*/React.createElement(Icon, {
     name: "best-badge"
-  }) : "")), open && /*#__PURE__*/React.createElement(Stack, {
+  }) : "")), isOpen && /*#__PURE__*/React.createElement(Stack, {
     className: "panel-body",
     gap: 2
   }, layout.renderControls && React.createElement(layout.renderControls, {
@@ -593,18 +660,10 @@ function S4Controls({
     gap: 3
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-s4long",
-    label: "Long (mm)",
+    label: "Long piece (mm)",
     value: state.s4Long,
     onChange: v => setState({
       s4Long: v
-    }),
-    step: 10
-  }), /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-s4short",
-    label: "Short (mm)",
-    value: state.s4Short,
-    onChange: v => setState({
-      s4Short: v
     }),
     step: 10
   }));
@@ -2353,6 +2412,27 @@ function SheetSymmetricLayout({
 }) {
   const [hoveredType, setHoveredType] = React.useState(null);
   const [surfaceOpen, setSurfaceOpen] = React.useState(true);
+
+  // ── Material presets (shared with pattern layouts) ─────────────────────────
+  const presets = React.useMemo(() => (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : []).filter(p => p.name), []);
+  const [activePreset, setActivePreset] = React.useState(null);
+  const [showWidDropdown, setShowWidDropdown] = React.useState(false);
+  const widWrapRef = React.useRef(null);
+  React.useEffect(() => {
+    const onClickOutside = e => {
+      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+  const applyPreset = (p, idx) => {
+    setSym(s => ({
+      ...s,
+      panelWidth: p.width
+    }));
+    setActivePreset(idx);
+    setShowWidDropdown(false);
+  };
   const layout = {
     id: "s0",
     title: "Symmetric layout",
@@ -2372,30 +2452,54 @@ function SheetSymmetricLayout({
     gap: 3
   }, /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-sym-surface",
-    title: "Surface Area",
+    title: "Inputs",
     open: surfaceOpen,
-    setOpen: setSurfaceOpen
+    setOpen: setSurfaceOpen,
+    noToggle: true
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-sym-room-width",
-    label: "Room width (mm)",
+    label: "Area width (mm)",
     value: sym.roomWidth,
     onChange: v => setSym(s => ({
       ...s,
-      roomWidth: v
+      roomWidth: Math.max(100, Math.min(50000, Number(v) || 100))
     })),
-    step: 10
-  }), /*#__PURE__*/React.createElement(NumInput, {
+    step: 10,
+    min: 100
+  }), /*#__PURE__*/React.createElement("div", {
+    ref: widWrapRef,
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-sym-panel-width",
-    label: "Panel width (mm)",
+    label: "Product width (mm)",
     value: sym.panelWidth,
-    onChange: v => setSym(s => ({
-      ...s,
-      panelWidth: v
-    })),
-    step: 10
-  }), /*#__PURE__*/React.createElement(Stack, {
+    onChange: v => {
+      setSym(s => ({
+        ...s,
+        panelWidth: Math.max(100, Math.min(5000, Number(v) || 100))
+      }));
+      setActivePreset(null);
+    },
+    step: 10,
+    min: 100,
+    onFocus: () => setShowWidDropdown(true)
+  }), showWidDropdown && presets.length > 0 && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    anchorRef: widWrapRef,
+    presets: presets,
+    activePreset: activePreset,
+    onApply: applyPreset,
+    field: "width"
+  })))), /*#__PURE__*/React.createElement(ControlPanel, {
+    id: "control-sym-settings",
+    title: "Settings",
+    noToggle: true
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 3
+  }, /*#__PURE__*/React.createElement(Stack, {
     gap: 1,
     className: "ctrl-lbl"
   }, /*#__PURE__*/React.createElement("span", {
@@ -2420,9 +2524,10 @@ function SheetSymmetricLayout({
     value: sym.customFirstPieceWidth ?? "",
     onChange: v => setSym(s => ({
       ...s,
-      customFirstPieceWidth: v
+      customFirstPieceWidth: Math.max(0, Math.min(50000, Number(v) || 0))
     })),
-    step: 10
+    step: 10,
+    min: 0
   })))), /*#__PURE__*/React.createElement("div", {
     id: "data-preview",
     className: "data-preview"
@@ -2431,70 +2536,15 @@ function SheetSymmetricLayout({
     result: result,
     hoveredType: hoveredType,
     setHoveredType: setHoveredType,
-    isBest: false
+    isBest: false,
+    noToggle: true
   })));
-}
-function MaterialPresetDropdown({
-  anchorRef,
-  presets,
-  activePreset,
-  onApply,
-  field
-}) {
-  const [pos, setPos] = React.useState({
-    top: 0,
-    left: 0,
-    width: 0
-  });
-  React.useLayoutEffect(() => {
-    if (anchorRef.current) {
-      const r = anchorRef.current.getBoundingClientRect();
-      setPos({
-        top: r.bottom + window.scrollY + 4,
-        left: r.left + window.scrollX,
-        width: r.width
-      });
-    }
-  }, [anchorRef]);
-  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
-    className: "rate-presets-dropdown",
-    style: {
-      position: "absolute",
-      top: pos.top,
-      left: pos.left,
-      width: pos.width,
-      zIndex: 9999
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rate-presets-header"
-  }, "Material Presets"), /*#__PURE__*/React.createElement("div", {
-    className: "rate-presets-list"
-  }, presets.map((p, idx) => {
-    if (!p.name) return null;
-    const displayVal = field === "width" ? p.width : p.length;
-    const displayUnit = field === "width" ? "w" : "l";
-    return /*#__PURE__*/React.createElement("div", {
-      key: idx,
-      className: "rate-preset-item" + (activePreset === idx ? " active" : ""),
-      onMouseDown: e => {
-        e.preventDefault();
-        e.stopPropagation();
-        onApply(p, idx);
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "rate-preset-info"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "rate-preset-name"
-    }, p.name), /*#__PURE__*/React.createElement("span", {
-      className: "rate-preset-meta"
-    }, p.width, " \xD7 ", p.length, " mm")), /*#__PURE__*/React.createElement("span", {
-      className: "rate-preset-val"
-    }, displayVal, /*#__PURE__*/React.createElement("small", null, displayUnit)));
-  }))), document.body);
 }
 function SheetSurfaceLayout({
   sh,
-  setSh
+  setSh,
+  panelOpen,
+  setPanelOpen
 }) {
   const {
     W,
@@ -2505,8 +2555,7 @@ function SheetSurfaceLayout({
     direction,
     minJ,
     startOff,
-    s4Long,
-    s4Short
+    s4Long
   } = sh;
   const rowStart = sh.rowStart || "top";
   const [hoveredType, setHoveredType] = React.useState(null);
@@ -2612,8 +2661,7 @@ function SheetSurfaceLayout({
   }));
   const setS4PanelState = patch => setSh(s => ({
     ...s,
-    s4Long: patch.s4Long !== undefined ? patch.s4Long : s.s4Long,
-    s4Short: patch.s4Short !== undefined ? patch.s4Short : s.s4Short
+    s4Long: patch.s4Long !== undefined ? patch.s4Long : s.s4Long
   }));
   const stateGetters = {
     s1: () => ({}),
@@ -2622,8 +2670,7 @@ function SheetSurfaceLayout({
     }),
     s3: () => ({}),
     s4: () => ({
-      s4Long,
-      s4Short
+      s4Long
     })
   };
   const stateSetters = {
@@ -2699,14 +2746,14 @@ function SheetSurfaceLayout({
       gap: 1
     }, /*#__PURE__*/React.createElement(SLabel, null, "Surface Area"), /*#__PURE__*/React.createElement(NumInput, {
       id: "input-W",
-      label: "Width (mm)",
+      label: "Width \u2014 horizontal (mm)",
       labelIcon: "arrow-h",
       value: Math.max(100, W),
       onChange: setSurf("W"),
       step: 10
     }), /*#__PURE__*/React.createElement(NumInput, {
       id: "input-H",
-      label: "Length (mm)",
+      label: "Length \u2014 vertical (mm)",
       labelIcon: "arrow-v",
       value: Math.max(100, H),
       onChange: setSurf("H"),
@@ -2788,7 +2835,7 @@ function SheetSurfaceLayout({
     name: "plus"
   }), " Manage Presets"))), /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-surface",
-    title: "Surface Area",
+    title: "Inputs",
     open: surfaceOpen,
     setOpen: setSurfaceOpen,
     noToggle: true
@@ -2796,14 +2843,14 @@ function SheetSurfaceLayout({
     gap: 3
   }, /*#__PURE__*/React.createElement(NumInput, {
     id: "input-W",
-    label: "Width (mm)",
+    label: "Width \u2014 horizontal (mm)",
     labelIcon: "arrow-h",
     value: W,
     onChange: setSurf("W"),
     step: 10
   }), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-H",
-    label: "Length (mm)",
+    label: "Length \u2014 vertical (mm)",
     labelIcon: "arrow-v",
     value: H,
     onChange: setSurf("H"),
@@ -2896,6 +2943,11 @@ function SheetSurfaceLayout({
       hoveredType: hoveredType,
       setHoveredType: setHoveredType,
       rowStart: rowStart,
+      open: panelOpen[id],
+      setOpen: v => setPanelOpen(s => ({
+        ...s,
+        [id]: v
+      })),
       isBest: panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best
     });
   }))), showModal && /*#__PURE__*/React.createElement("div", {
@@ -3262,7 +3314,9 @@ function MainPageContent({
   grItems,
   setGrItems,
   theme,
-  setTheme
+  setTheme,
+  panelOpen,
+  setPanelOpen
 }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
   if (page === "home") {
@@ -3299,7 +3353,9 @@ function MainPageContent({
   } else if (pageMeta) {
     content = /*#__PURE__*/React.createElement(SheetSurfaceLayout, {
       sh: sh,
-      setSh: setSh
+      setSh: setSh,
+      panelOpen: panelOpen,
+      setPanelOpen: setPanelOpen
     });
     wrapperClass = "main-data";
   }
@@ -3382,6 +3438,12 @@ function App() {
   const [sh, setSh] = useState(DEFAULT_SH);
   const [sym, setSym] = useState(DEFAULT_SYM);
   const [grItems, setGrItems] = useState(DEFAULT_GR);
+  const [s4PanelOpen, setS4PanelOpen] = useState({
+    s1: false,
+    s2: false,
+    s3: false,
+    s4: false
+  });
   return /*#__PURE__*/React.createElement("div", {
     id: "app",
     className: "app"
@@ -3474,7 +3536,9 @@ function App() {
     grItems: grItems,
     setGrItems: setGrItems,
     theme: theme,
-    setTheme: setTheme
+    setTheme: setTheme,
+    panelOpen: s4PanelOpen,
+    setPanelOpen: setS4PanelOpen
   }))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
