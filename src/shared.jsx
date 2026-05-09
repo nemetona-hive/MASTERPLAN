@@ -336,3 +336,41 @@ function Text({ children, size, weight, variant, color, className = "", style = 
     </Tag>
   );
 }
+
+function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field }) {
+  const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
+
+  React.useLayoutEffect(() => {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+    }
+  }, [anchorRef]);
+
+  return ReactDOM.createPortal(
+    <div className="rate-presets-dropdown" style={{ position: "absolute", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}>
+      <div className="rate-presets-header">Material Presets</div>
+      <div className="rate-presets-list">
+        {presets.map((p, idx) => {
+          if (!p.name) return null;
+          const displayVal = field === "width" ? p.width : p.length;
+          const displayUnit = field === "width" ? "w" : "l";
+          return (
+            <div
+              key={idx}
+              className={"rate-preset-item" + (activePreset === idx ? " active" : "")}
+              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
+            >
+              <div className="rate-preset-info">
+                <span className="rate-preset-name">{p.name}</span>
+                <span className="rate-preset-meta">{p.width} × {p.length} mm</span>
+              </div>
+              <span className="rate-preset-val">{displayVal}<small>{displayUnit}</small></span>
+            </div>
+          );
+        })}
+      </div>
+    </div>,
+    document.body
+  );
+}
