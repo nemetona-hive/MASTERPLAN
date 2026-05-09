@@ -259,6 +259,6 @@ function computeS4(sh) {
       { label: L.full,        value: stats.full,                                                  unit: "pcs", hoverType: "full" },
       { label: L.cut,         value: stats.cut,                                                   unit: "pcs", hoverType: "cut" }
     ],
-    meta: { width: sW, visualization: "rows", s4: true }
+    meta: { width: sW, visualization: "rows", s4: true, useS4Colors: s4Long !== PPi }
   };
 }
