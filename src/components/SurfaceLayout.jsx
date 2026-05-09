@@ -18,8 +18,12 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const [showLenDropdown, setShowLenDropdown] = React.useState(false);
   const [showWidDropdown, setShowWidDropdown] = React.useState(false);
   const [showModal,       setShowModal]       = React.useState(false);
+  const [largePreview,    setLargePreview]    = React.useState(null);
   const [fieldFlash,      setFieldFlash]      = React.useState(false);
   const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+
+  const openLargePreview = (layout, result) => setLargePreview({ layout, result });
+  const closeLargePreview = () => setLargePreview(null);
 
   const flashTimerRef  = React.useRef(null);
   const fieldTimerRef  = React.useRef(null);
@@ -211,6 +215,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                 rowStart={rowStart}
                 open={panelOpen[id]}
                 setOpen={v => setPanelOpen(s => ({ ...s, [id]: v }))}
+                onLargePreview={openLargePreview}
                 isBest={panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best} />
             );
           })}
@@ -309,6 +314,27 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
                 <div className="pw-formula-text" style={{ opacity: 0.7 }}>
                   Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.
+                </div>
+              </Stack>
+            </div>
+          </div>
+        </div>
+      )}
+      {largePreview && (
+        <div className="mp-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) closeLargePreview(); }}>
+          <div className="mp-modal mp-modal-large">
+            <div className="mp-modal-head">
+              <span>Large layout preview — {largePreview.layout.title}</span>
+              <button className="mp-modal-close" onClick={closeLargePreview}>
+                <Icon name="minus" />
+              </button>
+            </div>
+            <div className="mp-modal-body">
+              <Stack gap={4}>
+                {largePreview.result.summaryRows.length > 0 &&
+                  <PanelSummary rows={largePreview.result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
+                <div className={`large-layout-vis-wrap data-preview`}>
+                  <LayoutVisualization result={largePreview.result} hoveredType={hoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} />
                 </div>
               </Stack>
             </div>
