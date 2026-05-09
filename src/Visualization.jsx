@@ -49,8 +49,8 @@ function PanelSummary({ rows, hoveredType, setHoveredType }) {
 
 function rowSignature(row) {
   return row.segs
-    .map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0].join(":"))
-    .join("|") + (row.long ? "-L" : "-S");
+    .map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0, seg.sourceId || ""].join(":"))
+    .join("|") + (row.long ? "-L" : "-S") + `-H${Math.round(row.h || 0)}`;
 }
 
 function groupAdjacentRows(rowsWithIndexes) {
@@ -58,10 +58,12 @@ function groupAdjacentRows(rowsWithIndexes) {
   rowsWithIndexes.forEach(item => {
     const signature = rowSignature(item.row);
     const last = groups[groups.length - 1];
+    const rowHeight = Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1;
     if (last && last.signature === signature) {
       last.items.push(item);
+      last.height += rowHeight;
     } else {
-      groups.push({ signature, items: [item] });
+      groups.push({ signature, items: [item], height: rowHeight });
     }
   });
   return groups;
@@ -120,10 +122,10 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
 
   return (
     <Stack gap={0}>
-      <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "stretch" }}>
+      <div style={{ display: "grid", gridTemplateColumns: showRowText ? "max-content minmax(0, 1fr) max-content" : "minmax(0, 1fr) max-content", gap: "var(--sp-2)", alignItems: "stretch" }}>
         {/* Labels Column — Left Side */}
         {showRowText && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0, gridColumn: 1, gridRow: 1 }}>
             {rowGroups.map((group, i) => {
               const count = group.items.length;
               const startR = group.items[0].idx + 1;
@@ -132,7 +134,7 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
                 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)} ×${count}` 
                 : `R${startR}`;
               return (
-                <div key={i} style={{ flexGrow: count, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                <div key={i} style={{ flexGrow: group.height, flexBasis: 0, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                   <span className="sys-row-lbl-outer">{label}</span>
                 </div>
               );
@@ -140,12 +142,10 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
           </div>
         )}
 
-        <Stack className="sys-rows sys-rows-border" gap={0} style={{ flex: 1, aspectRatio: chartAspectRatio, maxHeight: "420px" }}>
+        <Stack className="sys-rows sys-rows-border" gap={0} style={{ gridColumn: showRowText ? 2 : 1, gridRow: 1, justifySelf: "stretch", width: "100%", minWidth: 0, aspectRatio: chartAspectRatio, maxHeight: "420px" }}>
           {rowGroups.map((group, i) => {
-            const count = group.items.length;
-            
             return (
-              <div key={i} className="sys-row" style={{ flexGrow: count }}>
+              <div key={i} className="sys-row" style={{ flexGrow: group.height }}>
                 <div className="sys-row-vis">
                   <PanelRowVis
                     segs={group.items[0].row.segs}
@@ -160,35 +160,18 @@ function LayoutVisualization({ result, hoveredType, rowStart = "top" }) {
         </Stack>
 
         {/* Vertical legend — Right side, rotated */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "18px" }}>
+        <div style={{ gridColumn: showRowText ? 3 : 2, gridRow: 1, display: "flex", alignItems: "center", justifyContent: "center", minWidth: "18px" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-1)", writingMode: "vertical-rl", fontFamily: "var(--mono)", fontSize: "var(--fs-md)", color: "var(--color-gray-opa80)", whiteSpace: "nowrap" }}>
             <Icon name="arrow-v" style={{ writingMode: "horizontal-tb", fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
             <span>{vertLabel}</span>
           </div>
         </div>
-      </div>
 
-      {/* Horizontal legend — Mirrored layout to align with sys-rows border */}
-      <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
-        {/* Left padding/spacer for labels */}
-        {showRowText && (
-          <div style={{ visibility: "hidden", pointerEvents: "none", display: "flex", flexDirection: "column", gap: 0 }}>
-             <span className="sys-row-lbl-outer">R8-R8 ×8</span> {/* Representative width */}
-          </div>
-        )}
-
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--sp-1)", fontFamily: "var(--mono)", fontSize: "var(--fs-md)", color: "var(--color-gray-opa80)" }}>
+        {/* Horizontal legend */}
+        <div style={{ gridColumn: showRowText ? 2 : 1, gridRow: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--sp-1)", fontFamily: "var(--mono)", fontSize: "var(--fs-md)", color: "var(--color-gray-opa80)" }}>
           <Icon name="arrow-h" style={{ fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
           <span>{horzLabel}</span>
           <Icon name="arrow-h" style={{ fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
-        </div>
-
-        {/* Right padding/spacer for vertical legend */}
-        <div style={{ visibility: "hidden", pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center", minWidth: "18px" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-1)", writingMode: "vertical-rl" }}>
-            <Icon name="arrow-v" style={{ fontSize: "var(--fs-md)" }} />
-            <span>0000 mm</span>
-          </div>
         </div>
       </div>
     </Stack>
