@@ -1675,7 +1675,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	flex-direction: column;
 	background: var(--color-darkblue);
 	border-radius: 6px;
-	padding: 8px 6px;
+	padding: 0;
 	min-height: 96px;
 }
 
@@ -1704,78 +1704,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	opacity: 0.95;
 }
 
-.data-preview .sys-row-vis {
-	position: relative;
-	flex: 1;
-	min-width: 0;
-	min-height: 0;
-}
-
-.data-preview .panel-row {
-	position: relative;
-	height: 100%;
-	min-height: 0;
-	border-bottom: 1px solid color-mix(in srgb, var(--color-darkblue) 30%, transparent);
-	opacity: 0;
-	animation: fadeInRow 0.3s ease forwards;
-}
-
-@keyframes fadeInRow {
-	from { opacity: 0; transform: translateY(-5px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-
-.data-preview .panel-row-v {
-	width: 100%;
-	border-bottom: 0;
-	border-right: 1px solid color-mix(in srgb, var(--color-darkblue) 30%, transparent);
-}
-
-@media (max-width: 700px) {
-	.data-preview .sys-rows {
-		min-height: 72px;
-		max-height: 260px;
-	}
-}
-
-.data-preview .panel-seg {
-	position: absolute;
-	height: 100%;
-	border-radius: 1px;
-	box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--color-darkblue) 40%, transparent);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	overflow: hidden;
-	transition: all 0.3s ease, box-shadow 0.15s;
-}
-
-.data-preview .panel-seg.seg-highlight {
-	box-shadow: inset 0 0 0 1.5px var(--color-white);
-}
-
-.data-preview .panel-seg-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.data-preview .source-marker {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 16px;
-	height: 16px;
-	padding: 0 3px;
-	border-radius: 4px;
-	background: color-mix(in srgb, var(--color-darkblue) 40%, transparent);
-	font-size: var(--fs-xs);
-	font-weight: var(--fw-bold);
-	color: var(--color-white);
-	border: 1px solid color-mix(in srgb, var(--color-white) 30%, transparent);
-}
 
 .data-preview .strip {
 	display: flex;
@@ -1841,6 +1769,41 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 
 
+.preview-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-1) var(--sp-2);
+  border-bottom: 2px solid var(--border);
+  margin-bottom: var(--sp-4);
+}
+
+.preview-head-main {
+  flex: 1;
+}
+
+.preview-title {
+  font-family: var(--sans);
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.preview-desc {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.preview-head-actions {
+  display: flex;
+  align-items: center;
+  padding-bottom: 4px;
+}
 
 /*
  * ----------------------------------------------------------
@@ -3697,4 +3660,193 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 .data-row-danger {
   color: var(--danger) !important;
+}
+
+/*
+ * ----------------------------------------------------------
+ * LAYOUT SVG VISUALIZATION
+ * ----------------------------------------------------------
+ */
+
+.viz-expand-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  z-index: 50;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  font-size: 14px;
+}
+
+.viz-expand-btn:hover {
+  background: var(--surface-hover);
+  color: var(--color-white);
+  border-color: var(--brand);
+  transform: scale(1.05);
+}
+
+.ts-btn--icon-only {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  font-size: 16px;
+}
+
+.ts-btn--icon-only:hover {
+  color: var(--brand);
+}
+
+.layout-svg-wrap {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+}
+
+/* ── Visualization card ─────────────────────────────────── */
+.viz-card {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* The SVG chart element — border via CSS, not SVG rect */
+.viz-card svg {
+  background: var(--color-darkblue);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 8px;
+  outline: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Dimension legend row */
+.viz-legends {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.viz-legend-h {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.viz-legend-h span {
+  color: var(--text-secondary);
+  font-size: var(--fs-md);
+}
+
+/* Small panel cap */
+.data-preview .layout-svg,
+.data-preview svg.layout-svg {
+  max-height: 420px;
+}
+
+.layout-svg-seg {
+  stroke: color-mix(in srgb, var(--color-darkblue) 45%, transparent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: filter 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+  cursor: pointer;
+}
+
+.layout-svg-seg.is-highlighted {
+  stroke: var(--color-white);
+  stroke-width: 2;
+  filter: brightness(1.15);
+}
+
+.layout-svg-seg.is-selected {
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+  filter: brightness(1.25);
+}
+
+.layout-svg-seg.is-selected.is-highlighted {
+  stroke: var(--color-white);
+  stroke-width: 3;
+}
+
+.layout-svg-gap {
+  fill: url(#layout-gap-hatch);
+  stroke: var(--danger);
+}
+
+.layout-svg-row-bg {
+  fill: var(--surface-1);
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Fill colors matching legacy background colors */
+.layout-svg-seg.color-s0 { fill: var(--sys-s0); }
+.layout-svg-seg.color-s1 { fill: var(--sys-s1); }
+.layout-svg-seg.color-s2l { fill: var(--sys-s2); }
+.layout-svg-seg.color-s2d { fill: color-mix(in srgb, var(--sys-s2) 60%, transparent); }
+.layout-svg-seg.color-s3l { fill: color-mix(in srgb, var(--sys-s3) 60%, transparent); }
+.layout-svg-seg.color-s3d { fill: var(--sys-s3); }
+.layout-svg-seg.color-s4l { fill: var(--sys-s4); }
+.layout-svg-seg.color-s4s { fill: color-mix(in srgb, var(--sys-s4) 60%, transparent); }
+.layout-svg-seg.color-offcut { fill: var(--viz-offcut); }
+.layout-svg-seg.color-cut { fill: var(--viz-cut); }
+.layout-svg-seg.color-edge { fill: var(--viz-edge); }
+.layout-svg-seg.color-sys1 { fill: var(--sys-s1); }
+
+.layout-svg-label {
+  pointer-events: none;
+  fill: var(--color-white);
+  font-family: var(--mono);
+  font-size: 67px;
+  font-weight: var(--fw-semi);
+}
+
+.layout-svg-row-label {
+  pointer-events: none;
+  fill: var(--color-gray-opa80);
+  font-family: var(--mono);
+  font-size: 80px;
+  font-weight: var(--fw-semi);
+  letter-spacing: 0.02em;
+}
+
+.layout-svg-source {
+  pointer-events: none;
+  fill: var(--color-white);
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: var(--fw-bold);
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .layout-svg-label,
+  .layout-svg-source {
+    display: none; /* Hide SVG labels on mobile to avoid clutter */
+  }
 }

@@ -98,6 +98,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const panelResultsById  = panelResults.reduce((acc, p) => { acc[p.layout.id] = p; return acc; }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
   const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;
+  const bestPanel = comparableResults.find(p => p.result.stats.total === best);
 
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return (
@@ -204,8 +205,11 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         </ControlPanel>
       </Stack>
       <div id="data-preview" className="data-preview">
-        <PreviewSection id="pattern-layouts" title="Pattern Layouts"
-          description="Compare row-based layouts that share the same surface and material settings.">
+        <PreviewSection 
+          id="pattern-layouts" 
+          title="Pattern Layouts"
+          description="Compare row-based layouts that share the same surface and material settings."
+        >
           {["s1", "s2", "s3", "s4"].map(id => {
             const panel = panelResultsById[id];
             if (!panel) return null;
@@ -334,7 +338,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                 {largePreview.result.summaryRows.length > 0 &&
                   <PanelSummary rows={largePreview.result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
                 <div className={`large-layout-vis-wrap data-preview`}>
-                  <LayoutVisualization result={largePreview.result} hoveredType={hoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} />
+                  <LayoutVisualization result={largePreview.result} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} />
                 </div>
               </Stack>
             </div>

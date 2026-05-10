@@ -553,13 +553,109 @@ function groupAdjacentRows(rowsWithIndexes) {
   });
   return groups;
 }
+function buildLayoutSvgRects(result, rowStart = "top") {
+  const {
+    surfaceW,
+    surfaceH,
+    direction,
+    s4,
+    useS4Colors,
+    palClasses,
+    PPi,
+    PLa
+  } = result.meta;
+  const isV = direction === "V";
+  const stdRowH = isV ? PPi : PLa;
+  const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
+    row,
+    idx
+  })).reverse() : result.rows.map((row, idx) => ({
+    row,
+    idx
+  }));
+  let physicalCursor = 0;
+  let visualCursor = 0;
+  const rects = [];
+  const rowRects = [];
+  orderedRows.forEach(({
+    row,
+    idx
+  }) => {
+    const rowSize = Number.isFinite(row.h) && row.h > 0 ? row.h : 1;
+    const visualRowSize = !isV ? stdRowH : rowSize;
+    if (!isV) {
+      rowRects.push({
+        x: 0,
+        y: visualCursor,
+        w: surfaceW,
+        h: visualRowSize,
+        key: `row-bg-${idx}`
+      });
+    }
+    const rowPalClasses = s4 && useS4Colors ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses || PAL_CLASSES.s1;
+    const isS4Palette = rowPalClasses === PAL_CLASSES.s4l || rowPalClasses === PAL_CLASSES.s4s;
+    row.segs.forEach((seg, segIndex) => {
+      const segPalClasses = isS4Palette && seg.type === "full" && seg.long !== undefined ? seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : rowPalClasses;
+      let segClass = seg.type === "gap" ? "layout-svg-gap" : getSegmentClass(seg, segPalClasses);
+      const rect = {
+        key: `${idx}-${segIndex}-${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.sourceId || ""}`,
+        type: seg.type,
+        sourceId: seg.sourceId,
+        rowIndex: idx,
+        segIndex,
+        row,
+        seg,
+        segClass
+      };
+      if (isV) {
+        rect.x = physicalCursor;
+        rect.y = seg.x;
+        rect.w = rowSize;
+        rect.h = seg.w;
+      } else {
+        rect.x = seg.x;
+        rect.y = visualCursor + (visualRowSize - rowSize);
+        rect.w = seg.w;
+        rect.h = rowSize;
+      }
+      rects.push(rect);
+    });
+    physicalCursor += rowSize;
+    visualCursor += visualRowSize;
+  });
+
+  // vH = actual visual height of all rows (may exceed surfaceH if rows × PLa > surfaceH)
+  const totalVisualH = Math.max(surfaceH, visualCursor);
+
+  // If rows don't fill full surface height, shift content to bottom
+  const yOffset = !isV && visualCursor < surfaceH ? surfaceH - visualCursor : 0;
+  if (yOffset > 0) {
+    rects.forEach(r => r.y += yOffset);
+    rowRects.forEach(r => r.y += yOffset);
+  }
+  return {
+    rects,
+    rowRects,
+    vW: surfaceW,
+    vH: totalVisualH,
+    yOffset
+  };
+}
+
+// ── LayoutVisualization (rewritten from scratch) ──────────────────────────────
+// Row labels live inside the SVG, positioned in SVG coordinate space.
+// This guarantees they always align with the chart rows at any container size.
+
 function LayoutVisualization({
   result,
   hoveredType,
+  setHoveredType,
   rowStart = "top",
+  alwaysShowLabels = false,
   maxHeight = 420,
-  alwaysShowLabels = false
+  onLargePreview
 }) {
+  // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {
     return /*#__PURE__*/React.createElement("div", {
       className: "strip"
@@ -592,13 +688,8 @@ function LayoutVisualization({
       className: "strip-note"
     }, "\uD83D\uDCA1 ", result.stats.cut === 0 ? "No panels are cut (perfect fit)." : result.stats.cut === 1 ? "1 edge piece is cut from a full panel (1 panel is cut)." : "Both edge pieces are cut from full panels (2 panels are cut)."));
   }
-  const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
-    row,
-    idx
-  })).reverse() : result.rows.map((row, idx) => ({
-    row,
-    idx
-  }));
+
+  // ── Main SVG layout ──
   const {
     surfaceW,
     surfaceH,
@@ -609,91 +700,164 @@ function LayoutVisualization({
     direction
   } = result.meta;
   const isV = direction === "V";
-  const horzTotal = surfaceW;
-  const vertTotal = surfaceH;
   const horzPanel = isV ? PLa : PPi;
+  const horzLabel = isS4 ? `${surfaceW} mm \u2014 long ${s4Long} mm` : `${surfaceW} mm \u2014 panel ${horzPanel} mm`;
   const vertPanel = isV ? PPi : PLa;
-  const horzLabel = isS4 ? `${horzTotal} mm — long ${s4Long} mm` : `${horzTotal} mm — panel ${horzPanel} mm`;
-  const vertLabel = `${vertTotal} mm — row ${vertPanel} mm`;
-  const chartAspectRatio = horzTotal && vertTotal ? horzTotal / vertTotal : 1;
-  const showRowText = !isV && orderedRows.length <= 12;
-  const showSegmentText = alwaysShowLabels || orderedRows.length <= 10;
-  const rowGroups = groupAdjacentRows(orderedRows);
-  const visualRows = orderedRows.map(item => ({
-    signature: `${item.idx}-${rowSignature(item.row)}`,
-    items: [item],
-    height: Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1
+  const vertLabel = `${surfaceH} mm \u2014 row ${vertPanel} mm`;
+
+  // Build rects in SVG coordinate space
+  const {
+    rects,
+    rowRects,
+    vW,
+    vH,
+    yOffset
+  } = buildLayoutSvgRects(result, rowStart);
+  const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
+  const showRowLabels = !isV && result.rows.length <= 12;
+
+  // ── Compute row label bands in SVG coordinate space ──
+  // We read directly from rowRects (same coords as the SVG rows).
+  const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
+    row,
+    idx
+  })).reverse() : result.rows.map((row, idx) => ({
+    row,
+    idx
   }));
-  return /*#__PURE__*/React.createElement(Stack, {
-    gap: 0
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: showRowText ? "max-content minmax(0, 1fr) max-content" : "minmax(0, 1fr) max-content",
-      gap: "var(--sp-2)",
-      alignItems: "stretch"
-    }
-  }, showRowText && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 0,
-      gridColumn: 1,
-      gridRow: 1
-    }
-  }, rowGroups.map((group, i) => {
+  const rowGroups = groupAdjacentRows(orderedRows);
+  const groupBands = showRowLabels ? rowGroups.map(group => {
+    const idxSet = new Set(group.items.map(item => item.idx));
+    // Use row background rects so labels center on the full visual lane
+    const matching = rowRects.filter(r => idxSet.has(parseInt(r.key.replace("row-bg-", ""), 10)));
+    if (matching.length === 0) return null;
+    const topY = Math.min(...matching.map(r => r.y));
+    const botY = Math.max(...matching.map(r => r.y + r.h));
     const count = group.items.length;
     const startR = group.items[0].idx + 1;
     const endR = group.items[count - 1].idx + 1;
-    const label = count > 1 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)} ×${count}` : `R${startR}`;
-    return /*#__PURE__*/React.createElement("div", {
-      key: group.signature,
-      style: {
-        flexGrow: group.height,
-        flexBasis: 0,
-        minHeight: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-end"
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "sys-row-lbl-outer"
-    }, label));
-  })), /*#__PURE__*/React.createElement(Stack, {
-    className: "sys-rows sys-rows-border",
-    gap: 0,
-    style: {
-      gridColumn: showRowText ? 2 : 1,
-      gridRow: 1,
-      justifySelf: "stretch",
-      width: "100%",
-      minWidth: 0,
-      aspectRatio: chartAspectRatio,
-      maxHeight: `${maxHeight}px`,
-      flexDirection: isV ? "row" : "column"
+    const label = count > 1 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)}` : `R${startR}`;
+    return {
+      midY: (topY + botY) / 2,
+      label
+    };
+  }).filter(Boolean) : [];
+
+  // ── SVG viewBox — reserve a left strip for row labels ──
+  // Font size in SVG user units, capped relative to chart width (not row height)
+  // so it stays consistent regardless of row count.
+  const rowLabelFontSize = showRowLabels ? Math.round(vW * 0.018) : 0;
+  // Column wide enough for ~5 chars ("R1-R9") at that font size
+  const labelColW = showRowLabels ? Math.round(rowLabelFontSize * 3.2) : 0;
+  const gap = showRowLabels ? Math.round(rowLabelFontSize * 0.4) : 0;
+  const chartX = labelColW + gap;
+  const totalVW = vW + chartX;
+  const aspectRatio = totalVW / vH;
+  const [selectedKey, setSelectedKey] = React.useState(null);
+  const [selectedSourceId, setSelectedSourceId] = React.useState(null);
+  const handleSegClick = rect => {
+    if (selectedKey === rect.key) {
+      setSelectedKey(null);
+      setSelectedSourceId(null);
+    } else {
+      setSelectedKey(rect.key);
+      setSelectedSourceId(rect.sourceId || null);
     }
-  }, visualRows.map((group, i) => {
-    return /*#__PURE__*/React.createElement("div", {
-      key: group.signature,
-      className: "sys-row",
-      style: {
-        flexGrow: group.height
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "sys-row-vis"
-    }, /*#__PURE__*/React.createElement(PanelRowVis, {
-      segs: group.items[0].row.segs,
-      W: result.meta.width,
-      palClasses: result.meta.s4 && result.meta.useS4Colors ? group.items[0].row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : result.meta.palClasses || PAL_CLASSES.s1,
-      hoveredType: hoveredType,
-      showLabels: showSegmentText,
-      orientation: isV ? "vertical" : "horizontal",
-      alwaysShowLabels: alwaysShowLabels
-    })));
-  })), /*#__PURE__*/React.createElement("div", {
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "viz-card"
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      gridColumn: showRowText ? 3 : 2,
-      gridRow: 1,
+      display: "flex",
+      alignItems: "stretch",
+      gap: "var(--sp-2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      flex: 1,
+      aspectRatio,
+      maxHeight: `${maxHeight}px`
+    }
+  }, onLargePreview && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "viz-expand-btn",
+    onClick: () => onLargePreview(),
+    title: "Open large preview"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "maximize"
+  })), /*#__PURE__*/React.createElement("svg", {
+    viewBox: `0 0 ${totalVW} ${vH}`,
+    preserveAspectRatio: "none",
+    role: "img",
+    style: {
+      display: "block",
+      width: "100%",
+      height: "100%",
+      borderRadius: "8px"
+    },
+    onClick: () => {
+      setSelectedKey(null);
+      setSelectedSourceId(null);
+    }
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("pattern", {
+    id: "layout-gap-hatch",
+    patternUnits: "userSpaceOnUse",
+    width: "16",
+    height: "16"
+  }, /*#__PURE__*/React.createElement("rect", {
+    width: "16",
+    height: "16",
+    fill: "rgba(255,68,68,0.12)"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M0 16 L16 0",
+    stroke: "var(--danger)",
+    strokeWidth: "2"
+  }))), rowRects.map(r => /*#__PURE__*/React.createElement("rect", {
+    key: r.key,
+    x: r.x + chartX,
+    y: r.y,
+    width: r.w,
+    height: r.h,
+    className: "layout-svg-row-bg"
+  })), rects.map(rect => {
+    const isHighlighted = hoveredType && rect.type === hoveredType;
+    const isSelected = selectedKey === rect.key || selectedSourceId && rect.sourceId === selectedSourceId;
+    const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035;
+    return /*#__PURE__*/React.createElement("g", {
+      key: rect.key,
+      style: {
+        cursor: rect.sourceId ? "pointer" : "default"
+      },
+      onClick: e => {
+        e.stopPropagation();
+        handleSegClick(rect);
+      }
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: rect.x + chartX,
+      y: rect.y,
+      width: rect.w,
+      height: rect.h,
+      className: `layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`,
+      onMouseEnter: () => setHoveredType && setHoveredType(rect.type),
+      onMouseLeave: () => setHoveredType && setHoveredType(null)
+    }, /*#__PURE__*/React.createElement("title", null, `${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`)), showLabel && /*#__PURE__*/React.createElement("text", {
+      x: rect.x + chartX + rect.w / 2,
+      y: rect.y + rect.h / 2,
+      textAnchor: "middle",
+      dominantBaseline: "middle",
+      className: "layout-svg-label"
+    }, rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : Math.round(rect.seg.w)));
+  }), groupBands.map(band => /*#__PURE__*/React.createElement("text", {
+    key: band.label,
+    x: labelColW * 0.92,
+    y: band.midY,
+    fontSize: rowLabelFontSize,
+    textAnchor: "end",
+    dominantBaseline: "middle",
+    className: "layout-svg-row-label"
+  }, band.label)))), /*#__PURE__*/React.createElement("div", {
+    style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -718,28 +882,18 @@ function LayoutVisualization({
       fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
-  }), /*#__PURE__*/React.createElement("span", null, vertLabel))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      gridColumn: showRowText ? 2 : 1,
-      gridRow: 2,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "var(--sp-1)",
-      fontFamily: "var(--mono)",
-      fontSize: "var(--fs-md)",
-      color: "var(--color-gray-opa80)"
-    }
+  }), /*#__PURE__*/React.createElement("span", null, vertLabel)))), /*#__PURE__*/React.createElement("div", {
+    className: "viz-legends"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "viz-legend-h"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "arrow-h",
     style: {
-      fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
   }), /*#__PURE__*/React.createElement("span", null, horzLabel), /*#__PURE__*/React.createElement(Icon, {
     name: "arrow-h",
     style: {
-      fontSize: "var(--fs-md)",
       color: "var(--color-primary)"
     }
   }))));
@@ -784,11 +938,7 @@ function LayoutPanel({
   }, layout.description), /*#__PURE__*/React.createElement("div", {
     className: "sys-head-actions",
     onClick: e => e.stopPropagation()
-  }, canLargePreview && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "ts-btn ts-btn--muted",
-    onClick: () => onLargePreview(layout, result)
-  }, "Large preview"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: "sys-head-count"
   }, result.stats.total, " pcs ", isBest ? /*#__PURE__*/React.createElement(Icon, {
     name: "best-badge"
@@ -805,18 +955,32 @@ function LayoutPanel({
   }), result.rows.length > 0 && /*#__PURE__*/React.createElement(LayoutVisualization, {
     result: result,
     hoveredType: hoveredType,
-    rowStart: rowStart
+    setHoveredType: setHoveredType,
+    rowStart: rowStart,
+    onLargePreview: onLargePreview ? () => onLargePreview(layout, result) : null
   })));
 }
 function PreviewSection({
   id,
   title,
   description,
+  headerActions,
   children
 }) {
   return /*#__PURE__*/React.createElement(Stack, {
+    id: id,
     gap: 3
-  }, /*#__PURE__*/React.createElement(Stack, {
+  }, (title || description || headerActions) && /*#__PURE__*/React.createElement("div", {
+    className: "preview-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "preview-head-main"
+  }, title && /*#__PURE__*/React.createElement("h2", {
+    className: "preview-title"
+  }, title), description && /*#__PURE__*/React.createElement("p", {
+    className: "preview-desc"
+  }, description)), headerActions && /*#__PURE__*/React.createElement("div", {
+    className: "preview-head-actions"
+  }, headerActions)), /*#__PURE__*/React.createElement(Stack, {
     className: "preview-data",
     gap: 3
   }, children));
@@ -2875,6 +3039,7 @@ function SheetSurfaceLayout({
   }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
   const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;
+  const bestPanel = comparableResults.find(p => p.result.stats.total === best);
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Stack, {
       id: "data-control",
@@ -3255,6 +3420,7 @@ function SheetSurfaceLayout({
   }, /*#__PURE__*/React.createElement(LayoutVisualization, {
     result: largePreview.result,
     hoveredType: hoveredType,
+    setHoveredType: setHoveredType,
     rowStart: rowStart,
     maxHeight: 760,
     alwaysShowLabels: true

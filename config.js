@@ -13,6 +13,7 @@ const ICONS = {
   // Collapse / Expand toggles
   "chevron-down": "fa-solid fa-chevron-down",     // Section open
   "chevron-right": "fa-solid fa-chevron-right",    // Section closed
+  "maximize": "fa-solid fa-expand",
 
   // Navigation sidebar
   "panel-left-close": "fa-solid fa-kaaba",   // Toggle sidebar
