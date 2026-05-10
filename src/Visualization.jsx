@@ -106,6 +106,13 @@ function buildLayoutSvgRects(result, orderedRows) {
 // This guarantees they always align with the chart rows at any container size.
 
 function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview }) {
+  const [selectedKey, setSelectedKey] = React.useState(null);
+  const [selectedSourceId, setSelectedSourceId] = React.useState(null);
+  const svgIdRef = React.useRef(null);
+  if (!svgIdRef.current) {
+    svgIdRef.current = `layout-svg-${Math.random().toString(36).slice(2, 10)}`;
+  }
+  const gapHatchId = `${svgIdRef.current}-gap-hatch`;
 
   // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {
@@ -183,9 +190,6 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
   const chartX = labelColW + gap;
   const totalVW = vW + chartX;
   const aspectRatio = totalVW / vH;
-
-  const [selectedKey, setSelectedKey] = React.useState(null);
-  const [selectedSourceId, setSelectedSourceId] = React.useState(null);
   const handleSegClick = (rect) => {
     if (selectedKey === rect.key) {
       setSelectedKey(null);
@@ -207,13 +211,13 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
           )}
           <svg
             viewBox={`0 0 ${totalVW} ${vH}`}
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
             role="img"
             style={{ display: "block", width: "100%", height: "100%", borderRadius: "8px" }}
             onClick={() => { setSelectedKey(null); setSelectedSourceId(null); }}
           >
             <defs>
-              <pattern id="layout-gap-hatch" patternUnits="userSpaceOnUse" width="16" height="16">
+              <pattern id={gapHatchId} patternUnits="userSpaceOnUse" width="16" height="16">
                 <rect width="16" height="16" fill="rgba(255,68,68,0.12)" />
                 <path d="M0 16 L16 0" stroke="var(--danger)" strokeWidth="2" />
               </pattern>
@@ -232,6 +236,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
                   <rect
                     x={rect.x + chartX} y={rect.y} width={rect.w} height={rect.h}
                     className={`layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
+                    style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
                     onMouseEnter={() => setHoveredType && setHoveredType(rect.type)}
                     onMouseLeave={() => setHoveredType && setHoveredType(null)}
                   >
