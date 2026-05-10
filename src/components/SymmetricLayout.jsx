@@ -43,7 +43,7 @@ function SheetSymmetricLayout({ sym, setSym }) {
                 id="input-sym-panel-width"
                 label="Product width (mm)"
                 value={sym.panelWidth}
-                onChange={v => { setSym(s => ({ ...s, panelWidth: Math.max(100, Math.min(5000, Number(v) || 100)) })); setActivePreset(null); }}
+                onChange={v => { setSym(s => ({ ...s, panelWidth: Math.max(100, Math.min(50000, Number(v) || 100)) })); setActivePreset(null); }}
                 step={10}
                 min={100}
                 onFocus={() => setShowWidDropdown(true)}
