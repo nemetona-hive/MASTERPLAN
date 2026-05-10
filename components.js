@@ -2652,7 +2652,7 @@ function SheetSymmetricLayout({
     onChange: v => {
       setSym(s => ({
         ...s,
-        panelWidth: Math.max(100, Math.min(5000, Number(v) || 100))
+        panelWidth: Math.max(100, Math.min(50000, Number(v) || 100))
       }));
       setActivePreset(null);
     },
@@ -2823,7 +2823,7 @@ function SheetSurfaceLayout({
   const setMat = k => v => {
     setSh(s => ({
       ...s,
-      [k]: Math.max(100, Math.min(5000, Number(v) || 100))
+      [k]: Math.max(100, Math.min(50000, Number(v) || 100))
     }));
     setActivePreset(null);
   };
