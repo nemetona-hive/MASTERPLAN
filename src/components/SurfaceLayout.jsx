@@ -78,7 +78,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   };
 
   const set = k => v => { setSh(s => ({ ...s, [k]: v })); setActivePreset(null); };
-  const setMat = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(5000, Number(v) || 100)) })); setActivePreset(null); };
+  const setMat = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); setActivePreset(null); };
   const setSurf = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); };
   const setS2PanelState = patch => setSh(s => ({ ...s, offset:  patch.offset  !== undefined ? patch.offset  : s.offset }));
   const setS4PanelState = patch => setSh(s => ({ ...s,
