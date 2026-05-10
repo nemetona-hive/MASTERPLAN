@@ -459,61 +459,6 @@ function MaterialPresetDropdown({
     }, displayVal, /*#__PURE__*/React.createElement("small", null, displayUnit)));
   }))), document.body);
 }
-
-// ── Visualization components ──────────────────────────────────────────────────
-
-const PanelRowVis = React.memo(function PanelRowVis({
-  segs,
-  W,
-  palClasses,
-  hoveredType,
-  showLabels = true,
-  orientation = "horizontal",
-  alwaysShowLabels = false
-}) {
-  const isVertical = orientation === "vertical";
-  return /*#__PURE__*/React.createElement("div", {
-    className: "panel-row" + (isVertical ? " panel-row-v" : "")
-  }, segs.map((seg, i) => {
-    const l = seg.x / W * 100,
-      w = seg.w / W * 100;
-    const isGap = seg.type === "gap";
-    const isS4Palette = palClasses === PAL_CLASSES.s4l || palClasses === PAL_CLASSES.s4s;
-    const segPalClasses = isS4Palette && seg.type === "full" && seg.long !== undefined ? seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses;
-    const segClass = getSegmentClass(seg, segPalClasses);
-    const isDimmed = hoveredType && seg.type === hoveredType;
-    const tc = isGap ? "#ff6666" : "var(--color-white)";
-    const bgStyle = isGap ? {
-      background: "repeating-linear-gradient(45deg,#ff444433 0,#ff444433 4px,#09101a55 4px,#09101a55 8px)",
-      border: "1px dashed #ff4444"
-    } : undefined;
-    const titleText = isGap ? `${Math.round(seg.w)}mm \u2014 gap` : `${Math.round(seg.w)}mm \u2014 ${seg.type === "offcut" ? "remainder from prev" : seg.type === "cut" ? "cut" : seg.type === "edge" ? "edge piece" : "full panel"}` + (seg.sourceId ? ` (source: ${seg.sourceId})` : "");
-    return /*#__PURE__*/React.createElement("div", {
-      key: `${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.long || ''}-${seg.sourceId || ''}`,
-      className: "panel-seg " + (!isGap ? segClass : "") + (isDimmed ? " seg-highlight" : ""),
-      style: isVertical ? {
-        top: `${l}%`,
-        height: `${w}%`,
-        left: 0,
-        width: "100%",
-        ...bgStyle
-      } : {
-        left: `${l}%`,
-        width: `${w}%`,
-        ...bgStyle
-      },
-      title: titleText
-    }, showLabels && (alwaysShowLabels || w > 4) && /*#__PURE__*/React.createElement("span", {
-      className: "panel-seg-lbl",
-      style: {
-        color: tc
-      }
-    }, isGap ? `\u2205${Math.round(seg.w)}` : Math.round(seg.w), seg.sourceId && /*#__PURE__*/React.createElement("span", {
-      className: "source-marker"
-    }, seg.type === "offcut" ? `${seg.sourceId}'` : seg.sourceId)));
-  }));
-});
-const LARGE_LAYOUT_PREVIEW_THRESHOLD = 32;
 function PanelSummary({
   rows,
   hoveredType,
@@ -553,7 +498,7 @@ function groupAdjacentRows(rowsWithIndexes) {
   });
   return groups;
 }
-function buildLayoutSvgRects(result, rowStart = "top") {
+function buildLayoutSvgRects(result, orderedRows) {
   const {
     surfaceW,
     surfaceH,
@@ -566,13 +511,6 @@ function buildLayoutSvgRects(result, rowStart = "top") {
   } = result.meta;
   const isV = direction === "V";
   const stdRowH = isV ? PPi : PLa;
-  const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
-    row,
-    idx
-  })).reverse() : result.rows.map((row, idx) => ({
-    row,
-    idx
-  }));
   let physicalCursor = 0;
   let visualCursor = 0;
   const rects = [];
@@ -655,6 +593,14 @@ function LayoutVisualization({
   maxHeight = 420,
   onLargePreview
 }) {
+  const [selectedKey, setSelectedKey] = React.useState(null);
+  const [selectedSourceId, setSelectedSourceId] = React.useState(null);
+  const svgIdRef = React.useRef(null);
+  if (!svgIdRef.current) {
+    svgIdRef.current = `layout-svg-${Math.random().toString(36).slice(2, 10)}`;
+  }
+  const gapHatchId = `${svgIdRef.current}-gap-hatch`;
+
   // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {
     return /*#__PURE__*/React.createElement("div", {
@@ -705,19 +651,7 @@ function LayoutVisualization({
   const vertPanel = isV ? PPi : PLa;
   const vertLabel = `${surfaceH} mm \u2014 row ${vertPanel} mm`;
 
-  // Build rects in SVG coordinate space
-  const {
-    rects,
-    rowRects,
-    vW,
-    vH,
-    yOffset
-  } = buildLayoutSvgRects(result, rowStart);
-  const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
-  const showRowLabels = !isV && result.rows.length <= 12;
-
-  // ── Compute row label bands in SVG coordinate space ──
-  // We read directly from rowRects (same coords as the SVG rows).
+  // Define orderedRows once as the single source of truth for this render
   const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
     row,
     idx
@@ -725,6 +659,19 @@ function LayoutVisualization({
     row,
     idx
   }));
+
+  // Build rects in SVG coordinate space
+  const {
+    rects,
+    rowRects,
+    vW,
+    vH,
+    yOffset
+  } = buildLayoutSvgRects(result, orderedRows);
+  const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
+  const showRowLabels = !isV && result.rows.length <= 12;
+
+  // ── Compute row label bands in SVG coordinate space ──
   const rowGroups = groupAdjacentRows(orderedRows);
   const groupBands = showRowLabels ? rowGroups.map(group => {
     const idxSet = new Set(group.items.map(item => item.idx));
@@ -753,8 +700,6 @@ function LayoutVisualization({
   const chartX = labelColW + gap;
   const totalVW = vW + chartX;
   const aspectRatio = totalVW / vH;
-  const [selectedKey, setSelectedKey] = React.useState(null);
-  const [selectedSourceId, setSelectedSourceId] = React.useState(null);
   const handleSegClick = rect => {
     if (selectedKey === rect.key) {
       setSelectedKey(null);
@@ -788,7 +733,7 @@ function LayoutVisualization({
     name: "maximize"
   })), /*#__PURE__*/React.createElement("svg", {
     viewBox: `0 0 ${totalVW} ${vH}`,
-    preserveAspectRatio: "none",
+    preserveAspectRatio: "xMidYMid meet",
     role: "img",
     style: {
       display: "block",
@@ -801,7 +746,7 @@ function LayoutVisualization({
       setSelectedSourceId(null);
     }
   }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("pattern", {
-    id: "layout-gap-hatch",
+    id: gapHatchId,
     patternUnits: "userSpaceOnUse",
     width: "16",
     height: "16"
@@ -839,6 +784,9 @@ function LayoutVisualization({
       width: rect.w,
       height: rect.h,
       className: `layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`,
+      style: rect.type === "gap" ? {
+        fill: `url(#${gapHatchId})`
+      } : undefined,
       onMouseEnter: () => setHoveredType && setHoveredType(rect.type),
       onMouseLeave: () => setHoveredType && setHoveredType(null)
     }, /*#__PURE__*/React.createElement("title", null, `${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`)), showLabel && /*#__PURE__*/React.createElement("text", {
