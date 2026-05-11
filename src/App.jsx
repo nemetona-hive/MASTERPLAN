@@ -1,6 +1,6 @@
 // ── App root ──────────────────────────────────────────────────────────────────
 
-const getIsMobile = () => typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+const getIsMobile = isMobileViewport;
 
 // Read page id from URL hash, fallback to "home"
 const getHashPage = () => {
