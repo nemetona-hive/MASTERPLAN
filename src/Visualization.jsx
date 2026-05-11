@@ -162,6 +162,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
 
   // ── Main SVG layout ──
   const { surfaceW, surfaceH, PPi, PLa, s4Long, s4: isS4, direction } = result.meta;
+  if (!surfaceW || !surfaceH || !PPi || !PLa) return null;
   const isV = direction === "V";
   const horzPanel = isV ? PLa : PPi;
   const horzLabel = isS4 ? `${surfaceW} mm \u2014 long ${s4Long} mm` : `${surfaceW} mm \u2014 panel ${horzPanel} mm`;
@@ -169,17 +170,22 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
   const vertLabel = `${surfaceH} mm \u2014 row ${vertPanel} mm`;
 
   // Define orderedRows once as the single source of truth for this render
-  const orderedRows = rowStart === "bottom"
-    ? result.rows.map((row, idx) => ({ row, idx })).reverse()
-    : result.rows.map((row, idx) => ({ row, idx }));
+  const orderedRows = React.useMemo(() =>
+    rowStart === "bottom"
+      ? result.rows.map((row, idx) => ({ row, idx })).reverse()
+      : result.rows.map((row, idx) => ({ row, idx })),
+  [result.rows, rowStart]);
 
   // Build rects in SVG coordinate space
-  const { rects, rowRects, vW, vH, yOffset } = buildLayoutSvgRects(result, orderedRows, rowStart);
+  const { rects, rowRects, vW, vH, yOffset } = React.useMemo(
+    () => buildLayoutSvgRects(result, orderedRows, rowStart),
+    [result, orderedRows, rowStart]
+  );
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = !isV && result.rows.length <= 12;
 
   // ── Compute row label bands in SVG coordinate space ──
-  const rowGroups = groupAdjacentRows(orderedRows);
+  const rowGroups = React.useMemo(() => groupAdjacentRows(orderedRows), [orderedRows]);
 
   const groupBands = showRowLabels ? rowGroups.map(group => {
     const idxSet = new Set(group.items.map(item => item.idx));
