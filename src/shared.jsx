@@ -8,6 +8,114 @@ function Icon({ name, className = "" }) {
   return <i className={[faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")} />;
 }
 
+function isMobileViewport() {
+  return typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+}
+
+function safeSaveStaticDefaults(key, value) {
+  if (typeof saveStaticDefaults === "undefined") {
+    return Promise.reject(new Error("saveStaticDefaults is not available"));
+  }
+  return saveStaticDefaults(key, value);
+}
+
+function toNumber(value, fallback = 0) {
+  if (value === "" || value === null || value === undefined) return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function clampNumber(value, min, max, fallback = min) {
+  return Math.min(max, Math.max(min, toNumber(value, fallback)));
+}
+
+function useTimedState(initialValue, defaultDelay = 2500) {
+  const [value, setValue] = React.useState(initialValue);
+  const timerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    return () => clearTimeout(timerRef.current);
+  }, []);
+
+  const setTimedValue = (nextValue, delay = defaultDelay) => {
+    setValue(nextValue);
+    clearTimeout(timerRef.current);
+    if (delay > 0) {
+      timerRef.current = window.setTimeout(() => setValue(initialValue), delay);
+    }
+  };
+
+  const clearTimedValue = () => {
+    clearTimeout(timerRef.current);
+    setValue(initialValue);
+  };
+
+  return [value, setTimedValue, clearTimedValue];
+}
+
+function useTimedSet(defaultDelay = 600) {
+  const [values, setValues] = React.useState(() => new Set());
+  const timerRefs = React.useRef({});
+
+  React.useEffect(() => {
+    return () => Object.values(timerRefs.current).forEach(clearTimeout);
+  }, []);
+
+  const add = React.useCallback((item, delay = defaultDelay) => {
+    setValues(prev => {
+      const next = new Set(prev);
+      next.add(item);
+      return next;
+    });
+    clearTimeout(timerRefs.current[item]);
+    timerRefs.current[item] = window.setTimeout(() => {
+      setValues(prev => {
+        const next = new Set(prev);
+        next.delete(item);
+        return next;
+      });
+      delete timerRefs.current[item];
+    }, delay);
+  }, [defaultDelay]);
+
+  const remove = React.useCallback((item) => {
+    setValues(prev => {
+      const next = new Set(prev);
+      next.delete(item);
+      return next;
+    });
+    clearTimeout(timerRefs.current[item]);
+    delete timerRefs.current[item];
+  }, []);
+
+  const clear = React.useCallback(() => {
+    Object.values(timerRefs.current).forEach(clearTimeout);
+    timerRefs.current = {};
+    setValues(new Set());
+  }, []);
+
+  return [values, add, remove, clear];
+}
+
+function useClickOutside(refs, handler, active = true) {
+  React.useEffect(() => {
+    if (!active) return;
+
+    const onMouseDown = (e) => {
+      const target = e.target;
+      const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
+      if (!clickedInside) handler(e);
+    };
+
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("touchstart", onMouseDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("touchstart", onMouseDown);
+    };
+  }, [handler, active]);
+}
+
 /**
  * Hook for protecting range sliders from accidental touch during scroll on mobile.
  * On mobile, touches are tracked to distinguish between horizontal slider adjustment
@@ -16,8 +124,8 @@ function Icon({ name, className = "" }) {
  * @returns {Object} { onChange: protected onChange, onTouchStart: touch start handler, onTouchMove: touch move handler }
  */
 function useProtectedRangeSlider(onChange) {
-  const touchState = React.useRef({ startX: 0, startY: 0, isScrolling: false, initialValue: 0 });
-  const isMobileMode = typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+  const touchState = React.useRef({ startX: 0, startY: 0, isScrolling: false });
+  const isMobileMode = isMobileViewport();
 
   const onTouchStart = (e) => {
     if (!isMobileMode) return;
@@ -25,8 +133,7 @@ function useProtectedRangeSlider(onChange) {
     touchState.current = {
       startX: touch.clientX,
       startY: touch.clientY,
-      isScrolling: false,
-      initialValue: parseFloat(e.target.value)
+      isScrolling: false
     };
   };
 
@@ -64,7 +171,7 @@ function useProtectedRangeSlider(onChange) {
  * A lockable range slider component to prevent accidental movement on mobile.
  */
 function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
-  const isMobileMode = typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+  const isMobileMode = isMobileViewport();
   // Default to locked on both mobile and desktop
   const [isLocked, setIsLocked] = React.useState(true);
 
@@ -114,12 +221,10 @@ function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
 
 function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = false, onFocus, labelIcon }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
-  const [committed, setCommitted] = React.useState(false);
-  const commitTimer = React.useRef(null);
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
 
-  const commit = (flash = false) => {
+  const commit = () => {
     if (local === "") {
       onChange("");
     } else {
@@ -132,14 +237,7 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = f
         setLocal(value === "" ? "" : String(value));
       }
     }
-    if (flash) {
-      setCommitted(true);
-      clearTimeout(commitTimer.current);
-      commitTimer.current = setTimeout(() => setCommitted(false), 600);
-    }
   };
-
-  React.useEffect(() => () => clearTimeout(commitTimer.current), []);
 
   return (
     <div className="num-wrap">
