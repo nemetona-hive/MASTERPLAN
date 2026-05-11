@@ -13,46 +13,28 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
     ).map(p => ({ ...p }))
   );
   const [activePreset,    setActivePreset]    = React.useState(null);
-  const [flashIdx,        setFlashIdx]        = React.useState(null);
-  const [showLenDropdown, setShowLenDropdown] = React.useState(false);
-  const [showWidDropdown, setShowWidDropdown] = React.useState(false);
+  const [flashIdx,        setFlashIdx]        = useTimedState(null, 1200);
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const [showModal,       setShowModal]       = React.useState(false);
   const [largePreview,    setLargePreview]    = React.useState(null);
-  const [fieldFlash,      setFieldFlash]      = React.useState(false);
-  const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+  const [fieldFlash,      setFieldFlash]      = useTimedState(false, 900);
+  const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
-
-  const flashTimerRef  = React.useRef(null);
-  const fieldTimerRef  = React.useRef(null);
   const lenWrapRef     = React.useRef(null);
   const widWrapRef     = React.useRef(null);
 
-  React.useEffect(() => {
-    const onClickOutside = e => {
-      if (lenWrapRef.current && !lenWrapRef.current.contains(e.target)) setShowLenDropdown(false);
-      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", onClickOutside);
-      clearTimeout(flashTimerRef.current);
-      clearTimeout(fieldTimerRef.current);
-    };
-  }, []);
+  useClickOutside([lenWrapRef, widWrapRef], () => {
+    setActivePresetDropdown(null);
+  });
 
   const applyPreset = (p, idx) => {
     setSh(s => ({ ...s, PPi: p.length, PLa: p.width }));
     setActivePreset(idx);
-    setShowLenDropdown(false);
-    setShowWidDropdown(false);
-    clearTimeout(flashTimerRef.current);
+    setActivePresetDropdown(null);
     setFlashIdx(idx);
-    flashTimerRef.current = setTimeout(() => setFlashIdx(null), 1200);
-    clearTimeout(fieldTimerRef.current);
     setFieldFlash(true);
-    fieldTimerRef.current = setTimeout(() => setFieldFlash(false), 900);
   };
 
   const updatePreset = (idx, field, val) => {
@@ -64,22 +46,25 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const addPreset = () => setPresets([...presets, { name: "", length: "", width: "" }]);
 
   const saveMaterialDefaults = async () => {
-    setPresetSaveStatus("saving");
+    setPresetSaveStatus("saving", 0);
     try {
-      await saveStaticDefaults("materialPresets", presets);
+      await safeSaveStaticDefaults("materialPresets", presets);
       setPresetSaveStatus("saved");
-      setTimeout(() => setPresetSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setPresetSaveStatus("error");
-      setTimeout(() => setPresetSaveStatus(""), 3500);
     }
   };
 
-  const set = k => v => { setSh(s => ({ ...s, [k]: v })); setActivePreset(null); };
-  const setMat = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(8000, Number(v) || 100)) })); setActivePreset(null); };
-  const setSurf = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); };
-  const setS2PanelState = patch => setSh(s => ({ ...s, offset:  patch.offset  !== undefined ? patch.offset  : s.offset }));
+  const setShField = (key, normalize = v => v, resetActive = false) => value => {
+    setSh(s => ({ ...s, [key]: normalize(value) }));
+    if (resetActive) setActivePreset(null);
+  };
+
+  const set = k => setShField(k, v => v, true);
+  const setMat = k => setShField(k, v => clampNumber(v, 100, 8000, 100), true);
+  const setSurf = k => setShField(k, v => clampNumber(v, 100, 50000, 100));
+  const setS2PanelState = patch => setSh(s => ({ ...s, offset: patch.offset !== undefined ? patch.offset : s.offset }));
   const setS4PanelState = patch => setSh(s => ({ ...s,
     s4Long: patch.s4Long !== undefined ? patch.s4Long : s.s4Long
   }));
@@ -105,8 +90,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           <MaterialSpecification 
             sh={sh} setSh={setSh} setMat={setMat} 
             presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-            showWidDropdown={showWidDropdown} setShowWidDropdown={setShowWidDropdown} 
-            showLenDropdown={showLenDropdown} setShowLenDropdown={setShowLenDropdown} 
+            activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
             widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
             fieldFlash={fieldFlash} setShowModal={setShowModal}
           />
@@ -124,14 +108,13 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         <MaterialSpecification 
           sh={sh} setSh={setSh} setMat={setMat} 
           presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-          showWidDropdown={showWidDropdown} setShowWidDropdown={setShowWidDropdown} 
-          showLenDropdown={showLenDropdown} setShowLenDropdown={setShowLenDropdown} 
+          activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
           widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
           fieldFlash={fieldFlash} setShowModal={setShowModal}
         />
         <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
-          <LayoutSettings sh={sh} setSh={setSh} />
+          <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
         </ControlPanel>
       </Stack>
       <div id="data-preview" className="data-preview">
@@ -275,8 +258,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                     <MaterialSpecification 
                       sh={sh} setSh={setSh} setMat={setMat} 
                       presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-                      showWidDropdown={showWidDropdown} setShowWidDropdown={setShowWidDropdown} 
-                      showLenDropdown={showLenDropdown} setShowLenDropdown={setShowLenDropdown} 
+                      activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
                       widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
                       fieldFlash={fieldFlash} setShowModal={setShowModal}
                     />
@@ -285,7 +267,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   <div className="control-panel" style={{ margin: 0, height: "100%" }}>
                     <div className="panel-head"><span>Layout Settings</span></div>
                     <div className="panel-data">
-                      <LayoutSettings sh={sh} setSh={setSh} />
+                      <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
                     </div>
                   </div>
                   <div className="control-panel" style={{ margin: 0, height: "100%" }}>
@@ -330,13 +312,13 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   );
 }
 
-function LayoutSettings({ sh, setSh }) {
+function LayoutSettings({ sh, setField, setSh }) {
   const { PPi, direction, minJ, startOff } = sh;
   const rowStart = sh.rowStart || "top";
   const psRaw = sh.patternStart;
   const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
   
-  const set = k => v => { setSh(s => ({ ...s, [k]: v })); };
+  const set = k => setField(k);
 
   return (
     <Stack gap={3}>
@@ -384,11 +366,11 @@ function LayoutSettings({ sh, setSh }) {
       </Stack>
       <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
       <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
-        onChange={v => setSh(s => ({ ...s, startOff: Math.min(v, Math.max(1, PPi) - 1) }))} step={10} min={0} />
+        onChange={v => setField("startOff", v => Math.min(v, Math.max(1, PPi) - 1))(v)} step={10} min={0} />
     </Stack>
   );
 }
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, showWidDropdown, setShowWidDropdown, showLenDropdown, setShowLenDropdown, widWrapRef, lenWrapRef, fieldFlash, setShowModal }) {
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, activePresetDropdown, setActivePresetDropdown, widWrapRef, lenWrapRef, fieldFlash, setShowModal }) {
   const { PLa, PPi } = sh;
   return (
     <ControlPanel id="control-material" title="Material Specification" noToggle>
@@ -402,9 +384,9 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onChange={setMat("PLa")}
             step={10}
             min={100}
-            onFocus={() => { setShowWidDropdown(true); setShowLenDropdown(false); }}
+            onFocus={() => setActivePresetDropdown("wid")}
           />
-          {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
+          {activePresetDropdown === "wid" && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
         </div>
         <div className={fieldFlash ? "num-input-flash" : ""} ref={lenWrapRef} style={{ position: "relative" }}>
           <NumInput
@@ -415,9 +397,9 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onChange={setMat("PPi")}
             step={10}
             min={100}
-            onFocus={() => { setShowLenDropdown(true); setShowWidDropdown(false); }}
+            onFocus={() => setActivePresetDropdown("len")}
           />
-          {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
+          {activePresetDropdown === "len" && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
         </div>
         {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
           <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
