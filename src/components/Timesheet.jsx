@@ -104,6 +104,11 @@ function SheetTimesheet() {
 
   const handleCopy = () => {
     if (!hasCalcTotal) return;
+    if (!navigator.clipboard) {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 1800);
+      return;
+    }
     navigator.clipboard.writeText(fmtDecimal(calcTotalMins)).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
