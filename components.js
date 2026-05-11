@@ -655,6 +655,7 @@ function LayoutVisualization({
     s4: isS4,
     direction
   } = result.meta;
+  if (!surfaceW || !surfaceH || !PPi || !PLa) return null;
   const isV = direction === "V";
   const horzPanel = isV ? PLa : PPi;
   const horzLabel = isS4 ? `${surfaceW} mm \u2014 long ${s4Long} mm` : `${surfaceW} mm \u2014 panel ${horzPanel} mm`;
@@ -662,13 +663,13 @@ function LayoutVisualization({
   const vertLabel = `${surfaceH} mm \u2014 row ${vertPanel} mm`;
 
   // Define orderedRows once as the single source of truth for this render
-  const orderedRows = rowStart === "bottom" ? result.rows.map((row, idx) => ({
+  const orderedRows = React.useMemo(() => rowStart === "bottom" ? result.rows.map((row, idx) => ({
     row,
     idx
   })).reverse() : result.rows.map((row, idx) => ({
     row,
     idx
-  }));
+  })), [result.rows, rowStart]);
 
   // Build rects in SVG coordinate space
   const {
@@ -677,12 +678,12 @@ function LayoutVisualization({
     vW,
     vH,
     yOffset
-  } = buildLayoutSvgRects(result, orderedRows, rowStart);
+  } = React.useMemo(() => buildLayoutSvgRects(result, orderedRows, rowStart), [result, orderedRows, rowStart]);
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = !isV && result.rows.length <= 12;
 
   // ── Compute row label bands in SVG coordinate space ──
-  const rowGroups = groupAdjacentRows(orderedRows);
+  const rowGroups = React.useMemo(() => groupAdjacentRows(orderedRows), [orderedRows]);
   const groupBands = showRowLabels ? rowGroups.map(group => {
     const idxSet = new Set(group.items.map(item => item.idx));
     // Use row background rects so labels center on the full visual lane
@@ -1210,6 +1211,11 @@ function SheetTimesheet() {
 
   const handleCopy = () => {
     if (!hasCalcTotal) return;
+    if (!navigator.clipboard) {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 1800);
+      return;
+    }
     navigator.clipboard.writeText(fmtDecimal(calcTotalMins)).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -2311,28 +2317,9 @@ function PipeWrapCalculator() {
 }
 function SheetHome({
   page,
-  setPage,
-  theme,
-  setTheme
+  setPage
 }) {
   const items = PAGES.filter(pg => !pg.noNav);
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const handleToggleMenu = e => {
-    e.stopPropagation();
-    setMenuOpen(!menuOpen);
-  };
-  const selectTheme = id => {
-    setTheme(id);
-    setMenuOpen(false);
-  };
-
-  // Close menu when clicking elsewhere
-  React.useEffect(() => {
-    if (!menuOpen) return;
-    const close = () => setMenuOpen(false);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, [menuOpen]);
   return /*#__PURE__*/React.createElement("div", {
     className: "home-scroll"
   }, /*#__PURE__*/React.createElement(Stack, {
@@ -2376,60 +2363,7 @@ function SheetHome({
     className: "home-divider"
   }), /*#__PURE__*/React.createElement("div", {
     className: "home-footer"
-  }, "NEMETONA HIVE")), menuOpen && /*#__PURE__*/React.createElement("div", {
-    className: "theme-menu",
-    onClick: e => e.stopPropagation()
-  }, Object.keys(THEMES).map(id => /*#__PURE__*/React.createElement("button", {
-    key: id,
-    className: "theme-item" + (theme === id ? " active" : ""),
-    onClick: () => selectTheme(id)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "theme-swatches",
-    style: {
-      display: 'flex',
-      gap: '2px',
-      marginRight: '6px'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: '12px',
-      height: '12px',
-      borderRadius: '50%',
-      background: THEMES[id].colors['--bg']
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: '12px',
-      height: '12px',
-      borderRadius: '50%',
-      background: THEMES[id].colors['--surface-1']
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: '12px',
-      height: '12px',
-      borderRadius: '50%',
-      background: THEMES[id].colors['--brand']
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: '12px',
-      height: '12px',
-      borderRadius: '50%',
-      background: THEMES[id].colors['--accent']
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "theme-item-icon"
-  }, THEMES[id].icon), /*#__PURE__*/React.createElement("span", {
-    className: "theme-item-label"
-  }, THEMES[id].label)))), /*#__PURE__*/React.createElement("button", {
-    className: "theme-toggle",
-    onClick: handleToggleMenu,
-    title: "Switch Color Theme",
-    "aria-label": "Switch Color Theme"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "palette"
-  })));
+  }, "NEMETONA HIVE")));
 }
 function SheetGoldenRatio({
   grItems: baseItems,
@@ -2705,7 +2639,6 @@ function SheetSymmetricLayout({
   setSym
 }) {
   const [hoveredType, setHoveredType] = React.useState(null);
-  const [surfaceOpen, setSurfaceOpen] = React.useState(true);
 
   // ── Material presets (shared with pattern layouts) ─────────────────────────
   const presets = React.useMemo(() => (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : []).filter(p => p.name), []);
@@ -2747,8 +2680,6 @@ function SheetSymmetricLayout({
   }, /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-sym-surface",
     title: "Inputs",
-    open: surfaceOpen,
-    setOpen: setSurfaceOpen,
     noToggle: true
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
@@ -2774,7 +2705,7 @@ function SheetSymmetricLayout({
     onChange: v => {
       setSym(s => ({
         ...s,
-        panelWidth: Math.max(100, Math.min(50000, Number(v) || 100))
+        panelWidth: Math.max(100, Math.min(8000, Number(v) || 100))
       }));
       setActivePreset(null);
     },
@@ -2853,8 +2784,6 @@ function SheetSurfaceLayout({
   } = sh;
   const rowStart = sh.rowStart || "top";
   const [hoveredType, setHoveredType] = React.useState(null);
-  const [materialOpen, setMaterialOpen] = React.useState(true);
-  const [surfaceOpen, setSurfaceOpen] = React.useState(true);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
   // ── Material presets ───────────────────────────────────────────────────────
@@ -2945,7 +2874,7 @@ function SheetSurfaceLayout({
   const setMat = k => v => {
     setSh(s => ({
       ...s,
-      [k]: Math.max(100, Math.min(50000, Number(v) || 100))
+      [k]: Math.max(100, Math.min(8000, Number(v) || 100))
     }));
     setActivePreset(null);
   };
@@ -2997,7 +2926,6 @@ function SheetSurfaceLayout({
   }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
   const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;
-  const bestPanel = comparableResults.find(p => p.result.stats.total === best);
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Stack, {
       id: "data-control",
@@ -3073,8 +3001,6 @@ function SheetSurfaceLayout({
   }, /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-material",
     title: "Material Specification",
-    open: materialOpen,
-    setOpen: setMaterialOpen,
     noToggle: true
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
@@ -3137,8 +3063,6 @@ function SheetSurfaceLayout({
   }), " Manage Presets"))), /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-surface",
     title: "Inputs",
-    open: surfaceOpen,
-    setOpen: setSurfaceOpen,
     noToggle: true
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3
@@ -3164,8 +3088,8 @@ function SheetSurfaceLayout({
     },
     onClick: () => setSh(s => ({
       ...s,
-      W: DEFAULT_SH.W,
-      H: DEFAULT_SH.H
+      W: Math.max(100, DEFAULT_SH.W),
+      H: Math.max(100, DEFAULT_SH.H)
     }))
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "refresh-cw"
@@ -3658,9 +3582,7 @@ function MainPageContent({
       className: "page-main-full"
     }, /*#__PURE__*/React.createElement(SheetHome, {
       page: page,
-      setPage: setPage,
-      theme: theme,
-      setTheme: setTheme
+      setPage: setPage
     }));
   }
   let content = null;
@@ -3696,7 +3618,8 @@ function MainPageContent({
     className: wrapperClass
   }, content));
 }
-const DEV_MODE = false;
+const DEV_MODE = false; // reserved for future use
+
 function App() {
   const [page, setPageState] = useState(getHashPage);
 
