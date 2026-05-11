@@ -5,8 +5,9 @@ Hosted on GitHub Pages at: https://nemetona-hive.github.io/MASTERPLAN/
 
 ## Architecture
 
-**No bundler / no npm.** JSX files are concatenated by a custom build script
-into a single output file. React and ReactDOM are loaded from CDN.
+**No bundler.** JSX files are concatenated by a custom build script
+into a single output file. Run `npm.cmd run build` on Windows, or `npm run build`
+when the shell permits npm scripts. React and ReactDOM are loaded from CDN.
 All global state (config, constants, compute functions) lives outside `src/`
 and is available as globals — do NOT import them.
 
@@ -54,6 +55,7 @@ Note: `themes.js` is loaded directly in `index.html` to ensure themes apply earl
 | `getSegmentClass(seg, palClasses)` | Returns CSS class for a row segment |
 | `THEMES` | Theme definitions (name, label, icon, colors map of CSS vars) |
 | `DEFAULT_CONCRETE_PRESETS` | Initial product list for Concrete calculator (name, rate, bagKg, bagPrice) |
+| `DEFAULT_MATERIAL_PRESETS` | Initial material list for Surface Layout (name, length, width) |
 | `canSaveStaticDefaults()` | Boolean check for local dev environment |
 | `saveStaticDefaults(key, value)` | API call to persist config changes to disk during development |
 | `getThemeOrder()` | Ordered list of theme keys |
@@ -87,20 +89,22 @@ Page render is handled in `MainPageContent` in App.jsx — add new pages there.
 Nav items come from `PAGES` global — add new pages in config (outside src/).
 
 Current pages: `home`, `layout` (parent), `pattern-layout`, `symmetric-layout`,
-`self-leveling-floor`, `golden-ratio`, `pipe-wrap`, `timesheet`.
+`concrete`, `golden-ratio`, `pipe-wrap`, `timesheet`.
 
 ## UI components (from shared.jsx)
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange step min unit />` — controlled number input with commit-on-blur
+- `<NumInput id label value onChange step min unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle; uses `useProtectedRangeSlider` for mobile touch-scroll protection. Starts locked; click row or tap lock icon to unlock.
 - `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
 - `<Section title bg>` — collapsible section for preview area
-- `<Collapsible>` — base for both Section and ControlPanel (variant="section"|"panel")
-- `<Row label value unit hi hoverType hoveredType setHoveredType />` — data display row
+- `<DetailSection title open>` — collapsible section for secondary information or management UI
+- `<Collapsible>` — base for Section, ControlPanel, and DetailSection (variant="section"|"panel"|"detail")
+- `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<SLabel>` — simple label div for section headings in controls
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
+- `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
 - `.seg-group` — Container for exclusive mode-switch toggles; provides a unified border/boundary for grouped buttons.
 - `.pill-btn` — Minimalist, rounded buttons used for quick-select presets.
 - `.ctrl-dir` / `.ts-btn` — Standardized button styles with "premium glow" hover/active feedback. Standalone buttons use `var(--fs-md)` while segmented controls are bumped for legibility.
@@ -134,11 +138,16 @@ Best layout = fewest total pieces among valid results.
 
 ## Visualization
 
-- `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`
-- `PanelRowVis` — renders one row of segments as positioned divs (React.memo)
-- Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`
-- Gap segments get red hatched styling; others get palette classes from PAL_CLASSES
-- `hoveredType` cross-highlights between summary rows and visualization segments
+- `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`.
+- **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
+- `PanelSummary` — displays detailed statistics and counts for segments.
+- Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`.
+- Gap segments get red hatched styling; others get palette classes from PAL_CLASSES.
+- `hoveredType` cross-highlights between summary rows and visualization segments.
+- Pattern layout chart geometry must render real physical rows/columns, not grouped rows.
+- `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.
+- In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.
+- In `direction === "H"`, rows render horizontally and segment positions use `left`/`width`.
 
 ## Mobile / responsive
 
@@ -155,8 +164,8 @@ When running the application locally, a specialized persistence mechanism allows
 - `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
 - Currently utilized by:
   - **Concrete Calculator**: To persist product presets.
+  - **Surface Layout**: To persist material presets.
   - **Golden Ratio Tool**: To persist saved value series.
-  - **Pattern Layouts**: To persist material dimension presets.
 
 ## Theme system
 
@@ -176,6 +185,9 @@ Cards use tone system (a/b/c/d) for visual identity.
 
 - `useState` destructured from React at top of shared.jsx — use directly
 - All other React hooks via `React.useXxx`
+- After editing files under `src/`, run `npm.cmd run build` so `components.js` is regenerated.
+- Treat `components.js` as generated output; do not hand-edit it except for emergency inspection/debugging.
+- If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
 - Buttons use the "Premium Glow" interaction language — subtle box-shadows and color-mix transitions.
 - No CSS-in-JS except inline style for dynamic values; use className strings
