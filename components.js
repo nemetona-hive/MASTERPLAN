@@ -498,7 +498,7 @@ function groupAdjacentRows(rowsWithIndexes) {
   });
   return groups;
 }
-function buildLayoutSvgRects(result, orderedRows) {
+function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const {
     surfaceW,
     surfaceH,
@@ -521,15 +521,13 @@ function buildLayoutSvgRects(result, orderedRows) {
   }) => {
     const rowSize = Number.isFinite(row.h) && row.h > 0 ? row.h : 1;
     const visualRowSize = !isV ? stdRowH : rowSize;
-    if (!isV) {
-      rowRects.push({
-        x: 0,
-        y: visualCursor,
-        w: surfaceW,
-        h: visualRowSize,
-        key: `row-bg-${idx}`
-      });
-    }
+    rowRects.push({
+      x: isV ? visualCursor : 0,
+      y: isV ? 0 : visualCursor,
+      w: isV ? visualRowSize : surfaceW,
+      h: isV ? surfaceH : visualRowSize,
+      key: `row-bg-${idx}`
+    });
     const rowPalClasses = s4 && useS4Colors ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses || PAL_CLASSES.s1;
     const isS4Palette = rowPalClasses === PAL_CLASSES.s4l || rowPalClasses === PAL_CLASSES.s4s;
     row.segs.forEach((seg, segIndex) => {
@@ -546,36 +544,48 @@ function buildLayoutSvgRects(result, orderedRows) {
         segClass
       };
       if (isV) {
-        rect.x = physicalCursor;
+        rect.x = visualCursor + (rowStart === "bottom" ? visualRowSize - rowSize : 0);
         rect.y = seg.x;
         rect.w = rowSize;
         rect.h = seg.w;
       } else {
         rect.x = seg.x;
-        rect.y = visualCursor + (visualRowSize - rowSize);
+        rect.y = visualCursor + (rowStart === "bottom" ? visualRowSize - rowSize : 0);
         rect.w = seg.w;
         rect.h = rowSize;
       }
       rects.push(rect);
     });
-    physicalCursor += rowSize;
     visualCursor += visualRowSize;
   });
+  const vW = isV ? Math.max(surfaceW, visualCursor) : surfaceW;
+  const vH = isV ? surfaceH : Math.max(surfaceH, visualCursor);
 
-  // vH = actual visual height of all rows (may exceed surfaceH if rows × PLa > surfaceH)
-  const totalVisualH = Math.max(surfaceH, visualCursor);
-
-  // If rows don't fill full surface height, shift content to bottom
-  const yOffset = !isV && visualCursor < surfaceH ? surfaceH - visualCursor : 0;
-  if (yOffset > 0) {
-    rects.forEach(r => r.y += yOffset);
-    rowRects.forEach(r => r.y += yOffset);
+  // Centering / Offset logic
+  let xOffset = 0;
+  let yOffset = 0;
+  if (isV && visualCursor < surfaceW) {
+    xOffset = (surfaceW - visualCursor) / 2;
+  } else if (!isV && visualCursor < surfaceH && rowStart === "bottom") {
+    // For horizontal, only shift to bottom if rowStart was bottom
+    yOffset = surfaceH - visualCursor;
+  }
+  if (xOffset > 0 || yOffset > 0) {
+    rects.forEach(r => {
+      r.x += xOffset;
+      r.y += yOffset;
+    });
+    rowRects.forEach(r => {
+      r.x += xOffset;
+      r.y += yOffset;
+    });
   }
   return {
     rects,
     rowRects,
-    vW: surfaceW,
-    vH: totalVisualH,
+    vW,
+    vH,
+    xOffset,
     yOffset
   };
 }
@@ -667,7 +677,7 @@ function LayoutVisualization({
     vW,
     vH,
     yOffset
-  } = buildLayoutSvgRects(result, orderedRows);
+  } = buildLayoutSvgRects(result, orderedRows, rowStart);
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = !isV && result.rows.length <= 12;
 
