@@ -11,9 +11,9 @@ const symEdge = (total, step) => {
   };
 };
 
-const mkRowHeights = (H, PP, vSym) => {
+const mkRowHeights = (H, PP, useSymmetry) => {
   if (PP <= 0) return [H];
-  if (vSym) {
+  if (useSymmetry) {
 	const { edgeWidth, finalFullCount } = symEdge(H, PP);
 	return [edgeWidth, ...Array(Math.max(0, finalFullCount)).fill(PP), edgeWidth];
   }
@@ -32,18 +32,18 @@ function getSourceId(index) {
   return id;
 }
 
-const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) => {
+const simulate = (W, H, PP, PL, offset, minJ, sys, useSymmetry = false, startOff = 0, mirror = false) => {
   if (W <= 0 || H <= 0 || PP <= 0 || PL <= 0) return [];
   // Safety cap: prevent runaway loops with extreme values
   if (W / PL > 2000 || H / PP > 2000) return [];
-  const heights = mkRowHeights(H, PP, vSym);
+  const heights = mkRowHeights(H, PP, useSymmetry);
   const startRemainder = startOff > 0 ? Math.max(0, Math.min(startOff, PL)) : 0;
   const rows = [];
   let remainder = startRemainder;
   let cutIndex = 0;
   let activeSourceId = null;
   for (let i = 0; i < heights.length; i++) {
-	if (vSym) remainder = startRemainder;
+	if (useSymmetry) remainder = startRemainder;
 	const off = sys === 1 ? 0 : sys === 2 ? (i % 2 === 1 ? offset * PL : 0) : (i % 3) * (PL / 3);
 	const segs = [];
 	let x = -off;
@@ -74,14 +74,19 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, vSym = false, startOff = 0) =
 	const offsetW = W + off;
 	const nj = remainder + Math.ceil(Math.max(0, offsetW - remainder) / PL) * PL - offsetW;
 	remainder = nj >= minJ && isFinite(nj) && !isNaN(nj) ? nj : 0;
+
+    if (mirror) {
+      segs.forEach(s => { s.x = W - s.x - s.w; });
+      segs.reverse();
+    }
 	rows.push({ segs, h: heights[i] });
   }
   return rows;
 };
 
-function simulateS4(W, H, PP, PLong, minJ, vSym) {
+function simulateS4(W, H, PP, PLong, minJ, useSymmetry, mirror = false) {
   if (W <= 0 || H <= 0 || PP <= 0 || PLong <= 0) return [];
-  const heights = mkRowHeights(H, PP, vSym);
+  const heights = mkRowHeights(H, PP, useSymmetry);
   const rows = [];
 
   const fullCount = Math.floor(W / PLong);
@@ -110,6 +115,10 @@ function simulateS4(W, H, PP, PLong, minJ, vSym) {
       segs.push({ x, w: rem, type: "cut", long: false });
     }
 
+    if (mirror) {
+      segs.forEach(s => { s.x = W - s.x - s.w; });
+      segs.reverse();
+    }
     rows.push({ segs, h });
   }
   return rows;
@@ -217,11 +226,12 @@ function computeS0(state) {
 
 // Single helper replaces computeS1, computeS2, computeS3
 function computeStandard(sh, sysNum, offset, palKey) {
-  const { W, H, PPi, PLa, direction, minJ, startOff } = sh;
+  const { W, H, PPi, PLa, direction, minJ, startOff, patternStart } = sh;
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
-  const rows = simulate(sW, vSym ? W : H, PLa, PPi, offset, minJ, sysNum, vSym, startOff);
+  const isMirror = vSym ? patternStart === "bottom" : patternStart === "right";
+  const rows = simulate(sW, vSym ? W : H, PLa, PPi, offset, minJ, sysNum, false, startOff, isMirror);
   const stats = makeStats(rows);
   const gaps = nGap(rows);
   const totalGapWidth = gapWidth(rows);
@@ -241,7 +251,7 @@ function computeStandard(sh, sysNum, offset, palKey) {
 	  ] : []),
 	  { label: valid ? L.status : "Uncovered gaps \u2014 increase min remainder or adjust panel size.", value: valid ? "Valid" : "Invalid", unit: "", hi: !valid, danger: !valid }
 	],
-	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey], surfaceW: sh.W, surfaceH: sh.H, PPi: sh.PPi, PLa: sh.PLa, direction: sh.direction }
+	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey], surfaceW: sh.W, surfaceH: sh.H, simW: sW, simH: vSym ? W : H, PPi: sh.PPi, PLa: sh.PLa, direction: sh.direction }
   };
 }
 
@@ -250,12 +260,13 @@ const computeS2 = sh => computeStandard(sh, 2, sh.offset,  "s2");
 const computeS3 = sh => computeStandard(sh, 3, 0,          "s3");
 
 function computeS4(sh) {
-  const { W, H, PPi, PLa, direction, minJ, s4Long } = sh;
+  const { W, H, PPi, PLa, direction, minJ, s4Long, patternStart } = sh;
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0 || s4Long <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
   const sH = vSym ? W : H;
-  const rows = simulateS4(sW, sH, PLa, s4Long, minJ, vSym);
+  const isMirror = vSym ? patternStart === "bottom" : patternStart === "right";
+  const rows = simulateS4(sW, sH, PLa, s4Long, minJ, false, isMirror);
   const stats = makeStats(rows);
   const shortPiece = sW - Math.floor(sW / s4Long) * s4Long;
 
@@ -276,6 +287,6 @@ function computeS4(sh) {
       { label: L.full,        value: stats.full,                                                  unit: "pcs", hoverType: "full" },
       { label: L.cut,         value: stats.cut,                                                   unit: "pcs", hoverType: "cut" }
     ],
-    meta: { width: sW, visualization: "rows", s4: true, useS4Colors: s4Long !== PPi, surfaceW: sh.W, surfaceH: sh.H, PPi: sh.PPi, PLa: sh.PLa, s4Long, direction: sh.direction }
+    meta: { width: sW, visualization: "rows", s4: true, useS4Colors: s4Long !== PPi, surfaceW: sh.W, surfaceH: sh.H, simW: sW, simH: sH, PPi: sh.PPi, PLa: sh.PLa, s4Long, direction: sh.direction }
   };
 }

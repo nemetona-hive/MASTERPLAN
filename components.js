@@ -502,6 +502,8 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const {
     surfaceW,
     surfaceH,
+    simW,
+    simH,
     direction,
     s4,
     useS4Colors,
@@ -511,6 +513,9 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
   } = result.meta;
   const isV = direction === "V";
   const stdRowH = isV ? PPi : PLa;
+  // Use simulation dimensions for canvas sizing (swapped in V mode)
+  const canvasW = simW || surfaceW;
+  const canvasH = simH || surfaceH;
   let physicalCursor = 0;
   let visualCursor = 0;
   const rects = [];
@@ -520,12 +525,13 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
     idx
   }) => {
     const rowSize = Number.isFinite(row.h) && row.h > 0 ? row.h : 1;
+    // Standard Lane Rule: Each row gets a full panel-width lane for readability/labels.
     const visualRowSize = !isV ? stdRowH : rowSize;
     rowRects.push({
       x: isV ? visualCursor : 0,
       y: isV ? 0 : visualCursor,
-      w: isV ? visualRowSize : surfaceW,
-      h: isV ? surfaceH : visualRowSize,
+      w: isV ? visualRowSize : canvasW,
+      h: isV ? canvasW : visualRowSize,
       key: `row-bg-${idx}`
     });
     const rowPalClasses = s4 && useS4Colors ? row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s : palClasses || PAL_CLASSES.s1;
@@ -558,17 +564,14 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
     });
     visualCursor += visualRowSize;
   });
-  const vW = isV ? Math.max(surfaceW, visualCursor) : surfaceW;
-  const vH = isV ? surfaceH : Math.max(surfaceH, visualCursor);
+  const vW = isV ? visualCursor : canvasW;
+  const vH = isV ? canvasW : Math.max(canvasH, visualCursor);
 
   // Centering / Offset logic
   let xOffset = 0;
   let yOffset = 0;
-  if (isV && visualCursor < surfaceW) {
-    xOffset = (surfaceW - visualCursor) / 2;
-  } else if (!isV && visualCursor < surfaceH && rowStart === "bottom") {
-    // For horizontal, only shift to bottom if rowStart was bottom
-    yOffset = surfaceH - visualCursor;
+  if (!isV && visualCursor < canvasH && rowStart === "bottom") {
+    yOffset = canvasH - visualCursor;
   }
   if (xOffset > 0 || yOffset > 0) {
     rects.forEach(r => {
@@ -680,37 +683,24 @@ function LayoutVisualization({
     yOffset
   } = React.useMemo(() => buildLayoutSvgRects(result, orderedRows, rowStart), [result, orderedRows, rowStart]);
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
-  const showRowLabels = !isV && result.rows.length <= 12;
-
-  // ── Compute row label bands in SVG coordinate space ──
-  const rowGroups = React.useMemo(() => groupAdjacentRows(orderedRows), [orderedRows]);
-  const groupBands = showRowLabels ? rowGroups.map(group => {
-    const idxSet = new Set(group.items.map(item => item.idx));
-    // Use row background rects so labels center on the full visual lane
-    const matching = rowRects.filter(r => idxSet.has(parseInt(r.key.replace("row-bg-", ""), 10)));
-    if (matching.length === 0) return null;
-    const topY = Math.min(...matching.map(r => r.y));
-    const botY = Math.max(...matching.map(r => r.y + r.h));
-    const count = group.items.length;
-    const startR = group.items[0].idx + 1;
-    const endR = group.items[count - 1].idx + 1;
-    const label = count > 1 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)}` : `R${startR}`;
+  const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
+  const groupBands = showRowLabels ? rowRects.map(rr => {
+    const originalIdx = parseInt(rr.key.replace("row-bg-", ""), 10);
+    const label = `R${originalIdx + 1}`;
     return {
-      midY: (topY + botY) / 2,
+      mid: isV ? rr.x + rr.w / 2 : rr.y + rr.h / 2,
       label
     };
-  }).filter(Boolean) : [];
+  }) : [];
 
-  // ── SVG viewBox — reserve a left strip for row labels ──
-  // Font size in SVG user units, capped relative to chart width (not row height)
-  // so it stays consistent regardless of row count.
-  const rowLabelFontSize = showRowLabels ? Math.round(vW * 0.018) : 0;
-  // Column wide enough for ~5 chars ("R1-R9") at that font size
-  const labelColW = showRowLabels ? Math.round(rowLabelFontSize * 3.2) : 0;
-  const gap = showRowLabels ? Math.round(rowLabelFontSize * 0.4) : 0;
-  const chartX = labelColW + gap;
+  // ── SVG viewBox ──
+  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.018) : 0;
+  const labelMargin = showRowLabels ? Math.round(labelFontSize * 2.2) : 0;
+  const chartX = !isV ? labelMargin : 0;
+  const chartY = isV ? labelMargin : 0;
   const totalVW = vW + chartX;
-  const aspectRatio = totalVW / vH;
+  const totalVH = vH + chartY;
+  const aspectRatio = totalVW / totalVH;
   const handleSegClick = rect => {
     if (selectedKey === rect.key) {
       setSelectedKey(null);
@@ -743,7 +733,7 @@ function LayoutVisualization({
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "maximize"
   })), /*#__PURE__*/React.createElement("svg", {
-    viewBox: `0 0 ${totalVW} ${vH}`,
+    viewBox: `0 0 ${totalVW} ${totalVH}`,
     preserveAspectRatio: "xMidYMid meet",
     role: "img",
     style: {
@@ -772,7 +762,7 @@ function LayoutVisualization({
   }))), rowRects.map(r => /*#__PURE__*/React.createElement("rect", {
     key: r.key,
     x: r.x + chartX,
-    y: r.y,
+    y: r.y + chartY,
     width: r.w,
     height: r.h,
     className: "layout-svg-row-bg"
@@ -791,7 +781,7 @@ function LayoutVisualization({
       }
     }, /*#__PURE__*/React.createElement("rect", {
       x: rect.x + chartX,
-      y: rect.y,
+      y: rect.y + chartY,
       width: rect.w,
       height: rect.h,
       className: `layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`,
@@ -802,18 +792,18 @@ function LayoutVisualization({
       onMouseLeave: () => setHoveredType && setHoveredType(null)
     }, /*#__PURE__*/React.createElement("title", null, `${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`)), showLabel && /*#__PURE__*/React.createElement("text", {
       x: rect.x + chartX + rect.w / 2,
-      y: rect.y + rect.h / 2,
+      y: rect.y + chartY + rect.h / 2,
       textAnchor: "middle",
       dominantBaseline: "middle",
       className: "layout-svg-label"
     }, rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : Math.round(rect.seg.w)));
   }), groupBands.map(band => /*#__PURE__*/React.createElement("text", {
     key: band.label,
-    x: labelColW * 0.92,
-    y: band.midY,
-    fontSize: rowLabelFontSize,
-    textAnchor: "end",
-    dominantBaseline: "middle",
+    x: isV ? band.mid + chartX : chartX - labelFontSize * 0.5,
+    y: isV ? chartY - labelFontSize * 0.5 : band.mid + chartY,
+    fontSize: labelFontSize,
+    textAnchor: isV ? "middle" : "end",
+    dominantBaseline: isV ? "auto" : "middle",
     className: "layout-svg-row-label"
   }, band.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2780,9 +2770,11 @@ function SheetSurfaceLayout({
     direction,
     minJ,
     startOff,
-    s4Long
+    s4Long,
+    patternStart: psRaw
   } = sh;
   const rowStart = sh.rowStart || "top";
+  const patternStart = psRaw || (direction === "V" ? "top" : "left");
   const [hoveredType, setHoveredType] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
@@ -3113,14 +3105,16 @@ function SheetSurfaceLayout({
     className: "ctrl-dir " + (direction === s ? "on" : ""),
     onClick: () => setSh(st => ({
       ...st,
-      direction: s
+      direction: s,
+      rowStart: s === "V" ? "top" : st.rowStart,
+      patternStart: s === "V" ? "bottom" : "left"
     }))
   }, s)))), /*#__PURE__*/React.createElement(Stack, {
     gap: 1,
     className: "ctrl-lbl"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ctrl-sublbl"
-  }, "Row order"), /*#__PURE__*/React.createElement("div", {
+  }, direction === "V" ? "Column order" : "Row order"), /*#__PURE__*/React.createElement("div", {
     id: "ctrl-row-order",
     className: "seg-group"
   }, /*#__PURE__*/React.createElement("button", {
@@ -3129,13 +3123,45 @@ function SheetSurfaceLayout({
       ...st,
       rowStart: "top"
     }))
-  }, "R1 top"), /*#__PURE__*/React.createElement("button", {
+  }, direction === "V" ? "R1 Left" : "R1 top"), /*#__PURE__*/React.createElement("button", {
     className: "ctrl-dir " + (rowStart === "bottom" ? "on" : ""),
     onClick: () => setSh(st => ({
       ...st,
       rowStart: "bottom"
     }))
-  }, "R1 bottom"))), /*#__PURE__*/React.createElement(NumInput, {
+  }, direction === "V" ? "R1 Right" : "R1 bottom"))), /*#__PURE__*/React.createElement(Stack, {
+    gap: 1,
+    className: "ctrl-lbl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl"
+  }, "Start side"), /*#__PURE__*/React.createElement("div", {
+    id: "ctrl-pattern-start",
+    className: "seg-group"
+  }, direction === "V" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "bottom" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "bottom"
+    }))
+  }, "from bottom"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "top" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "top"
+    }))
+  }, "from top")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "left" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "left"
+    }))
+  }, "from left"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "right" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "right"
+    }))
+  }, "from right")))), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-minJ",
     label: "Min remainder (mm)",
     value: minJ,

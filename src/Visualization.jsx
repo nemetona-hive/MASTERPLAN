@@ -33,9 +33,12 @@ function groupAdjacentRows(rowsWithIndexes) {
 }
 
 function buildLayoutSvgRects(result, orderedRows, rowStart) {
-  const { surfaceW, surfaceH, direction, s4, useS4Colors, palClasses, PPi, PLa } = result.meta;
+  const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa } = result.meta;
   const isV = direction === "V";
   const stdRowH = isV ? PPi : PLa;
+  // Use simulation dimensions for canvas sizing (swapped in V mode)
+  const canvasW = simW || surfaceW;
+  const canvasH = simH || surfaceH;
 
   let physicalCursor = 0;
   let visualCursor = 0;
@@ -44,13 +47,14 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
 
   orderedRows.forEach(({ row, idx }) => {
     const rowSize = Number.isFinite(row.h) && row.h > 0 ? row.h : 1;
+    // Standard Lane Rule: Each row gets a full panel-width lane for readability/labels.
     const visualRowSize = !isV ? stdRowH : rowSize;
 
     rowRects.push({
       x: isV ? visualCursor : 0,
       y: isV ? 0 : visualCursor,
-      w: isV ? visualRowSize : surfaceW,
-      h: isV ? surfaceH : visualRowSize,
+      w: isV ? visualRowSize : canvasW,
+      h: isV ? canvasW : visualRowSize,
       key: `row-bg-${idx}`
     });
 
@@ -94,18 +98,15 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
     visualCursor += visualRowSize;
   });
 
-  const vW = isV ? Math.max(surfaceW, visualCursor) : surfaceW;
-  const vH = isV ? surfaceH : Math.max(surfaceH, visualCursor);
+  const vW = isV ? visualCursor : canvasW;
+  const vH = isV ? canvasW : Math.max(canvasH, visualCursor);
 
   // Centering / Offset logic
   let xOffset = 0;
   let yOffset = 0;
 
-  if (isV && visualCursor < surfaceW) {
-    xOffset = (surfaceW - visualCursor) / 2;
-  } else if (!isV && visualCursor < surfaceH && rowStart === "bottom") {
-    // For horizontal, only shift to bottom if rowStart was bottom
-    yOffset = (surfaceH - visualCursor);
+  if (!isV && visualCursor < canvasH && rowStart === "bottom") {
+    yOffset = (canvasH - visualCursor);
   }
 
   if (xOffset > 0 || yOffset > 0) {
@@ -182,35 +183,25 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
     [result, orderedRows, rowStart]
   );
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
-  const showRowLabels = !isV && result.rows.length <= 12;
+  const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
 
-  // ── Compute row label bands in SVG coordinate space ──
-  const rowGroups = React.useMemo(() => groupAdjacentRows(orderedRows), [orderedRows]);
+  const groupBands = showRowLabels ? rowRects.map(rr => {
+    const originalIdx = parseInt(rr.key.replace("row-bg-", ""), 10);
+    const label = `R${originalIdx + 1}`;
+    return {
+      mid: isV ? rr.x + rr.w / 2 : rr.y + rr.h / 2,
+      label
+    };
+  }) : [];
 
-  const groupBands = showRowLabels ? rowGroups.map(group => {
-    const idxSet = new Set(group.items.map(item => item.idx));
-    // Use row background rects so labels center on the full visual lane
-    const matching = rowRects.filter(r => idxSet.has(parseInt(r.key.replace("row-bg-", ""), 10)));
-    if (matching.length === 0) return null;
-    const topY = Math.min(...matching.map(r => r.y));
-    const botY = Math.max(...matching.map(r => r.y + r.h));
-    const count = group.items.length;
-    const startR = group.items[0].idx + 1;
-    const endR = group.items[count - 1].idx + 1;
-    const label = count > 1 ? `R${Math.min(startR, endR)}-R${Math.max(startR, endR)}` : `R${startR}`;
-    return { midY: (topY + botY) / 2, label };
-  }).filter(Boolean) : [];
-
-  // ── SVG viewBox — reserve a left strip for row labels ──
-  // Font size in SVG user units, capped relative to chart width (not row height)
-  // so it stays consistent regardless of row count.
-  const rowLabelFontSize = showRowLabels ? Math.round(vW * 0.018) : 0;
-  // Column wide enough for ~5 chars ("R1-R9") at that font size
-  const labelColW = showRowLabels ? Math.round(rowLabelFontSize * 3.2) : 0;
-  const gap = showRowLabels ? Math.round(rowLabelFontSize * 0.4) : 0;
-  const chartX = labelColW + gap;
+  // ── SVG viewBox ──
+  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.018) : 0;
+  const labelMargin = showRowLabels ? Math.round(labelFontSize * 2.2) : 0;
+  const chartX = !isV ? labelMargin : 0;
+  const chartY = isV ? labelMargin : 0;
   const totalVW = vW + chartX;
-  const aspectRatio = totalVW / vH;
+  const totalVH = vH + chartY;
+  const aspectRatio = totalVW / totalVH;
   const handleSegClick = (rect) => {
     if (selectedKey === rect.key) {
       setSelectedKey(null);
@@ -231,7 +222,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
             </button>
           )}
           <svg
-            viewBox={`0 0 ${totalVW} ${vH}`}
+            viewBox={`0 0 ${totalVW} ${totalVH}`}
             preserveAspectRatio="xMidYMid meet"
             role="img"
             style={{ display: "block", width: "100%", height: "100%", borderRadius: "8px" }}
@@ -244,7 +235,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
               </pattern>
             </defs>
             {rowRects.map(r => (
-              <rect key={r.key} x={r.x + chartX} y={r.y} width={r.w} height={r.h} className="layout-svg-row-bg" />
+              <rect key={r.key} x={r.x + chartX} y={r.y + chartY} width={r.w} height={r.h} className="layout-svg-row-bg" />
             ))}
             {rects.map(rect => {
               const isHighlighted = hoveredType && rect.type === hoveredType;
@@ -255,7 +246,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
                   onClick={e => { e.stopPropagation(); handleSegClick(rect); }}
                 >
                   <rect
-                    x={rect.x + chartX} y={rect.y} width={rect.w} height={rect.h}
+                    x={rect.x + chartX} y={rect.y + chartY} width={rect.w} height={rect.h}
                     className={`layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
                     style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
                     onMouseEnter={() => setHoveredType && setHoveredType(rect.type)}
@@ -264,7 +255,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
                     <title>{`${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`}</title>
                   </rect>
                   {showLabel && (
-                    <text x={rect.x + chartX + rect.w / 2} y={rect.y + rect.h / 2}
+                    <text x={rect.x + chartX + rect.w / 2} y={rect.y + chartY + rect.h / 2}
                       textAnchor="middle" dominantBaseline="middle" className="layout-svg-label">
                       {rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : Math.round(rect.seg.w)}
                     </text>
@@ -273,9 +264,14 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
               );
             })}
             {groupBands.map(band => (
-              <text key={band.label} x={labelColW * 0.92} y={band.midY}
-                fontSize={rowLabelFontSize}
-                textAnchor="end" dominantBaseline="middle" className="layout-svg-row-label">
+              <text key={band.label}
+                x={isV ? band.mid + chartX : chartX - (labelFontSize * 0.5)}
+                y={isV ? chartY - (labelFontSize * 0.5) : band.mid + chartY}
+                fontSize={labelFontSize}
+                textAnchor={isV ? "middle" : "end"}
+                dominantBaseline={isV ? "auto" : "middle"}
+                className="layout-svg-row-label"
+              >
                 {band.label}
               </text>
             ))}

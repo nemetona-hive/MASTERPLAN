@@ -1,6 +1,7 @@
 function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
-  const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long } = sh;
+  const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, patternStart: psRaw } = sh;
   const rowStart = sh.rowStart || "top";
+  const patternStart = psRaw || (direction === "V" ? "top" : "left");
   const [hoveredType, setHoveredType] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
@@ -182,17 +183,41 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
               <div id="ctrl-direction" className="seg-group">
                 {["V", "H"].map(s => (
                   <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
-                    onClick={() => setSh(st => ({ ...st, direction: s }))}>{s}</button>
+                    onClick={() => setSh(st => ({ ...st, direction: s, rowStart: s === "V" ? "top" : st.rowStart, patternStart: s === "V" ? "bottom" : "left" }))}>{s}</button>
                 ))}
               </div>
             </Stack>
             <Stack gap={1} className="ctrl-lbl">
-              <span className="ctrl-sublbl">Row order</span>
+              <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
               <div id="ctrl-row-order" className="seg-group">
                 <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>R1 top</button>
+                  onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
+                  {direction === "V" ? "R1 Left" : "R1 top"}
+                </button>
                 <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>R1 bottom</button>
+                  onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
+                  {direction === "V" ? "R1 Right" : "R1 bottom"}
+                </button>
+              </div>
+            </Stack>
+            <Stack gap={1} className="ctrl-lbl">
+              <span className="ctrl-sublbl">Start side</span>
+              <div id="ctrl-pattern-start" className="seg-group">
+                {direction === "V" ? (
+                  <>
+                    <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
+                      onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>from bottom</button>
+                    <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
+                      onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>from top</button>
+                  </>
+                ) : (
+                  <>
+                    <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
+                      onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>from left</button>
+                    <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
+                      onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>from right</button>
+                  </>
+                )}
               </div>
             </Stack>
             <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />

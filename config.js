@@ -216,9 +216,9 @@ const DEFAULT_MATERIAL_PRESETS = [
     width: 1200
   },
   {
-    name: "Plank 1200×200",
-    length: 1200,
-    width: 200
+    name: "Välisvoodrilaud UYVK 18x120",
+    length: 6000,
+    width: 110
   },
   {
     name: "Herringbone 600×300",
