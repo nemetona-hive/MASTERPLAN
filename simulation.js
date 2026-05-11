@@ -230,7 +230,8 @@ function computeStandard(sh, sysNum, offset, palKey) {
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
-  const isMirror = vSym ? patternStart === "bottom" : patternStart === "right";
+  const activePatternStart = patternStart || (vSym ? "bottom" : "left");
+  const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
   const rows = simulate(sW, vSym ? W : H, PLa, PPi, offset, minJ, sysNum, false, startOff, isMirror);
   const stats = makeStats(rows);
   const gaps = nGap(rows);
@@ -265,7 +266,8 @@ function computeS4(sh) {
   const vSym = direction === "V";
   const sW = vSym ? H : W;
   const sH = vSym ? W : H;
-  const isMirror = vSym ? patternStart === "bottom" : patternStart === "right";
+  const activePatternStart = patternStart || (vSym ? "bottom" : "left");
+  const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
   const rows = simulateS4(sW, sH, PLa, s4Long, minJ, false, isMirror);
   const stats = makeStats(rows);
   const shortPiece = sW - Math.floor(sW / s4Long) * s4Long;
