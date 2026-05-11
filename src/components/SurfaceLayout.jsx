@@ -2,8 +2,6 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long } = sh;
   const rowStart = sh.rowStart || "top";
   const [hoveredType, setHoveredType] = React.useState(null);
-  const [materialOpen, setMaterialOpen] = React.useState(true);
-  const [surfaceOpen,  setSurfaceOpen]  = React.useState(true);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
   // ── Material presets ───────────────────────────────────────────────────────
@@ -78,7 +76,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   };
 
   const set = k => v => { setSh(s => ({ ...s, [k]: v })); setActivePreset(null); };
-  const setMat = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); setActivePreset(null); };
+  const setMat = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(8000, Number(v) || 100)) })); setActivePreset(null); };
   const setSurf = k => v => { setSh(s => ({ ...s, [k]: Math.max(100, Math.min(50000, Number(v) || 100)) })); };
   const setS2PanelState = patch => setSh(s => ({ ...s, offset:  patch.offset  !== undefined ? patch.offset  : s.offset }));
   const setS4PanelState = patch => setSh(s => ({ ...s,
@@ -98,7 +96,6 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const panelResultsById  = panelResults.reduce((acc, p) => { acc[p.layout.id] = p; return acc; }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
   const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;
-  const bestPanel = comparableResults.find(p => p.result.stats.total === best);
 
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return (
@@ -130,7 +127,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
-        <ControlPanel id="control-material" title="Material Specification" open={materialOpen} setOpen={setMaterialOpen} noToggle>
+        <ControlPanel id="control-material" title="Material Specification" noToggle>
           <Stack gap={3}>
             <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
               <NumInput
@@ -165,14 +162,14 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
             )}
           </Stack>
         </ControlPanel>
-        <ControlPanel id="control-surface" title="Inputs" open={surfaceOpen} setOpen={setSurfaceOpen} noToggle>
+        <ControlPanel id="control-surface" title="Inputs" noToggle>
           <Stack gap={3}>
             <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
             <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
             <button
               className="ctrl-dir"
               style={{ width: "100%", marginTop: "var(--sp-1)" }}
-              onClick={() => setSh(s => ({ ...s, W: DEFAULT_SH.W, H: DEFAULT_SH.H }))}
+              onClick={() => setSh(s => ({ ...s, W: Math.max(100, DEFAULT_SH.W), H: Math.max(100, DEFAULT_SH.H) }))}
             >
               <Icon name="refresh-cw" /> Reset
             </button>
