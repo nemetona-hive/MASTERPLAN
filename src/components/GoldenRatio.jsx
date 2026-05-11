@@ -3,18 +3,13 @@ function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
   const link = useLinkedCardHighlight("golden-ratio");
   const PHI = 1.6180339887499;
 
-  const [committedIds, setCommittedIds] = React.useState(() => new Set());
-  const commitTimers = React.useRef({});
+  const [committedIds, addCommittedId, removeCommittedId, clearCommittedIds] = useTimedSet(600);
 
   const flashCommit = id => {
-    setCommittedIds(prev => new Set([...prev, id]));
-    clearTimeout(commitTimers.current[id]);
-    commitTimers.current[id] = setTimeout(() => {
-      setCommittedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
-    }, 600);
+    addCommittedId(id);
   };
 
-  React.useEffect(() => () => Object.values(commitTimers.current).forEach(clearTimeout), []);
+  React.useEffect(() => () => clearCommittedIds(), []);
 
   const setItemField = (id, key, value) => {
     setBaseItems(items => items.map(item => (item.id === id ? { ...item, [key]: value } : item)));
@@ -69,22 +64,17 @@ function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
     savedCommitted: String(item.value).trim() !== ""
   }));
 
-  const [saveStatus, setSaveStatus] = React.useState("");
+  const [saveStatus, setSaveStatus] = useTimedState("");
   
   const saveGoldenRatioDefaults = async () => {
-    setSaveStatus("saving");
+    setSaveStatus("saving", 0);
     try {
-      if (typeof saveStaticDefaults === "undefined") {
-        throw new Error("saveStaticDefaults is not available");
-      }
       const nextDefaults = normalizeGoldenRatioDefaults(baseItems);
-      await saveStaticDefaults("goldenRatioDefaults", nextDefaults);
+      await safeSaveStaticDefaults("goldenRatioDefaults", nextDefaults);
       setSaveStatus("saved");
-      setTimeout(() => setSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setSaveStatus("error");
-      setTimeout(() => setSaveStatus(""), 3500);
     }
   };
 
