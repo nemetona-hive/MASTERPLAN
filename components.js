@@ -16,6 +16,96 @@ function Icon({
     className: [faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")
   });
 }
+function isMobileViewport() {
+  return typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+}
+function safeSaveStaticDefaults(key, value) {
+  if (typeof saveStaticDefaults === "undefined") {
+    return Promise.reject(new Error("saveStaticDefaults is not available"));
+  }
+  return saveStaticDefaults(key, value);
+}
+function toNumber(value, fallback = 0) {
+  if (value === "" || value === null || value === undefined) return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+function clampNumber(value, min, max, fallback = min) {
+  return Math.min(max, Math.max(min, toNumber(value, fallback)));
+}
+function useTimedState(initialValue, defaultDelay = 2500) {
+  const [value, setValue] = React.useState(initialValue);
+  const timerRef = React.useRef(null);
+  React.useEffect(() => {
+    return () => clearTimeout(timerRef.current);
+  }, []);
+  const setTimedValue = (nextValue, delay = defaultDelay) => {
+    setValue(nextValue);
+    clearTimeout(timerRef.current);
+    if (delay > 0) {
+      timerRef.current = window.setTimeout(() => setValue(initialValue), delay);
+    }
+  };
+  const clearTimedValue = () => {
+    clearTimeout(timerRef.current);
+    setValue(initialValue);
+  };
+  return [value, setTimedValue, clearTimedValue];
+}
+function useTimedSet(defaultDelay = 600) {
+  const [values, setValues] = React.useState(() => new Set());
+  const timerRefs = React.useRef({});
+  React.useEffect(() => {
+    return () => Object.values(timerRefs.current).forEach(clearTimeout);
+  }, []);
+  const add = React.useCallback((item, delay = defaultDelay) => {
+    setValues(prev => {
+      const next = new Set(prev);
+      next.add(item);
+      return next;
+    });
+    clearTimeout(timerRefs.current[item]);
+    timerRefs.current[item] = window.setTimeout(() => {
+      setValues(prev => {
+        const next = new Set(prev);
+        next.delete(item);
+        return next;
+      });
+      delete timerRefs.current[item];
+    }, delay);
+  }, [defaultDelay]);
+  const remove = React.useCallback(item => {
+    setValues(prev => {
+      const next = new Set(prev);
+      next.delete(item);
+      return next;
+    });
+    clearTimeout(timerRefs.current[item]);
+    delete timerRefs.current[item];
+  }, []);
+  const clear = React.useCallback(() => {
+    Object.values(timerRefs.current).forEach(clearTimeout);
+    timerRefs.current = {};
+    setValues(new Set());
+  }, []);
+  return [values, add, remove, clear];
+}
+function useClickOutside(refs, handler, active = true) {
+  React.useEffect(() => {
+    if (!active) return;
+    const onMouseDown = e => {
+      const target = e.target;
+      const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
+      if (!clickedInside) handler(e);
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("touchstart", onMouseDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("touchstart", onMouseDown);
+    };
+  }, [handler, active]);
+}
 
 /**
  * Hook for protecting range sliders from accidental touch during scroll on mobile.
@@ -28,18 +118,16 @@ function useProtectedRangeSlider(onChange) {
   const touchState = React.useRef({
     startX: 0,
     startY: 0,
-    isScrolling: false,
-    initialValue: 0
+    isScrolling: false
   });
-  const isMobileMode = typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+  const isMobileMode = isMobileViewport();
   const onTouchStart = e => {
     if (!isMobileMode) return;
     const touch = e.touches[0];
     touchState.current = {
       startX: touch.clientX,
       startY: touch.clientY,
-      isScrolling: false,
-      initialValue: parseFloat(e.target.value)
+      isScrolling: false
     };
   };
   const onTouchMove = e => {
@@ -85,7 +173,7 @@ function RangeSlider({
   step,
   className = ""
 }) {
-  const isMobileMode = typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+  const isMobileMode = isMobileViewport();
   // Default to locked on both mobile and desktop
   const [isLocked, setIsLocked] = React.useState(true);
   const {
@@ -141,12 +229,10 @@ function NumInput({
   labelIcon
 }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
-  const [committed, setCommitted] = React.useState(false);
-  const commitTimer = React.useRef(null);
   React.useEffect(() => {
     setLocal(value === "" ? "" : String(value));
   }, [value]);
-  const commit = (flash = false) => {
+  const commit = () => {
     if (local === "") {
       onChange("");
     } else {
@@ -159,13 +245,7 @@ function NumInput({
         setLocal(value === "" ? "" : String(value));
       }
     }
-    if (flash) {
-      setCommitted(true);
-      clearTimeout(commitTimer.current);
-      commitTimer.current = setTimeout(() => setCommitted(false), 600);
-    }
   };
-  React.useEffect(() => () => clearTimeout(commitTimer.current), []);
   return /*#__PURE__*/React.createElement("div", {
     className: "num-wrap"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1107,8 +1187,8 @@ function calcRowResult(row) {
 function SheetTimesheet() {
   const [calcRows, setCalcRows] = useState(makeCalcRows);
   const [activeRowId, setActiveRowId] = useState(null);
-  const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState(false);
+  const [copied, setCopied] = useTimedState(false, 1800);
+  const [copyError, setCopyError] = useTimedState(false, 1800);
   const nextCalcId = React.useRef(4);
   const startRefs = React.useRef({});
 
@@ -1181,16 +1261,13 @@ function SheetTimesheet() {
     if (!hasCalcTotal) return;
     if (!navigator.clipboard) {
       setCopyError(true);
-      setTimeout(() => setCopyError(false), 1800);
       return;
     }
     navigator.clipboard.writeText(fmtDecimal(calcTotalMins)).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
     }).catch(err => {
       console.error('Clipboard copy failed:', err);
       setCopyError(true);
-      setTimeout(() => setCopyError(false), 1800);
     });
   };
 
@@ -1395,12 +1472,9 @@ function SheetConcrete() {
   const [bagKg, setBagKg] = React.useState("");
   const [bagPrice, setBagPrice] = React.useState("");
   const [activePreset, setActivePreset] = React.useState(null);
-  const [flashIdx, setFlashIdx] = React.useState(null);
-  const [fieldFlash, setFieldFlash] = React.useState(false);
-  const [showUpdated, setShowUpdated] = React.useState(false);
-  const flashTimerRef = React.useRef(null);
-  const noteTimerRef = React.useRef(null);
-  const fieldTimerRef = React.useRef(null);
+  const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
+  const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
+  const [showUpdated, setShowUpdated] = useTimedState(false, 2500);
   const rateInputRef = React.useRef(null);
   const [showRatePresets, setShowRatePresets] = React.useState(false);
 
@@ -1425,18 +1499,13 @@ function SheetConcrete() {
   })));
   const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
   const saveConcreteDefaults = async () => {
-    setPresetSaveStatus("saving");
+    setPresetSaveStatus("saving", 0);
     try {
-      if (typeof saveStaticDefaults === "undefined") {
-        throw new Error("saveStaticDefaults is not available");
-      }
-      await saveStaticDefaults("concretePresets", presets);
+      await safeSaveStaticDefaults("concretePresets", presets);
       setPresetSaveStatus("saved");
-      setTimeout(() => setPresetSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setPresetSaveStatus("error");
-      setTimeout(() => setPresetSaveStatus(""), 3500);
     }
   };
   const resetAll = () => {
@@ -1477,15 +1546,9 @@ function SheetConcrete() {
     setBagKg(p.bagKg === "" ? "" : parseFloat(p.bagKg) || 0);
     setBagPrice(p.bagPrice);
     setActivePreset(idx);
-    clearTimeout(flashTimerRef.current);
     setFlashIdx(idx);
-    flashTimerRef.current = setTimeout(() => setFlashIdx(null), 1200);
-    clearTimeout(fieldTimerRef.current);
     setFieldFlash(true);
-    fieldTimerRef.current = setTimeout(() => setFieldFlash(false), 900);
-    clearTimeout(noteTimerRef.current);
     setShowUpdated(true);
-    noteTimerRef.current = setTimeout(() => setShowUpdated(false), 2500);
   };
   const handleRateChange = v => {
     setRate(v);
@@ -1499,27 +1562,10 @@ function SheetConcrete() {
     setBagPrice(v);
     setActivePreset(null);
   };
-  React.useEffect(() => {
-    const handleClickOutside = e => {
-      if (rateInputRef.current && !rateInputRef.current.contains(e.target)) {
-        setShowRatePresets(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      clearTimeout(flashTimerRef.current);
-      clearTimeout(noteTimerRef.current);
-      clearTimeout(fieldTimerRef.current);
-    };
-  }, []);
+  useClickOutside([rateInputRef], () => setShowRatePresets(false));
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const parseNum = v => {
-    if (v === "" || v === null || v === undefined) return 0;
-    const n = parseFloat(v);
-    return isNaN(n) ? 0 : n;
-  };
+  const parseNum = toNumber;
   const area = areaMode === "dims" ? parseNum(lenMm) * parseNum(widMm) / 1_000_000 : parseNum(areaManual);
   const computedDimsArea = parseNum(lenMm) * parseNum(widMm) / 1_000_000;
   let computedAvgH, diff;
@@ -2340,20 +2386,11 @@ function SheetGoldenRatio({
   const [baseOpen, setBaseOpen] = React.useState(true);
   const link = useLinkedCardHighlight("golden-ratio");
   const PHI = 1.6180339887499;
-  const [committedIds, setCommittedIds] = React.useState(() => new Set());
-  const commitTimers = React.useRef({});
+  const [committedIds, addCommittedId, removeCommittedId, clearCommittedIds] = useTimedSet(600);
   const flashCommit = id => {
-    setCommittedIds(prev => new Set([...prev, id]));
-    clearTimeout(commitTimers.current[id]);
-    commitTimers.current[id] = setTimeout(() => {
-      setCommittedIds(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }, 600);
+    addCommittedId(id);
   };
-  React.useEffect(() => () => Object.values(commitTimers.current).forEach(clearTimeout), []);
+  React.useEffect(() => () => clearCommittedIds(), []);
   const setItemField = (id, key, value) => {
     setBaseItems(items => items.map(item => item.id === id ? {
       ...item,
@@ -2422,21 +2459,16 @@ function SheetGoldenRatio({
     },
     savedCommitted: String(item.value).trim() !== ""
   }));
-  const [saveStatus, setSaveStatus] = React.useState("");
+  const [saveStatus, setSaveStatus] = useTimedState("");
   const saveGoldenRatioDefaults = async () => {
-    setSaveStatus("saving");
+    setSaveStatus("saving", 0);
     try {
-      if (typeof saveStaticDefaults === "undefined") {
-        throw new Error("saveStaticDefaults is not available");
-      }
       const nextDefaults = normalizeGoldenRatioDefaults(baseItems);
-      await saveStaticDefaults("goldenRatioDefaults", nextDefaults);
+      await safeSaveStaticDefaults("goldenRatioDefaults", nextDefaults);
       setSaveStatus("saved");
-      setTimeout(() => setSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setSaveStatus("error");
-      setTimeout(() => setSaveStatus(""), 3500);
     }
   };
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -2613,13 +2645,7 @@ function SheetSymmetricLayout({
   const [activePreset, setActivePreset] = React.useState(null);
   const [showWidDropdown, setShowWidDropdown] = React.useState(false);
   const widWrapRef = React.useRef(null);
-  React.useEffect(() => {
-    const onClickOutside = e => {
-      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+  useClickOutside([widWrapRef], () => setShowWidDropdown(false));
   const applyPreset = (p, idx) => {
     setSym(s => ({
       ...s,
@@ -2657,7 +2683,7 @@ function SheetSymmetricLayout({
     value: sym.roomWidth,
     onChange: v => setSym(s => ({
       ...s,
-      roomWidth: Math.max(100, Math.min(50000, Number(v) || 100))
+      roomWidth: clampNumber(v, 100, 50000, 100)
     })),
     step: 10,
     min: 100
@@ -2673,7 +2699,7 @@ function SheetSymmetricLayout({
     onChange: v => {
       setSym(s => ({
         ...s,
-        panelWidth: Math.max(100, Math.min(8000, Number(v) || 100))
+        panelWidth: clampNumber(v, 100, 8000, 100)
       }));
       setActivePreset(null);
     },
@@ -2717,7 +2743,7 @@ function SheetSymmetricLayout({
     value: sym.customFirstPieceWidth ?? "",
     onChange: v => setSym(s => ({
       ...s,
-      customFirstPieceWidth: Math.max(0, Math.min(50000, Number(v) || 0))
+      customFirstPieceWidth: clampNumber(v, 0, 50000, 0)
     })),
     step: 10,
     min: 0
@@ -2765,34 +2791,22 @@ function SheetSurfaceLayout({
     ...p
   })));
   const [activePreset, setActivePreset] = React.useState(null);
-  const [flashIdx, setFlashIdx] = React.useState(null);
-  const [showLenDropdown, setShowLenDropdown] = React.useState(false);
-  const [showWidDropdown, setShowWidDropdown] = React.useState(false);
+  const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const [showModal, setShowModal] = React.useState(false);
   const [largePreview, setLargePreview] = React.useState(null);
-  const [fieldFlash, setFieldFlash] = React.useState(false);
-  const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+  const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
+  const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
   const openLargePreview = (layout, result) => setLargePreview({
     layout,
     result
   });
   const closeLargePreview = () => setLargePreview(null);
-  const flashTimerRef = React.useRef(null);
-  const fieldTimerRef = React.useRef(null);
   const lenWrapRef = React.useRef(null);
   const widWrapRef = React.useRef(null);
-  React.useEffect(() => {
-    const onClickOutside = e => {
-      if (lenWrapRef.current && !lenWrapRef.current.contains(e.target)) setShowLenDropdown(false);
-      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", onClickOutside);
-      clearTimeout(flashTimerRef.current);
-      clearTimeout(fieldTimerRef.current);
-    };
-  }, []);
+  useClickOutside([lenWrapRef, widWrapRef], () => {
+    setActivePresetDropdown(null);
+  });
   const applyPreset = (p, idx) => {
     setSh(s => ({
       ...s,
@@ -2800,14 +2814,9 @@ function SheetSurfaceLayout({
       PLa: p.width
     }));
     setActivePreset(idx);
-    setShowLenDropdown(false);
-    setShowWidDropdown(false);
-    clearTimeout(flashTimerRef.current);
+    setActivePresetDropdown(null);
     setFlashIdx(idx);
-    flashTimerRef.current = setTimeout(() => setFlashIdx(null), 1200);
-    clearTimeout(fieldTimerRef.current);
     setFieldFlash(true);
-    fieldTimerRef.current = setTimeout(() => setFieldFlash(false), 900);
   };
   const updatePreset = (idx, field, val) => {
     const next = [...presets];
@@ -2823,37 +2832,25 @@ function SheetSurfaceLayout({
     width: ""
   }]);
   const saveMaterialDefaults = async () => {
-    setPresetSaveStatus("saving");
+    setPresetSaveStatus("saving", 0);
     try {
-      await saveStaticDefaults("materialPresets", presets);
+      await safeSaveStaticDefaults("materialPresets", presets);
       setPresetSaveStatus("saved");
-      setTimeout(() => setPresetSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setPresetSaveStatus("error");
-      setTimeout(() => setPresetSaveStatus(""), 3500);
     }
   };
-  const set = k => v => {
+  const setShField = (key, normalize = v => v, resetActive = false) => value => {
     setSh(s => ({
       ...s,
-      [k]: v
+      [key]: normalize(value)
     }));
-    setActivePreset(null);
+    if (resetActive) setActivePreset(null);
   };
-  const setMat = k => v => {
-    setSh(s => ({
-      ...s,
-      [k]: Math.max(100, Math.min(8000, Number(v) || 100))
-    }));
-    setActivePreset(null);
-  };
-  const setSurf = k => v => {
-    setSh(s => ({
-      ...s,
-      [k]: Math.max(100, Math.min(50000, Number(v) || 100))
-    }));
-  };
+  const set = k => setShField(k, v => v, true);
+  const setMat = k => setShField(k, v => clampNumber(v, 100, 8000, 100), true);
+  const setSurf = k => setShField(k, v => clampNumber(v, 100, 50000, 100));
   const setS2PanelState = patch => setSh(s => ({
     ...s,
     offset: patch.offset !== undefined ? patch.offset : s.offset
@@ -2908,10 +2905,8 @@ function SheetSurfaceLayout({
       presets: presets,
       activePreset: activePreset,
       applyPreset: applyPreset,
-      showWidDropdown: showWidDropdown,
-      setShowWidDropdown: setShowWidDropdown,
-      showLenDropdown: showLenDropdown,
-      setShowLenDropdown: setShowLenDropdown,
+      activePresetDropdown: activePresetDropdown,
+      setActivePresetDropdown: setActivePresetDropdown,
       widWrapRef: widWrapRef,
       lenWrapRef: lenWrapRef,
       fieldFlash: fieldFlash,
@@ -2938,10 +2933,8 @@ function SheetSurfaceLayout({
     presets: presets,
     activePreset: activePreset,
     applyPreset: applyPreset,
-    showWidDropdown: showWidDropdown,
-    setShowWidDropdown: setShowWidDropdown,
-    showLenDropdown: showLenDropdown,
-    setShowLenDropdown: setShowLenDropdown,
+    activePresetDropdown: activePresetDropdown,
+    setActivePresetDropdown: setActivePresetDropdown,
     widWrapRef: widWrapRef,
     lenWrapRef: lenWrapRef,
     fieldFlash: fieldFlash,
@@ -2957,6 +2950,7 @@ function SheetSurfaceLayout({
     setOpen: setSettingsOpen
   }, /*#__PURE__*/React.createElement(LayoutSettings, {
     sh: sh,
+    setField: setShField,
     setSh: setSh
   }))), /*#__PURE__*/React.createElement("div", {
     id: "data-preview",
@@ -3130,10 +3124,8 @@ function SheetSurfaceLayout({
     presets: presets,
     activePreset: activePreset,
     applyPreset: applyPreset,
-    showWidDropdown: showWidDropdown,
-    setShowWidDropdown: setShowWidDropdown,
-    showLenDropdown: showLenDropdown,
-    setShowLenDropdown: setShowLenDropdown,
+    activePresetDropdown: activePresetDropdown,
+    setActivePresetDropdown: setActivePresetDropdown,
     widWrapRef: widWrapRef,
     lenWrapRef: lenWrapRef,
     fieldFlash: fieldFlash,
@@ -3154,6 +3146,7 @@ function SheetSurfaceLayout({
     className: "panel-data"
   }, /*#__PURE__*/React.createElement(LayoutSettings, {
     sh: sh,
+    setField: setShField,
     setSh: setSh
   }))), /*#__PURE__*/React.createElement("div", {
     className: "control-panel",
@@ -3192,6 +3185,7 @@ function SheetSurfaceLayout({
 }
 function LayoutSettings({
   sh,
+  setField,
   setSh
 }) {
   const {
@@ -3203,12 +3197,7 @@ function LayoutSettings({
   const rowStart = sh.rowStart || "top";
   const psRaw = sh.patternStart;
   const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
-  const set = k => v => {
-    setSh(s => ({
-      ...s,
-      [k]: v
-    }));
-  };
+  const set = k => setField(k);
   return /*#__PURE__*/React.createElement(Stack, {
     gap: 3
   }, /*#__PURE__*/React.createElement(Stack, {
@@ -3290,10 +3279,7 @@ function LayoutSettings({
     id: "input-startOff",
     label: "R1 start point (mm)",
     value: startOff,
-    onChange: v => setSh(s => ({
-      ...s,
-      startOff: Math.min(v, Math.max(1, PPi) - 1)
-    })),
+    onChange: v => setField("startOff", v => Math.min(v, Math.max(1, PPi) - 1))(v),
     step: 10,
     min: 0
   }));
@@ -3304,10 +3290,8 @@ function MaterialSpecification({
   presets,
   activePreset,
   applyPreset,
-  showWidDropdown,
-  setShowWidDropdown,
-  showLenDropdown,
-  setShowLenDropdown,
+  activePresetDropdown,
+  setActivePresetDropdown,
   widWrapRef,
   lenWrapRef,
   fieldFlash,
@@ -3337,11 +3321,8 @@ function MaterialSpecification({
     onChange: setMat("PLa"),
     step: 10,
     min: 100,
-    onFocus: () => {
-      setShowWidDropdown(true);
-      setShowLenDropdown(false);
-    }
-  }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    onFocus: () => setActivePresetDropdown("wid")
+  }), activePresetDropdown === "wid" && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
     anchorRef: widWrapRef,
     presets: presets,
     activePreset: activePreset,
@@ -3361,11 +3342,8 @@ function MaterialSpecification({
     onChange: setMat("PPi"),
     step: 10,
     min: 100,
-    onFocus: () => {
-      setShowLenDropdown(true);
-      setShowWidDropdown(false);
-    }
-  }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    onFocus: () => setActivePresetDropdown("len")
+  }), activePresetDropdown === "len" && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
     anchorRef: lenWrapRef,
     presets: presets,
     activePreset: activePreset,
@@ -3658,7 +3636,7 @@ function AppNav({
 
 // ── App root ──────────────────────────────────────────────────────────────────
 
-const getIsMobile = () => typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+const getIsMobile = isMobileViewport;
 
 // Read page id from URL hash, fallback to "home"
 const getHashPage = () => {
