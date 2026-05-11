@@ -9,13 +9,7 @@ function SheetSymmetricLayout({ sym, setSym }) {
   const [showWidDropdown,  setShowWidDropdown]  = React.useState(false);
   const widWrapRef = React.useRef(null);
 
-  React.useEffect(() => {
-    const onClickOutside = e => {
-      if (widWrapRef.current && !widWrapRef.current.contains(e.target)) setShowWidDropdown(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+  useClickOutside([widWrapRef], () => setShowWidDropdown(false));
 
   const applyPreset = (p, idx) => {
     setSym(s => ({ ...s, panelWidth: p.width }));
@@ -36,13 +30,13 @@ function SheetSymmetricLayout({ sym, setSym }) {
       <Stack id="data-control" className="data-control" gap={3}>
         <ControlPanel id="control-sym-surface" title="Inputs" noToggle>
           <Stack gap={3}>
-            <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth} onChange={v => setSym(s => ({ ...s, roomWidth: Math.max(100, Math.min(50000, Number(v) || 100)) }))} step={10} min={100} />
+            <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth} onChange={v => setSym(s => ({ ...s, roomWidth: clampNumber(v, 100, 50000, 100) }))} step={10} min={100} />
             <div ref={widWrapRef} style={{ position: "relative" }}>
               <NumInput
                 id="input-sym-panel-width"
                 label="Product width (mm)"
                 value={sym.panelWidth}
-                onChange={v => { setSym(s => ({ ...s, panelWidth: Math.max(100, Math.min(8000, Number(v) || 100)) })); setActivePreset(null); }}
+                onChange={v => { setSym(s => ({ ...s, panelWidth: clampNumber(v, 100, 8000, 100) })); setActivePreset(null); }}
                 step={10}
                 min={100}
                 onFocus={() => setShowWidDropdown(true)}
@@ -65,7 +59,7 @@ function SheetSymmetricLayout({ sym, setSym }) {
               </div>
             </Stack>
             {sym.oneFullEdge && (
-              <NumInput id="input-sym-custom-first" label="First piece width (mm)" value={sym.customFirstPieceWidth ?? ""} onChange={v => setSym(s => ({ ...s, customFirstPieceWidth: Math.max(0, Math.min(50000, Number(v) || 0)) }))} step={10} min={0} />
+              <NumInput id="input-sym-custom-first" label="First piece width (mm)" value={sym.customFirstPieceWidth ?? ""} onChange={v => setSym(s => ({ ...s, customFirstPieceWidth: clampNumber(v, 0, 50000, 0) }))} step={10} min={0} />
             )}
           </Stack>
         </ControlPanel>
