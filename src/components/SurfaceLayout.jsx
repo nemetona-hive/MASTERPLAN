@@ -1,7 +1,7 @@
 function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, patternStart: psRaw } = sh;
   const rowStart = sh.rowStart || "top";
-  const patternStart = psRaw || (direction === "V" ? "top" : "left");
+  const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
   const [hoveredType, setHoveredType] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
@@ -102,22 +102,15 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
     return (
       <>
         <Stack id="data-control" className="data-control" gap={3}>
-          <Stack gap={1}>
-            <SLabel>Material Specification</SLabel>
-            <div ref={widWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-PLa" label="Width (mm)"  labelIcon="arrow-h" min={100} value={Math.max(100, PLa)} onChange={setMat("PLa")} step={10} />
-              {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
-            </div>
-            <div ref={lenWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-PPi" label="Length (mm)" labelIcon="arrow-v" min={100} value={Math.max(100, PPi)} onChange={setMat("PPi")} step={10} />
-              {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
-            </div>
-          </Stack>
-          <Stack gap={1}>
-            <SLabel>Surface Area</SLabel>
-            <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={Math.max(100, W)} onChange={setSurf("W")} step={10} />
-            <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={Math.max(100, H)} onChange={setSurf("H")} step={10} />
-          </Stack>
+          <MaterialSpecification 
+            sh={sh} setSh={setSh} setMat={setMat} 
+            presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
+            showWidDropdown={showWidDropdown} setShowWidDropdown={setShowWidDropdown} 
+            showLenDropdown={showLenDropdown} setShowLenDropdown={setShowLenDropdown} 
+            widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
+            fieldFlash={fieldFlash} setShowModal={setShowModal}
+          />
+          <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         </Stack>
         <div id="data-preview" className="data-preview">
           <p className="desc">Select all input values - all must be greater than 0!</p>
@@ -128,102 +121,17 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
-        <ControlPanel id="control-material" title="Material Specification" noToggle>
-          <Stack gap={3}>
-            <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
-              <NumInput
-                id="input-PLa"
-                label="Width (mm)"
-                labelIcon="arrow-h"
-                value={PLa}
-                onChange={setMat("PLa")}
-                step={10}
-                min={100}
-                onFocus={() => { setShowWidDropdown(true); setShowLenDropdown(false); }}
-              />
-              {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
-            </div>
-            <div className={fieldFlash ? "num-input-flash" : ""} ref={lenWrapRef} style={{ position: "relative" }}>
-              <NumInput
-                id="input-PPi"
-                label="Length (mm)"
-                labelIcon="arrow-v"
-                value={PPi}
-                onChange={setMat("PPi")}
-                step={10}
-                min={100}
-                onFocus={() => { setShowLenDropdown(true); setShowWidDropdown(false); }}
-              />
-              {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
-            </div>
-            {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
-              <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
-                <Icon name="plus" /> Manage Presets
-              </button>
-            )}
-          </Stack>
-        </ControlPanel>
-        <ControlPanel id="control-surface" title="Inputs" noToggle>
-          <Stack gap={3}>
-            <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
-            <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
-            <button
-              className="ctrl-dir"
-              style={{ width: "100%", marginTop: "var(--sp-1)" }}
-              onClick={() => setSh(s => ({ ...s, W: Math.max(100, DEFAULT_SH.W), H: Math.max(100, DEFAULT_SH.H) }))}
-            >
-              <Icon name="refresh-cw" /> Reset
-            </button>
-          </Stack>
-        </ControlPanel>
+        <MaterialSpecification 
+          sh={sh} setSh={setSh} setMat={setMat} 
+          presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
+          showWidDropdown={showWidDropdown} setShowWidDropdown={setShowWidDropdown} 
+          showLenDropdown={showLenDropdown} setShowLenDropdown={setShowLenDropdown} 
+          widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
+          fieldFlash={fieldFlash} setShowModal={setShowModal}
+        />
+        <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
-          <Stack gap={3}>
-            <Stack gap={1} className="ctrl-lbl">
-              <span className="ctrl-sublbl">Direction</span>
-              <div id="ctrl-direction" className="seg-group">
-                {["V", "H"].map(s => (
-                  <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
-                    onClick={() => setSh(st => ({ ...st, direction: s, rowStart: s === "V" ? "top" : st.rowStart, patternStart: s === "V" ? "bottom" : "left" }))}>{s}</button>
-                ))}
-              </div>
-            </Stack>
-            <Stack gap={1} className="ctrl-lbl">
-              <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
-              <div id="ctrl-row-order" className="seg-group">
-                <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
-                  {direction === "V" ? "R1 Left" : "R1 top"}
-                </button>
-                <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
-                  {direction === "V" ? "R1 Right" : "R1 bottom"}
-                </button>
-              </div>
-            </Stack>
-            <Stack gap={1} className="ctrl-lbl">
-              <span className="ctrl-sublbl">Start side</span>
-              <div id="ctrl-pattern-start" className="seg-group">
-                {direction === "V" ? (
-                  <>
-                    <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
-                      onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>from bottom</button>
-                    <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
-                      onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>from top</button>
-                  </>
-                ) : (
-                  <>
-                    <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
-                      onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>from left</button>
-                    <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
-                      onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>from right</button>
-                  </>
-                )}
-              </div>
-            </Stack>
-            <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
-            <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
-              onChange={v => setSh(s => ({ ...s, startOff: Math.min(v, Math.max(1, PPi) - 1) }))} step={10} min={0} />
-          </Stack>
+          <LayoutSettings sh={sh} setSh={setSh} />
         </ControlPanel>
       </Stack>
       <div id="data-preview" className="data-preview">
@@ -360,7 +268,58 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                 {largePreview.result.summaryRows.length > 0 &&
                   <PanelSummary rows={largePreview.result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
                 <div className={`large-layout-vis-wrap data-preview`}>
-                  <LayoutVisualization result={largePreview.result} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} />
+                  <LayoutVisualization result={largePreview.result} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
+                </div>
+                <div className="layout-split" style={{ gridTemplateColumns: "1fr 1fr 2fr", marginTop: "var(--sp-2)", alignItems: "stretch" }}>
+                  <Stack gap={4}>
+                    <MaterialSpecification 
+                      sh={sh} setSh={setSh} setMat={setMat} 
+                      presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
+                      showWidDropdown={showWidDropdown} setShowWidDropdown={setShowWidDropdown} 
+                      showLenDropdown={showLenDropdown} setShowLenDropdown={setShowLenDropdown} 
+                      widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
+                      fieldFlash={fieldFlash} setShowModal={setShowModal}
+                    />
+                    <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
+                  </Stack>
+                  <div className="control-panel" style={{ margin: 0, height: "100%" }}>
+                    <div className="panel-head"><span>Layout Settings</span></div>
+                    <div className="panel-data">
+                      <LayoutSettings sh={sh} setSh={setSh} />
+                    </div>
+                  </div>
+                  <div className="control-panel" style={{ margin: 0, height: "100%" }}>
+                    <div className="panel-head"><span>Detailed Statistics</span></div>
+                    <div className="panel-data">
+                      {(() => {
+                        const r = largePreview.result.rows;
+                        const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
+                        const lastRow  = rowStart === "bottom" ? r[0] : r[r.length - 1];
+                        return (
+                          <>
+                            <Row 
+                              label={sh.direction === "V" ? "Total columns" : "Total rows"} 
+                              value={r.length} 
+                              unit={sh.direction === "V" ? "cols" : "rows"} 
+                            />
+                            <Row 
+                              label={sh.direction === "V" ? "Left column width" : "Top row width"} 
+                              value={firstRow.h} 
+                              unit="mm" 
+                            />
+                            <Row 
+                              label={sh.direction === "V" ? "Right column width" : "Bottom row width"} 
+                              value={lastRow.h} 
+                              unit="mm" 
+                            />
+                          </>
+                        );
+                      })()}
+                      <div className="pw-formula-text" style={{ opacity: 0.6, marginTop: "var(--sp-2)" }}>
+                        Advanced material analysis will appear here.
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </Stack>
             </div>
@@ -368,5 +327,116 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         </div>
       )}
     </>
+  );
+}
+
+function LayoutSettings({ sh, setSh }) {
+  const { PPi, direction, minJ, startOff } = sh;
+  const rowStart = sh.rowStart || "top";
+  const psRaw = sh.patternStart;
+  const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
+  
+  const set = k => v => { setSh(s => ({ ...s, [k]: v })); };
+
+  return (
+    <Stack gap={3}>
+      <Stack gap={1} className="ctrl-lbl">
+        <span className="ctrl-sublbl">Direction</span>
+        <div id="ctrl-direction" className="seg-group">
+          {["V", "H"].map(s => (
+            <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
+              onClick={() => setSh(st => ({ ...st, direction: s, rowStart: s === "V" ? "top" : st.rowStart, patternStart: s === "V" ? "bottom" : "left" }))}>{s}</button>
+          ))}
+        </div>
+      </Stack>
+      <Stack gap={1} className="ctrl-lbl">
+        <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
+        <div id="ctrl-row-order" className="seg-group">
+          <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
+            onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
+            {direction === "V" ? "R1 Left" : "R1 top"}
+          </button>
+          <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
+            onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
+            {direction === "V" ? "R1 Right" : "R1 bottom"}
+          </button>
+        </div>
+      </Stack>
+      <Stack gap={1} className="ctrl-lbl">
+        <span className="ctrl-sublbl">Start side</span>
+        <div id="ctrl-pattern-start" className="seg-group">
+          {direction === "V" ? (
+            <>
+              <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
+                onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>from bottom</button>
+              <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
+                onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>from top</button>
+            </>
+          ) : (
+            <>
+              <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
+                onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>from left</button>
+              <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
+                onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>from right</button>
+            </>
+          )}
+        </div>
+      </Stack>
+      <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
+      <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
+        onChange={v => setSh(s => ({ ...s, startOff: Math.min(v, Math.max(1, PPi) - 1) }))} step={10} min={0} />
+    </Stack>
+  );
+}
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, showWidDropdown, setShowWidDropdown, showLenDropdown, setShowLenDropdown, widWrapRef, lenWrapRef, fieldFlash, setShowModal }) {
+  const { PLa, PPi } = sh;
+  return (
+    <ControlPanel id="control-material" title="Material Specification" noToggle>
+      <Stack gap={3}>
+        <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
+          <NumInput
+            id="input-PLa"
+            label="Width (mm)"
+            labelIcon="arrow-h"
+            value={PLa}
+            onChange={setMat("PLa")}
+            step={10}
+            min={100}
+            onFocus={() => { setShowWidDropdown(true); setShowLenDropdown(false); }}
+          />
+          {showWidDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
+        </div>
+        <div className={fieldFlash ? "num-input-flash" : ""} ref={lenWrapRef} style={{ position: "relative" }}>
+          <NumInput
+            id="input-PPi"
+            label="Length (mm)"
+            labelIcon="arrow-v"
+            value={PPi}
+            onChange={setMat("PPi")}
+            step={10}
+            min={100}
+            onFocus={() => { setShowLenDropdown(true); setShowWidDropdown(false); }}
+          />
+          {showLenDropdown && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
+        </div>
+        {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
+          <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
+            <Icon name="plus" /> Manage Presets
+          </button>
+        )}
+      </Stack>
+    </ControlPanel>
+  );
+}
+
+function SurfaceInputs({ sh, setSh, setSurf }) {
+  const { W, H } = sh;
+  return (
+    <ControlPanel id="control-surface" title="Inputs" noToggle>
+      <Stack gap={3}>
+        <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
+        <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
+      </Stack>
+    </ControlPanel>
   );
 }
