@@ -476,28 +476,6 @@ function PanelSummary({
     setHoveredType: setHoveredType
   })));
 }
-function rowSignature(row) {
-  return row.segs.map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0, seg.sourceId || ""].join(":")).join("|") + (row.long ? "-L" : "-S") + `-H${Math.round(row.h || 0)}`;
-}
-function groupAdjacentRows(rowsWithIndexes) {
-  const groups = [];
-  rowsWithIndexes.forEach(item => {
-    const signature = rowSignature(item.row);
-    const last = groups[groups.length - 1];
-    const rowHeight = Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1;
-    if (last && last.signature === signature) {
-      last.items.push(item);
-      last.height += rowHeight;
-    } else {
-      groups.push({
-        signature,
-        items: [item],
-        height: rowHeight
-      });
-    }
-  });
-  return groups;
-}
 function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const {
     surfaceW,
@@ -729,9 +707,9 @@ function LayoutVisualization({
     type: "button",
     className: "viz-expand-btn",
     onClick: () => onLargePreview(),
-    title: "Open large preview"
+    title: alwaysShowLabels ? "Close large preview" : "Open large preview"
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: "maximize"
+    name: alwaysShowLabels ? "minimize" : "maximize"
   })), /*#__PURE__*/React.createElement("svg", {
     viewBox: `0 0 ${totalVW} ${totalVH}`,
     preserveAspectRatio: "xMidYMid meet",
@@ -2774,7 +2752,7 @@ function SheetSurfaceLayout({
     patternStart: psRaw
   } = sh;
   const rowStart = sh.rowStart || "top";
-  const patternStart = psRaw || (direction === "V" ? "top" : "left");
+  const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
   const [hoveredType, setHoveredType] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
@@ -2923,63 +2901,26 @@ function SheetSurfaceLayout({
       id: "data-control",
       className: "data-control",
       gap: 3
-    }, /*#__PURE__*/React.createElement(Stack, {
-      gap: 1
-    }, /*#__PURE__*/React.createElement(SLabel, null, "Material Specification"), /*#__PURE__*/React.createElement("div", {
-      ref: widWrapRef,
-      style: {
-        position: "relative"
-      }
-    }, /*#__PURE__*/React.createElement(NumInput, {
-      id: "input-PLa",
-      label: "Width (mm)",
-      labelIcon: "arrow-h",
-      min: 100,
-      value: Math.max(100, PLa),
-      onChange: setMat("PLa"),
-      step: 10
-    }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
-      anchorRef: widWrapRef,
+    }, /*#__PURE__*/React.createElement(MaterialSpecification, {
+      sh: sh,
+      setSh: setSh,
+      setMat: setMat,
       presets: presets,
       activePreset: activePreset,
-      onApply: applyPreset,
-      field: "width"
+      applyPreset: applyPreset,
+      showWidDropdown: showWidDropdown,
+      setShowWidDropdown: setShowWidDropdown,
+      showLenDropdown: showLenDropdown,
+      setShowLenDropdown: setShowLenDropdown,
+      widWrapRef: widWrapRef,
+      lenWrapRef: lenWrapRef,
+      fieldFlash: fieldFlash,
+      setShowModal: setShowModal
+    }), /*#__PURE__*/React.createElement(SurfaceInputs, {
+      sh: sh,
+      setSh: setSh,
+      setSurf: setSurf
     })), /*#__PURE__*/React.createElement("div", {
-      ref: lenWrapRef,
-      style: {
-        position: "relative"
-      }
-    }, /*#__PURE__*/React.createElement(NumInput, {
-      id: "input-PPi",
-      label: "Length (mm)",
-      labelIcon: "arrow-v",
-      min: 100,
-      value: Math.max(100, PPi),
-      onChange: setMat("PPi"),
-      step: 10
-    }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
-      anchorRef: lenWrapRef,
-      presets: presets,
-      activePreset: activePreset,
-      onApply: applyPreset,
-      field: "length"
-    }))), /*#__PURE__*/React.createElement(Stack, {
-      gap: 1
-    }, /*#__PURE__*/React.createElement(SLabel, null, "Surface Area"), /*#__PURE__*/React.createElement(NumInput, {
-      id: "input-W",
-      label: "Width \u2014 horizontal (mm)",
-      labelIcon: "arrow-h",
-      value: Math.max(100, W),
-      onChange: setSurf("W"),
-      step: 10
-    }), /*#__PURE__*/React.createElement(NumInput, {
-      id: "input-H",
-      label: "Length \u2014 vertical (mm)",
-      labelIcon: "arrow-v",
-      value: Math.max(100, H),
-      onChange: setSurf("H"),
-      step: 10
-    }))), /*#__PURE__*/React.createElement("div", {
       id: "data-preview",
       className: "data-preview"
     }, /*#__PURE__*/React.createElement("p", {
@@ -2990,194 +2931,34 @@ function SheetSurfaceLayout({
     id: "data-control",
     className: "data-control",
     gap: 3
-  }, /*#__PURE__*/React.createElement(ControlPanel, {
-    id: "control-material",
-    title: "Material Specification",
-    noToggle: true
-  }, /*#__PURE__*/React.createElement(Stack, {
-    gap: 3
-  }, /*#__PURE__*/React.createElement("div", {
-    className: fieldFlash ? "num-input-flash" : "",
-    ref: widWrapRef,
-    style: {
-      position: "relative"
-    }
-  }, /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-PLa",
-    label: "Width (mm)",
-    labelIcon: "arrow-h",
-    value: PLa,
-    onChange: setMat("PLa"),
-    step: 10,
-    min: 100,
-    onFocus: () => {
-      setShowWidDropdown(true);
-      setShowLenDropdown(false);
-    }
-  }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
-    anchorRef: widWrapRef,
+  }, /*#__PURE__*/React.createElement(MaterialSpecification, {
+    sh: sh,
+    setSh: setSh,
+    setMat: setMat,
     presets: presets,
     activePreset: activePreset,
-    onApply: applyPreset,
-    field: "width"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: fieldFlash ? "num-input-flash" : "",
-    ref: lenWrapRef,
-    style: {
-      position: "relative"
-    }
-  }, /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-PPi",
-    label: "Length (mm)",
-    labelIcon: "arrow-v",
-    value: PPi,
-    onChange: setMat("PPi"),
-    step: 10,
-    min: 100,
-    onFocus: () => {
-      setShowLenDropdown(true);
-      setShowWidDropdown(false);
-    }
-  }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
-    anchorRef: lenWrapRef,
-    presets: presets,
-    activePreset: activePreset,
-    onApply: applyPreset,
-    field: "length"
-  })), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir",
-    style: {
-      marginTop: "var(--sp-1)"
-    },
-    onClick: () => setShowModal(true)
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "plus"
-  }), " Manage Presets"))), /*#__PURE__*/React.createElement(ControlPanel, {
-    id: "control-surface",
-    title: "Inputs",
-    noToggle: true
-  }, /*#__PURE__*/React.createElement(Stack, {
-    gap: 3
-  }, /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-W",
-    label: "Width \u2014 horizontal (mm)",
-    labelIcon: "arrow-h",
-    value: W,
-    onChange: setSurf("W"),
-    step: 10
-  }), /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-H",
-    label: "Length \u2014 vertical (mm)",
-    labelIcon: "arrow-v",
-    value: H,
-    onChange: setSurf("H"),
-    step: 10
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir",
-    style: {
-      width: "100%",
-      marginTop: "var(--sp-1)"
-    },
-    onClick: () => setSh(s => ({
-      ...s,
-      W: Math.max(100, DEFAULT_SH.W),
-      H: Math.max(100, DEFAULT_SH.H)
-    }))
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "refresh-cw"
-  }), " Reset"))), /*#__PURE__*/React.createElement(ControlPanel, {
+    applyPreset: applyPreset,
+    showWidDropdown: showWidDropdown,
+    setShowWidDropdown: setShowWidDropdown,
+    showLenDropdown: showLenDropdown,
+    setShowLenDropdown: setShowLenDropdown,
+    widWrapRef: widWrapRef,
+    lenWrapRef: lenWrapRef,
+    fieldFlash: fieldFlash,
+    setShowModal: setShowModal
+  }), /*#__PURE__*/React.createElement(SurfaceInputs, {
+    sh: sh,
+    setSh: setSh,
+    setSurf: setSurf
+  }), /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-settings",
     title: "Settings",
     open: settingsOpen,
     setOpen: setSettingsOpen
-  }, /*#__PURE__*/React.createElement(Stack, {
-    gap: 3
-  }, /*#__PURE__*/React.createElement(Stack, {
-    gap: 1,
-    className: "ctrl-lbl"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ctrl-sublbl"
-  }, "Direction"), /*#__PURE__*/React.createElement("div", {
-    id: "ctrl-direction",
-    className: "seg-group"
-  }, ["V", "H"].map(s => /*#__PURE__*/React.createElement("button", {
-    key: s,
-    className: "ctrl-dir " + (direction === s ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      direction: s,
-      rowStart: s === "V" ? "top" : st.rowStart,
-      patternStart: s === "V" ? "bottom" : "left"
-    }))
-  }, s)))), /*#__PURE__*/React.createElement(Stack, {
-    gap: 1,
-    className: "ctrl-lbl"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ctrl-sublbl"
-  }, direction === "V" ? "Column order" : "Row order"), /*#__PURE__*/React.createElement("div", {
-    id: "ctrl-row-order",
-    className: "seg-group"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir " + (rowStart === "top" ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      rowStart: "top"
-    }))
-  }, direction === "V" ? "R1 Left" : "R1 top"), /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir " + (rowStart === "bottom" ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      rowStart: "bottom"
-    }))
-  }, direction === "V" ? "R1 Right" : "R1 bottom"))), /*#__PURE__*/React.createElement(Stack, {
-    gap: 1,
-    className: "ctrl-lbl"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ctrl-sublbl"
-  }, "Start side"), /*#__PURE__*/React.createElement("div", {
-    id: "ctrl-pattern-start",
-    className: "seg-group"
-  }, direction === "V" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir " + (patternStart === "bottom" ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      patternStart: "bottom"
-    }))
-  }, "from bottom"), /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir " + (patternStart === "top" ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      patternStart: "top"
-    }))
-  }, "from top")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir " + (patternStart === "left" ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      patternStart: "left"
-    }))
-  }, "from left"), /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir " + (patternStart === "right" ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      patternStart: "right"
-    }))
-  }, "from right")))), /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-minJ",
-    label: "Min remainder (mm)",
-    value: minJ,
-    onChange: set("minJ"),
-    step: 10
-  }), /*#__PURE__*/React.createElement(NumInput, {
-    id: "input-startOff",
-    label: "R1 start point (mm)",
-    value: startOff,
-    onChange: v => setSh(s => ({
-      ...s,
-      startOff: Math.min(v, Math.max(1, PPi) - 1)
-    })),
-    step: 10,
-    min: 0
-  })))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(LayoutSettings, {
+    sh: sh,
+    setSh: setSh
+  }))), /*#__PURE__*/React.createElement("div", {
     id: "data-preview",
     className: "data-preview"
   }, /*#__PURE__*/React.createElement(PreviewSection, {
@@ -3331,8 +3112,305 @@ function SheetSurfaceLayout({
     setHoveredType: setHoveredType,
     rowStart: rowStart,
     maxHeight: 760,
-    alwaysShowLabels: true
-  })))))));
+    alwaysShowLabels: true,
+    onLargePreview: closeLargePreview
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "layout-split",
+    style: {
+      gridTemplateColumns: "1fr 1fr 2fr",
+      marginTop: "var(--sp-2)",
+      alignItems: "stretch"
+    }
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 4
+  }, /*#__PURE__*/React.createElement(MaterialSpecification, {
+    sh: sh,
+    setSh: setSh,
+    setMat: setMat,
+    presets: presets,
+    activePreset: activePreset,
+    applyPreset: applyPreset,
+    showWidDropdown: showWidDropdown,
+    setShowWidDropdown: setShowWidDropdown,
+    showLenDropdown: showLenDropdown,
+    setShowLenDropdown: setShowLenDropdown,
+    widWrapRef: widWrapRef,
+    lenWrapRef: lenWrapRef,
+    fieldFlash: fieldFlash,
+    setShowModal: setShowModal
+  }), /*#__PURE__*/React.createElement(SurfaceInputs, {
+    sh: sh,
+    setSh: setSh,
+    setSurf: setSurf
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "control-panel",
+    style: {
+      margin: 0,
+      height: "100%"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "panel-head"
+  }, /*#__PURE__*/React.createElement("span", null, "Layout Settings")), /*#__PURE__*/React.createElement("div", {
+    className: "panel-data"
+  }, /*#__PURE__*/React.createElement(LayoutSettings, {
+    sh: sh,
+    setSh: setSh
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "control-panel",
+    style: {
+      margin: 0,
+      height: "100%"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "panel-head"
+  }, /*#__PURE__*/React.createElement("span", null, "Detailed Statistics")), /*#__PURE__*/React.createElement("div", {
+    className: "panel-data"
+  }, (() => {
+    const r = largePreview.result.rows;
+    const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
+    const lastRow = rowStart === "bottom" ? r[0] : r[r.length - 1];
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Row, {
+      label: sh.direction === "V" ? "Total columns" : "Total rows",
+      value: r.length,
+      unit: sh.direction === "V" ? "cols" : "rows"
+    }), /*#__PURE__*/React.createElement(Row, {
+      label: sh.direction === "V" ? "Left column width" : "Top row width",
+      value: firstRow.h,
+      unit: "mm"
+    }), /*#__PURE__*/React.createElement(Row, {
+      label: sh.direction === "V" ? "Right column width" : "Bottom row width",
+      value: lastRow.h,
+      unit: "mm"
+    }));
+  })(), /*#__PURE__*/React.createElement("div", {
+    className: "pw-formula-text",
+    style: {
+      opacity: 0.6,
+      marginTop: "var(--sp-2)"
+    }
+  }, "Advanced material analysis will appear here.")))))))));
+}
+function LayoutSettings({
+  sh,
+  setSh
+}) {
+  const {
+    PPi,
+    direction,
+    minJ,
+    startOff
+  } = sh;
+  const rowStart = sh.rowStart || "top";
+  const psRaw = sh.patternStart;
+  const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
+  const set = k => v => {
+    setSh(s => ({
+      ...s,
+      [k]: v
+    }));
+  };
+  return /*#__PURE__*/React.createElement(Stack, {
+    gap: 3
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 1,
+    className: "ctrl-lbl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl"
+  }, "Direction"), /*#__PURE__*/React.createElement("div", {
+    id: "ctrl-direction",
+    className: "seg-group"
+  }, ["V", "H"].map(s => /*#__PURE__*/React.createElement("button", {
+    key: s,
+    className: "ctrl-dir " + (direction === s ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      direction: s,
+      rowStart: s === "V" ? "top" : st.rowStart,
+      patternStart: s === "V" ? "bottom" : "left"
+    }))
+  }, s)))), /*#__PURE__*/React.createElement(Stack, {
+    gap: 1,
+    className: "ctrl-lbl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl"
+  }, direction === "V" ? "Column order" : "Row order"), /*#__PURE__*/React.createElement("div", {
+    id: "ctrl-row-order",
+    className: "seg-group"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (rowStart === "top" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      rowStart: "top"
+    }))
+  }, direction === "V" ? "R1 Left" : "R1 top"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (rowStart === "bottom" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      rowStart: "bottom"
+    }))
+  }, direction === "V" ? "R1 Right" : "R1 bottom"))), /*#__PURE__*/React.createElement(Stack, {
+    gap: 1,
+    className: "ctrl-lbl"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl"
+  }, "Start side"), /*#__PURE__*/React.createElement("div", {
+    id: "ctrl-pattern-start",
+    className: "seg-group"
+  }, direction === "V" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "bottom" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "bottom"
+    }))
+  }, "from bottom"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "top" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "top"
+    }))
+  }, "from top")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "left" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "left"
+    }))
+  }, "from left"), /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir " + (patternStart === "right" ? "on" : ""),
+    onClick: () => setSh(st => ({
+      ...st,
+      patternStart: "right"
+    }))
+  }, "from right")))), /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-minJ",
+    label: "Min remainder (mm)",
+    value: minJ,
+    onChange: set("minJ"),
+    step: 10
+  }), /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-startOff",
+    label: "R1 start point (mm)",
+    value: startOff,
+    onChange: v => setSh(s => ({
+      ...s,
+      startOff: Math.min(v, Math.max(1, PPi) - 1)
+    })),
+    step: 10,
+    min: 0
+  }));
+}
+function MaterialSpecification({
+  sh,
+  setMat,
+  presets,
+  activePreset,
+  applyPreset,
+  showWidDropdown,
+  setShowWidDropdown,
+  showLenDropdown,
+  setShowLenDropdown,
+  widWrapRef,
+  lenWrapRef,
+  fieldFlash,
+  setShowModal
+}) {
+  const {
+    PLa,
+    PPi
+  } = sh;
+  return /*#__PURE__*/React.createElement(ControlPanel, {
+    id: "control-material",
+    title: "Material Specification",
+    noToggle: true
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 3
+  }, /*#__PURE__*/React.createElement("div", {
+    className: fieldFlash ? "num-input-flash" : "",
+    ref: widWrapRef,
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-PLa",
+    label: "Width (mm)",
+    labelIcon: "arrow-h",
+    value: PLa,
+    onChange: setMat("PLa"),
+    step: 10,
+    min: 100,
+    onFocus: () => {
+      setShowWidDropdown(true);
+      setShowLenDropdown(false);
+    }
+  }), showWidDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    anchorRef: widWrapRef,
+    presets: presets,
+    activePreset: activePreset,
+    onApply: applyPreset,
+    field: "width"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: fieldFlash ? "num-input-flash" : "",
+    ref: lenWrapRef,
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-PPi",
+    label: "Length (mm)",
+    labelIcon: "arrow-v",
+    value: PPi,
+    onChange: setMat("PPi"),
+    step: 10,
+    min: 100,
+    onFocus: () => {
+      setShowLenDropdown(true);
+      setShowWidDropdown(false);
+    }
+  }), showLenDropdown && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    anchorRef: lenWrapRef,
+    presets: presets,
+    activePreset: activePreset,
+    onApply: applyPreset,
+    field: "length"
+  })), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
+    className: "ctrl-dir",
+    style: {
+      marginTop: "var(--sp-1)"
+    },
+    onClick: () => setShowModal(true)
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "plus"
+  }), " Manage Presets")));
+}
+function SurfaceInputs({
+  sh,
+  setSh,
+  setSurf
+}) {
+  const {
+    W,
+    H
+  } = sh;
+  return /*#__PURE__*/React.createElement(ControlPanel, {
+    id: "control-surface",
+    title: "Inputs",
+    noToggle: true
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 3
+  }, /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-W",
+    label: "Width \u2014 horizontal (mm)",
+    labelIcon: "arrow-h",
+    value: W,
+    onChange: setSurf("W"),
+    step: 10
+  }), /*#__PURE__*/React.createElement(NumInput, {
+    id: "input-H",
+    label: "Length \u2014 vertical (mm)",
+    labelIcon: "arrow-v",
+    value: H,
+    onChange: setSurf("H"),
+    step: 10
+  })));
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
