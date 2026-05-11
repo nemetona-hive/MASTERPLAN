@@ -130,7 +130,6 @@ const sumSegWidth = (rows, type) =>
     a + (Array.isArray(r.segs) ? r.segs.reduce((acc, s) => acc + (s.type === type ? s.w : 0), 0) : 0)
   , 0) : 0;
 const gapWidth = rows => sumSegWidth(rows, "gap");
-const nTotal = rows => nPanels(rows) + nCut(rows);
 
 function emptyLayoutResult() {
   return { valid: false, rows: [], stats: { full: 0, cut: 0, total: 0 }, summaryRows: [], meta: {} };
@@ -259,7 +258,6 @@ function computeS4(sh) {
   const rows = simulateS4(sW, sH, PLa, s4Long, minJ, vSym);
   const stats = makeStats(rows);
   const shortPiece = sW - Math.floor(sW / s4Long) * s4Long;
-  const fullCount  = Math.floor(sW / s4Long);
 
   // Stock pieces: each full long comes from one stock piece (PPi)
   // Short pieces are cut from the same stock piece as the last long in each row
