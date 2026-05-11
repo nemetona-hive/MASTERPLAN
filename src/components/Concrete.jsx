@@ -22,13 +22,9 @@ function SheetConcrete() {
   const [bagPrice, setBagPrice] = React.useState("");
 
   const [activePreset, setActivePreset] = React.useState(null);
-  const [flashIdx,     setFlashIdx]     = React.useState(null);
-  const [fieldFlash,   setFieldFlash]   = React.useState(false);
-  const [showUpdated,  setShowUpdated]  = React.useState(false);
-
-  const flashTimerRef  = React.useRef(null);
-  const noteTimerRef   = React.useRef(null);
-  const fieldTimerRef  = React.useRef(null);
+  const [flashIdx,     setFlashIdx]     = useTimedState(null, 1200);
+  const [fieldFlash,   setFieldFlash]   = useTimedState(false, 900);
+  const [showUpdated,  setShowUpdated]  = useTimedState(false, 2500);
   const rateInputRef   = React.useRef(null);
 
   const [showRatePresets, setShowRatePresets] = React.useState(false);
@@ -48,18 +44,13 @@ function SheetConcrete() {
   const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
 
   const saveConcreteDefaults = async () => {
-    setPresetSaveStatus("saving");
+    setPresetSaveStatus("saving", 0);
     try {
-      if (typeof saveStaticDefaults === "undefined") {
-        throw new Error("saveStaticDefaults is not available");
-      }
-      await saveStaticDefaults("concretePresets", presets);
+      await safeSaveStaticDefaults("concretePresets", presets);
       setPresetSaveStatus("saved");
-      setTimeout(() => setPresetSaveStatus(""), 2500);
     } catch (err) {
       console.error(err);
       setPresetSaveStatus("error");
-      setTimeout(() => setPresetSaveStatus(""), 3500);
     }
   };
   
@@ -94,45 +85,19 @@ function SheetConcrete() {
     setBagPrice(p.bagPrice);
 
     setActivePreset(idx);
-
-    clearTimeout(flashTimerRef.current);
     setFlashIdx(idx);
-    flashTimerRef.current = setTimeout(() => setFlashIdx(null), 1200);
-
-    clearTimeout(fieldTimerRef.current);
     setFieldFlash(true);
-    fieldTimerRef.current = setTimeout(() => setFieldFlash(false), 900);
-
-    clearTimeout(noteTimerRef.current);
     setShowUpdated(true);
-    noteTimerRef.current = setTimeout(() => setShowUpdated(false), 2500);
   };
 
   const handleRateChange     = v => { setRate(v);     setActivePreset(null); };
   const handleBagKgChange    = v => { setBagKg(v);    setActivePreset(null); };
   const handleBagPriceChange = v => { setBagPrice(v); setActivePreset(null); };
 
-  React.useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (rateInputRef.current && !rateInputRef.current.contains(e.target)) {
-        setShowRatePresets(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      clearTimeout(flashTimerRef.current);
-      clearTimeout(noteTimerRef.current);
-      clearTimeout(fieldTimerRef.current);
-    };
-  }, []);
+  useClickOutside([rateInputRef], () => setShowRatePresets(false));
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const parseNum = (v) => {
-    if (v === "" || v === null || v === undefined) return 0;
-    const n = parseFloat(v);
-    return isNaN(n) ? 0 : n;
-  };
+  const parseNum = toNumber;
 
   const area = areaMode === "dims"
     ? (parseNum(lenMm) * parseNum(widMm)) / 1_000_000
