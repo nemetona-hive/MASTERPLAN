@@ -12,7 +12,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
-    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} theme={theme} setTheme={setTheme} /></div>;
+    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} /></div>;
   }
 
   let content = null;
@@ -43,7 +43,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
   );
 }
 
-const DEV_MODE = false;
+const DEV_MODE = false; // reserved for future use
 
 function App() {
   const [page, setPageState]                = useState(getHashPage);
