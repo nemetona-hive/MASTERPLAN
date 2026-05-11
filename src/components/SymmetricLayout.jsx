@@ -1,6 +1,5 @@
 function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
-  const [surfaceOpen, setSurfaceOpen] = React.useState(true);
 
   // ── Material presets (shared with pattern layouts) ─────────────────────────
   const presets = React.useMemo(() =>
@@ -35,7 +34,7 @@ function SheetSymmetricLayout({ sym, setSym }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
-        <ControlPanel id="control-sym-surface" title="Inputs" open={surfaceOpen} setOpen={setSurfaceOpen} noToggle>
+        <ControlPanel id="control-sym-surface" title="Inputs" noToggle>
           <Stack gap={3}>
             <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth} onChange={v => setSym(s => ({ ...s, roomWidth: Math.max(100, Math.min(50000, Number(v) || 100)) }))} step={10} min={100} />
             <div ref={widWrapRef} style={{ position: "relative" }}>
@@ -43,7 +42,7 @@ function SheetSymmetricLayout({ sym, setSym }) {
                 id="input-sym-panel-width"
                 label="Product width (mm)"
                 value={sym.panelWidth}
-                onChange={v => { setSym(s => ({ ...s, panelWidth: Math.max(100, Math.min(50000, Number(v) || 100)) })); setActivePreset(null); }}
+                onChange={v => { setSym(s => ({ ...s, panelWidth: Math.max(100, Math.min(8000, Number(v) || 100)) })); setActivePreset(null); }}
                 step={10}
                 min={100}
                 onFocus={() => setShowWidDropdown(true)}
