@@ -39,8 +39,8 @@ function calcRowResult(row) {
 function SheetTimesheet() {
   const [calcRows,    setCalcRows]    = useState(makeCalcRows);
   const [activeRowId, setActiveRowId] = useState(null);
-  const [copied,      setCopied]      = useState(false);
-  const [copyError,   setCopyError]   = useState(false);
+  const [copied,      setCopied]      = useTimedState(false, 1800);
+  const [copyError,   setCopyError]   = useTimedState(false, 1800);
 
   const nextCalcId = React.useRef(4);
   const startRefs  = React.useRef({});
@@ -106,16 +106,13 @@ function SheetTimesheet() {
     if (!hasCalcTotal) return;
     if (!navigator.clipboard) {
       setCopyError(true);
-      setTimeout(() => setCopyError(false), 1800);
       return;
     }
     navigator.clipboard.writeText(fmtDecimal(calcTotalMins)).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
     }).catch(err => {
       console.error('Clipboard copy failed:', err);
       setCopyError(true);
-      setTimeout(() => setCopyError(false), 1800);
     });
   };
 
