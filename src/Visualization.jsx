@@ -10,27 +10,7 @@ function PanelSummary({ rows, hoveredType, setHoveredType }) {
   );
 }
 
-function rowSignature(row) {
-  return row.segs
-    .map(seg => [seg.type, Math.round(seg.x), Math.round(seg.w), seg.long ? 1 : 0, seg.sourceId || ""].join(":"))
-    .join("|") + (row.long ? "-L" : "-S") + `-H${Math.round(row.h || 0)}`;
-}
 
-function groupAdjacentRows(rowsWithIndexes) {
-  const groups = [];
-  rowsWithIndexes.forEach(item => {
-    const signature = rowSignature(item.row);
-    const last = groups[groups.length - 1];
-    const rowHeight = Number.isFinite(item.row.h) && item.row.h > 0 ? item.row.h : 1;
-    if (last && last.signature === signature) {
-      last.items.push(item);
-      last.height += rowHeight;
-    } else {
-      groups.push({ signature, items: [item], height: rowHeight });
-    }
-  });
-  return groups;
-}
 
 function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa } = result.meta;
@@ -217,8 +197,8 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
       <div style={{ display: "flex", alignItems: "stretch", gap: "var(--sp-2)" }}>
         <div style={{ position: "relative", flex: 1, aspectRatio, maxHeight: `${maxHeight}px` }}>
           {onLargePreview && (
-            <button type="button" className="viz-expand-btn" onClick={() => onLargePreview()} title="Open large preview">
-              <Icon name="maximize" />
+            <button type="button" className="viz-expand-btn" onClick={() => onLargePreview()} title={alwaysShowLabels ? "Close large preview" : "Open large preview"}>
+              <Icon name={alwaysShowLabels ? "minimize" : "maximize"} />
             </button>
           )}
           <svg
