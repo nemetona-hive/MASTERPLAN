@@ -14,6 +14,7 @@ const ICONS = {
   "chevron-down": "fa-solid fa-chevron-down",     // Section open
   "chevron-right": "fa-solid fa-chevron-right",    // Section closed
   "maximize": "fa-solid fa-expand",
+  "minimize": "fa-solid fa-compress",
 
   // Navigation sidebar
   "panel-left-close": "fa-solid fa-kaaba",   // Toggle sidebar
@@ -242,9 +243,15 @@ const DEFAULT_CONCRETE_PRESETS = [
   },
   {
     name: "mira x-plan",
-    rate: "1.7",
-    bagKg: "25",
-    bagPrice: "20"
+    rate: 1.7,
+    bagKg: 25,
+    bagPrice: 20
+  },
+  {
+    name: "sakret BE",
+    rate: 2.2,
+    bagKg: 25,
+    bagPrice: 3.6
   }
 ];
 
