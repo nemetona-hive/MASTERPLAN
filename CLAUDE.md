@@ -138,11 +138,12 @@ Best layout = fewest total pieces among valid results.
 
 ## Visualization
 
-- `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`
-- `PanelRowVis` — renders one row of segments as positioned divs (React.memo)
-- Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`
-- Gap segments get red hatched styling; others get palette classes from PAL_CLASSES
-- `hoveredType` cross-highlights between summary rows and visualization segments
+- `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`.
+- **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
+- `PanelSummary` — displays detailed statistics and counts for segments.
+- Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`.
+- Gap segments get red hatched styling; others get palette classes from PAL_CLASSES.
+- `hoveredType` cross-highlights between summary rows and visualization segments.
 - Pattern layout chart geometry must render real physical rows/columns, not grouped rows.
 - `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.
 - In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.
