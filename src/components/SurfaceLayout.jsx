@@ -302,9 +302,12 @@ function LayoutSettings({ sh, setField, setSh }) {
 
   return (
     <Stack gap={3}>
-      <Stack gap={1} className="ctrl-lbl">
-        <span className="ctrl-sublbl">Direction</span>
-        <div id="ctrl-direction" className="seg-group">
+      <div style={{ padding: "var(--sp-3)", borderRadius: "14px", border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)", background: "color-mix(in srgb, var(--color-primary) 6%, transparent)" }}>
+        <Stack gap={1} className="ctrl-lbl">
+          <span className="ctrl-sublbl" style={{ fontSize: "var(--fs-lg)", fontWeight: "var(--fw-bold)" }}>Direction</span>
+          <span className="ctrl-sublbl" style={{ opacity: 0.75 }}>Primary layout axis for the pattern preview.</span>
+        </Stack>
+        <div id="ctrl-direction" className="seg-group" style={{ marginTop: "var(--sp-2)" }}>
           {["V", "H"].map(s => (
             <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
               onClick={() => setSh(st => {
@@ -324,40 +327,42 @@ function LayoutSettings({ sh, setField, setSh }) {
               })}>{s}</button>
           ))}
         </div>
-      </Stack>
-      <Stack gap={1} className="ctrl-lbl">
-        <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
-        <div id="ctrl-row-order" className="seg-group">
-          <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
-            onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
-            {direction === "V" ? "R1 Left" : "R1 top"}
-          </button>
-          <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
-            onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
-            {direction === "V" ? "R1 Right" : "R1 bottom"}
-          </button>
-        </div>
-      </Stack>
-      <Stack gap={1} className="ctrl-lbl">
-        <span className="ctrl-sublbl">Layout Start</span>
-        <div id="ctrl-pattern-start" className="seg-group">
-          {direction === "V" ? (
-            <>
-              <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>bottom</button>
-              <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>top</button>
-            </>
-          ) : (
-            <>
-              <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>left</button>
-              <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>right</button>
-            </>
-          )}
-        </div>
-      </Stack>
+      </div>
+      <div style={{ padding: "var(--sp-3)", borderRadius: "14px", border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)", background: "color-mix(in srgb, var(--color-primary) 6%, transparent)" }}>
+        <Stack gap={1} className="ctrl-lbl">
+          <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
+          <div id="ctrl-row-order" className="seg-group">
+            <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
+              onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
+              {direction === "V" ? "R1 Left" : "R1 top"}
+            </button>
+            <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
+              onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
+              {direction === "V" ? "R1 Right" : "R1 bottom"}
+            </button>
+          </div>
+        </Stack>
+        <Stack gap={1} className="ctrl-lbl" style={{ marginTop: "var(--sp-3)" }}>
+          <span className="ctrl-sublbl">Layout Start</span>
+          <div id="ctrl-pattern-start" className="seg-group">
+            {direction === "V" ? (
+              <>
+                <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
+                  onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>bottom</button>
+                <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
+                  onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>top</button>
+              </>
+            ) : (
+              <>
+                <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
+                  onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>left</button>
+                <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
+                  onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>right</button>
+              </>
+            )}
+          </div>
+        </Stack>
+      </div>
       <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
       <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
         onChange={v => setField("startOff", v => Math.min(v, Math.max(1, PPi) - 1))(v)} step={10} min={0} />
