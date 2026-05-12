@@ -435,6 +435,28 @@ function Text({ children, size, weight, variant, color, className = "", style = 
   );
 }
 
+function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, className = "", style = {} }) {
+  if (typeof canSaveStaticDefaults === "undefined" || !canSaveStaticDefaults()) return null;
+  const {
+    savingLabel = "Saving...",
+    savedLabel = <><Icon name="check" /> Saved Defaults</>,
+    errorLabel = "Error Saving",
+    defaultLabel = <><Icon name="check" /> Save Defaults</>
+  } = labels;
+
+  return (
+    <button
+      className={["ctrl-dir", status === "saved" ? "on pw-preset-flash" : "", className].filter(Boolean).join(" ")}
+      type="button"
+      onClick={onClick}
+      disabled={disabled || status === "saving"}
+      style={style}
+    >
+      {status === "saving" ? savingLabel : status === "saved" ? savedLabel : status === "error" ? errorLabel : defaultLabel}
+    </button>
+  );
+}
+
 function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
