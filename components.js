@@ -93,16 +93,14 @@ function useTimedSet(defaultDelay = 600) {
 function useClickOutside(refs, handler, active = true) {
   React.useEffect(() => {
     if (!active) return;
-    const onMouseDown = e => {
+    const onPointerDown = e => {
       const target = e.target;
       const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
       if (!clickedInside) handler(e);
     };
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("touchstart", onMouseDown);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
-      document.removeEventListener("mousedown", onMouseDown);
-      document.removeEventListener("touchstart", onMouseDown);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [handler, active]);
 }
@@ -149,9 +147,8 @@ function useProtectedRangeSlider(onChange) {
     startY: 0,
     isScrolling: false
   });
-  const isMobileMode = isMobileViewport();
   const onTouchStart = e => {
-    if (!isMobileMode) return;
+    if (!isMobileViewport()) return;
     const touch = e.touches[0];
     touchState.current = {
       startX: touch.clientX,
@@ -160,7 +157,7 @@ function useProtectedRangeSlider(onChange) {
     };
   };
   const onTouchMove = e => {
-    if (!isMobileMode || touchState.current.isScrolling) return;
+    if (!isMobileViewport() || touchState.current.isScrolling) return;
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchState.current.startX;
     const deltaY = touch.clientY - touchState.current.startY;
@@ -172,6 +169,7 @@ function useProtectedRangeSlider(onChange) {
     }
   };
   const protectedOnChange = e => {
+    const isMobileMode = isMobileViewport();
     // On desktop, always allow changes
     if (!isMobileMode) {
       onChange(e);
@@ -3150,29 +3148,35 @@ function SheetSurfaceLayout({
       className: "mp-modal-body"
     }, /*#__PURE__*/React.createElement(Stack, {
       gap: 4
-    }, currentResult.summaryRows.length > 0 && /*#__PURE__*/React.createElement(PanelSummary, {
+    }, currentResult.summaryRows.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "summary-grid"
+    }, /*#__PURE__*/React.createElement(PanelSummary, {
       rows: currentResult.summaryRows,
       hoveredType: hoveredType,
       setHoveredType: setHoveredType
-    }), /*#__PURE__*/React.createElement("div", {
-      className: `large-layout-vis-wrap data-preview`
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "large-layout-vis-wrap data-preview",
+      style: {
+        background: "var(--color-bg-alt)",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--color-border)"
+      }
     }, /*#__PURE__*/React.createElement(LayoutVisualization, {
       result: currentResult,
       hoveredType: hoveredType,
       setHoveredType: setHoveredType,
       rowStart: rowStart,
-      maxHeight: 760,
+      maxHeight: 1000,
       alwaysShowLabels: true,
       onLargePreview: closeLargePreview
     })), /*#__PURE__*/React.createElement("div", {
-      className: "layout-split",
+      className: "large-preview-grid",
       style: {
-        gridTemplateColumns: "1fr 1fr 2fr",
-        marginTop: "var(--sp-2)",
-        alignItems: "stretch"
+        paddingBottom: "var(--sp-6)"
       }
     }, /*#__PURE__*/React.createElement(Stack, {
-      gap: 4
+      gap: 4,
+      className: "u-hide-mobile"
     }, /*#__PURE__*/React.createElement(MaterialSpecification, {
       sh: sh,
       setSh: setSh,
@@ -3186,29 +3190,26 @@ function SheetSurfaceLayout({
       sh: sh,
       setSh: setSh,
       setSurf: setSurf
-    })), /*#__PURE__*/React.createElement("div", {
-      className: "control-panel",
-      style: {
-        margin: 0,
-        height: "100%"
-      }
+    })), /*#__PURE__*/React.createElement(ControlPanel, {
+      id: "control-settings-large",
+      title: "Layout Engine",
+      open: true,
+      noToggle: true,
+      className: "u-hide-mobile"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "panel-head"
-    }, /*#__PURE__*/React.createElement("span", null, "Layout Settings")), /*#__PURE__*/React.createElement("div", {
       className: "panel-data"
     }, /*#__PURE__*/React.createElement(LayoutSettings, {
       sh: sh,
       setField: setShField,
       setSh: setSh
-    }))), /*#__PURE__*/React.createElement("div", {
-      className: "control-panel",
-      style: {
-        margin: 0,
-        height: "100%"
-      }
+    }))), /*#__PURE__*/React.createElement(Stack, {
+      gap: 4
+    }, /*#__PURE__*/React.createElement(ControlPanel, {
+      id: "control-stats-large",
+      title: "Detailed Statistics",
+      open: true,
+      noToggle: true
     }, /*#__PURE__*/React.createElement("div", {
-      className: "panel-head"
-    }, /*#__PURE__*/React.createElement("span", null, "Detailed Statistics")), /*#__PURE__*/React.createElement("div", {
       className: "panel-data"
     }, (() => {
       const r = currentResult.rows;
@@ -3227,13 +3228,12 @@ function SheetSurfaceLayout({
         value: lastRow.h,
         unit: "mm"
       }));
-    })(), /*#__PURE__*/React.createElement("div", {
+    })())), /*#__PURE__*/React.createElement("div", {
       className: "pw-formula-text",
       style: {
-        opacity: 0.6,
-        marginTop: "var(--sp-2)"
+        opacity: 0.6
       }
-    }, "Advanced material analysis will appear here."))))))));
+    }, "Advanced material analysis and optimized cut-list integration will appear here in the next update.")))))));
   })());
 }
 function LayoutSettings({

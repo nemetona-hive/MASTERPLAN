@@ -229,13 +229,23 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
               </div>
               <div className="mp-modal-body">
                 <Stack gap={4}>
+                  {/* ── 1. TOP: Summary Bar ── */}
                   {currentResult.summaryRows.length > 0 &&
-                    <PanelSummary rows={currentResult.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
-                  <div className={`large-layout-vis-wrap data-preview`}>
-                    <LayoutVisualization result={currentResult} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
-                  </div>
-                  <div className="layout-split" style={{ gridTemplateColumns: "1fr 1fr 2fr", marginTop: "var(--sp-2)", alignItems: "stretch" }}>
-                    <Stack gap={4}>
+                    <div className="summary-grid">
+                      <PanelSummary rows={currentResult.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />
+                    </div>
+                  }
+                  
+                  {/* ── 2. MIDDLE: Visualization ── */}
+                    <div className="large-layout-vis-wrap data-preview" style={{ background: "var(--color-bg-alt)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)" }}>
+                      <LayoutVisualization result={currentResult} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={1000} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
+                    </div>
+
+                  {/* ── 3. BOTTOM: 3-Column Dashboard Split ── */}
+                  <div className="large-preview-grid" style={{ paddingBottom: "var(--sp-6)" }}>
+                    
+                    {/* Column 1: Material & Surface (25%) */}
+                    <Stack gap={4} className="u-hide-mobile">
                       <MaterialSpecification 
                         sh={sh} setSh={setSh} setMat={setMat} 
                         presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
@@ -243,44 +253,49 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                       />
                       <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
                     </Stack>
-                    <div className="control-panel" style={{ margin: 0, height: "100%" }}>
-                      <div className="panel-head"><span>Layout Settings</span></div>
+
+                    {/* Column 2: Layout Engine (25%) */}
+                    <ControlPanel id="control-settings-large" title="Layout Engine" open={true} noToggle className="u-hide-mobile">
                       <div className="panel-data">
                         <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
                       </div>
-                    </div>
-                    <div className="control-panel" style={{ margin: 0, height: "100%" }}>
-                      <div className="panel-head"><span>Detailed Statistics</span></div>
-                      <div className="panel-data">
-                        {(() => {
-                          const r = currentResult.rows;
-                          const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
-                          const lastRow  = rowStart === "bottom" ? r[0] : r[r.length - 1];
-                          return (
-                            <>
-                              <Row 
-                                label={sh.direction === "V" ? "Total columns" : "Total rows"} 
-                                value={r.length} 
-                                unit={sh.direction === "V" ? "cols" : "rows"} 
-                              />
-                              <Row 
-                                label={sh.direction === "V" ? "Left column width" : "Top row width"} 
-                                value={firstRow.h} 
-                                unit="mm" 
-                              />
-                              <Row 
-                                label={sh.direction === "V" ? "Right column width" : "Bottom row width"} 
-                                value={lastRow.h} 
-                                unit="mm" 
-                              />
-                            </>
-                          );
-                        })()}
-                        <div className="pw-formula-text" style={{ opacity: 0.6, marginTop: "var(--sp-2)" }}>
-                          Advanced material analysis will appear here.
+                    </ControlPanel>
+
+                    {/* Column 3: Detailed Statistics (50%) */}
+                    <Stack gap={4}>
+                      <ControlPanel id="control-stats-large" title="Detailed Statistics" open={true} noToggle>
+                        <div className="panel-data">
+                          {(() => {
+                            const r = currentResult.rows;
+                            const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
+                            const lastRow  = rowStart === "bottom" ? r[0] : r[r.length - 1];
+                            return (
+                              <>
+                                <Row 
+                                  label={sh.direction === "V" ? "Total columns" : "Total rows"} 
+                                  value={r.length} 
+                                  unit={sh.direction === "V" ? "cols" : "rows"} 
+                                />
+                                <Row 
+                                  label={sh.direction === "V" ? "Left column width" : "Top row width"} 
+                                  value={firstRow.h} 
+                                  unit="mm" 
+                                />
+                                <Row 
+                                  label={sh.direction === "V" ? "Right column width" : "Bottom row width"} 
+                                  value={lastRow.h} 
+                                  unit="mm" 
+                                />
+                              </>
+                            );
+                          })()}
                         </div>
+                      </ControlPanel>
+                      <div className="pw-formula-text" style={{ opacity: 0.6 }}>
+                        Advanced material analysis and optimized cut-list integration will appear here in the next update.
                       </div>
-                    </div>
+                    </Stack>
+
                   </div>
                 </Stack>
               </div>

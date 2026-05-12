@@ -101,17 +101,15 @@ function useClickOutside(refs, handler, active = true) {
   React.useEffect(() => {
     if (!active) return;
 
-    const onMouseDown = (e) => {
+    const onPointerDown = (e) => {
       const target = e.target;
       const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
       if (!clickedInside) handler(e);
     };
 
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("touchstart", onMouseDown);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
-      document.removeEventListener("mousedown", onMouseDown);
-      document.removeEventListener("touchstart", onMouseDown);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [handler, active]);
 }
@@ -155,10 +153,9 @@ function useDropdownKeyboard(itemsLength, onSelect, onClose) {
  */
 function useProtectedRangeSlider(onChange) {
   const touchState = React.useRef({ startX: 0, startY: 0, isScrolling: false });
-  const isMobileMode = isMobileViewport();
 
   const onTouchStart = (e) => {
-    if (!isMobileMode) return;
+    if (!isMobileViewport()) return;
     const touch = e.touches[0];
     touchState.current = {
       startX: touch.clientX,
@@ -168,7 +165,7 @@ function useProtectedRangeSlider(onChange) {
   };
 
   const onTouchMove = (e) => {
-    if (!isMobileMode || touchState.current.isScrolling) return;
+    if (!isMobileViewport() || touchState.current.isScrolling) return;
 
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchState.current.startX;
@@ -182,6 +179,7 @@ function useProtectedRangeSlider(onChange) {
   };
 
   const protectedOnChange = (e) => {
+    const isMobileMode = isMobileViewport();
     // On desktop, always allow changes
     if (!isMobileMode) {
       onChange(e);
