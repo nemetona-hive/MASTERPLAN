@@ -278,12 +278,6 @@ function NumInput({
       }
     }
   };
-
-  // Commits value AND signals explicit user confirmation (Enter / button)
-  const commitAndConfirm = () => {
-    commitValue();
-    if (onCommit) onCommit();
-  };
   return /*#__PURE__*/React.createElement("div", {
     className: "num-wrap"
   }, label && /*#__PURE__*/React.createElement("span", {
@@ -306,7 +300,13 @@ function NumInput({
     onKeyDown: e => {
       // Parent handler runs first — can e.preventDefault() to intercept Enter
       if (onKeyDown) onKeyDown(e);
-      if (e.key === "Enter" && !e.defaultPrevented) commitAndConfirm();
+      if (e.key === "Enter" && !e.defaultPrevented) {
+        e.preventDefault();
+        e.stopPropagation();
+        commitValue();
+        if (onCommit) onCommit();
+        e.target.blur();
+      }
     },
     onBlur: () => commitValue() // blur only commits value, no onCommit
     ,
@@ -314,7 +314,10 @@ function NumInput({
   }), /*#__PURE__*/React.createElement("button", {
     className: "num-btn",
     type: "button",
-    onClick: () => commitAndConfirm()
+    onClick: () => {
+      commitValue();
+      if (onCommit) onCommit();
+    }
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "corner-down-left"
   }))));
@@ -600,7 +603,7 @@ function MaterialPresetDropdown({
       role: "option",
       "aria-selected": isHovered,
       className: "rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : ""),
-      onMouseDown: e => {
+      onPointerDown: e => {
         e.preventDefault();
         e.stopPropagation();
         onApply(p, idx);
@@ -678,6 +681,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
         key: `${idx}-${segIndex}-${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.sourceId || ""}`,
         type: seg.type,
         sourceId: seg.sourceId,
+        isCarry: !!seg.sourceId,
         rowIndex: idx,
         segIndex,
         row,
@@ -819,6 +823,38 @@ function LayoutVisualization({
   } = React.useMemo(() => buildLayoutSvgRects(result, orderedRows, rowStart), [result, orderedRows, rowStart]);
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
+
+  // Build carry connector lines between adjacent rows at cut→offcut boundaries
+  const carryLines = React.useMemo(() => {
+    if (isV) return []; // connectors only in H mode for now
+    const lines = [];
+    for (let i = 0; i < orderedRows.length - 1; i++) {
+      const {
+        row: rowA
+      } = orderedRows[i];
+      const {
+        row: rowB
+      } = orderedRows[i + 1];
+      const cutSeg = rowA.segs[rowA.segs.length - 1];
+      const offcutSeg = rowB.segs[0];
+      if (cutSeg?.sourceId && offcutSeg?.sourceId === cutSeg.sourceId) {
+        // find the visual y positions from rowRects
+        const rrA = rowRects[i];
+        const rrB = rowRects[i + 1];
+        if (!rrA || !rrB) continue;
+        const boundary = rrA.y + rrA.h; // SVG y of row boundary
+        const x1 = cutSeg.x + cutSeg.w; // right edge of cut (= surfaceW)
+        const x2 = offcutSeg.x + offcutSeg.w; // right edge of offcut
+        lines.push({
+          x1,
+          x2,
+          y: boundary,
+          sourceId: cutSeg.sourceId
+        });
+      }
+    }
+    return lines;
+  }, [orderedRows, rowRects, isV]);
   const groupBands = showRowLabels ? rowRects.map(rr => {
     const originalIdx = parseInt(rr.key.replace("row-bg-", ""), 10);
     const label = `R${originalIdx + 1}`;
@@ -829,8 +865,8 @@ function LayoutVisualization({
   }) : [];
 
   // ── SVG viewBox ──
-  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.018) : 0;
-  const labelMargin = showRowLabels ? Math.round(labelFontSize * 2.2) : 0;
+  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.016) : 0;
+  const labelMargin = showRowLabels ? Math.round(labelFontSize * 3.6) : 0;
   const chartX = !isV ? labelMargin : 0;
   const chartY = isV ? labelMargin : 0;
   const totalVW = vW + chartX;
@@ -919,7 +955,7 @@ function LayoutVisualization({
       y: rect.y + chartY,
       width: rect.w,
       height: rect.h,
-      className: `layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`,
+      className: `layout-svg-seg ${rect.segClass}${rect.isCarry ? " is-carry" : ""}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`,
       style: rect.type === "gap" ? {
         fill: `url(#${gapHatchId})`
       } : undefined,
@@ -932,7 +968,14 @@ function LayoutVisualization({
       dominantBaseline: "middle",
       className: "layout-svg-label"
     }, rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : Math.round(rect.seg.w)));
-  }), groupBands.map(band => /*#__PURE__*/React.createElement("text", {
+  }), carryLines.map((cl, i) => /*#__PURE__*/React.createElement("line", {
+    key: `carry-${i}-${cl.sourceId}`,
+    x1: cl.x1 + chartX,
+    y1: cl.y + chartY,
+    x2: cl.x2 + chartX,
+    y2: cl.y + chartY,
+    className: "layout-svg-carry-line"
+  })), groupBands.map(band => /*#__PURE__*/React.createElement("text", {
     key: band.label,
     x: isV ? band.mid + chartX : chartX - labelFontSize * 0.5,
     y: isV ? chartY - labelFontSize * 0.5 : band.mid + chartY,
@@ -1857,7 +1900,7 @@ function SheetConcrete() {
       role: "option",
       "aria-selected": isHovered,
       className: "rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : ""),
-      onMouseDown: e => {
+      onPointerDown: e => {
         e.preventDefault();
         e.stopPropagation();
         applyPreset(p, originalIdx);
