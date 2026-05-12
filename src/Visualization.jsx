@@ -54,6 +54,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
         key: `${idx}-${segIndex}-${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.sourceId || ""}`,
         type: seg.type,
         sourceId: seg.sourceId,
+        isCarry: !!(seg.sourceId),
         rowIndex: idx,
         segIndex,
         row,
@@ -165,6 +166,29 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
 
+  // Build carry connector lines between adjacent rows at cut→offcut boundaries
+  const carryLines = React.useMemo(() => {
+    if (isV) return []; // connectors only in H mode for now
+    const lines = [];
+    for (let i = 0; i < orderedRows.length - 1; i++) {
+      const { row: rowA } = orderedRows[i];
+      const { row: rowB } = orderedRows[i + 1];
+      const cutSeg    = rowA.segs[rowA.segs.length - 1];
+      const offcutSeg = rowB.segs[0];
+      if (cutSeg?.sourceId && offcutSeg?.sourceId === cutSeg.sourceId) {
+        // find the visual y positions from rowRects
+        const rrA = rowRects[i];
+        const rrB = rowRects[i + 1];
+        if (!rrA || !rrB) continue;
+        const boundary = rrA.y + rrA.h; // SVG y of row boundary
+        const x1 = cutSeg.x + cutSeg.w;        // right edge of cut (= surfaceW)
+        const x2 = offcutSeg.x + offcutSeg.w;  // right edge of offcut
+        lines.push({ x1, x2, y: boundary, sourceId: cutSeg.sourceId });
+      }
+    }
+    return lines;
+  }, [orderedRows, rowRects, isV]);
+
   const groupBands = showRowLabels ? rowRects.map(rr => {
     const originalIdx = parseInt(rr.key.replace("row-bg-", ""), 10);
     const label = `R${originalIdx + 1}`;
@@ -175,8 +199,8 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
   }) : [];
 
   // ── SVG viewBox ──
-  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.018) : 0;
-  const labelMargin = showRowLabels ? Math.round(labelFontSize * 2.2) : 0;
+  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.016) : 0;
+  const labelMargin = showRowLabels ? Math.round(labelFontSize * 3.6) : 0;
   const chartX = !isV ? labelMargin : 0;
   const chartY = isV ? labelMargin : 0;
   const totalVW = vW + chartX;
@@ -227,7 +251,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
                 >
                   <rect
                     x={rect.x + chartX} y={rect.y + chartY} width={rect.w} height={rect.h}
-                    className={`layout-svg-seg ${rect.segClass}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
+                    className={`layout-svg-seg ${rect.segClass}${rect.isCarry ? " is-carry" : ""}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
                     style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
                     onMouseEnter={() => setHoveredType && setHoveredType(rect.type)}
                     onMouseLeave={() => setHoveredType && setHoveredType(null)}
@@ -243,6 +267,14 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
                 </g>
               );
             })}
+            {carryLines.map((cl, i) => (
+              <line
+                key={`carry-${i}-${cl.sourceId}`}
+                x1={cl.x1 + chartX} y1={cl.y + chartY}
+                x2={cl.x2 + chartX} y2={cl.y + chartY}
+                className="layout-svg-carry-line"
+              />
+            ))}
             {groupBands.map(band => (
               <text key={band.label}
                 x={isV ? band.mid + chartX : chartX - (labelFontSize * 0.5)}
