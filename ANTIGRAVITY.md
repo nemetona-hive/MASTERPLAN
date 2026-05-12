@@ -136,9 +136,41 @@ All calculators and pages are stored as standalone files inside `src/components/
 LAYOUT_REGISTRY in Controls.jsx maps s1–s4 to their compute functions and control components.
 Best layout = fewest total pieces among valid results.
 
+## Mobile / responsive
+
+- Mobile/Tablet breakpoint: width ≤ 1024px OR height ≤ 500px
+- Nav collapses to hamburger on mobile, sidebar on desktop
+- `isMobile` state in App.jsx drives nav behavior reactively on resize/rotate
+- `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
+- Large Preview modal is optimized for mobile by hiding non-essential controls and prioritizing visualization and statistics.
+
+## UI components (from shared.jsx)
+
+- `<Icon name="..." />` — renders FontAwesome icon via ICONS map
+- `<NumInput id label value onChange step min unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
+- `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle; uses `useProtectedRangeSlider` for mobile touch-scroll protection. Starts locked; click row or tap lock icon to unlock.
+- `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
+- `<Section title bg>` — collapsible section for preview area
+- `<DetailSection title open>` — collapsible section for secondary information or management UI
+- `<Collapsible>` — base for Section, ControlPanel, and DetailSection (variant="section"|"panel"|"detail")
+- `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
+- `<SLabel>` — simple label div for section headings in controls
+- `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
+- `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
+- `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
+- `useClickOutside(refs, handler, active)` — Unified interaction hook using `pointerdown` for robust cross-device detection.
+- `useDropdownKeyboard(count, onSelect, onClose)` — Specialized hook for keyboard navigation (Arrow keys, Enter, Esc) within custom dropdowns.
+- `.seg-group` — Container for exclusive mode-switch toggles; provides a unified border/boundary for grouped buttons.
+- `.pill-btn` — Minimalist, rounded buttons used for quick-select presets.
+- `.ctrl-dir` / `.ts-btn` — Standardized button styles with "premium glow" hover/active feedback. Standalone buttons use `var(--fs-md)` while segmented controls are bumped for legibility.
+
 ## Visualization
 
 - `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`.
+- **Large Preview Modal**: Full-screen analytical dashboard.
+  - **Live Synchronization**: Edits to material or surface inputs within the modal reflect immediately in the visualization and stats.
+  - **Dashboard Layout**: Uses a 3-column split (Material/Surface, Layout Engine, and Detailed Statistics).
+  - **Mobile Optimization**: Hides secondary settings on mobile to maximize visualization space; enables horizontal scrolling for wide room layouts.
 - **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
 - `PanelSummary` — displays detailed statistics and counts for segments.
 - Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`.
@@ -148,13 +180,6 @@ Best layout = fewest total pieces among valid results.
 - `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.
 - In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.
 - In `direction === "H"`, rows render horizontally and segment positions use `left`/`width`.
-
-## Mobile / responsive
-
-- Mobile breakpoint: width ≤ 768px OR height ≤ 500px
-- Nav collapses to hamburger on mobile, sidebar on desktop
-- `isMobile` state in App.jsx drives nav behavior reactively on resize/rotate
-- `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
 
 ## Local Static Defaults (Dev environment only)
 
