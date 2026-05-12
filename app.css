@@ -92,6 +92,7 @@ html, body, #root {
 	--viz-cut: #9aa8b3;
 	--viz-offcut: #6e7f8c;
 	--viz-edge: #d0bd86;
+	--viz-carry: #d4a030;
 
 	/* Legacy variables mapped to semantic tokens */
 	--color-primary: var(--brand);
@@ -3897,6 +3898,23 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .layout-svg-seg.color-cut { fill: var(--viz-cut); }
 .layout-svg-seg.color-edge { fill: var(--viz-edge); }
 .layout-svg-seg.color-sys1 { fill: var(--sys-s1); }
+
+.layout-svg-seg.is-carry {
+  stroke: var(--viz-carry);
+  stroke-width: 2;
+}
+
+.layout-svg-seg.is-carry.is-highlighted {
+  stroke: var(--color-white);
+}
+
+.layout-svg-carry-line {
+  stroke: var(--viz-carry);
+  stroke-width: 2;
+  opacity: 0.65;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
 
 .layout-svg-label {
   pointer-events: none;
