@@ -82,25 +82,9 @@ function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
     <>
       <div id="data-control" className="data-control">
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
-          {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
-            <div style={{ padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" }}>
-              <button 
-                className={"ctrl-dir on" + (saveStatus === "saved" ? " pw-preset-flash" : "")} 
-                onClick={saveGoldenRatioDefaults}
-                disabled={saveStatus === "saving"}
-              >
-                {saveStatus === "saving" ? (
-                  <>Saving...</>
-                ) : saveStatus === "saved" ? (
-                  <><Icon name="check" /> Saved Defaults</>
-                ) : saveStatus === "error" ? (
-                  <>Error Saving</>
-                ) : (
-                  <><Icon name="check" /> Save Defaults</>
-                )}
-              </button>
-            </div>
-          )}
+          <div style={{ padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" }}>
+            <SaveDefaultsButton status={saveStatus} onClick={saveGoldenRatioDefaults} />
+          </div>
           <Stack gap={2}>
             {baseItems.map(item => {
               const tone = getLinkedCardTone(item.id);
