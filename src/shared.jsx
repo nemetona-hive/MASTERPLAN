@@ -101,15 +101,17 @@ function useClickOutside(refs, handler, active = true) {
   React.useEffect(() => {
     if (!active) return;
 
-    const onPointerDown = (e) => {
+    const onMouseDown = (e) => {
       const target = e.target;
       const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
       if (!clickedInside) handler(e);
     };
 
-    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("touchstart", onMouseDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("touchstart", onMouseDown);
     };
   }, [handler, active]);
 }
@@ -247,7 +249,7 @@ function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
   );
 }
 
-function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinity, unit, req = false, onFocus, labelIcon, onKeyDown, onCommit }) {
+function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinity, unit, req = false, onFocus, onMouseDown, labelIcon, onKeyDown, onCommit }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
@@ -291,11 +293,11 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinit
               e.stopPropagation();
               commitValue();
               if (onCommit) onCommit();
-              e.target.blur();
             }
           }}
           onBlur={() => commitValue()}  // blur only commits value, no onCommit
-          onFocus={onFocus} />
+          onFocus={onFocus}
+          onMouseDown={onMouseDown} />
         <button
           className="num-btn"
           type="button"
@@ -527,7 +529,7 @@ function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, fie
               role="option"
               aria-selected={isHovered}
               className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
-              onPointerDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
+              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
             >
               <div className="rate-preset-info">
                 <span className="rate-preset-name">{p.name}</span>
