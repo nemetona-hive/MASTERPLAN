@@ -275,7 +275,7 @@ function SheetConcrete() {
                                   role="option"
                                   aria-selected={isHovered}
                                   className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
-                                  onMouseDown={(e) => {
+                                  onPointerDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     applyPreset(p, originalIdx);
