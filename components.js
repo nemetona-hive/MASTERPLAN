@@ -106,6 +106,35 @@ function useClickOutside(refs, handler, active = true) {
     };
   }, [handler, active]);
 }
+function useDropdownKeyboard(itemsLength, onSelect, onClose) {
+  const [hoveredIndex, setHoveredIndex] = React.useState(-1);
+
+  // Reset hovered index when items change or dropdown opens
+  React.useEffect(() => {
+    setHoveredIndex(-1);
+  }, [itemsLength]);
+  const onKeyDown = e => {
+    if (itemsLength === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHoveredIndex(prev => prev < itemsLength - 1 ? prev + 1 : 0);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHoveredIndex(prev => prev > 0 ? prev - 1 : itemsLength - 1);
+    } else if (e.key === "Enter" && hoveredIndex >= 0) {
+      e.preventDefault(); // Prevent NumInput from committing its partial value
+      onSelect(hoveredIndex);
+      onClose();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+    }
+  };
+  return {
+    hoveredIndex,
+    onKeyDown
+  };
+}
 
 /**
  * Hook for protecting range sliders from accidental touch during scroll on mobile.
@@ -223,22 +252,27 @@ function NumInput({
   onChange,
   step = 1,
   min = 0,
+  max = Infinity,
   unit,
   req = false,
   onFocus,
-  labelIcon
+  labelIcon,
+  onKeyDown,
+  onCommit
 }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   React.useEffect(() => {
     setLocal(value === "" ? "" : String(value));
   }, [value]);
-  const commit = () => {
+
+  // Commits the numeric value — called on blur and as part of confirm
+  const commitValue = () => {
     if (local === "") {
       onChange("");
     } else {
       const n = Number(local);
       if (!isNaN(n)) {
-        const val = Math.max(min, Math.round(n * 100) / 100);
+        const val = Math.max(min, Math.min(max, Math.round(n * 100) / 100));
         onChange(val);
         setLocal(String(val));
       } else {
@@ -246,9 +280,15 @@ function NumInput({
       }
     }
   };
+
+  // Commits value AND signals explicit user confirmation (Enter / button)
+  const commitAndConfirm = () => {
+    commitValue();
+    if (onCommit) onCommit();
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "num-wrap"
-  }, /*#__PURE__*/React.createElement("span", {
+  }, label && /*#__PURE__*/React.createElement("span", {
     className: "num-lbl"
   }, label, labelIcon && /*#__PURE__*/React.createElement(Icon, {
     name: labelIcon,
@@ -262,15 +302,21 @@ function NumInput({
     type: "number",
     value: local,
     min: min,
+    max: max === Infinity ? undefined : max,
     step: step,
     onChange: e => setLocal(e.target.value),
-    onKeyDown: e => e.key === "Enter" && commit(),
-    onBlur: () => commit(),
+    onKeyDown: e => {
+      // Parent handler runs first — can e.preventDefault() to intercept Enter
+      if (onKeyDown) onKeyDown(e);
+      if (e.key === "Enter" && !e.defaultPrevented) commitAndConfirm();
+    },
+    onBlur: () => commitValue() // blur only commits value, no onCommit
+    ,
     onFocus: onFocus
   }), /*#__PURE__*/React.createElement("button", {
     className: "num-btn",
     type: "button",
-    onClick: () => commit()
+    onClick: () => commitAndConfirm()
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "corner-down-left"
   }))));
@@ -513,7 +559,8 @@ function MaterialPresetDropdown({
   presets,
   activePreset,
   onApply,
-  field
+  field,
+  hoveredIndex = -1
 }) {
   const [pos, setPos] = React.useState({
     top: 0,
@@ -542,14 +589,19 @@ function MaterialPresetDropdown({
   }, /*#__PURE__*/React.createElement("div", {
     className: "rate-presets-header"
   }, "Material Presets"), /*#__PURE__*/React.createElement("div", {
-    className: "rate-presets-list"
+    className: "rate-presets-list",
+    role: "listbox"
   }, presets.map((p, idx) => {
     if (!p.name) return null;
     const displayVal = field === "width" ? p.width : p.length;
     const displayUnit = field === "width" ? "w" : "l";
+    const isActive = activePreset === idx;
+    const isHovered = hoveredIndex === idx;
     return /*#__PURE__*/React.createElement("div", {
       key: idx,
-      className: "rate-preset-item" + (activePreset === idx ? " active" : ""),
+      role: "option",
+      "aria-selected": isHovered,
+      className: "rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : ""),
       onMouseDown: e => {
         e.preventDefault();
         e.stopPropagation();
@@ -1590,6 +1642,11 @@ function SheetConcrete() {
     setActivePreset(null);
   };
   useClickOutside([rateInputRef], () => setShowRatePresets(false));
+  const validPresets = presets.filter(p => p.name);
+  const {
+    hoveredIndex,
+    onKeyDown
+  } = useDropdownKeyboard(showRatePresets ? validPresets.length : 0, idx => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])), () => setShowRatePresets(false));
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const parseNum = toNumber;
@@ -1783,22 +1840,29 @@ function SheetConcrete() {
     step: 0.1,
     onChange: handleRateChange,
     req: hasAnyInput && !rate,
-    onFocus: () => setShowRatePresets(true)
-  }), showRatePresets && /*#__PURE__*/React.createElement("div", {
+    onFocus: () => setShowRatePresets(true),
+    onCommit: () => setShowRatePresets(false),
+    onKeyDown: onKeyDown
+  }), showRatePresets && validPresets.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "rate-presets-dropdown"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rate-presets-header"
   }, "Quick Presets"), /*#__PURE__*/React.createElement("div", {
-    className: "rate-presets-list"
-  }, presets.map((p, idx) => {
-    if (!p.name) return null;
+    className: "rate-presets-list",
+    role: "listbox"
+  }, validPresets.map((p, idx) => {
+    const originalIdx = presets.indexOf(p);
+    const isActive = activePreset === originalIdx;
+    const isHovered = hoveredIndex === idx;
     return /*#__PURE__*/React.createElement("div", {
       key: idx,
-      className: "rate-preset-item" + (activePreset === idx ? " active" : ""),
+      role: "option",
+      "aria-selected": isHovered,
+      className: "rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : ""),
       onMouseDown: e => {
         e.preventDefault();
         e.stopPropagation();
-        applyPreset(p, idx);
+        applyPreset(p, originalIdx);
         setShowRatePresets(false);
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -2143,20 +2207,13 @@ function PipeWrapCalculator() {
     value: overlap,
     className: "pw-adj-range",
     onChange: e => setOverlap(e.target.value)
-  }), /*#__PURE__*/React.createElement("input", {
+  }), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-overlap-val",
-    name: "input-overlap-val",
-    type: "number",
-    className: "num-input pw-adj-val",
+    value: overlap,
     min: 0,
     max: 200,
     step: 1,
-    value: overlap,
-    onChange: e => setOverlap(e.target.value),
-    onBlur: e => {
-      const v = e.target.value;
-      if (v === "") setOverlap("");else setOverlap(Math.max(0, Math.min(200, parseFloat(v) || 0)));
-    }
+    onChange: setOverlap
   })), /*#__PURE__*/React.createElement(Stack, {
     direction: "row",
     gap: 3,
@@ -2171,20 +2228,13 @@ function PipeWrapCalculator() {
     value: gap,
     className: "pw-adj-range",
     onChange: e => setGap(e.target.value)
-  }), /*#__PURE__*/React.createElement("input", {
+  }), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-gap-val",
-    name: "input-gap-val",
-    type: "number",
-    className: "num-input pw-adj-val",
+    value: gap,
     min: 0,
     max: 200,
     step: 1,
-    value: gap,
-    onChange: e => setGap(e.target.value),
-    onBlur: e => {
-      const v = e.target.value;
-      if (v === "") setGap("");else setGap(Math.max(0, Math.min(200, parseFloat(v) || 0)));
-    }
+    onChange: setGap
   })))), /*#__PURE__*/React.createElement("div", {
     className: "section unboxed",
     style: {
@@ -2671,6 +2721,10 @@ function SheetSymmetricLayout({
     setActivePreset(idx);
     setShowWidDropdown(false);
   };
+  const {
+    hoveredIndex,
+    onKeyDown
+  } = useDropdownKeyboard(showWidDropdown ? presets.length : 0, idx => applyPreset(presets[idx], idx), () => setShowWidDropdown(false));
   const layout = {
     id: "s0",
     title: "Symmetric layout",
@@ -2722,13 +2776,16 @@ function SheetSymmetricLayout({
     },
     step: 10,
     min: 100,
-    onFocus: () => setShowWidDropdown(true)
+    onFocus: () => setShowWidDropdown(true),
+    onCommit: () => setShowWidDropdown(false),
+    onKeyDown: onKeyDown
   }), showWidDropdown && presets.length > 0 && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
     anchorRef: widWrapRef,
     presets: presets,
     activePreset: activePreset,
     onApply: applyPreset,
-    field: "width"
+    field: "width",
+    hoveredIndex: hoveredIndex
   })))), /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-sym-settings",
     title: "Settings",
@@ -3223,12 +3280,23 @@ function LayoutSettings({
   }, ["V", "H"].map(s => /*#__PURE__*/React.createElement("button", {
     key: s,
     className: "ctrl-dir " + (direction === s ? "on" : ""),
-    onClick: () => setSh(st => ({
-      ...st,
-      direction: s,
-      rowStart: s === "V" ? "top" : st.rowStart,
-      patternStart: s === "V" ? "bottom" : "left"
-    }))
+    onClick: () => setSh(st => {
+      const curDir = st.direction;
+      const rsKey = curDir === "V" ? "rowStartV" : "rowStartH";
+      const psKey = curDir === "V" ? "patternStartV" : "patternStartH";
+      const trsKey = s === "V" ? "rowStartV" : "rowStartH";
+      const tpsKey = s === "V" ? "patternStartV" : "patternStartH";
+      return {
+        ...st,
+        [rsKey]: st.rowStart,
+        // save current rowStart
+        [psKey]: st.patternStart || (curDir === "V" ? "bottom" : "left"),
+        // save current patternStart
+        direction: s,
+        rowStart: st[trsKey] || (s === "V" ? "top" : "bottom"),
+        patternStart: st[tpsKey] || (s === "V" ? "bottom" : "left")
+      };
+    })
   }, s)))), /*#__PURE__*/React.createElement(Stack, {
     gap: 1,
     className: "ctrl-lbl"
@@ -3254,7 +3322,7 @@ function LayoutSettings({
     className: "ctrl-lbl"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ctrl-sublbl"
-  }, "Start side"), /*#__PURE__*/React.createElement("div", {
+  }, "Layout Start"), /*#__PURE__*/React.createElement("div", {
     id: "ctrl-pattern-start",
     className: "seg-group"
   }, direction === "V" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
@@ -3263,25 +3331,25 @@ function LayoutSettings({
       ...st,
       patternStart: "bottom"
     }))
-  }, "from bottom"), /*#__PURE__*/React.createElement("button", {
+  }, "bottom"), /*#__PURE__*/React.createElement("button", {
     className: "ctrl-dir " + (patternStart === "top" ? "on" : ""),
     onClick: () => setSh(st => ({
       ...st,
       patternStart: "top"
     }))
-  }, "from top")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+  }, "top")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
     className: "ctrl-dir " + (patternStart === "left" ? "on" : ""),
     onClick: () => setSh(st => ({
       ...st,
       patternStart: "left"
     }))
-  }, "from left"), /*#__PURE__*/React.createElement("button", {
+  }, "left"), /*#__PURE__*/React.createElement("button", {
     className: "ctrl-dir " + (patternStart === "right" ? "on" : ""),
     onClick: () => setSh(st => ({
       ...st,
       patternStart: "right"
     }))
-  }, "from right")))), /*#__PURE__*/React.createElement(NumInput, {
+  }, "right")))), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-minJ",
     label: "Min remainder (mm)",
     value: minJ,
@@ -3313,6 +3381,15 @@ function MaterialSpecification({
     PLa,
     PPi
   } = sh;
+  const validPresets = presets.filter(p => p.name);
+  const {
+    hoveredIndex: widHovered,
+    onKeyDown: onWidKeyDown
+  } = useDropdownKeyboard(activePresetDropdown === "wid" ? validPresets.length : 0, idx => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])), () => setActivePresetDropdown(null));
+  const {
+    hoveredIndex: lenHovered,
+    onKeyDown: onLenKeyDown
+  } = useDropdownKeyboard(activePresetDropdown === "len" ? validPresets.length : 0, idx => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])), () => setActivePresetDropdown(null));
   return /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-material",
     title: "Material Specification",
@@ -3333,13 +3410,16 @@ function MaterialSpecification({
     onChange: setMat("PLa"),
     step: 10,
     min: 100,
-    onFocus: () => setActivePresetDropdown("wid")
-  }), activePresetDropdown === "wid" && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    onFocus: () => setActivePresetDropdown("wid"),
+    onCommit: () => setActivePresetDropdown(null),
+    onKeyDown: onWidKeyDown
+  }), activePresetDropdown === "wid" && validPresets.length > 0 && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
     anchorRef: widWrapRef,
-    presets: presets,
+    presets: validPresets,
     activePreset: activePreset,
     onApply: applyPreset,
-    field: "width"
+    field: "width",
+    hoveredIndex: widHovered
   })), /*#__PURE__*/React.createElement("div", {
     className: fieldFlash ? "num-input-flash" : "",
     ref: lenWrapRef,
@@ -3354,13 +3434,16 @@ function MaterialSpecification({
     onChange: setMat("PPi"),
     step: 10,
     min: 100,
-    onFocus: () => setActivePresetDropdown("len")
-  }), activePresetDropdown === "len" && presets.some(p => p.name) && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
+    onFocus: () => setActivePresetDropdown("len"),
+    onCommit: () => setActivePresetDropdown(null),
+    onKeyDown: onLenKeyDown
+  }), activePresetDropdown === "len" && validPresets.length > 0 && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
     anchorRef: lenWrapRef,
-    presets: presets,
+    presets: validPresets,
     activePreset: activePreset,
     onApply: applyPreset,
-    field: "length"
+    field: "length",
+    hoveredIndex: lenHovered
   })), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
     className: "ctrl-dir",
     style: {

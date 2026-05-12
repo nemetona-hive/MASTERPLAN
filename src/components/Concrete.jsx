@@ -96,6 +96,13 @@ function SheetConcrete() {
 
   useClickOutside([rateInputRef], () => setShowRatePresets(false));
 
+  const validPresets = presets.filter(p => p.name);
+  const { hoveredIndex, onKeyDown } = useDropdownKeyboard(
+    showRatePresets ? validPresets.length : 0,
+    (idx) => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])),
+    () => setShowRatePresets(false)
+  );
+
   // ── Derived values ─────────────────────────────────────────────────────────
   const parseNum = toNumber;
 
@@ -250,22 +257,28 @@ function SheetConcrete() {
                         onChange={handleRateChange} 
                         req={hasAnyInput && !rate}
                         onFocus={() => setShowRatePresets(true)}
+                        onCommit={() => setShowRatePresets(false)}
+                        onKeyDown={onKeyDown}
                       />
                       
-                      {showRatePresets && (
+                      {showRatePresets && validPresets.length > 0 && (
                         <div className="rate-presets-dropdown">
                           <div className="rate-presets-header">Quick Presets</div>
-                          <div className="rate-presets-list">
-                            {presets.map((p, idx) => {
-                              if (!p.name) return null;
+                          <div className="rate-presets-list" role="listbox">
+                            {validPresets.map((p, idx) => {
+                              const originalIdx = presets.indexOf(p);
+                              const isActive = activePreset === originalIdx;
+                              const isHovered = hoveredIndex === idx;
                               return (
                                 <div 
                                   key={idx} 
-                                  className={"rate-preset-item" + (activePreset === idx ? " active" : "")}
+                                  role="option"
+                                  aria-selected={isHovered}
+                                  className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
                                   onMouseDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    applyPreset(p, idx);
+                                    applyPreset(p, originalIdx);
                                     setShowRatePresets(false);
                                   }}
                                 >

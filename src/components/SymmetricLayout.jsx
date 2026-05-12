@@ -17,6 +17,12 @@ function SheetSymmetricLayout({ sym, setSym }) {
     setShowWidDropdown(false);
   };
 
+  const { hoveredIndex, onKeyDown } = useDropdownKeyboard(
+    showWidDropdown ? presets.length : 0,
+    (idx) => applyPreset(presets[idx], idx),
+    () => setShowWidDropdown(false)
+  );
+
   const layout = {
     id: "s0", title: "Symmetric layout", description: "Equal edge pieces, full pieces in center",
     defaultOpen: true, renderControls: null, icon: "s0",
@@ -40,9 +46,11 @@ function SheetSymmetricLayout({ sym, setSym }) {
                 step={10}
                 min={100}
                 onFocus={() => setShowWidDropdown(true)}
+                onCommit={() => setShowWidDropdown(false)}
+                onKeyDown={onKeyDown}
               />
               {showWidDropdown && presets.length > 0 && (
-                <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />
+                <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" hoveredIndex={hoveredIndex} />
               )}
             </div>
           </Stack>

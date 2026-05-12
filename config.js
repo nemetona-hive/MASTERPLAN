@@ -187,6 +187,10 @@ const DEFAULT_SH = {
   offset: 0.5,
   direction: "H",
   rowStart: "bottom",
+  rowStartH: "bottom",
+  rowStartV: "top",
+  patternStartH: "left",
+  patternStartV: "bottom",
   minJ: 100,
   startOff: 0,
   s4Long: 2400

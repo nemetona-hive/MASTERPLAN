@@ -318,7 +318,21 @@ function LayoutSettings({ sh, setField, setSh }) {
         <div id="ctrl-direction" className="seg-group">
           {["V", "H"].map(s => (
             <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
-              onClick={() => setSh(st => ({ ...st, direction: s, rowStart: s === "V" ? "top" : st.rowStart, patternStart: s === "V" ? "bottom" : "left" }))}>{s}</button>
+              onClick={() => setSh(st => {
+                const curDir = st.direction;
+                const rsKey  = curDir === "V" ? "rowStartV"     : "rowStartH";
+                const psKey  = curDir === "V" ? "patternStartV" : "patternStartH";
+                const trsKey = s === "V"      ? "rowStartV"     : "rowStartH";
+                const tpsKey = s === "V"      ? "patternStartV" : "patternStartH";
+                return {
+                  ...st,
+                  [rsKey]: st.rowStart,       // save current rowStart
+                  [psKey]: st.patternStart || (curDir === "V" ? "bottom" : "left"), // save current patternStart
+                  direction: s,
+                  rowStart:     st[trsKey] || (s === "V" ? "top"    : "bottom"),
+                  patternStart: st[tpsKey] || (s === "V" ? "bottom" : "left")
+                };
+              })}>{s}</button>
           ))}
         </div>
       </Stack>
@@ -336,21 +350,21 @@ function LayoutSettings({ sh, setField, setSh }) {
         </div>
       </Stack>
       <Stack gap={1} className="ctrl-lbl">
-        <span className="ctrl-sublbl">Start side</span>
+        <span className="ctrl-sublbl">Layout Start</span>
         <div id="ctrl-pattern-start" className="seg-group">
           {direction === "V" ? (
             <>
               <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>from bottom</button>
+                onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>bottom</button>
               <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>from top</button>
+                onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>top</button>
             </>
           ) : (
             <>
               <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>from left</button>
+                onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>left</button>
               <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
-                onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>from right</button>
+                onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>right</button>
             </>
           )}
         </div>
@@ -363,6 +377,20 @@ function LayoutSettings({ sh, setField, setSh }) {
 }
 function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, activePresetDropdown, setActivePresetDropdown, widWrapRef, lenWrapRef, fieldFlash, setShowModal }) {
   const { PLa, PPi } = sh;
+  const validPresets = presets.filter(p => p.name);
+  
+  const { hoveredIndex: widHovered, onKeyDown: onWidKeyDown } = useDropdownKeyboard(
+    activePresetDropdown === "wid" ? validPresets.length : 0,
+    (idx) => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])),
+    () => setActivePresetDropdown(null)
+  );
+
+  const { hoveredIndex: lenHovered, onKeyDown: onLenKeyDown } = useDropdownKeyboard(
+    activePresetDropdown === "len" ? validPresets.length : 0,
+    (idx) => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])),
+    () => setActivePresetDropdown(null)
+  );
+
   return (
     <ControlPanel id="control-material" title="Material Specification" noToggle>
       <Stack gap={3}>
@@ -376,8 +404,10 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             step={10}
             min={100}
             onFocus={() => setActivePresetDropdown("wid")}
+            onCommit={() => setActivePresetDropdown(null)}
+            onKeyDown={onWidKeyDown}
           />
-          {activePresetDropdown === "wid" && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" />}
+          {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={applyPreset} field="width" hoveredIndex={widHovered} />}
         </div>
         <div className={fieldFlash ? "num-input-flash" : ""} ref={lenWrapRef} style={{ position: "relative" }}>
           <NumInput
@@ -389,8 +419,10 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             step={10}
             min={100}
             onFocus={() => setActivePresetDropdown("len")}
+            onCommit={() => setActivePresetDropdown(null)}
+            onKeyDown={onLenKeyDown}
           />
-          {activePresetDropdown === "len" && presets.some(p => p.name) && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="length" />}
+          {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={applyPreset} field="length" hoveredIndex={lenHovered} />}
         </div>
         {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
           <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>

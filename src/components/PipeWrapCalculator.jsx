@@ -105,19 +105,13 @@ function PipeWrapCalculator() {
                     className="pw-adj-range"
                     onChange={e => setOverlap(e.target.value)}
                   />
-                  <input
+                  <NumInput
                     id="input-overlap-val"
-                    name="input-overlap-val"
-                    type="number"
-                    className="num-input pw-adj-val"
-                    min={0} max={200} step={1}
                     value={overlap}
-                    onChange={e => setOverlap(e.target.value)}
-                    onBlur={e => {
-                      const v = e.target.value;
-                      if (v === "") setOverlap("");
-                      else setOverlap(Math.max(0, Math.min(200, parseFloat(v) || 0)));
-                    }}
+                    min={0}
+                    max={200}
+                    step={1}
+                    onChange={setOverlap}
                   />
                 </Stack>
 
@@ -130,19 +124,13 @@ function PipeWrapCalculator() {
                     className="pw-adj-range"
                     onChange={e => setGap(e.target.value)}
                   />
-                  <input
+                  <NumInput
                     id="input-gap-val"
-                    name="input-gap-val"
-                    type="number"
-                    className="num-input pw-adj-val"
-                    min={0} max={200} step={1}
                     value={gap}
-                    onChange={e => setGap(e.target.value)}
-                    onBlur={e => {
-                      const v = e.target.value;
-                      if (v === "") setGap("");
-                      else setGap(Math.max(0, Math.min(200, parseFloat(v) || 0)));
-                    }}
+                    min={0}
+                    max={200}
+                    step={1}
+                    onChange={setGap}
                   />
                 </Stack>
 

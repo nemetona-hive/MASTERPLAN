@@ -116,6 +116,36 @@ function useClickOutside(refs, handler, active = true) {
   }, [handler, active]);
 }
 
+function useDropdownKeyboard(itemsLength, onSelect, onClose) {
+  const [hoveredIndex, setHoveredIndex] = React.useState(-1);
+
+  // Reset hovered index when items change or dropdown opens
+  React.useEffect(() => {
+    setHoveredIndex(-1);
+  }, [itemsLength]);
+
+  const onKeyDown = (e) => {
+    if (itemsLength === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHoveredIndex(prev => (prev < itemsLength - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHoveredIndex(prev => (prev > 0 ? prev - 1 : itemsLength - 1));
+    } else if (e.key === "Enter" && hoveredIndex >= 0) {
+      e.preventDefault(); // Prevent NumInput from committing its partial value
+      onSelect(hoveredIndex);
+      onClose();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+    }
+  };
+
+  return { hoveredIndex, onKeyDown };
+}
+
 /**
  * Hook for protecting range sliders from accidental touch during scroll on mobile.
  * On mobile, touches are tracked to distinguish between horizontal slider adjustment
@@ -219,18 +249,19 @@ function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
   );
 }
 
-function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = false, onFocus, labelIcon }) {
+function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinity, unit, req = false, onFocus, labelIcon, onKeyDown, onCommit }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
 
-  const commit = () => {
+  // Commits the numeric value — called on blur and as part of confirm
+  const commitValue = () => {
     if (local === "") {
       onChange("");
     } else {
       const n = Number(local);
       if (!isNaN(n)) {
-        const val = Math.max(min, Math.round(n * 100) / 100);
+        const val = Math.max(min, Math.min(max, Math.round(n * 100) / 100));
         onChange(val);
         setLocal(String(val));
       } else {
@@ -239,9 +270,15 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = f
     }
   };
 
+  // Commits value AND signals explicit user confirmation (Enter / button)
+  const commitAndConfirm = () => {
+    commitValue();
+    if (onCommit) onCommit();
+  };
+
   return (
     <div className="num-wrap">
-      <span className="num-lbl">{label}{labelIcon && <Icon name={labelIcon} className="num-lbl-icon" />}</span>
+      {label && <span className="num-lbl">{label}{labelIcon && <Icon name={labelIcon} className="num-lbl-icon" />}</span>}
       <div className="num-row">
         <input
           id={id}
@@ -250,15 +287,20 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, unit, req = f
           type="number"
           value={local}
           min={min}
+          max={max === Infinity ? undefined : max}
           step={step}
           onChange={e => setLocal(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && commit()}
-          onBlur={() => commit()}
+          onKeyDown={e => {
+            // Parent handler runs first — can e.preventDefault() to intercept Enter
+            if (onKeyDown) onKeyDown(e);
+            if (e.key === "Enter" && !e.defaultPrevented) commitAndConfirm();
+          }}
+          onBlur={() => commitValue()}  // blur only commits value, no onCommit
           onFocus={onFocus} />
         <button
           className="num-btn"
           type="button"
-          onClick={() => commit()}>
+          onClick={() => commitAndConfirm()}>
           <Icon name="corner-down-left" />
         </button>
       </div>
@@ -457,7 +499,7 @@ function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, cl
   );
 }
 
-function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field }) {
+function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, hoveredIndex = -1 }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
   React.useLayoutEffect(() => {
@@ -470,15 +512,19 @@ function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, fie
   return ReactDOM.createPortal(
     <div className="rate-presets-dropdown" style={{ position: "absolute", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}>
       <div className="rate-presets-header">Material Presets</div>
-      <div className="rate-presets-list">
+      <div className="rate-presets-list" role="listbox">
         {presets.map((p, idx) => {
           if (!p.name) return null;
           const displayVal = field === "width" ? p.width : p.length;
           const displayUnit = field === "width" ? "w" : "l";
+          const isActive = activePreset === idx;
+          const isHovered = hoveredIndex === idx;
           return (
             <div
               key={idx}
-              className={"rate-preset-item" + (activePreset === idx ? " active" : "")}
+              role="option"
+              aria-selected={isHovered}
+              className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
             >
               <div className="rate-preset-info">

@@ -1095,7 +1095,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	border-bottom: none;
 }
 
-.rate-preset-item:hover {
+.rate-preset-item:hover,
+.rate-preset-item.focused {
 	background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
