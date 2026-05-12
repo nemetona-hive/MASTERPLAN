@@ -14,7 +14,6 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   );
   const [activePreset,    setActivePreset]    = React.useState(null);
   const [flashIdx,        setFlashIdx]        = useTimedState(null, 1200);
-  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const [showModal,       setShowModal]       = React.useState(false);
   const [largePreview,    setLargePreview]    = React.useState(null);
   const [fieldFlash,      setFieldFlash]      = useTimedState(false, 900);
@@ -22,17 +21,10 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
-  const lenWrapRef     = React.useRef(null);
-  const widWrapRef     = React.useRef(null);
-
-  useClickOutside([lenWrapRef, widWrapRef], () => {
-    setActivePresetDropdown(null);
-  });
 
   const applyPreset = (p, idx) => {
     setSh(s => ({ ...s, PPi: p.length, PLa: p.width }));
     setActivePreset(idx);
-    setActivePresetDropdown(null);
     setFlashIdx(idx);
     setFieldFlash(true);
   };
@@ -90,8 +82,6 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           <MaterialSpecification 
             sh={sh} setSh={setSh} setMat={setMat} 
             presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-            activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
-            widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
             fieldFlash={fieldFlash} setShowModal={setShowModal}
           />
           <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
@@ -108,8 +98,6 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         <MaterialSpecification 
           sh={sh} setSh={setSh} setMat={setMat} 
           presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-          activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
-          widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
           fieldFlash={fieldFlash} setShowModal={setShowModal}
         />
         <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
@@ -228,77 +216,78 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           </div>
         </div>
       )}
-      {largePreview && (
-        <div className="mp-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) closeLargePreview(); }}>
-          <div className="mp-modal mp-modal-large">
-            <div className="mp-modal-head">
-              <span>Large layout preview — {largePreview.layout.title}</span>
-              <button className="mp-modal-close" onClick={closeLargePreview}>
-                <Icon name="minus" />
-              </button>
-            </div>
-            <div className="mp-modal-body">
-              <Stack gap={4}>
-                {largePreview.result.summaryRows.length > 0 &&
-                  <PanelSummary rows={largePreview.result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
-                <div className={`large-layout-vis-wrap data-preview`}>
-                  <LayoutVisualization result={largePreview.result} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
-                </div>
-                <div className="layout-split" style={{ gridTemplateColumns: "1fr 1fr 2fr", marginTop: "var(--sp-2)", alignItems: "stretch" }}>
-                  <Stack gap={4}>
-                    <MaterialSpecification 
-                      sh={sh} setSh={setSh} setMat={setMat} 
-                      presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-                      activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
-                      widWrapRef={widWrapRef} lenWrapRef={lenWrapRef}
-                      fieldFlash={fieldFlash} setShowModal={setShowModal}
-                    />
-                    <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
-                  </Stack>
-                  <div className="control-panel" style={{ margin: 0, height: "100%" }}>
-                    <div className="panel-head"><span>Layout Settings</span></div>
-                    <div className="panel-data">
-                      <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
-                    </div>
+      {largePreview && (() => {
+        const currentResult = panelResultsById[largePreview.layout.id]?.result || largePreview.result;
+        return (
+          <div className="mp-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) closeLargePreview(); }}>
+            <div className="mp-modal mp-modal-large">
+              <div className="mp-modal-head">
+                <span>Large layout preview — {largePreview.layout.title}</span>
+                <button className="mp-modal-close" onClick={closeLargePreview}>
+                  <Icon name="minus" />
+                </button>
+              </div>
+              <div className="mp-modal-body">
+                <Stack gap={4}>
+                  {currentResult.summaryRows.length > 0 &&
+                    <PanelSummary rows={currentResult.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
+                  <div className={`large-layout-vis-wrap data-preview`}>
+                    <LayoutVisualization result={currentResult} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={760} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
                   </div>
-                  <div className="control-panel" style={{ margin: 0, height: "100%" }}>
-                    <div className="panel-head"><span>Detailed Statistics</span></div>
-                    <div className="panel-data">
-                      {(() => {
-                        const r = largePreview.result.rows;
-                        const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
-                        const lastRow  = rowStart === "bottom" ? r[0] : r[r.length - 1];
-                        return (
-                          <>
-                            <Row 
-                              label={sh.direction === "V" ? "Total columns" : "Total rows"} 
-                              value={r.length} 
-                              unit={sh.direction === "V" ? "cols" : "rows"} 
-                            />
-                            <Row 
-                              label={sh.direction === "V" ? "Left column width" : "Top row width"} 
-                              value={firstRow.h} 
-                              unit="mm" 
-                            />
-                            <Row 
-                              label={sh.direction === "V" ? "Right column width" : "Bottom row width"} 
-                              value={lastRow.h} 
-                              unit="mm" 
-                            />
-                          </>
-                        );
-                      })()}
-                      <div className="pw-formula-text" style={{ opacity: 0.6, marginTop: "var(--sp-2)" }}>
-                        Advanced material analysis will appear here.
+                  <div className="layout-split" style={{ gridTemplateColumns: "1fr 1fr 2fr", marginTop: "var(--sp-2)", alignItems: "stretch" }}>
+                    <Stack gap={4}>
+                      <MaterialSpecification 
+                        sh={sh} setSh={setSh} setMat={setMat} 
+                        presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
+                        fieldFlash={fieldFlash} setShowModal={setShowModal}
+                      />
+                      <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
+                    </Stack>
+                    <div className="control-panel" style={{ margin: 0, height: "100%" }}>
+                      <div className="panel-head"><span>Layout Settings</span></div>
+                      <div className="panel-data">
+                        <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
+                      </div>
+                    </div>
+                    <div className="control-panel" style={{ margin: 0, height: "100%" }}>
+                      <div className="panel-head"><span>Detailed Statistics</span></div>
+                      <div className="panel-data">
+                        {(() => {
+                          const r = currentResult.rows;
+                          const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
+                          const lastRow  = rowStart === "bottom" ? r[0] : r[r.length - 1];
+                          return (
+                            <>
+                              <Row 
+                                label={sh.direction === "V" ? "Total columns" : "Total rows"} 
+                                value={r.length} 
+                                unit={sh.direction === "V" ? "cols" : "rows"} 
+                              />
+                              <Row 
+                                label={sh.direction === "V" ? "Left column width" : "Top row width"} 
+                                value={firstRow.h} 
+                                unit="mm" 
+                              />
+                              <Row 
+                                label={sh.direction === "V" ? "Right column width" : "Bottom row width"} 
+                                value={lastRow.h} 
+                                unit="mm" 
+                              />
+                            </>
+                          );
+                        })()}
+                        <div className="pw-formula-text" style={{ opacity: 0.6, marginTop: "var(--sp-2)" }}>
+                          Advanced material analysis will appear here.
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Stack>
+                </Stack>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </>
   );
 }
@@ -375,19 +364,32 @@ function LayoutSettings({ sh, setField, setSh }) {
     </Stack>
   );
 }
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, activePresetDropdown, setActivePresetDropdown, widWrapRef, lenWrapRef, fieldFlash, setShowModal }) {
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal }) {
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const { PLa, PPi } = sh;
   const validPresets = presets.filter(p => p.name);
   
+  const widWrapRef = React.useRef(null);
+  const lenWrapRef = React.useRef(null);
+
+  useClickOutside([widWrapRef, lenWrapRef], () => {
+    setActivePresetDropdown(null);
+  });
+
+  const localApply = (p, idx) => {
+    applyPreset(p, idx);
+    setActivePresetDropdown(null);
+  };
+
   const { hoveredIndex: widHovered, onKeyDown: onWidKeyDown } = useDropdownKeyboard(
     activePresetDropdown === "wid" ? validPresets.length : 0,
-    (idx) => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])),
+    (idx) => localApply(validPresets[idx], presets.indexOf(validPresets[idx])),
     () => setActivePresetDropdown(null)
   );
 
   const { hoveredIndex: lenHovered, onKeyDown: onLenKeyDown } = useDropdownKeyboard(
     activePresetDropdown === "len" ? validPresets.length : 0,
-    (idx) => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])),
+    (idx) => localApply(validPresets[idx], presets.indexOf(validPresets[idx])),
     () => setActivePresetDropdown(null)
   );
 
@@ -407,7 +409,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onWidKeyDown}
           />
-          {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={applyPreset} field="width" hoveredIndex={widHovered} />}
+          {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="width" hoveredIndex={widHovered} />}
         </div>
         <div className={fieldFlash ? "num-input-flash" : ""} ref={lenWrapRef} style={{ position: "relative" }}>
           <NumInput
@@ -422,7 +424,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onLenKeyDown}
           />
-          {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={applyPreset} field="length" hoveredIndex={lenHovered} />}
+          {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" hoveredIndex={lenHovered} />}
         </div>
         {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
           <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
