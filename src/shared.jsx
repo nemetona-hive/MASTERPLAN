@@ -268,11 +268,6 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinit
     }
   };
 
-  // Commits value AND signals explicit user confirmation (Enter / button)
-  const commitAndConfirm = () => {
-    commitValue();
-    if (onCommit) onCommit();
-  };
 
   return (
     <div className="num-wrap">
@@ -291,14 +286,23 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinit
           onKeyDown={e => {
             // Parent handler runs first — can e.preventDefault() to intercept Enter
             if (onKeyDown) onKeyDown(e);
-            if (e.key === "Enter" && !e.defaultPrevented) commitAndConfirm();
+            if (e.key === "Enter" && !e.defaultPrevented) {
+              e.preventDefault();
+              e.stopPropagation();
+              commitValue();
+              if (onCommit) onCommit();
+              e.target.blur();
+            }
           }}
           onBlur={() => commitValue()}  // blur only commits value, no onCommit
           onFocus={onFocus} />
         <button
           className="num-btn"
           type="button"
-          onClick={() => commitAndConfirm()}>
+          onClick={() => {
+            commitValue();
+            if (onCommit) onCommit();
+          }}>
           <Icon name="corner-down-left" />
         </button>
       </div>
@@ -523,7 +527,7 @@ function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, fie
               role="option"
               aria-selected={isHovered}
               className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
-              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
+              onPointerDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
             >
               <div className="rate-preset-info">
                 <span className="rate-preset-name">{p.name}</span>
