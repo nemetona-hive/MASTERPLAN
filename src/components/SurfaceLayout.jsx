@@ -217,16 +217,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   <button className="ctrl-dir" onClick={addPreset}>
                     <Icon name="plus" /> Add Row
                   </button>
-                  <button
-                    className={"ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : "")}
-                    onClick={saveMaterialDefaults}
-                    disabled={presetSaveStatus === "saving"}
-                  >
-                    {presetSaveStatus === "saving" ? <>Saving...</>
-                      : presetSaveStatus === "saved" ? <><Icon name="check" /> Saved Defaults</>
-                      : presetSaveStatus === "error" ? <>Error Saving</>
-                      : <><Icon name="check" /> Save Defaults</>}
-                  </button>
+                  <SaveDefaultsButton status={presetSaveStatus} onClick={saveMaterialDefaults} />
                 </Stack>
 
                 <div className="pw-formula-text" style={{ opacity: 0.7 }}>
