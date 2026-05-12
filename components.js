@@ -2866,7 +2866,6 @@ function SheetSurfaceLayout({
   })));
   const [activePreset, setActivePreset] = React.useState(null);
   const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
-  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const [showModal, setShowModal] = React.useState(false);
   const [largePreview, setLargePreview] = React.useState(null);
   const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
@@ -2876,11 +2875,6 @@ function SheetSurfaceLayout({
     result
   });
   const closeLargePreview = () => setLargePreview(null);
-  const lenWrapRef = React.useRef(null);
-  const widWrapRef = React.useRef(null);
-  useClickOutside([lenWrapRef, widWrapRef], () => {
-    setActivePresetDropdown(null);
-  });
   const applyPreset = (p, idx) => {
     setSh(s => ({
       ...s,
@@ -2888,7 +2882,6 @@ function SheetSurfaceLayout({
       PLa: p.width
     }));
     setActivePreset(idx);
-    setActivePresetDropdown(null);
     setFlashIdx(idx);
     setFieldFlash(true);
   };
@@ -2979,10 +2972,6 @@ function SheetSurfaceLayout({
       presets: presets,
       activePreset: activePreset,
       applyPreset: applyPreset,
-      activePresetDropdown: activePresetDropdown,
-      setActivePresetDropdown: setActivePresetDropdown,
-      widWrapRef: widWrapRef,
-      lenWrapRef: lenWrapRef,
       fieldFlash: fieldFlash,
       setShowModal: setShowModal
     }), /*#__PURE__*/React.createElement(SurfaceInputs, {
@@ -3007,10 +2996,6 @@ function SheetSurfaceLayout({
     presets: presets,
     activePreset: activePreset,
     applyPreset: applyPreset,
-    activePresetDropdown: activePresetDropdown,
-    setActivePresetDropdown: setActivePresetDropdown,
-    widWrapRef: widWrapRef,
-    lenWrapRef: lenWrapRef,
     fieldFlash: fieldFlash,
     setShowModal: setShowModal
   }), /*#__PURE__*/React.createElement(SurfaceInputs, {
@@ -3145,112 +3130,111 @@ function SheetSurfaceLayout({
     style: {
       opacity: 0.7
     }
-  }, "Fill preset data above and click \"Apply\" to update the calculator, or \"Save Defaults\" to persist."))))), largePreview && /*#__PURE__*/React.createElement("div", {
-    className: "mp-modal-overlay",
-    onMouseDown: e => {
-      if (e.target === e.currentTarget) closeLargePreview();
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mp-modal mp-modal-large"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mp-modal-head"
-  }, /*#__PURE__*/React.createElement("span", null, "Large layout preview \u2014 ", largePreview.layout.title), /*#__PURE__*/React.createElement("button", {
-    className: "mp-modal-close",
-    onClick: closeLargePreview
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "minus"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mp-modal-body"
-  }, /*#__PURE__*/React.createElement(Stack, {
-    gap: 4
-  }, largePreview.result.summaryRows.length > 0 && /*#__PURE__*/React.createElement(PanelSummary, {
-    rows: largePreview.result.summaryRows,
-    hoveredType: hoveredType,
-    setHoveredType: setHoveredType
-  }), /*#__PURE__*/React.createElement("div", {
-    className: `large-layout-vis-wrap data-preview`
-  }, /*#__PURE__*/React.createElement(LayoutVisualization, {
-    result: largePreview.result,
-    hoveredType: hoveredType,
-    setHoveredType: setHoveredType,
-    rowStart: rowStart,
-    maxHeight: 760,
-    alwaysShowLabels: true,
-    onLargePreview: closeLargePreview
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "layout-split",
-    style: {
-      gridTemplateColumns: "1fr 1fr 2fr",
-      marginTop: "var(--sp-2)",
-      alignItems: "stretch"
-    }
-  }, /*#__PURE__*/React.createElement(Stack, {
-    gap: 4
-  }, /*#__PURE__*/React.createElement(MaterialSpecification, {
-    sh: sh,
-    setSh: setSh,
-    setMat: setMat,
-    presets: presets,
-    activePreset: activePreset,
-    applyPreset: applyPreset,
-    activePresetDropdown: activePresetDropdown,
-    setActivePresetDropdown: setActivePresetDropdown,
-    widWrapRef: widWrapRef,
-    lenWrapRef: lenWrapRef,
-    fieldFlash: fieldFlash,
-    setShowModal: setShowModal
-  }), /*#__PURE__*/React.createElement(SurfaceInputs, {
-    sh: sh,
-    setSh: setSh,
-    setSurf: setSurf
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "control-panel",
-    style: {
-      margin: 0,
-      height: "100%"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "panel-head"
-  }, /*#__PURE__*/React.createElement("span", null, "Layout Settings")), /*#__PURE__*/React.createElement("div", {
-    className: "panel-data"
-  }, /*#__PURE__*/React.createElement(LayoutSettings, {
-    sh: sh,
-    setField: setShField,
-    setSh: setSh
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "control-panel",
-    style: {
-      margin: 0,
-      height: "100%"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "panel-head"
-  }, /*#__PURE__*/React.createElement("span", null, "Detailed Statistics")), /*#__PURE__*/React.createElement("div", {
-    className: "panel-data"
-  }, (() => {
-    const r = largePreview.result.rows;
-    const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
-    const lastRow = rowStart === "bottom" ? r[0] : r[r.length - 1];
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Row, {
-      label: sh.direction === "V" ? "Total columns" : "Total rows",
-      value: r.length,
-      unit: sh.direction === "V" ? "cols" : "rows"
-    }), /*#__PURE__*/React.createElement(Row, {
-      label: sh.direction === "V" ? "Left column width" : "Top row width",
-      value: firstRow.h,
-      unit: "mm"
-    }), /*#__PURE__*/React.createElement(Row, {
-      label: sh.direction === "V" ? "Right column width" : "Bottom row width",
-      value: lastRow.h,
-      unit: "mm"
-    }));
-  })(), /*#__PURE__*/React.createElement("div", {
-    className: "pw-formula-text",
-    style: {
-      opacity: 0.6,
-      marginTop: "var(--sp-2)"
-    }
-  }, "Advanced material analysis will appear here.")))))))));
+  }, "Fill preset data above and click \"Apply\" to update the calculator, or \"Save Defaults\" to persist."))))), largePreview && (() => {
+    const currentResult = panelResultsById[largePreview.layout.id]?.result || largePreview.result;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "mp-modal-overlay",
+      onMouseDown: e => {
+        if (e.target === e.currentTarget) closeLargePreview();
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "mp-modal mp-modal-large"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "mp-modal-head"
+    }, /*#__PURE__*/React.createElement("span", null, "Large layout preview \u2014 ", largePreview.layout.title), /*#__PURE__*/React.createElement("button", {
+      className: "mp-modal-close",
+      onClick: closeLargePreview
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "minus"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "mp-modal-body"
+    }, /*#__PURE__*/React.createElement(Stack, {
+      gap: 4
+    }, currentResult.summaryRows.length > 0 && /*#__PURE__*/React.createElement(PanelSummary, {
+      rows: currentResult.summaryRows,
+      hoveredType: hoveredType,
+      setHoveredType: setHoveredType
+    }), /*#__PURE__*/React.createElement("div", {
+      className: `large-layout-vis-wrap data-preview`
+    }, /*#__PURE__*/React.createElement(LayoutVisualization, {
+      result: currentResult,
+      hoveredType: hoveredType,
+      setHoveredType: setHoveredType,
+      rowStart: rowStart,
+      maxHeight: 760,
+      alwaysShowLabels: true,
+      onLargePreview: closeLargePreview
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "layout-split",
+      style: {
+        gridTemplateColumns: "1fr 1fr 2fr",
+        marginTop: "var(--sp-2)",
+        alignItems: "stretch"
+      }
+    }, /*#__PURE__*/React.createElement(Stack, {
+      gap: 4
+    }, /*#__PURE__*/React.createElement(MaterialSpecification, {
+      sh: sh,
+      setSh: setSh,
+      setMat: setMat,
+      presets: presets,
+      activePreset: activePreset,
+      applyPreset: applyPreset,
+      fieldFlash: fieldFlash,
+      setShowModal: setShowModal
+    }), /*#__PURE__*/React.createElement(SurfaceInputs, {
+      sh: sh,
+      setSh: setSh,
+      setSurf: setSurf
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "control-panel",
+      style: {
+        margin: 0,
+        height: "100%"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "panel-head"
+    }, /*#__PURE__*/React.createElement("span", null, "Layout Settings")), /*#__PURE__*/React.createElement("div", {
+      className: "panel-data"
+    }, /*#__PURE__*/React.createElement(LayoutSettings, {
+      sh: sh,
+      setField: setShField,
+      setSh: setSh
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "control-panel",
+      style: {
+        margin: 0,
+        height: "100%"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "panel-head"
+    }, /*#__PURE__*/React.createElement("span", null, "Detailed Statistics")), /*#__PURE__*/React.createElement("div", {
+      className: "panel-data"
+    }, (() => {
+      const r = currentResult.rows;
+      const firstRow = rowStart === "bottom" ? r[r.length - 1] : r[0];
+      const lastRow = rowStart === "bottom" ? r[0] : r[r.length - 1];
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Row, {
+        label: sh.direction === "V" ? "Total columns" : "Total rows",
+        value: r.length,
+        unit: sh.direction === "V" ? "cols" : "rows"
+      }), /*#__PURE__*/React.createElement(Row, {
+        label: sh.direction === "V" ? "Left column width" : "Top row width",
+        value: firstRow.h,
+        unit: "mm"
+      }), /*#__PURE__*/React.createElement(Row, {
+        label: sh.direction === "V" ? "Right column width" : "Bottom row width",
+        value: lastRow.h,
+        unit: "mm"
+      }));
+    })(), /*#__PURE__*/React.createElement("div", {
+      className: "pw-formula-text",
+      style: {
+        opacity: 0.6,
+        marginTop: "var(--sp-2)"
+      }
+    }, "Advanced material analysis will appear here."))))))));
+  })());
 }
 function LayoutSettings({
   sh,
@@ -3370,26 +3354,32 @@ function MaterialSpecification({
   presets,
   activePreset,
   applyPreset,
-  activePresetDropdown,
-  setActivePresetDropdown,
-  widWrapRef,
-  lenWrapRef,
   fieldFlash,
   setShowModal
 }) {
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const {
     PLa,
     PPi
   } = sh;
   const validPresets = presets.filter(p => p.name);
+  const widWrapRef = React.useRef(null);
+  const lenWrapRef = React.useRef(null);
+  useClickOutside([widWrapRef, lenWrapRef], () => {
+    setActivePresetDropdown(null);
+  });
+  const localApply = (p, idx) => {
+    applyPreset(p, idx);
+    setActivePresetDropdown(null);
+  };
   const {
     hoveredIndex: widHovered,
     onKeyDown: onWidKeyDown
-  } = useDropdownKeyboard(activePresetDropdown === "wid" ? validPresets.length : 0, idx => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])), () => setActivePresetDropdown(null));
+  } = useDropdownKeyboard(activePresetDropdown === "wid" ? validPresets.length : 0, idx => localApply(validPresets[idx], presets.indexOf(validPresets[idx])), () => setActivePresetDropdown(null));
   const {
     hoveredIndex: lenHovered,
     onKeyDown: onLenKeyDown
-  } = useDropdownKeyboard(activePresetDropdown === "len" ? validPresets.length : 0, idx => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])), () => setActivePresetDropdown(null));
+  } = useDropdownKeyboard(activePresetDropdown === "len" ? validPresets.length : 0, idx => localApply(validPresets[idx], presets.indexOf(validPresets[idx])), () => setActivePresetDropdown(null));
   return /*#__PURE__*/React.createElement(ControlPanel, {
     id: "control-material",
     title: "Material Specification",
@@ -3417,7 +3407,7 @@ function MaterialSpecification({
     anchorRef: widWrapRef,
     presets: validPresets,
     activePreset: activePreset,
-    onApply: applyPreset,
+    onApply: localApply,
     field: "width",
     hoveredIndex: widHovered
   })), /*#__PURE__*/React.createElement("div", {
@@ -3441,7 +3431,7 @@ function MaterialSpecification({
     anchorRef: lenWrapRef,
     presets: validPresets,
     activePreset: activePreset,
-    onApply: applyPreset,
+    onApply: localApply,
     field: "length",
     hoveredIndex: lenHovered
   })), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
