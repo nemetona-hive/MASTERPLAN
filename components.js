@@ -93,14 +93,16 @@ function useTimedSet(defaultDelay = 600) {
 function useClickOutside(refs, handler, active = true) {
   React.useEffect(() => {
     if (!active) return;
-    const onPointerDown = e => {
+    const onMouseDown = e => {
       const target = e.target;
       const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
       if (!clickedInside) handler(e);
     };
-    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("touchstart", onMouseDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("touchstart", onMouseDown);
     };
   }, [handler, active]);
 }
@@ -254,6 +256,7 @@ function NumInput({
   unit,
   req = false,
   onFocus,
+  onMouseDown,
   labelIcon,
   onKeyDown,
   onCommit
@@ -305,12 +308,12 @@ function NumInput({
         e.stopPropagation();
         commitValue();
         if (onCommit) onCommit();
-        e.target.blur();
       }
     },
     onBlur: () => commitValue() // blur only commits value, no onCommit
     ,
-    onFocus: onFocus
+    onFocus: onFocus,
+    onMouseDown: onMouseDown
   }), /*#__PURE__*/React.createElement("button", {
     className: "num-btn",
     type: "button",
@@ -603,7 +606,7 @@ function MaterialPresetDropdown({
       role: "option",
       "aria-selected": isHovered,
       className: "rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : ""),
-      onPointerDown: e => {
+      onMouseDown: e => {
         e.preventDefault();
         e.stopPropagation();
         onApply(p, idx);
@@ -1900,7 +1903,7 @@ function SheetConcrete() {
       role: "option",
       "aria-selected": isHovered,
       className: "rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : ""),
-      onPointerDown: e => {
+      onMouseDown: e => {
         e.preventDefault();
         e.stopPropagation();
         applyPreset(p, originalIdx);
@@ -2911,6 +2914,7 @@ function SheetSurfaceLayout({
   const [largePreview, setLargePreview] = React.useState(null);
   const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
   const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const openLargePreview = (layout, result) => setLargePreview({
     layout,
     result
@@ -3014,7 +3018,9 @@ function SheetSurfaceLayout({
       activePreset: activePreset,
       applyPreset: applyPreset,
       fieldFlash: fieldFlash,
-      setShowModal: setShowModal
+      setShowModal: setShowModal,
+      activePresetDropdown: activePresetDropdown,
+      setActivePresetDropdown: setActivePresetDropdown
     }), /*#__PURE__*/React.createElement(SurfaceInputs, {
       sh: sh,
       setSh: setSh,
@@ -3228,7 +3234,9 @@ function SheetSurfaceLayout({
       activePreset: activePreset,
       applyPreset: applyPreset,
       fieldFlash: fieldFlash,
-      setShowModal: setShowModal
+      setShowModal: setShowModal,
+      activePresetDropdown: activePresetDropdown,
+      setActivePresetDropdown: setActivePresetDropdown
     }), /*#__PURE__*/React.createElement(SurfaceInputs, {
       sh: sh,
       setSh: setSh,
@@ -3427,9 +3435,10 @@ function MaterialSpecification({
   activePreset,
   applyPreset,
   fieldFlash,
-  setShowModal
+  setShowModal,
+  activePresetDropdown,
+  setActivePresetDropdown
 }) {
-  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
   const {
     PLa,
     PPi
@@ -3472,7 +3481,7 @@ function MaterialSpecification({
     onChange: setMat("PLa"),
     step: 10,
     min: 100,
-    onFocus: () => setActivePresetDropdown("wid"),
+    onMouseDown: () => setActivePresetDropdown("wid"),
     onCommit: () => setActivePresetDropdown(null),
     onKeyDown: onWidKeyDown
   }), activePresetDropdown === "wid" && validPresets.length > 0 && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
@@ -3496,7 +3505,7 @@ function MaterialSpecification({
     onChange: setMat("PPi"),
     step: 10,
     min: 100,
-    onFocus: () => setActivePresetDropdown("len"),
+    onMouseDown: () => setActivePresetDropdown("len"),
     onCommit: () => setActivePresetDropdown(null),
     onKeyDown: onLenKeyDown
   }), activePresetDropdown === "len" && validPresets.length > 0 && /*#__PURE__*/React.createElement(MaterialPresetDropdown, {
