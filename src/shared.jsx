@@ -9,7 +9,7 @@ function Icon({ name, className = "" }) {
 }
 
 function isMobileViewport() {
-  return typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 500);
+  return typeof window !== "undefined" && (window.innerWidth <= 1024 || window.innerHeight <= 500);
 }
 
 function safeSaveStaticDefaults(key, value) {
