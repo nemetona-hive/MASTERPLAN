@@ -18,6 +18,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const [largePreview,    setLargePreview]    = React.useState(null);
   const [fieldFlash,      setFieldFlash]      = useTimedState(false, 900);
   const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
@@ -83,6 +84,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
             sh={sh} setSh={setSh} setMat={setMat} 
             presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
             fieldFlash={fieldFlash} setShowModal={setShowModal}
+            activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
           />
           <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         </Stack>
@@ -250,6 +252,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                         sh={sh} setSh={setSh} setMat={setMat} 
                         presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
                         fieldFlash={fieldFlash} setShowModal={setShowModal}
+                        activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
                       />
                       <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
                     </Stack>
@@ -384,8 +387,7 @@ function LayoutSettings({ sh, setField, setSh }) {
     </Stack>
   );
 }
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal }) {
-  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown }) {
   const { PLa, PPi } = sh;
   const validPresets = presets.filter(p => p.name);
   
@@ -425,7 +427,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onChange={setMat("PLa")}
             step={10}
             min={100}
-            onFocus={() => setActivePresetDropdown("wid")}
+            onMouseDown={() => setActivePresetDropdown("wid")}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onWidKeyDown}
           />
@@ -440,7 +442,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onChange={setMat("PPi")}
             step={10}
             min={100}
-            onFocus={() => setActivePresetDropdown("len")}
+            onMouseDown={() => setActivePresetDropdown("len")}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onLenKeyDown}
           />
