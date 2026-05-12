@@ -481,6 +481,33 @@ function Text({
     style: s
   }, props), children);
 }
+function SaveDefaultsButton({
+  status,
+  onClick,
+  disabled = false,
+  labels = {},
+  className = "",
+  style = {}
+}) {
+  if (typeof canSaveStaticDefaults === "undefined" || !canSaveStaticDefaults()) return null;
+  const {
+    savingLabel = "Saving...",
+    savedLabel = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+      name: "check"
+    }), " Saved Defaults"),
+    errorLabel = "Error Saving",
+    defaultLabel = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+      name: "check"
+    }), " Save Defaults")
+  } = labels;
+  return /*#__PURE__*/React.createElement("button", {
+    className: ["ctrl-dir", status === "saved" ? "on pw-preset-flash" : "", className].filter(Boolean).join(" "),
+    type: "button",
+    onClick: onClick,
+    disabled: disabled || status === "saving",
+    style: style
+  }, status === "saving" ? savingLabel : status === "saved" ? savedLabel : status === "error" ? errorLabel : defaultLabel);
+}
 function MaterialPresetDropdown({
   anchorRef,
   presets,
@@ -1882,15 +1909,10 @@ function SheetConcrete() {
     onClick: addPreset
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "plus"
-  }), " Add Row"), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : ""),
-    onClick: saveConcreteDefaults,
-    disabled: presetSaveStatus === "saving"
-  }, presetSaveStatus === "saving" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Saving...") : presetSaveStatus === "saved" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: "check"
-  }), " Saved Defaults") : presetSaveStatus === "error" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Error Saving") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: "check"
-  }), " Save Defaults"))), /*#__PURE__*/React.createElement("div", {
+  }), " Add Row"), /*#__PURE__*/React.createElement(SaveDefaultsButton, {
+    status: presetSaveStatus,
+    onClick: saveConcreteDefaults
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pw-formula-text",
     style: {
       opacity: 0.7
@@ -2479,21 +2501,16 @@ function SheetGoldenRatio({
     title: "Base Number",
     open: baseOpen,
     setOpen: setBaseOpen
-  }, typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)",
       display: "flex",
       justifyContent: "flex-end"
     }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir on" + (saveStatus === "saved" ? " pw-preset-flash" : ""),
-    onClick: saveGoldenRatioDefaults,
-    disabled: saveStatus === "saving"
-  }, saveStatus === "saving" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Saving...") : saveStatus === "saved" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: "check"
-  }), " Saved Defaults") : saveStatus === "error" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Error Saving") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: "check"
-  }), " Save Defaults"))), /*#__PURE__*/React.createElement(Stack, {
+  }, /*#__PURE__*/React.createElement(SaveDefaultsButton, {
+    status: saveStatus,
+    onClick: saveGoldenRatioDefaults
+  })), /*#__PURE__*/React.createElement(Stack, {
     gap: 2
   }, baseItems.map(item => {
     const tone = getLinkedCardTone(item.id);
@@ -3063,15 +3080,10 @@ function SheetSurfaceLayout({
     onClick: addPreset
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "plus"
-  }), " Add Row"), /*#__PURE__*/React.createElement("button", {
-    className: "ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : ""),
-    onClick: saveMaterialDefaults,
-    disabled: presetSaveStatus === "saving"
-  }, presetSaveStatus === "saving" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Saving...") : presetSaveStatus === "saved" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: "check"
-  }), " Saved Defaults") : presetSaveStatus === "error" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Error Saving") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: "check"
-  }), " Save Defaults"))), /*#__PURE__*/React.createElement("div", {
+  }), " Add Row"), /*#__PURE__*/React.createElement(SaveDefaultsButton, {
+    status: presetSaveStatus,
+    onClick: saveMaterialDefaults
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pw-formula-text",
     style: {
       opacity: 0.7
