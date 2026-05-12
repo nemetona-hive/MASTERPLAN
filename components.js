@@ -3253,14 +3253,33 @@ function LayoutSettings({
   const set = k => setField(k);
   return /*#__PURE__*/React.createElement(Stack, {
     gap: 3
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "var(--sp-3)",
+      borderRadius: "14px",
+      border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)",
+      background: "color-mix(in srgb, var(--color-primary) 6%, transparent)"
+    }
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 1,
     className: "ctrl-lbl"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "ctrl-sublbl"
-  }, "Direction"), /*#__PURE__*/React.createElement("div", {
+    className: "ctrl-sublbl",
+    style: {
+      fontSize: "var(--fs-lg)",
+      fontWeight: "var(--fw-bold)"
+    }
+  }, "Direction"), /*#__PURE__*/React.createElement("span", {
+    className: "ctrl-sublbl",
+    style: {
+      opacity: 0.75
+    }
+  }, "Primary layout axis for the pattern preview.")), /*#__PURE__*/React.createElement("div", {
     id: "ctrl-direction",
-    className: "seg-group"
+    className: "seg-group",
+    style: {
+      marginTop: "var(--sp-2)"
+    }
   }, ["V", "H"].map(s => /*#__PURE__*/React.createElement("button", {
     key: s,
     className: "ctrl-dir " + (direction === s ? "on" : ""),
@@ -3281,7 +3300,14 @@ function LayoutSettings({
         patternStart: st[tpsKey] || (s === "V" ? "bottom" : "left")
       };
     })
-  }, s)))), /*#__PURE__*/React.createElement(Stack, {
+  }, s)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "var(--sp-3)",
+      borderRadius: "14px",
+      border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)",
+      background: "color-mix(in srgb, var(--color-primary) 6%, transparent)"
+    }
+  }, /*#__PURE__*/React.createElement(Stack, {
     gap: 1,
     className: "ctrl-lbl"
   }, /*#__PURE__*/React.createElement("span", {
@@ -3303,7 +3329,10 @@ function LayoutSettings({
     }))
   }, direction === "V" ? "R1 Right" : "R1 bottom"))), /*#__PURE__*/React.createElement(Stack, {
     gap: 1,
-    className: "ctrl-lbl"
+    className: "ctrl-lbl",
+    style: {
+      marginTop: "var(--sp-3)"
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "ctrl-sublbl"
   }, "Layout Start"), /*#__PURE__*/React.createElement("div", {
@@ -3333,7 +3362,7 @@ function LayoutSettings({
       ...st,
       patternStart: "right"
     }))
-  }, "right")))), /*#__PURE__*/React.createElement(NumInput, {
+  }, "right"))))), /*#__PURE__*/React.createElement(NumInput, {
     id: "input-minJ",
     label: "Min remainder (mm)",
     value: minJ,
