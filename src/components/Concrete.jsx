@@ -379,23 +379,7 @@ function SheetConcrete() {
                   <button className="ctrl-dir" onClick={addPreset}>
                     <Icon name="plus" /> Add Row
                   </button>
-                  {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
-                    <button 
-                      className={"ctrl-dir on" + (presetSaveStatus === "saved" ? " pw-preset-flash" : "")} 
-                      onClick={saveConcreteDefaults}
-                      disabled={presetSaveStatus === "saving"}
-                    >
-                      {presetSaveStatus === "saving" ? (
-                        <>Saving...</>
-                      ) : presetSaveStatus === "saved" ? (
-                        <><Icon name="check" /> Saved Defaults</>
-                      ) : presetSaveStatus === "error" ? (
-                        <>Error Saving</>
-                      ) : (
-                        <><Icon name="check" /> Save Defaults</>
-                      )}
-                    </button>
-                  )}
+                  <SaveDefaultsButton status={presetSaveStatus} onClick={saveConcreteDefaults} />
                 </Stack>
 
                 <div className="pw-formula-text" style={{ opacity: 0.7 }}>
