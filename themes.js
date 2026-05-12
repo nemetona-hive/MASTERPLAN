@@ -39,6 +39,7 @@ const THEMES = {
       '--viz-cut': '#9aa8b3',
       '--viz-offcut': '#6e7f8c',
       '--viz-edge': '#d0bd86',
+      '--viz-carry': '#d4a030',
     },
   },
   graphite: {
@@ -69,6 +70,7 @@ const THEMES = {
       '--viz-cut': '#9ba4ab',
       '--viz-offcut': '#6f7a82',
       '--viz-edge': '#d4c07a',
+      '--viz-carry': '#c49830',
     }
   },
   verdant: {
@@ -99,6 +101,7 @@ const THEMES = {
       '--viz-cut': '#6e807a',
       '--viz-offcut': '#8a9e96',
       '--viz-edge': '#a0853a',
+      '--viz-carry': '#b8860a',
     }
   }
 };
