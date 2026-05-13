@@ -310,8 +310,10 @@ function NumInput({
         if (onCommit) onCommit();
       }
     },
-    onBlur: () => commitValue() // blur only commits value, no onCommit
-    ,
+    onBlur: () => {
+      commitValue();
+      if (onCommit) onCommit();
+    },
     onFocus: onFocus,
     onMouseDown: onMouseDown
   }), /*#__PURE__*/React.createElement("button", {
@@ -3044,7 +3046,9 @@ function SheetSurfaceLayout({
     activePreset: activePreset,
     applyPreset: applyPreset,
     fieldFlash: fieldFlash,
-    setShowModal: setShowModal
+    setShowModal: setShowModal,
+    activePresetDropdown: activePresetDropdown,
+    setActivePresetDropdown: setActivePresetDropdown
   }), /*#__PURE__*/React.createElement(SurfaceInputs, {
     sh: sh,
     setSh: setSh,
@@ -3219,14 +3223,11 @@ function SheetSurfaceLayout({
       alwaysShowLabels: true,
       onLargePreview: closeLargePreview
     })), /*#__PURE__*/React.createElement("div", {
-      className: "large-preview-grid",
-      style: {
-        paddingBottom: "var(--sp-6)"
-      }
+      className: "large-preview-grid"
     }, /*#__PURE__*/React.createElement(Stack, {
       gap: 4,
       className: "u-hide-mobile"
-    }, /*#__PURE__*/React.createElement(MaterialSpecification, {
+    }, /*#__PURE__*/React.createElement(LargePreviewMaterialSpec, {
       sh: sh,
       setSh: setSh,
       setMat: setMat,
@@ -3234,9 +3235,7 @@ function SheetSurfaceLayout({
       activePreset: activePreset,
       applyPreset: applyPreset,
       fieldFlash: fieldFlash,
-      setShowModal: setShowModal,
-      activePresetDropdown: activePresetDropdown,
-      setActivePresetDropdown: setActivePresetDropdown
+      setShowModal: setShowModal
     }), /*#__PURE__*/React.createElement(SurfaceInputs, {
       sh: sh,
       setSh: setSh,
@@ -3428,6 +3427,31 @@ function LayoutSettings({
     min: 0
   }));
 }
+function LargePreviewMaterialSpec({
+  sh,
+  setSh,
+  setMat,
+  presets,
+  activePreset,
+  applyPreset,
+  fieldFlash,
+  setShowModal
+}) {
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
+  return /*#__PURE__*/React.createElement(MaterialSpecification, {
+    sh: sh,
+    setSh: setSh,
+    setMat: setMat,
+    presets: presets,
+    activePreset: activePreset,
+    applyPreset: applyPreset,
+    fieldFlash: fieldFlash,
+    setShowModal: setShowModal,
+    activePresetDropdown: activePresetDropdown,
+    setActivePresetDropdown: setActivePresetDropdown,
+    isLargePreview: true
+  });
+}
 function MaterialSpecification({
   sh,
   setMat,
@@ -3437,7 +3461,8 @@ function MaterialSpecification({
   fieldFlash,
   setShowModal,
   activePresetDropdown,
-  setActivePresetDropdown
+  setActivePresetDropdown,
+  isLargePreview = false
 }) {
   const {
     PLa,
@@ -3446,9 +3471,13 @@ function MaterialSpecification({
   const validPresets = presets.filter(p => p.name);
   const widWrapRef = React.useRef(null);
   const lenWrapRef = React.useRef(null);
+
+  // If we are in the main page but Large Preview is open, disable our click-outside
+  // to prevent us from closing dropdowns that belong to the modal.
+  const isBackground = !isLargePreview && document.querySelector('.large-preview-overlay');
   useClickOutside([widWrapRef, lenWrapRef], () => {
     setActivePresetDropdown(null);
-  });
+  }, activePresetDropdown !== null && !isBackground);
   const localApply = (p, idx) => {
     applyPreset(p, idx);
     setActivePresetDropdown(null);
