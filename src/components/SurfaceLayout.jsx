@@ -101,6 +101,7 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           sh={sh} setSh={setSh} setMat={setMat} 
           presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
           fieldFlash={fieldFlash} setShowModal={setShowModal}
+          activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
         />
         <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
@@ -244,15 +245,14 @@ function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                     </div>
 
                   {/* ── 3. BOTTOM: 3-Column Dashboard Split ── */}
-                  <div className="large-preview-grid" style={{ paddingBottom: "var(--sp-6)" }}>
+                  <div className="large-preview-grid">
                     
                     {/* Column 1: Material & Surface (25%) */}
                     <Stack gap={4} className="u-hide-mobile">
-                      <MaterialSpecification 
-                        sh={sh} setSh={setSh} setMat={setMat} 
-                        presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
+                      <LargePreviewMaterialSpec
+                        sh={sh} setSh={setSh} setMat={setMat}
+                        presets={presets} activePreset={activePreset} applyPreset={applyPreset}
                         fieldFlash={fieldFlash} setShowModal={setShowModal}
-                        activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
                       />
                       <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
                     </Stack>
@@ -387,16 +387,32 @@ function LayoutSettings({ sh, setField, setSh }) {
     </Stack>
   );
 }
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown }) {
+function LargePreviewMaterialSpec({ sh, setSh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal }) {
+  const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
+  return (
+    <MaterialSpecification
+      sh={sh} setSh={setSh} setMat={setMat}
+      presets={presets} activePreset={activePreset} applyPreset={applyPreset}
+      fieldFlash={fieldFlash} setShowModal={setShowModal}
+      activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
+      isLargePreview={true}
+    />
+  );
+}
+
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false }) {
   const { PLa, PPi } = sh;
   const validPresets = presets.filter(p => p.name);
   
   const widWrapRef = React.useRef(null);
   const lenWrapRef = React.useRef(null);
 
+  // If we are in the main page but Large Preview is open, disable our click-outside
+  // to prevent us from closing dropdowns that belong to the modal.
+  const isBackground = !isLargePreview && document.querySelector('.large-preview-overlay');
   useClickOutside([widWrapRef, lenWrapRef], () => {
     setActivePresetDropdown(null);
-  });
+  }, activePresetDropdown !== null && !isBackground);
 
   const localApply = (p, idx) => {
     applyPreset(p, idx);
