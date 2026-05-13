@@ -3730,6 +3730,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   padding: 24px;
 }
 
+.mp-modal-large .large-preview-grid {
+  margin-top: var(--sp-7);
+  border-top: 1px solid var(--border);
+  padding-top: var(--sp-5);
+}
+
 /* Invalid layout note */
 .layout-invalid-note {
   font-family: var(--mono);
