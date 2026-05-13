@@ -295,7 +295,7 @@ function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinit
               if (onCommit) onCommit();
             }
           }}
-          onBlur={() => commitValue()}  // blur only commits value, no onCommit
+          onBlur={() => { commitValue(); if (onCommit) onCommit(); }}
           onFocus={onFocus}
           onMouseDown={onMouseDown} />
         <button
