@@ -199,7 +199,13 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
   }) : [];
 
   // ── SVG viewBox ──
-  const labelFontSize = showRowLabels ? Math.round((isV ? vH : vW) * 0.016) : 0;
+  const maxRowLabelChars = groupBands.reduce((max, band) => Math.max(max, band.label.length), 1);
+  const minRowLabelLane = rowRects.reduce((min, rr) => Math.min(min, isV ? rr.w : rr.h), Infinity);
+  const baseLabelFontSize = Math.round((isV ? vH : vW) * 0.016);
+  const laneLabelFontSize = Number.isFinite(minRowLabelLane)
+    ? Math.floor(minRowLabelLane / (maxRowLabelChars * 0.68))
+    : baseLabelFontSize;
+  const labelFontSize = showRowLabels ? Math.max(10, Math.min(baseLabelFontSize, laneLabelFontSize)) : 0;
   const labelMargin = showRowLabels ? Math.round(labelFontSize * 3.6) : 0;
   const chartX = !isV ? labelMargin : 0;
   const chartY = isV ? labelMargin : 0;
@@ -280,6 +286,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
                 x={isV ? band.mid + chartX : chartX - (labelFontSize * 0.5)}
                 y={isV ? chartY - (labelFontSize * 0.5) : band.mid + chartY}
                 fontSize={labelFontSize}
+                style={{ fontSize: labelFontSize }}
                 textAnchor={isV ? "middle" : "end"}
                 dominantBaseline={isV ? "auto" : "middle"}
                 className="layout-svg-row-label"
