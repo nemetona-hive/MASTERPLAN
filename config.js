@@ -180,13 +180,13 @@ var PAGES = [{
 
 // Default application state — edit initial values here
 const DEFAULT_SH = {
-  W: 5600,
-  H: 2500,
-  PPi: 2500,
-  PLa: 1250,
+  W: 1400,
+  H: 2200,
+  PPi: 600,
+  PLa: 300,
   offset: 0.5,
   direction: "H",
-  rowStart: "bottom",
+  rowStart: "top",
   rowStartH: "bottom",
   rowStartV: "top",
   patternStartH: "left",
@@ -211,7 +211,7 @@ const DEFAULT_GR = [
 
 const DEFAULT_MATERIAL_PRESETS = [
   {
-    name: "OSB-3 1250x2500",
+    name: "OSB-3 1250×2500",
     length: 2500,
     width: 1250
   },
@@ -221,12 +221,12 @@ const DEFAULT_MATERIAL_PRESETS = [
     width: 1200
   },
   {
-    name: "Välisvoodrilaud UYVK 18x120",
+    name: "Välisvoodrilaud UYVK 18×120",
     length: 6000,
     width: 110
   },
   {
-    name: "Herringbone 600×300",
+    name: "Plaat 600×300",
     length: 600,
     width: 300
   }

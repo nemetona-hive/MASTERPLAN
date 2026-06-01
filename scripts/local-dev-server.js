@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORT = 3005;
 const ROOT_DIR = path.join(__dirname, '..');
 
 // ==========================================
@@ -14,13 +14,15 @@ const ROOT_DIR = path.join(__dirname, '..');
 const DEFAULT_WRITES = {
   concretePresets: "DEFAULT_CONCRETE_PRESETS",
   goldenRatioDefaults: "DEFAULT_GR",
-  materialPresets: "DEFAULT_MATERIAL_PRESETS"
+  materialPresets: "DEFAULT_MATERIAL_PRESETS",
+  shDefaults: "DEFAULT_SH",
+  symDefaults: "DEFAULT_SYM"
 };
 
 const toStringField = value => value == null ? "" : String(value);
 
 const toNumberOrBlank = value => {
-  if (value === "") return "";
+  if (value === "" || value === null || value === undefined) return "";
   const n = Number(value);
   if (!Number.isFinite(n)) {
     throwValidationError(`Expected a number or empty string, got ${JSON.stringify(value)}`);
@@ -102,10 +104,46 @@ function validateMaterialPresets(value) {
   });
 }
 
+function validateShDefaults(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throwValidationError("shDefaults must be an object");
+  }
+  return {
+    W: toNumberOrBlank(value.W),
+    H: toNumberOrBlank(value.H),
+    PPi: toNumberOrBlank(value.PPi),
+    PLa: toNumberOrBlank(value.PLa),
+    offset: toNumberOrBlank(value.offset),
+    direction: toStringField(value.direction),
+    rowStart: toStringField(value.rowStart),
+    rowStartH: toStringField(value.rowStartH),
+    rowStartV: toStringField(value.rowStartV),
+    patternStartH: toStringField(value.patternStartH),
+    patternStartV: toStringField(value.patternStartV),
+    minJ: toNumberOrBlank(value.minJ),
+    startOff: toNumberOrBlank(value.startOff),
+    s4Long: toNumberOrBlank(value.s4Long)
+  };
+}
+
+function validateSymDefaults(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throwValidationError("symDefaults must be an object");
+  }
+  return {
+    roomWidth: toNumberOrBlank(value.roomWidth),
+    panelWidth: toNumberOrBlank(value.panelWidth),
+    oneFullEdge: Boolean(value.oneFullEdge),
+    customFirstPieceWidth: value.customFirstPieceWidth === null || value.customFirstPieceWidth === "" ? null : toNumberOrBlank(value.customFirstPieceWidth)
+  };
+}
+
 const DEFAULT_VALIDATORS = {
   concretePresets: validateConcretePresets,
   goldenRatioDefaults: validateGoldenRatioDefaults,
-  materialPresets: validateMaterialPresets
+  materialPresets: validateMaterialPresets,
+  shDefaults: validateShDefaults,
+  symDefaults: validateSymDefaults
 };
 
 // Robust bracket matcher to safely replace constant values

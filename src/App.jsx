@@ -121,6 +121,32 @@ function App() {
   const [grItems, setGrItems] = useState(DEFAULT_GR);
   const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
+  const isInitialSh = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialSh.current) {
+      isInitialSh.current = false;
+      return;
+    }
+    if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
+      safeSaveStaticDefaults("shDefaults", sh).catch(err => {
+        console.error("Error saving pattern layouts defaults:", err);
+      });
+    }
+  }, [sh]);
+
+  const isInitialSym = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialSym.current) {
+      isInitialSym.current = false;
+      return;
+    }
+    if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
+      safeSaveStaticDefaults("symDefaults", sym).catch(err => {
+        console.error("Error saving symmetric layouts defaults:", err);
+      });
+    }
+  }, [sym]);
+
   return (
     <div id="app" className="app">
       <div id="app-head" className="app-head">

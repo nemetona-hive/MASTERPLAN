@@ -3984,6 +3984,30 @@ function App() {
     s3: false,
     s4: false
   });
+  const isInitialSh = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialSh.current) {
+      isInitialSh.current = false;
+      return;
+    }
+    if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
+      safeSaveStaticDefaults("shDefaults", sh).catch(err => {
+        console.error("Error saving pattern layouts defaults:", err);
+      });
+    }
+  }, [sh]);
+  const isInitialSym = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialSym.current) {
+      isInitialSym.current = false;
+      return;
+    }
+    if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
+      safeSaveStaticDefaults("symDefaults", sym).catch(err => {
+        console.error("Error saving symmetric layouts defaults:", err);
+      });
+    }
+  }, [sym]);
   return /*#__PURE__*/React.createElement("div", {
     id: "app",
     className: "app"
