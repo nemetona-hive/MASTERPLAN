@@ -2756,7 +2756,7 @@ function SheetGoldenRatio({
 }
 function GuiderLihtluliti() {
   return /*#__PURE__*/React.createElement(Stack, {
-    gap: 3
+    gap: 4
   }, /*#__PURE__*/React.createElement(Stack, {
     className: "sys-head",
     gap: 1
@@ -2767,154 +2767,132 @@ function GuiderLihtluliti() {
     className: "sys-title-icon"
   }), " Lihtl\xFCliti"), /*#__PURE__*/React.createElement("span", {
     className: "sys-head-sub"
-  }, "Valgusti ja l\xFCliti skeem")), /*#__PURE__*/React.createElement("div", {
+  }, "Valgusti ja l\xFCliti skeem \u2014 1-juhtmeline l\xFClitus")), /*#__PURE__*/React.createElement("div", {
     className: "sys-block"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "section-pad"
-  }, /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 520 290",
+    style: {
+      padding: "var(--sp-5) var(--sp-4) var(--sp-4)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--text-subtle)",
+      textTransform: "uppercase",
+      letterSpacing: "0.12em",
+      marginBottom: "var(--sp-4)",
+      paddingBottom: "var(--sp-3)",
+      borderBottom: "1px solid var(--border)"
+    }
+  }, "Skeem"), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 560 310",
     width: "100%",
     "aria-label": "Valgusti ja l\xFCliti skeem",
     style: {
-      display: "block",
-      maxWidth: "620px"
+      display: "block"
     }
   }, /*#__PURE__*/React.createElement("line", {
-    x1: "130",
-    y1: "185",
-    x2: "160",
-    y2: "185",
+    x1: "110",
+    y1: "190",
+    x2: "175",
+    y2: "190",
     stroke: "var(--viz-carry)",
-    strokeWidth: "2.5"
+    strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "240",
-    y1: "185",
-    x2: "240",
+    x1: "275",
+    y1: "190",
+    x2: "275",
     y2: "80",
     stroke: "var(--viz-carry)",
-    strokeWidth: "2.5"
+    strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "240",
+    x1: "275",
     y1: "80",
-    x2: "322",
+    x2: "346",
     y2: "80",
     stroke: "var(--viz-carry)",
-    strokeWidth: "2.5"
-  }), /*#__PURE__*/React.createElement("text", {
-    x: "281",
-    y: "72",
-    textAnchor: "middle",
-    style: {
-      fontFamily: "var(--mono)",
-      fontSize: "10px",
-      fill: "var(--viz-carry)"
-    }
-  }, "pruun"), /*#__PURE__*/React.createElement("line", {
-    x1: "130",
-    y1: "225",
-    x2: "430",
-    y2: "225",
-    stroke: "var(--accent)",
-    strokeWidth: "2.5"
+    strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "430",
-    y1: "225",
-    x2: "430",
+    x1: "110",
+    y1: "240",
+    x2: "460",
+    y2: "240",
+    stroke: "var(--accent)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "460",
+    y1: "240",
+    x2: "460",
     y2: "80",
     stroke: "var(--accent)",
-    strokeWidth: "2.5"
+    strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "378",
+    x1: "414",
     y1: "80",
-    x2: "430",
+    x2: "460",
     y2: "80",
     stroke: "var(--accent)",
-    strokeWidth: "2.5"
-  }), /*#__PURE__*/React.createElement("text", {
-    x: "404",
-    y: "72",
-    textAnchor: "middle",
-    style: {
-      fontFamily: "var(--mono)",
-      fontSize: "10px",
-      fill: "var(--accent)"
-    }
-  }, "sinine"), /*#__PURE__*/React.createElement("circle", {
-    cx: "130",
-    cy: "185",
-    r: "4",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "110",
+    cy: "190",
+    r: "4.5",
     fill: "var(--text)"
   }), /*#__PURE__*/React.createElement("circle", {
-    cx: "130",
-    cy: "225",
-    r: "4",
+    cx: "110",
+    cy: "240",
+    r: "4.5",
     fill: "var(--text)"
   }), /*#__PURE__*/React.createElement("text", {
-    x: "18",
-    y: "183",
+    x: "14",
+    y: "190",
     style: {
       fontFamily: "var(--mono)",
-      fontSize: "11px",
+      fontSize: "12px",
       fontWeight: "700",
       fill: "var(--text)"
     }
   }, "Toide L"), /*#__PURE__*/React.createElement("text", {
-    x: "18",
-    y: "196",
+    x: "14",
+    y: "240",
     style: {
       fontFamily: "var(--mono)",
-      fontSize: "9px",
-      fill: "var(--viz-carry)"
-    }
-  }, "pruun"), /*#__PURE__*/React.createElement("text", {
-    x: "18",
-    y: "223",
-    style: {
-      fontFamily: "var(--mono)",
-      fontSize: "11px",
+      fontSize: "12px",
       fontWeight: "700",
       fill: "var(--text)"
     }
-  }, "Toide N"), /*#__PURE__*/React.createElement("text", {
-    x: "18",
-    y: "236",
-    style: {
-      fontFamily: "var(--mono)",
-      fontSize: "9px",
-      fill: "var(--accent)"
-    }
-  }, "sinine"), /*#__PURE__*/React.createElement("rect", {
-    x: "145",
-    y: "165",
-    width: "110",
-    height: "40",
-    rx: "4",
+  }, "Toide N"), /*#__PURE__*/React.createElement("rect", {
+    x: "155",
+    y: "168",
+    width: "140",
+    height: "44",
+    rx: "5",
     fill: "none",
-    stroke: "var(--text-muted)",
+    stroke: "var(--text-subtle)",
     strokeWidth: "1.2",
-    strokeDasharray: "5 3"
+    strokeDasharray: "6 3"
   }), /*#__PURE__*/React.createElement("circle", {
-    cx: "160",
-    cy: "185",
-    r: "3.5",
+    cx: "175",
+    cy: "190",
+    r: "4",
     fill: "var(--text)"
   }), /*#__PURE__*/React.createElement("circle", {
-    cx: "240",
-    cy: "185",
-    r: "3.5",
+    cx: "275",
+    cy: "190",
+    r: "4",
     fill: "none",
     stroke: "var(--text)",
-    strokeWidth: "1.8"
+    strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "160",
-    y1: "185",
-    x2: "233",
-    y2: "170",
+    x1: "175",
+    y1: "190",
+    x2: "266",
+    y2: "172",
     stroke: "var(--text)",
-    strokeWidth: "2",
+    strokeWidth: "2.2",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
-    x: "200",
+    x: "225",
     y: "158",
     textAnchor: "middle",
     style: {
@@ -2922,88 +2900,553 @@ function GuiderLihtluliti() {
       fontSize: "11px",
       fill: "var(--text-muted)"
     }
-  }, "L\xFCliti"), /*#__PURE__*/React.createElement("circle", {
-    cx: "350",
+  }, "L\xFCliti"), /*#__PURE__*/React.createElement("line", {
+    x1: "275",
+    y1: "80",
+    x2: "275",
+    y2: "73",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "437",
+    y1: "80",
+    x2: "437",
+    y2: "73",
+    stroke: "var(--accent)",
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "380",
     cy: "80",
-    r: "28",
+    r: "34",
     fill: "none",
     stroke: "var(--text-muted)",
-    strokeWidth: "2"
+    strokeWidth: "2.2"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "330",
-    y1: "60",
-    x2: "370",
-    y2: "100",
+    x1: "356",
+    y1: "56",
+    x2: "404",
+    y2: "104",
     stroke: "var(--text-muted)",
     strokeWidth: "1.8",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("line", {
-    x1: "370",
-    y1: "60",
-    x2: "330",
-    y2: "100",
+    x1: "404",
+    y1: "56",
+    x2: "356",
+    y2: "104",
     stroke: "var(--text-muted)",
     strokeWidth: "1.8",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
-    x: "350",
-    y: "38",
+    x: "380",
+    y: "30",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "12px",
+      fill: "var(--text-muted)"
+    }
+  }, "Valgusti"), /*#__PURE__*/React.createElement("line", {
+    x1: "155",
+    y1: "272",
+    x2: "185",
+    y2: "272",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "192",
+    y: "276",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--text-muted)"
+    }
+  }, "faas (L)"), /*#__PURE__*/React.createElement("line", {
+    x1: "155",
+    y1: "292",
+    x2: "185",
+    y2: "292",
+    stroke: "var(--accent)",
+    strokeWidth: "2.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "192",
+    y: "296",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--text-muted)"
+    }
+  }, "null (N)")))), /*#__PURE__*/React.createElement("div", {
+    className: "sys-block"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "var(--sp-3) var(--sp-4)",
+      borderBottom: "1px solid var(--border)",
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--text-subtle)",
+      textTransform: "uppercase",
+      letterSpacing: "0.12em"
+    }
+  }, "\xDChendused"), /*#__PURE__*/React.createElement(Stack, {
+    gap: 0
+  }, [{
+    n: "1",
+    wire: "L",
+    text: "Toite faas (L) → lüliti sisend"
+  }, {
+    n: "2",
+    wire: "L",
+    text: "Lüliti väljund → valgusti (põhjaklemm)"
+  }, {
+    n: "3",
+    wire: "N",
+    text: "Valgusti null → toite null (N)"
+  }].map(row => /*#__PURE__*/React.createElement("div", {
+    key: row.n,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--sp-3)",
+      padding: "10px var(--sp-4)",
+      borderBottom: "1px solid var(--border)",
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-md)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: "20px",
+      height: "20px",
+      borderRadius: "50%",
+      border: "1px solid var(--border-strong)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "var(--fs-xs)",
+      color: "var(--text-subtle)",
+      flexShrink: 0
+    }
+  }, row.n), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: "8px",
+      height: "8px",
+      borderRadius: "50%",
+      background: row.wire === "L" ? "var(--viz-carry)" : "var(--accent)",
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--text-muted)"
+    }
+  }, row.text))))));
+}
+function GuiderVeksellulit() {
+  return /*#__PURE__*/React.createElement(Stack, {
+    gap: 4
+  }, /*#__PURE__*/React.createElement(Stack, {
+    className: "sys-head",
+    gap: 1
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "sys-title"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "guider",
+    className: "sys-title-icon"
+  }), " Veksell\xFCliti"), /*#__PURE__*/React.createElement("span", {
+    className: "sys-head-sub"
+  }, "Valgusti ja kahe l\xFClitiga skeem \u2014 3-juhtmeline veksel")), /*#__PURE__*/React.createElement("div", {
+    className: "sys-block"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "var(--sp-5) var(--sp-4) var(--sp-4)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--text-subtle)",
+      textTransform: "uppercase",
+      letterSpacing: "0.12em",
+      marginBottom: "var(--sp-4)",
+      paddingBottom: "var(--sp-3)",
+      borderBottom: "1px solid var(--border)"
+    }
+  }, "Skeem"), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 640 340",
+    width: "100%",
+    "aria-label": "Veksell\xFCliti skeem",
+    style: {
+      display: "block"
+    }
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: "80",
+    y1: "310",
+    x2: "80",
+    y2: "200",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "80",
+    cy: "200",
+    r: "4",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "200",
+    y1: "310",
+    x2: "200",
+    y2: "92",
+    stroke: "var(--accent)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "200",
+    cy: "310",
+    r: "4",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "58",
+    y: "330",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "12px",
+      fontWeight: "700",
+      fill: "var(--text)"
+    }
+  }, "L"), /*#__PURE__*/React.createElement("text", {
+    x: "188",
+    y: "330",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "12px",
+      fontWeight: "700",
+      fill: "var(--text)"
+    }
+  }, "N"), /*#__PURE__*/React.createElement("rect", {
+    x: "42",
+    y: "138",
+    width: "132",
+    height: "100",
+    rx: "5",
+    fill: "none",
+    stroke: "var(--text-subtle)",
+    strokeWidth: "1.2",
+    strokeDasharray: "6 3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "80",
+    cy: "200",
+    r: "4",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "80",
+    cy: "158",
+    r: "4",
+    fill: "none",
+    stroke: "var(--text)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "80",
+    cy: "215",
+    r: "4",
+    fill: "none",
+    stroke: "var(--text)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "80",
+    y1: "200",
+    x2: "80",
+    y2: "162",
+    stroke: "var(--text)",
+    strokeWidth: "2.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "80",
+    y1: "158",
+    x2: "155",
+    y2: "158",
+    stroke: "var(--text-subtle)",
+    strokeWidth: "1.2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "80",
+    y1: "215",
+    x2: "155",
+    y2: "215",
+    stroke: "var(--text-subtle)",
+    strokeWidth: "1.2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "155",
+    cy: "158",
+    r: "3",
+    fill: "var(--text-subtle)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "155",
+    cy: "215",
+    r: "3",
+    fill: "var(--text-subtle)"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "108",
+    y: "258",
     textAnchor: "middle",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "11px",
       fill: "var(--text-muted)"
     }
-  }, "Valgusti"), /*#__PURE__*/React.createElement("line", {
-    x1: "145",
-    y1: "245",
-    x2: "172",
-    y2: "245",
+  }, "L\xFCliti 1"), /*#__PURE__*/React.createElement("line", {
+    x1: "155",
+    y1: "158",
+    x2: "475",
+    y2: "158",
     stroke: "var(--viz-carry)",
-    strokeWidth: "2.5",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "155",
+    y1: "215",
+    x2: "475",
+    y2: "215",
+    stroke: "var(--sys-s3)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: "458",
+    y: "138",
+    width: "132",
+    height: "100",
+    rx: "5",
+    fill: "none",
+    stroke: "var(--text-subtle)",
+    strokeWidth: "1.2",
+    strokeDasharray: "6 3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "475",
+    cy: "158",
+    r: "3",
+    fill: "var(--text-subtle)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "475",
+    cy: "215",
+    r: "3",
+    fill: "var(--text-subtle)"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "475",
+    y1: "158",
+    x2: "550",
+    y2: "158",
+    stroke: "var(--text-subtle)",
+    strokeWidth: "1.2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "475",
+    y1: "215",
+    x2: "550",
+    y2: "215",
+    stroke: "var(--text-subtle)",
+    strokeWidth: "1.2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "550",
+    cy: "158",
+    r: "4",
+    fill: "none",
+    stroke: "var(--text)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "550",
+    cy: "215",
+    r: "4",
+    fill: "none",
+    stroke: "var(--text)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "550",
+    cy: "185",
+    r: "4",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "550",
+    y1: "215",
+    x2: "550",
+    y2: "189",
+    stroke: "var(--text)",
+    strokeWidth: "2.2",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
-    x: "178",
-    y: "249",
+    x: "524",
+    y: "258",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "11px",
+      fill: "var(--text-muted)"
+    }
+  }, "L\xFCliti 2"), /*#__PURE__*/React.createElement("line", {
+    x1: "550",
+    y1: "185",
+    x2: "580",
+    y2: "185",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "580",
+    y1: "185",
+    x2: "580",
+    y2: "60",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "232",
+    y1: "60",
+    x2: "580",
+    y2: "60",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "200",
+    cy: "60",
+    r: "32",
+    fill: "none",
+    stroke: "var(--text-muted)",
+    strokeWidth: "2.2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "177",
+    y1: "37",
+    x2: "223",
+    y2: "83",
+    stroke: "var(--text-muted)",
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "223",
+    y1: "37",
+    x2: "177",
+    y2: "83",
+    stroke: "var(--text-muted)",
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "200",
+    y: "18",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "12px",
+      fill: "var(--text-muted)"
+    }
+  }, "Valgusti"), /*#__PURE__*/React.createElement("line", {
+    x1: "230",
+    y1: "280",
+    x2: "258",
+    y2: "280",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "265",
+    y: "284",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "10px",
       fill: "var(--text-muted)"
     }
-  }, "pruun \u2013 faas (L)"), /*#__PURE__*/React.createElement("line", {
-    x1: "145",
-    y1: "263",
-    x2: "172",
-    y2: "263",
+  }, "faas (L)"), /*#__PURE__*/React.createElement("line", {
+    x1: "230",
+    y1: "298",
+    x2: "258",
+    y2: "298",
     stroke: "var(--accent)",
-    strokeWidth: "2.5",
+    strokeWidth: "2.2",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
-    x: "178",
-    y: "267",
+    x: "265",
+    y: "302",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "10px",
       fill: "var(--text-muted)"
     }
-  }, "sinine \u2013 null (N)")))), /*#__PURE__*/React.createElement("div", {
+  }, "null (N)"), /*#__PURE__*/React.createElement("line", {
+    x1: "230",
+    y1: "316",
+    x2: "258",
+    y2: "316",
+    stroke: "var(--sys-s3)",
+    strokeWidth: "2.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "265",
+    y: "320",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--text-muted)"
+    }
+  }, "veksel (kommuteeriv juhe)")))), /*#__PURE__*/React.createElement("div", {
     className: "sys-block"
-  }, /*#__PURE__*/React.createElement(Stack, {
-    className: "section-pad",
-    gap: 1
-  }, /*#__PURE__*/React.createElement(Row, {
-    label: "Toite pruun kokku l\xFCliti pruuniga",
-    value: ""
-  }), /*#__PURE__*/React.createElement(Row, {
-    label: "L\xFCliti sinine kokku valgusti pruuniga",
-    value: ""
-  }), /*#__PURE__*/React.createElement(Row, {
-    label: "(lambi p\xF5hjaklemm)",
-    value: ""
-  }), /*#__PURE__*/React.createElement(Row, {
-    label: "Valgusti sinine kokku toite sinisega",
-    value: ""
-  }))));
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "var(--sp-3) var(--sp-4)",
+      borderBottom: "1px solid var(--border)",
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-sm)",
+      color: "var(--text-subtle)",
+      textTransform: "uppercase",
+      letterSpacing: "0.12em"
+    }
+  }, "\xDChendused"), /*#__PURE__*/React.createElement(Stack, {
+    gap: 0
+  }, [{
+    n: "1",
+    color: "var(--viz-carry)",
+    text: "Toite faas (L) → Lüliti 1 ühisklemmile"
+  }, {
+    n: "2",
+    color: "var(--viz-carry)",
+    text: "Lüliti 1 väljund 1 ↔ Lüliti 2 sisend 1 (vekseltraat)"
+  }, {
+    n: "3",
+    color: "var(--sys-s3)",
+    text: "Lüliti 1 väljund 2 ↔ Lüliti 2 sisend 2 (vekseltraat)"
+  }, {
+    n: "4",
+    color: "var(--viz-carry)",
+    text: "Lüliti 2 ühisklemmilt → valgusti (põhjaklemm)"
+  }, {
+    n: "5",
+    color: "var(--accent)",
+    text: "Toite null (N) → valgusti nullklemmile"
+  }].map(row => /*#__PURE__*/React.createElement("div", {
+    key: row.n,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--sp-3)",
+      padding: "10px var(--sp-4)",
+      borderBottom: "1px solid var(--border)",
+      fontFamily: "var(--mono)",
+      fontSize: "var(--fs-md)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: "20px",
+      height: "20px",
+      borderRadius: "50%",
+      border: "1px solid var(--border-strong)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "var(--fs-xs)",
+      color: "var(--text-subtle)",
+      flexShrink: 0
+    }
+  }, row.n), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: "8px",
+      height: "8px",
+      borderRadius: "50%",
+      background: row.color,
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--text-muted)"
+    }
+  }, row.text))))));
 }
 function SheetGuider() {
   const [listOpen, setListOpen] = React.useState(true);
@@ -3011,6 +3454,9 @@ function SheetGuider() {
   const ENTRIES = [{
     id: "lihtluliti",
     label: "Lihtlüliti"
+  }, {
+    id: "veksellulit",
+    label: "Veksellüliti"
   }
   // more entries added here later
   ];
@@ -3036,7 +3482,7 @@ function SheetGuider() {
   }, /*#__PURE__*/React.createElement(Stack, {
     gap: 3,
     className: "guider-preview-list"
-  }, selected ? selected.id === "lihtluliti" ? /*#__PURE__*/React.createElement(GuiderLihtluliti, null) : /*#__PURE__*/React.createElement("div", {
+  }, selected ? selected.id === "lihtluliti" ? /*#__PURE__*/React.createElement(GuiderLihtluliti, null) : selected.id === "veksellulit" ? /*#__PURE__*/React.createElement(GuiderVeksellulit, null) : /*#__PURE__*/React.createElement("div", {
     className: "sys-block"
   }, /*#__PURE__*/React.createElement(Stack, {
     className: "section-pad",
