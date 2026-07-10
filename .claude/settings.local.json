@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(node scripts/build-components.js)"
+      "PowerShell(node scripts/build-components.js)",
+      "Bash(npm.cmd run *)"
     ]
   }
 }

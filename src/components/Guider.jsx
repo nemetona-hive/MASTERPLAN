@@ -67,7 +67,7 @@ function GuiderLihtluliti() {
             <line x1="414" y1="80" x2="460" y2="80"
               stroke="var(--accent)" strokeWidth="2" />
 
-            {/* ── Junction dots ── */}
+            {/* ── Supply junction dots ── */}
             <circle cx="110" cy="190" r="4.5" fill="var(--text)" />
             <circle cx="110" cy="240" r="4.5" fill="var(--text)" />
 
@@ -89,24 +89,18 @@ function GuiderLihtluliti() {
               stroke="var(--text-subtle)"
               strokeWidth="1.2"
               strokeDasharray="6 3" />
-            {/* left contact filled */}
-            <circle cx="175" cy="190" r="4" fill="var(--text)" />
-            {/* right contact open */}
-            <circle cx="275" cy="190" r="4" fill="none" stroke="var(--text)" strokeWidth="2" />
-            {/* lever */}
-            <line x1="175" y1="190" x2="266" y2="172"
-              stroke="var(--text)" strokeWidth="2.2" strokeLinecap="round" />
-            {/* Lüliti label above box */}
-            <text x="225" y="158" textAnchor="middle"
+            {/* common — left side, open circle */}
+            <circle cx="175" cy="190" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
+            {/* output — right side, open circle */}
+            <circle cx="275" cy="190" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
+            {/* lever — from common, angled toward output, OPEN (floating, short) */}
+            <line x1="175" y1="190" x2="220" y2="174"
+              stroke="var(--text)" strokeWidth="2" strokeLinecap="round" />
+            {/* Lüliti label below box */}
+            <text x="225" y="229" textAnchor="middle"
               style={{ fontFamily: "var(--mono)", fontSize: "11px", fill: "var(--text-muted)" }}>
               Lüliti
             </text>
-
-            {/* ── Wire tick marks only, no labels ── */}
-            <line x1="275" y1="80" x2="275" y2="73"
-              stroke="var(--viz-carry)" strokeWidth="1" />
-            <line x1="437" y1="80" x2="437" y2="73"
-              stroke="var(--accent)" strokeWidth="1" />
 
             {/* ── Lamp (Valgusti) ── */}
             {/* outer circle */}
@@ -132,9 +126,9 @@ function GuiderLihtluliti() {
               style={{ fontFamily: "var(--mono)", fontSize: "10px", fill: "var(--text-muted)" }}>
               faas (L)
             </text>
-            <line x1="155" y1="292" x2="185" y2="292"
+            <line x1="155" y1="289" x2="185" y2="289"
               stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round" />
-            <text x="192" y="296"
+            <text x="192" y="293"
               style={{ fontFamily: "var(--mono)", fontSize: "10px", fill: "var(--text-muted)" }}>
               null (N)
             </text>
@@ -157,9 +151,9 @@ function GuiderLihtluliti() {
         </div>
         <Stack gap={0}>
           {[
-            { n: "1", wire: "L", text: "Toite faas (L) → lüliti sisend" },
-            { n: "2", wire: "L", text: "Lüliti väljund → valgusti (põhjaklemm)" },
-            { n: "3", wire: "N", text: "Valgusti null → toite null (N)" },
+            { n: "1", color: "var(--viz-carry)", text: "Toite faas (L) → lüliti sisend" },
+            { n: "2", color: "var(--viz-carry)", text: "Lüliti väljund → valgusti (põhjaklemm)" },
+            { n: "3", color: "var(--accent)",    text: "Valgusti null → toite null (N)" },
           ].map(row => (
             <div key={row.n} style={{
               display: "flex",
@@ -188,7 +182,7 @@ function GuiderLihtluliti() {
                 width: "8px",
                 height: "8px",
                 borderRadius: "50%",
-                background: row.wire === "L" ? "var(--viz-carry)" : "var(--accent)",
+                background: row.color,
                 flexShrink: 0
               }} />
               <span style={{ color: "var(--text-muted)" }}>{row.text}</span>
