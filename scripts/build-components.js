@@ -15,6 +15,7 @@ const SOURCES = [
   "src/components/PipeWrapCalculator.jsx",
   "src/components/Home.jsx",
   "src/components/GoldenRatio.jsx",
+  "src/components/Guider.jsx",
   "src/components/SymmetricLayout.jsx",
   "src/components/SurfaceLayout.jsx",
   "src/Nav.jsx",

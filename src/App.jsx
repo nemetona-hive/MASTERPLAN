@@ -27,6 +27,9 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
     wrapperClass = "main-data";
   } else if (page === "pipe-wrap") {
     content = <PipeWrapCalculator />;
+  } else if (page === "guider") {
+    content = <SheetGuider />;
+    wrapperClass = "main-data";
   } else if (page === "symmetric-layout") {
     content = <SheetSymmetricLayout sym={sym} setSym={setSym} />;
     wrapperClass = "main-data";

@@ -2754,6 +2754,318 @@ function SheetGoldenRatio({
     }, fmtInt(stepItem.value))))))));
   }))));
 }
+function GuiderLihtluliti() {
+  return /*#__PURE__*/React.createElement(Stack, {
+    gap: 3
+  }, /*#__PURE__*/React.createElement(Stack, {
+    className: "sys-head",
+    gap: 1
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "sys-title"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "guider",
+    className: "sys-title-icon"
+  }), " Lihtl\xFCliti"), /*#__PURE__*/React.createElement("span", {
+    className: "sys-head-sub"
+  }, "Valgusti ja l\xFCliti skeem")), /*#__PURE__*/React.createElement("div", {
+    className: "sys-block"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "section-pad"
+  }, /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 520 290",
+    width: "100%",
+    "aria-label": "Valgusti ja l\xFCliti skeem",
+    style: {
+      display: "block",
+      maxWidth: "620px"
+    }
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: "130",
+    y1: "185",
+    x2: "160",
+    y2: "185",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "240",
+    y1: "185",
+    x2: "240",
+    y2: "80",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "240",
+    y1: "80",
+    x2: "322",
+    y2: "80",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "281",
+    y: "72",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--viz-carry)"
+    }
+  }, "pruun"), /*#__PURE__*/React.createElement("line", {
+    x1: "130",
+    y1: "225",
+    x2: "430",
+    y2: "225",
+    stroke: "var(--accent)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "430",
+    y1: "225",
+    x2: "430",
+    y2: "80",
+    stroke: "var(--accent)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "378",
+    y1: "80",
+    x2: "430",
+    y2: "80",
+    stroke: "var(--accent)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "404",
+    y: "72",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--accent)"
+    }
+  }, "sinine"), /*#__PURE__*/React.createElement("circle", {
+    cx: "130",
+    cy: "185",
+    r: "4",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "130",
+    cy: "225",
+    r: "4",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "18",
+    y: "183",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "11px",
+      fontWeight: "700",
+      fill: "var(--text)"
+    }
+  }, "Toide L"), /*#__PURE__*/React.createElement("text", {
+    x: "18",
+    y: "196",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "9px",
+      fill: "var(--viz-carry)"
+    }
+  }, "pruun"), /*#__PURE__*/React.createElement("text", {
+    x: "18",
+    y: "223",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "11px",
+      fontWeight: "700",
+      fill: "var(--text)"
+    }
+  }, "Toide N"), /*#__PURE__*/React.createElement("text", {
+    x: "18",
+    y: "236",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "9px",
+      fill: "var(--accent)"
+    }
+  }, "sinine"), /*#__PURE__*/React.createElement("rect", {
+    x: "145",
+    y: "165",
+    width: "110",
+    height: "40",
+    rx: "4",
+    fill: "none",
+    stroke: "var(--text-muted)",
+    strokeWidth: "1.2",
+    strokeDasharray: "5 3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "160",
+    cy: "185",
+    r: "3.5",
+    fill: "var(--text)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "240",
+    cy: "185",
+    r: "3.5",
+    fill: "none",
+    stroke: "var(--text)",
+    strokeWidth: "1.8"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "160",
+    y1: "185",
+    x2: "233",
+    y2: "170",
+    stroke: "var(--text)",
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "200",
+    y: "158",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "11px",
+      fill: "var(--text-muted)"
+    }
+  }, "L\xFCliti"), /*#__PURE__*/React.createElement("circle", {
+    cx: "350",
+    cy: "80",
+    r: "28",
+    fill: "none",
+    stroke: "var(--text-muted)",
+    strokeWidth: "2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "330",
+    y1: "60",
+    x2: "370",
+    y2: "100",
+    stroke: "var(--text-muted)",
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "370",
+    y1: "60",
+    x2: "330",
+    y2: "100",
+    stroke: "var(--text-muted)",
+    strokeWidth: "1.8",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "350",
+    y: "38",
+    textAnchor: "middle",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "11px",
+      fill: "var(--text-muted)"
+    }
+  }, "Valgusti"), /*#__PURE__*/React.createElement("line", {
+    x1: "145",
+    y1: "245",
+    x2: "172",
+    y2: "245",
+    stroke: "var(--viz-carry)",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "178",
+    y: "249",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--text-muted)"
+    }
+  }, "pruun \u2013 faas (L)"), /*#__PURE__*/React.createElement("line", {
+    x1: "145",
+    y1: "263",
+    x2: "172",
+    y2: "263",
+    stroke: "var(--accent)",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: "178",
+    y: "267",
+    style: {
+      fontFamily: "var(--mono)",
+      fontSize: "10px",
+      fill: "var(--text-muted)"
+    }
+  }, "sinine \u2013 null (N)")))), /*#__PURE__*/React.createElement("div", {
+    className: "sys-block"
+  }, /*#__PURE__*/React.createElement(Stack, {
+    className: "section-pad",
+    gap: 1
+  }, /*#__PURE__*/React.createElement(Row, {
+    label: "Toite pruun kokku l\xFCliti pruuniga",
+    value: ""
+  }), /*#__PURE__*/React.createElement(Row, {
+    label: "L\xFCliti sinine kokku valgusti pruuniga",
+    value: ""
+  }), /*#__PURE__*/React.createElement(Row, {
+    label: "(lambi p\xF5hjaklemm)",
+    value: ""
+  }), /*#__PURE__*/React.createElement(Row, {
+    label: "Valgusti sinine kokku toite sinisega",
+    value: ""
+  }))));
+}
+function SheetGuider() {
+  const [listOpen, setListOpen] = React.useState(true);
+  const [selectedId, setSelectedId] = React.useState(null);
+  const ENTRIES = [{
+    id: "lihtluliti",
+    label: "Lihtlüliti"
+  }
+  // more entries added here later
+  ];
+  const selected = ENTRIES.find(e => e.id === selectedId) || null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    id: "data-control",
+    className: "data-control"
+  }, /*#__PURE__*/React.createElement(ControlPanel, {
+    id: "control-guider-list",
+    title: "Electrism",
+    open: listOpen,
+    setOpen: setListOpen
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 1
+  }, ENTRIES.map(entry => /*#__PURE__*/React.createElement("button", {
+    key: entry.id,
+    type: "button",
+    className: "ctrl-dir" + (selectedId === entry.id ? " on" : ""),
+    onClick: () => setSelectedId(selectedId === entry.id ? null : entry.id)
+  }, entry.label))))), /*#__PURE__*/React.createElement("div", {
+    id: "data-preview",
+    className: "data-preview"
+  }, /*#__PURE__*/React.createElement(Stack, {
+    gap: 3,
+    className: "guider-preview-list"
+  }, selected ? selected.id === "lihtluliti" ? /*#__PURE__*/React.createElement(GuiderLihtluliti, null) : /*#__PURE__*/React.createElement("div", {
+    className: "sys-block"
+  }, /*#__PURE__*/React.createElement(Stack, {
+    className: "section-pad",
+    gap: 2
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "data-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "data-row-lbl"
+  }, selected.label)), /*#__PURE__*/React.createElement("div", {
+    className: "ctrl-sublbl"
+  }, "Data for ", selected.label, " will be added here later."))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Stack, {
+    className: "sys-head",
+    gap: 1
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "sys-title"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "guider",
+    className: "sys-title-icon"
+  }), " Guider"), /*#__PURE__*/React.createElement("span", {
+    className: "sys-head-sub"
+  }, "Select an entry to view details")), /*#__PURE__*/React.createElement("div", {
+    className: "sys-block"
+  }, /*#__PURE__*/React.createElement(Stack, {
+    className: "section-pad",
+    gap: 2
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ctrl-sublbl"
+  }, "No entry selected. Pick one from the panel on the left.")))))));
+}
 function SheetSymmetricLayout({
   sym,
   setSym
@@ -3883,6 +4195,9 @@ function MainPageContent({
     wrapperClass = "main-data";
   } else if (page === "pipe-wrap") {
     content = /*#__PURE__*/React.createElement(PipeWrapCalculator, null);
+  } else if (page === "guider") {
+    content = /*#__PURE__*/React.createElement(SheetGuider, null);
+    wrapperClass = "main-data";
   } else if (page === "symmetric-layout") {
     content = /*#__PURE__*/React.createElement(SheetSymmetricLayout, {
       sym: sym,
