@@ -28,7 +28,7 @@ function GuiderLihtluliti() {
           </div>
 
           <svg
-            viewBox="0 0 560 310"
+            viewBox="0 0 560 330"
             width="100%"
             aria-label="Valgusti ja lüliti skeem"
             style={{ display: "block" }}
@@ -36,68 +36,68 @@ function GuiderLihtluliti() {
             {/*
               Key coordinates
               ───────────────────────────────────────────
-              Toide L junction:   (110, 190)
-              Toide N junction:   (110, 240)
-              Switch left pin:    (175, 190)
-              Switch right pin:   (275, 190)
-              Switch box:         x=155..295  y=168..212
-              Vertical rise x:    275, y 190→80
+              Toide L junction:   (110, 170)
+              Toide N junction:   (110, 260)
+              Switch left pin:    (175, 170)
+              Switch right pin:   (275, 170)
+              Switch box:         x=155..295  y=120..220  (square, matches Veksellüliti)
+              Vertical rise x:    275, y 170→80
               Lamp centre:        (380, 80)   r=34
               Lamp left edge:     (346, 80)
               Lamp right edge:    (414, 80)
-              Neutral rail right: x=460, y 240→80
+              Neutral rail right: x=460, y 260→80
               ───────────────────────────────────────────
             */}
 
             {/* ── Toide L → switch left pin: straight horizontal ── */}
-            <line x1="110" y1="190" x2="175" y2="190"
+            <line x1="110" y1="170" x2="175" y2="170"
               stroke="var(--viz-carry)" strokeWidth="2" />
 
             {/* ── Switch right → rise → lamp left ── */}
-            <line x1="275" y1="190" x2="275" y2="80"
+            <line x1="275" y1="170" x2="275" y2="80"
               stroke="var(--viz-carry)" strokeWidth="2" />
             <line x1="275" y1="80" x2="346" y2="80"
               stroke="var(--viz-carry)" strokeWidth="2" />
 
             {/* ── Neutral bus ── */}
-            <line x1="110" y1="240" x2="460" y2="240"
+            <line x1="110" y1="260" x2="460" y2="260"
               stroke="var(--accent)" strokeWidth="2" />
-            <line x1="460" y1="240" x2="460" y2="80"
+            <line x1="460" y1="260" x2="460" y2="80"
               stroke="var(--accent)" strokeWidth="2" />
             <line x1="414" y1="80" x2="460" y2="80"
               stroke="var(--accent)" strokeWidth="2" />
 
             {/* ── Supply junction dots ── */}
-            <circle cx="110" cy="190" r="4.5" fill="var(--text)" />
-            <circle cx="110" cy="240" r="4.5" fill="var(--text)" />
+            <circle cx="110" cy="170" r="4.5" fill="var(--text)" />
+            <circle cx="110" cy="260" r="4.5" fill="var(--text)" />
 
             {/* ── Toide labels ── */}
             {/* L */}
-            <text x="14" y="190"
+            <text x="14" y="170"
               style={{ fontFamily: "var(--mono)", fontSize: "12px", fontWeight: "700", fill: "var(--text)" }}>
               Toide L
             </text>
             {/* N */}
-            <text x="14" y="240"
+            <text x="14" y="260"
               style={{ fontFamily: "var(--mono)", fontSize: "12px", fontWeight: "700", fill: "var(--text)" }}>
               Toide N
             </text>
 
-            {/* ── Switch box (dashed) ── */}
-            <rect x="155" y="168" width="140" height="44" rx="5"
+            {/* ── Switch box (dashed, square — matches Veksellüliti) ── */}
+            <rect x="155" y="120" width="140" height="100" rx="5"
               fill="none"
               stroke="var(--text-subtle)"
               strokeWidth="1.2"
               strokeDasharray="6 3" />
             {/* common — left side, open circle */}
-            <circle cx="175" cy="190" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
+            <circle cx="175" cy="170" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
             {/* output — right side, open circle */}
-            <circle cx="275" cy="190" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
+            <circle cx="275" cy="170" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
             {/* lever — from common, angled toward output, OPEN (floating, short) */}
-            <line x1="175" y1="190" x2="220" y2="174"
+            <line x1="175" y1="170" x2="220" y2="154"
               stroke="var(--text)" strokeWidth="2" strokeLinecap="round" />
             {/* Lüliti label below box */}
-            <text x="225" y="229" textAnchor="middle"
+            <text x="225" y="237" textAnchor="middle"
               style={{ fontFamily: "var(--mono)", fontSize: "11px", fill: "var(--text-muted)" }}>
               Lüliti
             </text>
@@ -120,15 +120,15 @@ function GuiderLihtluliti() {
             </text>
 
             {/* ── Legend ── */}
-            <line x1="155" y1="272" x2="185" y2="272"
+            <line x1="155" y1="292" x2="185" y2="292"
               stroke="var(--viz-carry)" strokeWidth="2.2" strokeLinecap="round" />
-            <text x="192" y="276"
+            <text x="192" y="296"
               style={{ fontFamily: "var(--mono)", fontSize: "10px", fill: "var(--text-muted)" }}>
               faas (L)
             </text>
-            <line x1="155" y1="289" x2="185" y2="289"
+            <line x1="155" y1="309" x2="185" y2="309"
               stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round" />
-            <text x="192" y="293"
+            <text x="192" y="313"
               style={{ fontFamily: "var(--mono)", fontSize: "10px", fill: "var(--text-muted)" }}>
               null (N)
             </text>
@@ -152,7 +152,7 @@ function GuiderLihtluliti() {
         <Stack gap={0}>
           {[
             { n: "1", color: "var(--viz-carry)", text: "Toite faas (L) → lüliti sisend" },
-            { n: "2", color: "var(--viz-carry)", text: "Lüliti väljund → valgusti (põhjaklemm)" },
+            { n: "2", color: "var(--viz-carry)", text: "Lüliti väljund → valgusti" },
             { n: "3", color: "var(--accent)",    text: "Valgusti null → toite null (N)" },
           ].map(row => (
             <div key={row.n} style={{
@@ -255,11 +255,11 @@ function GuiderVeksellulit() {
               ─────────────────────────────────────────────────────────────
             */}
 
-            {/* ── L supply ── */}
-            <line x1="100" y1="290" x2="100" y2="205"
+            {/* ── L supply: straight into L1 common, no jog ── */}
+            <line x1="75" y1="290" x2="75" y2="205"
               stroke="var(--viz-carry)" strokeWidth="2" />
-            <circle cx="100" cy="205" r="4" fill="var(--text)" />
-            <text x="86" y="308"
+            <circle cx="75" cy="290" r="4" fill="var(--text)" />
+            <text x="61" y="308"
               style={{ fontFamily: "var(--mono)", fontSize: "12px", fontWeight: "700", fill: "var(--text)" }}>
               L
             </text>
@@ -306,9 +306,6 @@ function GuiderVeksellulit() {
 
             {/* L1 common — left side, open circle */}
             <circle cx="75" cy="205" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
-            {/* Wire from L supply into common */}
-            <line x1="100" y1="205" x2="79" y2="205"
-              stroke="var(--viz-carry)" strokeWidth="2" />
 
             {/* L1 traveller A — right side, open circle */}
             <circle cx="185" cy="175" r="4.5" fill="none" stroke="var(--text)" strokeWidth="2" />
@@ -386,10 +383,10 @@ function GuiderVeksellulit() {
         </div>
         <Stack gap={0}>
           {[
-            { n: "1", color: "var(--viz-carry)",  text: "Toite faas (L) → Lüliti 1 ühisklemmile" },
-            { n: "2", color: "var(--viz-carry)",  text: "Lüliti 1 väljund 1 ↔ Lüliti 2 sisend 1 (vekseltraat)" },
-            { n: "3", color: "var(--sys-s3)",      text: "Lüliti 1 väljund 2 ↔ Lüliti 2 sisend 2 (vekseltraat)" },
-            { n: "4", color: "var(--viz-carry)",  text: "Lüliti 2 ühisklemmilt → valgusti (põhjaklemm)" },
+            { n: "1", color: "var(--viz-carry)",  text: "Toite faas (L) → Lüliti 1" },
+            { n: "2", color: "var(--viz-carry)",  text: "Lüliti 1 väljund 1 ↔ Lüliti 2 sisend 1" },
+            { n: "3", color: "var(--sys-s3)",      text: "Lüliti 1 väljund 2 ↔ Lüliti 2 sisend 2" },
+            { n: "4", color: "var(--viz-carry)",  text: "Lüliti 2 ühisklemmilt → valgusti" },
             { n: "5", color: "var(--accent)",     text: "Toite null (N) → valgusti nullklemmile" },
           ].map(row => (
             <div key={row.n} style={{

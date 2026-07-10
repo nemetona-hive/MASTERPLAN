@@ -2785,7 +2785,7 @@ function GuiderLihtluliti() {
       borderBottom: "1px solid var(--border)"
     }
   }, "Skeem"), /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 560 310",
+    viewBox: "0 0 560 330",
     width: "100%",
     "aria-label": "Valgusti ja l\xFCliti skeem",
     style: {
@@ -2793,14 +2793,14 @@ function GuiderLihtluliti() {
     }
   }, /*#__PURE__*/React.createElement("line", {
     x1: "110",
-    y1: "190",
+    y1: "170",
     x2: "175",
-    y2: "190",
+    y2: "170",
     stroke: "var(--viz-carry)",
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
     x1: "275",
-    y1: "190",
+    y1: "170",
     x2: "275",
     y2: "80",
     stroke: "var(--viz-carry)",
@@ -2814,14 +2814,14 @@ function GuiderLihtluliti() {
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
     x1: "110",
-    y1: "240",
+    y1: "260",
     x2: "460",
-    y2: "240",
+    y2: "260",
     stroke: "var(--accent)",
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
     x1: "460",
-    y1: "240",
+    y1: "260",
     x2: "460",
     y2: "80",
     stroke: "var(--accent)",
@@ -2835,17 +2835,17 @@ function GuiderLihtluliti() {
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("circle", {
     cx: "110",
-    cy: "190",
+    cy: "170",
     r: "4.5",
     fill: "var(--text)"
   }), /*#__PURE__*/React.createElement("circle", {
     cx: "110",
-    cy: "240",
+    cy: "260",
     r: "4.5",
     fill: "var(--text)"
   }), /*#__PURE__*/React.createElement("text", {
     x: "14",
-    y: "190",
+    y: "170",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "12px",
@@ -2854,7 +2854,7 @@ function GuiderLihtluliti() {
     }
   }, "Toide L"), /*#__PURE__*/React.createElement("text", {
     x: "14",
-    y: "240",
+    y: "260",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "12px",
@@ -2863,9 +2863,9 @@ function GuiderLihtluliti() {
     }
   }, "Toide N"), /*#__PURE__*/React.createElement("rect", {
     x: "155",
-    y: "168",
+    y: "120",
     width: "140",
-    height: "44",
+    height: "100",
     rx: "5",
     fill: "none",
     stroke: "var(--text-subtle)",
@@ -2873,29 +2873,29 @@ function GuiderLihtluliti() {
     strokeDasharray: "6 3"
   }), /*#__PURE__*/React.createElement("circle", {
     cx: "175",
-    cy: "190",
+    cy: "170",
     r: "4.5",
     fill: "none",
     stroke: "var(--text)",
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("circle", {
     cx: "275",
-    cy: "190",
+    cy: "170",
     r: "4.5",
     fill: "none",
     stroke: "var(--text)",
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("line", {
     x1: "175",
-    y1: "190",
+    y1: "170",
     x2: "220",
-    y2: "174",
+    y2: "154",
     stroke: "var(--text)",
     strokeWidth: "2",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
     x: "225",
-    y: "229",
+    y: "237",
     textAnchor: "middle",
     style: {
       fontFamily: "var(--mono)",
@@ -2936,15 +2936,15 @@ function GuiderLihtluliti() {
     }
   }, "Valgusti"), /*#__PURE__*/React.createElement("line", {
     x1: "155",
-    y1: "272",
+    y1: "292",
     x2: "185",
-    y2: "272",
+    y2: "292",
     stroke: "var(--viz-carry)",
     strokeWidth: "2.2",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
     x: "192",
-    y: "276",
+    y: "296",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "10px",
@@ -2952,15 +2952,15 @@ function GuiderLihtluliti() {
     }
   }, "faas (L)"), /*#__PURE__*/React.createElement("line", {
     x1: "155",
-    y1: "289",
+    y1: "309",
     x2: "185",
-    y2: "289",
+    y2: "309",
     stroke: "var(--accent)",
     strokeWidth: "2.2",
     strokeLinecap: "round"
   }), /*#__PURE__*/React.createElement("text", {
     x: "192",
-    y: "293",
+    y: "313",
     style: {
       fontFamily: "var(--mono)",
       fontSize: "10px",
@@ -2983,7 +2983,7 @@ function GuiderLihtluliti() {
   }, [{
     n: "1",
     color: "var(--viz-carry)",
-    text: "Toite faas (L) → lüliti"
+    text: "Toite faas (L) → lüliti sisend"
   }, {
     n: "2",
     color: "var(--viz-carry)",
@@ -3068,19 +3068,19 @@ function GuiderVeksellulit() {
       display: "block"
     }
   }, /*#__PURE__*/React.createElement("line", {
-    x1: "100",
+    x1: "75",
     y1: "290",
-    x2: "100",
+    x2: "75",
     y2: "205",
     stroke: "var(--viz-carry)",
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("circle", {
-    cx: "100",
-    cy: "205",
+    cx: "75",
+    cy: "290",
     r: "4",
     fill: "var(--text)"
   }), /*#__PURE__*/React.createElement("text", {
-    x: "86",
+    x: "61",
     y: "308",
     style: {
       fontFamily: "var(--mono)",
@@ -3192,13 +3192,6 @@ function GuiderVeksellulit() {
     r: "4.5",
     fill: "none",
     stroke: "var(--text)",
-    strokeWidth: "2"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "100",
-    y1: "205",
-    x2: "79",
-    y2: "205",
-    stroke: "var(--viz-carry)",
     strokeWidth: "2"
   }), /*#__PURE__*/React.createElement("circle", {
     cx: "185",
