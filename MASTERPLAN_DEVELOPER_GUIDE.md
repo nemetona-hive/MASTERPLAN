@@ -1,4 +1,4 @@
-# NEMETONA MASTERPLAN — Project Context
+# NEMETONA MASTERPLAN — Developer Guide
 
 React app for surface covering layout calculators (tiles, panels, etc.).
 Hosted on GitHub Pages at: https://nemetona-hive.github.io/MASTERPLAN/
@@ -11,25 +11,32 @@ when the shell permits npm scripts. React and ReactDOM are loaded from CDN.
 All global state (config, constants, compute functions) lives outside `src/`
 and is available as globals — do NOT import them.
 
+Any edit under `src/` requires a rebuild (`npm.cmd run build`) before it shows up
+in the browser — there is no bundler/hot-reload watching source files. Use
+`npm.cmd run watch` to rebuild automatically on save. `components.js` is a
+generated build artifact; never hand-edit it — edits will be silently
+overwritten on the next build.
+
 ## File load order (defined in components.jsx)
 
 ```
-1.  shared.jsx                 → Icon, useProtectedRangeSlider, RangeSlider, NumInput, SLabel,
-                                  Collapsible, Section, ControlPanel, Row,
-                                  getLinkedCardTone, getLinkedCardMarker, useLinkedCardHighlight,
-                                  Stack, Text
-2.  Visualization.jsx          → PanelRowVis, PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
-3.  Controls.jsx               → S2Controls, S4Controls, LAYOUT_REGISTRY
-4.  utils/timesheet.js         → parseTime, parseLunch, parseSumTime, roundMins, fmtHHMM, fmtDecimal
-5.  components/Timesheet.jsx   → SheetTimesheet
-6.  components/Concrete.jsx    → SheetConcrete
+1.  shared.jsx                       → Icon, useProtectedRangeSlider, RangeSlider, NumInput, SLabel,
+                                        Collapsible, Section, ControlPanel, Row,
+                                        getLinkedCardTone, getLinkedCardMarker, useLinkedCardHighlight,
+                                        Stack, Text
+2.  Visualization.jsx                → PanelRowVis, PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
+3.  Controls.jsx                     → S2Controls, S4Controls, LAYOUT_REGISTRY
+4.  utils/timesheet.js               → parseTime, parseLunch, parseSumTime, roundMins, fmtHHMM, fmtDecimal
+5.  components/Timesheet.jsx         → SheetTimesheet
+6.  components/Concrete.jsx          → SheetConcrete
 7.  components/PipeWrapCalculator.jsx → PipeWrapCalculator
-8.  components/Home.jsx        → SheetHome
-9.  components/GoldenRatio.jsx → SheetGoldenRatio
-10. components/SymmetricLayout.jsx → SheetSymmetricLayout
-11. components/SurfaceLayout.jsx → SheetSurfaceLayout
-12. Nav.jsx                    → isNavPageActive, NavButton, initOpenGroups, AppNav
-13. App.jsx                    → MainPageContent, App, ReactDOM.createRoot
+8.  components/Home.jsx              → SheetHome
+9.  components/GoldenRatio.jsx       → SheetGoldenRatio
+10. components/Guider.jsx            → SheetGuider
+11. components/SymmetricLayout.jsx   → SheetSymmetricLayout
+12. components/SurfaceLayout.jsx     → SheetSurfaceLayout
+13. Nav.jsx                          → isNavPageActive, NavButton, initOpenGroups, AppNav
+14. App.jsx                          → MainPageContent, App, ReactDOM.createRoot
 ```
 
 `components.jsx` is the manifest — it documents order but contains no logic.
@@ -89,25 +96,7 @@ Page render is handled in `MainPageContent` in App.jsx — add new pages there.
 Nav items come from `PAGES` global — add new pages in config (outside src/).
 
 Current pages: `home`, `layout` (parent), `pattern-layout`, `symmetric-layout`,
-`concrete`, `golden-ratio`, `pipe-wrap`, `timesheet`.
-
-## UI components (from shared.jsx)
-
-- `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange step min unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
-- `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle; uses `useProtectedRangeSlider` for mobile touch-scroll protection. Starts locked; click row or tap lock icon to unlock.
-- `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
-- `<Section title bg>` — collapsible section for preview area
-- `<DetailSection title open>` — collapsible section for secondary information or management UI
-- `<Collapsible>` — base for Section, ControlPanel, and DetailSection (variant="section"|"panel"|"detail")
-- `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
-- `<SLabel>` — simple label div for section headings in controls
-- `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
-- `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
-- `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
-- `.seg-group` — Container for exclusive mode-switch toggles; provides a unified border/boundary for grouped buttons.
-- `.pill-btn` — Minimalist, rounded buttons used for quick-select presets.
-- `.ctrl-dir` / `.ts-btn` — Standardized button styles with "premium glow" hover/active feedback. Standalone buttons use `var(--fs-md)` while segmented controls are bumped for legibility.
+`concrete`, `golden-ratio`, `pipe-wrap`, `guider`, `timesheet`.
 
 ## Page components
 
@@ -121,6 +110,7 @@ All calculators and pages are stored as standalone files inside `src/components/
 | `golden-ratio` | `SheetGoldenRatio` | `components/GoldenRatio.jsx` | Calculates Phi sequences |
 | `pipe-wrap` | `PipeWrapCalculator` | `components/PipeWrapCalculator.jsx` | Pipe wrap length calculator with SVG diagram |
 | `concrete` | `SheetConcrete` | `components/Concrete.jsx` | Concrete consumption estimator |
+| `guider` | `SheetGuider` | `components/Guider.jsx` | Reference/guide pages (e.g. electrical wiring diagrams) with an entry list panel |
 | `timesheet` | `SheetTimesheet` | `components/Timesheet.jsx` | Work hours calculator |
 
 ## Layout systems
@@ -164,6 +154,12 @@ Best layout = fewest total pieces among valid results.
 - `.pill-btn` — Minimalist, rounded buttons used for quick-select presets.
 - `.ctrl-dir` / `.ts-btn` — Standardized button styles with "premium glow" hover/active feedback. Standalone buttons use `var(--fs-md)` while segmented controls are bumped for legibility.
 
+## Icons
+
+- Icons are rendered via `<Icon name="..." />`, which maps a logical name to a FontAwesome class string through the `ICONS` global (`config.js`).
+- FontAwesome is vendored locally (`vendor/fontawesome.min.css`), not loaded from a CDN — the app must work fully offline.
+- Only the **Solid** (`vendor/fa-solid-900.woff2`), **Regular** (`vendor/fa-regular-400.woff2`), and **Brands** (`vendor/fa-brands-400.woff2`) webfonts are vendored. Using an icon class outside these three styles (e.g. Duotone, Sharp) will render as a fallback box — check which style a FontAwesome class belongs to before using it, and vendor the matching webfont if it's missing.
+
 ## Visualization
 
 - `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`.
@@ -205,6 +201,14 @@ Defined in `themes.js` (loaded as global, not inside `src/`).
 PHI = 1.6180339887499. Builds 7 descending steps: `base / PHI^n`.
 Cards use tone system (a/b/c/d) for visual identity.
 `useLinkedCardHighlight` hook links control cards to preview cards on click.
+
+## Guider tool
+
+Reference/guide page with a selectable entry list (`ControlPanel` on the left, detail view on the right).
+Currently ships wiring-diagram entries (`Lihtlüliti`, `Veksellüliti`) built as inline SVG schematics
+inside `components/Guider.jsx` — square dashed switch boxes with open-circle contacts and a floating
+lever, consistent stroke widths (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each
+diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 ## Important conventions
 

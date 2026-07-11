@@ -23,7 +23,7 @@ const ICONS = {
   "columns-2": "fa-solid fa-columns",          // Nav: Symmetric Layout
   "layer-group": "fa-solid fa-layer-group",       // Nav: Concrete
   "golden-phi": "fa-solid fa-dharmachakra",     // Nav: Golden Ratio
-  "guider": "fa-solid fa-route",                // Nav: Guider
+  "guider": "fa-brands fa-readme",               // Nav: Guider
 
   // Layout system title icons
   "s0": "fa-solid fa-circle-0",         // S0: Symmetric layout
