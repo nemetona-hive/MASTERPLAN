@@ -1,6 +1,9 @@
+import { React } from "../react-globals.js";
+import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, toNumber, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+
 // ── Concrete Calculator ────────────────────────────────────────────────────────
 
-function SheetConcrete() {
+export function SheetConcrete() {
   const [areaMode,  setAreaMode]  = React.useState("direct"); // "direct" | "dims"
   const [thickMode, setThickMode] = React.useState("avg");    // "avg" | "corners"
 

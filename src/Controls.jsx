@@ -1,3 +1,5 @@
+import { NumInput, RangeSlider, Stack } from "./shared.jsx";
+
 // ── Layout controls & registry ────────────────────────────────────────────────
 
 function S4Controls({ state, setState }) {
@@ -26,7 +28,7 @@ function S2Controls({ state, setState }) {
 }
 
 // Derives title and icon from SYSTEMS — edit titles/icons in config.js only
-var LAYOUT_REGISTRY = ["s1", "s2", "s3", "s4"].map(id => {
+export var LAYOUT_REGISTRY = ["s1", "s2", "s3", "s4"].map(id => {
   const sys = SYSTEMS.find(s => `s${s.id}` === id);
   return {
     id,

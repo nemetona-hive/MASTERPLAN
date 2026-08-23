@@ -1,3 +1,15 @@
+import { React, ReactDOM, useState } from "./react-globals.js";
+import { SheetConcrete } from "./components/Concrete.jsx";
+import { SheetGoldenRatio } from "./components/GoldenRatio.jsx";
+import { SheetGuider } from "./components/Guider.jsx";
+import { SheetHome } from "./components/Home.jsx";
+import { PipeWrapCalculator } from "./components/PipeWrapCalculator.jsx";
+import { SheetSurfaceLayout } from "./components/SurfaceLayout.jsx";
+import { SheetSymmetricLayout } from "./components/SymmetricLayout.jsx";
+import { SheetTimesheet } from "./components/Timesheet.jsx";
+import { AppNav } from "./Nav.jsx";
+import { isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
+
 // ── App root ──────────────────────────────────────────────────────────────────
 
 const getIsMobile = isMobileViewport;

@@ -1,4 +1,9 @@
-function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
+import { React } from "../react-globals.js";
+import { LAYOUT_REGISTRY } from "../Controls.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
+
+export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, patternStart: psRaw } = sh;
   const rowStart = sh.rowStart || "top";
   const patternStart = psRaw || (direction === "V" ? "bottom" : "left");

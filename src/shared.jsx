@@ -1,35 +1,34 @@
-"use strict";
-const { useState } = React;
+import { React, ReactDOM } from "./react-globals.js";
 
 // ── Shared UI primitives ──────────────────────────────────────────────────────
 
-function Icon({ name, className = "" }) {
+export function Icon({ name, className = "" }) {
   const faClass = ICONS[name] || "fa-solid fa-circle-question";
   return <i className={[faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")} />;
 }
 
-function isMobileViewport() {
+export function isMobileViewport() {
   return typeof window !== "undefined" && (window.innerWidth <= 1024 || window.innerHeight <= 500);
 }
 
-function safeSaveStaticDefaults(key, value) {
+export function safeSaveStaticDefaults(key, value) {
   if (typeof saveStaticDefaults === "undefined") {
     return Promise.reject(new Error("saveStaticDefaults is not available"));
   }
   return saveStaticDefaults(key, value);
 }
 
-function toNumber(value, fallback = 0) {
+export function toNumber(value, fallback = 0) {
   if (value === "" || value === null || value === undefined) return fallback;
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
 
-function clampNumber(value, min, max, fallback = min) {
+export function clampNumber(value, min, max, fallback = min) {
   return Math.min(max, Math.max(min, toNumber(value, fallback)));
 }
 
-function useTimedState(initialValue, defaultDelay = 2500) {
+export function useTimedState(initialValue, defaultDelay = 2500) {
   const [value, setValue] = React.useState(initialValue);
   const timerRef = React.useRef(null);
 
@@ -53,7 +52,7 @@ function useTimedState(initialValue, defaultDelay = 2500) {
   return [value, setTimedValue, clearTimedValue];
 }
 
-function useTimedSet(defaultDelay = 600) {
+export function useTimedSet(defaultDelay = 600) {
   const [values, setValues] = React.useState(() => new Set());
   const timerRefs = React.useRef({});
 
@@ -97,7 +96,7 @@ function useTimedSet(defaultDelay = 600) {
   return [values, add, remove, clear];
 }
 
-function useClickOutside(refs, handler, active = true) {
+export function useClickOutside(refs, handler, active = true) {
   React.useEffect(() => {
     if (!active) return;
 
@@ -116,7 +115,7 @@ function useClickOutside(refs, handler, active = true) {
   }, [handler, active]);
 }
 
-function useDropdownKeyboard(itemsLength, onSelect, onClose) {
+export function useDropdownKeyboard(itemsLength, onSelect, onClose) {
   const [hoveredIndex, setHoveredIndex] = React.useState(-1);
 
   // Reset hovered index when items change or dropdown opens
@@ -200,7 +199,7 @@ function useProtectedRangeSlider(onChange) {
 /**
  * A lockable range slider component to prevent accidental movement on mobile.
  */
-function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
+export function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
   const isMobileMode = isMobileViewport();
   // Default to locked on both mobile and desktop
   const [isLocked, setIsLocked] = React.useState(true);
@@ -249,7 +248,7 @@ function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
   );
 }
 
-function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinity, unit, req = false, onFocus, onMouseDown, labelIcon, onKeyDown, onCommit }) {
+export function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinity, unit, req = false, onFocus, onMouseDown, labelIcon, onKeyDown, onCommit }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
@@ -383,11 +382,11 @@ function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, chil
 }
 
 // Convenience aliases for readability at call sites
-const Section = (props) => <Collapsible {...props} />;
-const ControlPanel = (props) => <Collapsible {...props} variant="panel" />;
-const DetailSection = (props) => <Collapsible {...props} variant="detail" />;
+export const Section = (props) => <Collapsible {...props} />;
+export const ControlPanel = (props) => <Collapsible {...props} variant="panel" />;
+export const DetailSection = (props) => <Collapsible {...props} variant="detail" />;
 
-function Row({ label, value, unit, hi, danger, hoverType, hoveredType, setHoveredType }) {
+export function Row({ label, value, unit, hi, danger, hoverType, hoveredType, setHoveredType }) {
   const isHovered = hoverType && hoveredType === hoverType;
   return (
     <div className="data-row">
@@ -403,7 +402,7 @@ function Row({ label, value, unit, hi, danger, hoverType, hoveredType, setHovere
 }
 
 // Stable visual identity for id-driven cards (A/B/C... + tone buckets)
-function getLinkedCardTone(id) {
+export function getLinkedCardTone(id) {
   const key = String(id || "").toLowerCase();
   const tones = ["a", "b", "c", "d"];
   if (tones.includes(key)) return key;
@@ -411,7 +410,7 @@ function getLinkedCardTone(id) {
   return tones[hash % tones.length];
 }
 
-function getLinkedCardMarker(id) {
+export function getLinkedCardMarker(id) {
   const match = String(id || "").toUpperCase().match(/[A-Z0-9]/);
   return match ? match[0] : "X";
 }
@@ -419,7 +418,7 @@ function getLinkedCardMarker(id) {
 // Reusable linked-card interaction:
 // click control card -> matching preview card stays active
 // click elsewhere -> clear active preview
-function useLinkedCardHighlight(groupId) {
+export function useLinkedCardHighlight(groupId) {
   const [activeId, setActiveId] = React.useState(null);
 
   React.useEffect(() => {
@@ -447,7 +446,7 @@ function useLinkedCardHighlight(groupId) {
  * @param {1|2|3|4|5|6|7|0.5} gap - Spacing level from scale
  * @param {"column"|"row"} direction - Flex direction
  */
-function Stack({ children, gap = 2, direction = "column", className = "", style = {}, as: Tag = "div", ...props }) {
+export function Stack({ children, gap = 2, direction = "column", className = "", style = {}, as: Tag = "div", ...props }) {
   const gClass = `u-gap-${String(gap).replace('.', '')}`;
   const dClass = `u-flex-${direction === "row" ? "row" : "col"}`;
   return (
@@ -481,7 +480,7 @@ function Text({ children, size, weight, variant, color, className = "", style = 
   );
 }
 
-function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, className = "", style = {} }) {
+export function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, className = "", style = {} }) {
   if (typeof canSaveStaticDefaults === "undefined" || !canSaveStaticDefaults()) return null;
   const {
     savingLabel = "Saving...",
@@ -503,7 +502,7 @@ function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, cl
   );
 }
 
-function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, hoveredIndex = -1 }) {
+export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, hoveredIndex = -1 }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
   React.useLayoutEffect(() => {

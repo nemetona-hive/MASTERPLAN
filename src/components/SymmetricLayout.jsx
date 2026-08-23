@@ -1,4 +1,8 @@
-function SheetSymmetricLayout({ sym, setSym }) {
+import { React } from "../react-globals.js";
+import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDropdownKeyboard } from "../shared.jsx";
+import { LayoutPanel } from "../Visualization.jsx";
+
+export function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
 
   // ── Material presets (shared with pattern layouts) ─────────────────────────

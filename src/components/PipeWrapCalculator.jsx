@@ -1,6 +1,9 @@
+import { React } from "../react-globals.js";
+import { NumInput, RangeSlider, Row, Section, Stack } from "../shared.jsx";
+
 const PRESETS = [100, 125, 160, 200];
 
-function PipeWrapCalculator() {
+export function PipeWrapCalculator() {
   const [pipeDiam, setPipeDiam] = React.useState("");
   const [matThick, setMatThick] = React.useState("");
   const [overlap, setOverlap] = React.useState("");

@@ -1,7 +1,7 @@
 // ── Timesheet utilities ───────────────────────────────────────────────────────
 // Pure parse/format helpers — no DOM, no React. Safe to unit-test independently.
 
-function parseTime(raw) {
+export function parseTime(raw) {
   if (!raw || !raw.trim()) return null;
   let s = raw.trim().replace(',', '.');
   let m;
@@ -24,7 +24,7 @@ function parseTime(raw) {
   return null;
 }
 
-function parseLunch(raw) {
+export function parseLunch(raw) {
   // ".30" → 30 min (dot-prefix = minutes literal)
   if (!raw || !raw.trim()) return 0;
   let s = raw.trim();
@@ -52,6 +52,6 @@ function parseLunch(raw) {
 
 function roundMins(mins, to) { return to ? Math.round(mins / to) * to : mins; }
 // Formats as H:MM (e.g. 8:05 not 8:5)
-function fmtHHMM(mins) { return Math.floor(mins / 60) + ':' + String(mins % 60).padStart(2, '0'); }
+export function fmtHHMM(mins) { return Math.floor(mins / 60) + ':' + String(mins % 60).padStart(2, '0'); }
 // Rounds to nearest quarter hour: .00 / .25 / .50 / .75
-function fmtDecimal(mins) { return (Math.round((mins / 60) * 4) / 4).toFixed(2); }
+export function fmtDecimal(mins) { return (Math.round((mins / 60) * 4) / 4).toFixed(2); }

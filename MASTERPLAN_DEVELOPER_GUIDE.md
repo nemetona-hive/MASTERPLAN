@@ -5,43 +5,45 @@ Hosted on GitHub Pages at: https://nemetona-hive.github.io/MASTERPLAN/
 
 ## Architecture
 
-**No bundler.** JSX files are concatenated by a custom build script
-into a single output file. Run `npm.cmd run build` on Windows, or `npm run build`
-when the shell permits npm scripts. React and ReactDOM are loaded from CDN.
-All global state (config, constants, compute functions) lives outside `src/`
-and is available as globals — do NOT import them.
+**Bundled with esbuild.** `src/App.jsx` is the entry point; esbuild follows the
+`import` graph from there and emits a single IIFE into `components.js`. Run
+`npm run build` after any edit under `src/`, or `npm run watch` to rebuild on
+save. `components.js` is generated output — never hand-edit it, the next build
+overwrites it silently. It is committed anyway, because GitHub Pages serves the
+repo directly and there is no build step on that side.
 
-Any edit under `src/` requires a rebuild (`npm.cmd run build`) before it shows up
-in the browser — there is no bundler/hot-reload watching source files. Use
-`npm.cmd run watch` to rebuild automatically on save. `components.js` is a
-generated build artifact; never hand-edit it — edits will be silently
-overwritten on the next build.
+React and ReactDOM are plain `<script>` tags in `index.html`, loaded from
+`vendor/`, not bundled. `src/react-globals.js` re-exports those two window
+globals so source files can `import { React } from "./react-globals.js"` like
+any other module. This is also why the build sets `jsxFactory` to
+`React.createElement` rather than importing the react package.
 
-## File load order (defined in components.jsx)
+Everything that lives *outside* `src/` — `config.js`, `simulation.js`,
+`themes.js` — is still loaded as its own `<script>` and reached as a bare
+global. Do NOT import those; they are not modules.
+
+## Module graph
+
+There is no hand-maintained file order any more: esbuild derives it from the
+imports, so adding a file means importing it, nothing else.
 
 ```
-1.  shared.jsx                       → Icon, useProtectedRangeSlider, RangeSlider, NumInput, SLabel,
-                                        Collapsible, Section, ControlPanel, Row,
-                                        getLinkedCardTone, getLinkedCardMarker, useLinkedCardHighlight,
-                                        Stack, Text
-2.  Visualization.jsx                → PanelRowVis, PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
-3.  Controls.jsx                     → S2Controls, S4Controls, LAYOUT_REGISTRY
-4.  utils/timesheet.js               → parseTime, parseLunch, parseSumTime, roundMins, fmtHHMM, fmtDecimal
-5.  components/Timesheet.jsx         → SheetTimesheet
-6.  components/Concrete.jsx          → SheetConcrete
-7.  components/PipeWrapCalculator.jsx → PipeWrapCalculator
-8.  components/Home.jsx              → SheetHome
-9.  components/GoldenRatio.jsx       → SheetGoldenRatio
-10. components/Guider.jsx            → SheetGuider
-11. components/SymmetricLayout.jsx   → SheetSymmetricLayout
-12. components/SurfaceLayout.jsx     → SheetSurfaceLayout
-13. Nav.jsx                          → isNavPageActive, NavButton, initOpenGroups, AppNav
-14. App.jsx                          → MainPageContent, App, ReactDOM.createRoot
+react-globals.js  → React, ReactDOM, hooks (re-exported window globals)
+shared.jsx        → Icon, RangeSlider, NumInput, Collapsible, Section, ControlPanel,
+                    DetailSection, Row, Stack, MaterialPresetDropdown, SaveDefaultsButton,
+                    useTimedState, useTimedSet, useClickOutside, useDropdownKeyboard,
+                    useLinkedCardHighlight, getLinkedCardTone, getLinkedCardMarker,
+                    isMobileViewport, safeSaveStaticDefaults, toNumber, clampNumber
+Visualization.jsx → PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
+Controls.jsx      → LAYOUT_REGISTRY
+utils/timesheet.js→ parseTime, parseLunch, fmtHHMM, fmtDecimal
+components/*.jsx  → one Sheet* per page (plus PipeWrapCalculator)
+Nav.jsx           → AppNav
+App.jsx           → entry point; mounts via ReactDOM.createRoot
 ```
 
-`components.jsx` is the manifest — it documents order but contains no logic.
-**Never add logic to components.jsx.**
-Note: `themes.js` is loaded directly in `index.html` to ensure themes apply early before React renders.
+`themes.js` is loaded directly in `index.html` so themes apply before React
+renders.
 
 ## Key globals (defined outside src/, treat as read-only)
 
@@ -212,9 +214,9 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 ## Important conventions
 
-- `useState` destructured from React at top of shared.jsx — use directly
-- All other React hooks via `React.useXxx`
-- After editing files under `src/`, run `npm.cmd run build` so `components.js` is regenerated.
+- Hooks come from `react-globals.js`. Most call sites use `React.useXxx`; two
+  files import `useState` by name. Either is fine — import what you use.
+- After editing files under `src/`, run `npm run build` so `components.js` is regenerated.
 - Treat `components.js` as generated output; do not hand-edit it except for emergency inspection/debugging.
 - If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.

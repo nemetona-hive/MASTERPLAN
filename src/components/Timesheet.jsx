@@ -1,3 +1,7 @@
+import { React, useState } from "../react-globals.js";
+import { Stack, useTimedState } from "../shared.jsx";
+import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
+
 // ── SheetTimesheet ────────────────────────────────────────────────────────────
 
 const LUNCH_PRESETS = [
@@ -36,7 +40,7 @@ function calcRowResult(row) {
   return { dur: '', dec: '', status: 'partial', mins: 0 };
 }
 
-function SheetTimesheet() {
+export function SheetTimesheet() {
   const [calcRows,    setCalcRows]    = useState(makeCalcRows);
   const [activeRowId, setActiveRowId] = useState(null);
   const [copied,      setCopied]      = useTimedState(false, 1800);

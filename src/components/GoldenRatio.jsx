@@ -1,4 +1,7 @@
-function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
+import { React } from "../react-globals.js";
+import { ControlPanel, Icon, SaveDefaultsButton, Stack, getLinkedCardMarker, getLinkedCardTone, safeSaveStaticDefaults, useLinkedCardHighlight, useTimedSet, useTimedState } from "../shared.jsx";
+
+export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
   const [baseOpen, setBaseOpen] = React.useState(true);
   const link = useLinkedCardHighlight("golden-ratio");
   const PHI = 1.6180339887499;

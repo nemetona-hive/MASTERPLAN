@@ -1,4 +1,6 @@
-function SheetHome({ page, setPage }) {
+import { Icon, Stack } from "../shared.jsx";
+
+export function SheetHome({ page, setPage }) {
   const items = PAGES.filter(pg => !pg.noNav);
 
   return (

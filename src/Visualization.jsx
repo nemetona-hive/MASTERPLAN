@@ -1,5 +1,7 @@
+import { React } from "./react-globals.js";
+import { Icon, Row, Stack } from "./shared.jsx";
 
-function PanelSummary({ rows, hoveredType, setHoveredType }) {
+export function PanelSummary({ rows, hoveredType, setHoveredType }) {
   return (
     <>
       {rows.map((row, i) => (
@@ -102,7 +104,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
 // Row labels live inside the SVG, positioned in SVG coordinate space.
 // This guarantees they always align with the chart rows at any container size.
 
-function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview }) {
+export function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview }) {
   const [selectedKey, setSelectedKey] = React.useState(null);
   const [selectedSourceId, setSelectedSourceId] = React.useState(null);
   const svgIdRef = React.useRef(null);
@@ -317,7 +319,7 @@ function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "
   );
 }
 
-function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp, onLargePreview }) {
+export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp, onLargePreview }) {
   const [openLocal, setOpenLocal] = React.useState(layout.defaultOpen !== false);
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
@@ -354,7 +356,7 @@ function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowS
   );
 }
 
-function PreviewSection({ id, title, description, headerActions, children }) {
+export function PreviewSection({ id, title, description, headerActions, children }) {
   return (
     <Stack id={id} gap={3}>
       {(title || description || headerActions) && (

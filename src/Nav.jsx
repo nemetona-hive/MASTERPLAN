@@ -1,3 +1,6 @@
+import { React } from "./react-globals.js";
+import { Icon } from "./shared.jsx";
+
 // ── Navigation ────────────────────────────────────────────────────────────────
 
 function isNavPageActive(page, pg) {
@@ -93,7 +96,7 @@ function initOpenGroups(isMob) {
   }, {});
 }
 
-function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile, theme, setTheme }) {
+export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile, theme, setTheme }) {
   const mobile = isMobile;
   const showSubs = mobile ? mobileMenuOpen : navOpen;
   const navRef = React.useRef(null);

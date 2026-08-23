@@ -1,3 +1,6 @@
+import { React } from "../react-globals.js";
+import { ControlPanel, Icon, Stack } from "../shared.jsx";
+
 function GuiderLihtluliti() {
   return (
     <Stack gap={4}>
@@ -420,7 +423,7 @@ function GuiderVeksellulit() {
   );
 }
 
-function SheetGuider() {
+export function SheetGuider() {
   const [listOpen, setListOpen] = React.useState(true);
   const [selectedId, setSelectedId] = React.useState(null);
 
