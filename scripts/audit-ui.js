@@ -200,11 +200,30 @@ for (const file of cssFiles) {
     if (IGNORE_UNUSED.test(name)) continue;
     if (markupText.includes(name)) continue;
 
-    // A BEM-ish modifier is routinely concatenated onto its base, so the full
-    // name never appears literally. If the prefix is built anywhere, treat it
-    // as reachable.
+    /* A name assembled at runtime never appears literally. Two shapes:
+       a BEM-ish modifier concatenated onto its base, and a template hole —
+       `gr-control-card-${tone}` builds gr-control-card-a..d, none of which is
+       a substring of anything in the markup.
+
+       Cut at every dash and test the prefix with the dash and without it: the
+       hole in `gr-control-card-${…}` sits AFTER the dash, so a prefix that
+       stops before it never matches. Three characters minimum, or a prefix
+       short enough to appear by accident marks half the sheet reachable. */
     const mod = name.indexOf("--");
     if (mod > 0 && markupText.includes(name.slice(0, mod + 2))) continue;
+
+    let built = false;
+    for (let i = name.length; i > 0 && !built; i--) {
+      if (i < name.length && name[i] !== "-") continue;
+      for (const prefix of [name.slice(0, i), name.slice(0, i) + "-"]) {
+        if (prefix.replace(/-$/, "").length < 3) continue;
+        const p = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        if (new RegExp(`${p}\\$\\{`).test(markupText) || new RegExp(`${p}["'\\s]*\\+`).test(markupText)) {
+          built = true; break;
+        }
+      }
+    }
+    if (built) continue;
 
     if (e.target !== null) {
       add("WARN", "unused-css", file, e.target,

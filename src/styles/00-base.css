@@ -7,7 +7,7 @@
  * ----------------------------------------------------------
  *
  * ROOT */
- 
+
 *,
 *::before,
 *::after {
@@ -62,7 +62,7 @@ html, body, #root {
 	--color-gray-opa80: var(--text-muted);
 	--color-blue: var(--accent);
 	--color-white: var(--text);
-	
+
 	--color-bg: var(--bg);
 	--color-text: var(--text);
 	--color-gray-opa10: color-mix(in srgb, var(--text-muted) 10%, transparent);
@@ -70,12 +70,11 @@ html, body, #root {
 	/* Dividers */
 	--divider-subtle: color-mix(in srgb, var(--text-muted) 12%, transparent);
 	--divider: color-mix(in srgb, var(--border) 70%, transparent);
-	
 
 	--mono:        'JetBrains Mono', monospace;
 	--sans:        'IBM Plex Sans', sans-serif;
 	--row-h:       33px;
-	  
+
 	/* Typography scale */
 	--fs-xs:  9px;
 	--fs-sm:  10px;
@@ -140,13 +139,7 @@ body {
  * LEGEND
  * ----------------------------------------------------------
  */
-
-.color-s0 { background: var(--sys-s0); }
 .color-s1 { background: var(--sys-s1); }
-.color-s2l { background: var(--sys-s2); }
-.color-s2d { background: color-mix(in srgb, var(--sys-s2) 60%, transparent); }
-.color-s3l { background: color-mix(in srgb, var(--sys-s3) 60%, transparent); }
-.color-s3d { background: var(--sys-s3); }
 .color-s4l { background: var(--sys-s4); }
 .color-s4s { background: color-mix(in srgb, var(--sys-s4) 60%, transparent); }
 .color-offcut { background: var(--viz-offcut); }
@@ -184,7 +177,7 @@ body {
  * ELEMENT
  */
 
-button { 
+button {
 	cursor: pointer;
 	font-family: var(--sans);
 	position: relative;
@@ -254,7 +247,7 @@ input[type=range]::-webkit-slider-thumb {
 	border-radius: 50%;
 	background: var(--color-primary);
 	cursor: pointer;
-	margin-top: -5px; 
+	margin-top: -5px;
 	border: 1px solid var(--color-darkblue);
 	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 	transition: transform 0.1s ease, background 0.1s ease;

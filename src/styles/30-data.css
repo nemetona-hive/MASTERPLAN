@@ -4,7 +4,7 @@
  * ----------------------------------------------------------
  *
  * NUM
- */ 
+ */
 
 .num-wrap {
 	display: flex;
@@ -75,12 +75,6 @@
 	font-family: var(--mono);
 	font-size: var(--fs-md);
 	transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.num-btn--ok {
-	border-color: color-mix(in srgb, var(--success) 70%, transparent);
-	color: var(--success);
-	box-shadow: 0 0 6px color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .num-btn svg {

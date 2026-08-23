@@ -81,56 +81,6 @@
 	transform: scale(0.95);
 }
 
-
-/* Additional range slider controls */
-.range-controls {
-	display: flex;
-	align-items: center;
-	gap: var(--sp-2);
-	margin-left: 8px; /* space between slider and controls */
-}
-
-.range-reset-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 36px;
-	height: 36px;
-	border-radius: 8px;
-	border: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	background: color-mix(in srgb, var(--color-darkblue) 80%, transparent);
-	color: var(--color-gray-opa80);
-	cursor: pointer;
-	transition: all 0.15s ease;
-	flex-shrink: 0;
-}
-
-.range-slider-wrap.is-unlocked .range-reset-btn {
-	color: var(--color-primary);
-	border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
-	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-}
-
-.range-reset-btn:hover {
-	background: color-mix(in srgb, var(--color-gray-light) 20%, transparent);
-	color: var(--color-white);
-}
-
-.range-reset-btn:active {
-	transform: scale(0.95);
-}
-
-/* Manual value input next to slider */
-.pw-adj-val-input {
-	width: 60px;
-	text-align: right;
-	padding: 2px 4px;
-	border: 1px solid var(--color-gray-light);
-	border-radius: 4px;
-	background: var(--bg);
-	color: var(--text);
-}
-
 /* Ensure the sliders and controls align vertically */
 .range-slider-wrap {
 	align-items: center;

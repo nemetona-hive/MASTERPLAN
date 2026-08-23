@@ -151,8 +151,6 @@
 		overflow: visible;
 	}
 
-
-
 	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
 	/* Modern mobile touch targets: 44px min height for controls */
 	input[type="number"],
@@ -196,10 +194,6 @@
 
 	.data-preview .sys-block {
 		margin-bottom: 10px;
-	}
-
-	.data-preview .sys-rows {
-		padding: 5px 4px;
 	}
 
 	.data-preview .strip {
@@ -249,13 +243,9 @@
 	.data-preview .sys-head-count {
 		margin-left: auto;
 		flex-shrink: 0;
-	}
-
-	.data-preview .sys-row-lbl,
-	.data-preview .panel-seg-lbl,
-	.data-preview .strip-seg-lbl,
-	.data-preview .strip-legend-lbl,
-	.data-preview .strip-note {
+	}.data-preview .strip-seg-lbl,
+.data-preview .strip-legend-lbl,
+.data-preview .strip-note {
 		font-size: var(--fs-sm);
 	}
 
@@ -369,6 +359,5 @@
 	.page-scroll {
 		padding: 12px;
 	}
-
 
 }

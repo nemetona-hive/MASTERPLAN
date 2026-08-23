@@ -4,10 +4,6 @@
  * ----------------------------------------------------------
  */
 
-.pw-head-adj {
-	padding: 0 !important;
-}
-
 .pw-grid-2col {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -53,40 +49,8 @@
 	flex: 1;
 }
 
-.pw-adj-val {
-	width: 64px;
-	min-width: 50px;
-	flex-shrink: 0;
-	text-align: right;
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	padding: 4px 6px;
-	border-radius: 6px;
-	border: 1px solid color-mix(in srgb, var(--color-gray-light) 50%, transparent);
-	background: color-mix(in srgb, var(--color-darkblue-light) 80%, transparent);
-	color: var(--color-white);
-	transition: border-color 0.15s ease;
-	-moz-appearance: textfield;
-	appearance: textfield;
-}
-
-.pw-adj-val:focus {
-	outline: none;
-	border-color: var(--color-primary);
-}
-
-.pw-adj-val::-webkit-inner-spin-button,
-.pw-adj-val::-webkit-outer-spin-button {
-	-webkit-appearance: none;
-	margin: 0;
-}
-
 .pw-res-wrap {
 	border-bottom: 1px solid var(--color-gray);
-}
-
-.pw-res-row-last {
-	border-bottom: none !important;
 }
 
 .pw-diag-wrap {

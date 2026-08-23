@@ -24,33 +24,6 @@
 	gap: var(--sp-3);
 }
 
-/* Tabs -------------------------------------------------------------------- */
-
-.ts-tabs {
-	display: flex;
-	border: 1px solid var(--color-gray-light);
-	border-radius: 6px;
-	overflow: hidden;
-	width: fit-content;
-}
-
-.ts-tab {
-	padding: 6px 16px;
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	background: none;
-	border: none;
-	color: var(--color-gray-opa80);
-	cursor: pointer;
-	transition: background 0.1s, color 0.1s;
-}
-
-.ts-tab--on {
-	background: var(--color-gray-light);
-	color: var(--color-primary);
-	font-weight: var(--fw-semi);
-}
-
 /* Section card ------------------------------------------------------------ */
 
 .ts-section,
@@ -190,12 +163,6 @@
 	margin-top: 6px;
 }
 
-.ts-pill-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-gray);
-}
-
 .ts-pill {
 	font-size: var(--fs-sm);
 	font-family: var(--mono);
@@ -258,54 +225,6 @@
 .ts-btn--muted:hover {
 	border-color: var(--color-gray-light);
 	color: var(--color-white);
-}
-
-/* Sum tab row ------------------------------------------------------------- */
-
-.ts-sum-row {
-	display: grid;
-	grid-template-columns: 1fr 34px;
-	gap: var(--sp-2);
-	align-items: center;
-}
-
-/* Total bar --------------------------------------------------------------- */
-
-.ts-footer {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--sp-3);
-	padding: 8px 3px;
-	border-top: 1px solid var(--color-gray);
-	margin-top: 6px;
-}
-
-.ts-total-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-}
-
-.ts-total-vals {
-	display: flex;
-	align-items: baseline;
-	gap: var(--sp-3);
-}
-
-.ts-total-val {
-	font-family: var(--mono);
-	font-size: var(--fs-lg);
-	font-weight: var(--fw-semi);
-	color: var(--color-primary);
-}
-
-.ts-total-dec {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-gray-opa80);
 }
 
 .ts-copy {
@@ -378,9 +297,5 @@
 
 	.ts-remove {
 		height: 34px;
-	}
-
-	.ts-footer {
-		padding: 8px 12px;
 	}
 }

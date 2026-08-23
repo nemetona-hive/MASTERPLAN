@@ -2,7 +2,7 @@
  * ----------------------------------------------------------
  * CONTROL
  * ----------------------------------------------------------
- */ 
+ */
 
 .data-control {
 	width: 384px;
@@ -32,11 +32,6 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 10px 14px;
-}
-
-.data-control .control-panel .panel-head.panel-head-spacer {
-	visibility: hidden;
-	pointer-events: none;
 }
 
 .data-control .slabel {
@@ -201,12 +196,6 @@
 	text-align: center;
 }
 
-/* Text field sized to match NumInput's input area (excluding commit button width) */
-.data-control .ctrl-text-input {
-	width: calc(100% - 36px);
-	flex: 0 0 auto;
-}
-
 .data-control .gr-label-input {
 	color: var(--color-white);
 }
@@ -317,10 +306,7 @@
 .data-control .gr-control-card.gr-card-saved::before,
 .data-preview .gr-preview-card.gr-card-saved::before {
 	background: var(--color-primary);
-}
-
-.data-preview .gr-preview-card.gr-preview-card-active,
-.data-preview .gr-preview-card.linked-preview-active {
+}.data-preview .gr-preview-card.linked-preview-active {
 	border-color: color-mix(in srgb, var(--color-primary) 65%, var(--color-gray));
 	box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 8px 16px color-mix(in srgb, var(--color-primary) 12%, transparent);
 	transform: translateY(-1px);

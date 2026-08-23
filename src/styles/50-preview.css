@@ -2,7 +2,7 @@
  * ----------------------------------------------------------
  * PREVIEW
  * ----------------------------------------------------------
- */ 
+ */
 
 .data-preview {
 	flex: 1;
@@ -10,20 +10,16 @@
 	overflow-y: auto;
 }
 
-
-
 .data-preview .preview-data {
 	display: flex;
 	flex-direction: column;
 	gap: 0;
 }
 
-
-	
 .data-preview .sys-block {
 	margin-bottom: var(--sp-5);
 }
-	
+
 .data-preview .sys-head {
 	border-radius: 6px 6px 0 0;
 	padding: 7px 14px;
@@ -69,7 +65,6 @@
 	opacity: 0.7;
 }
 
-
 .data-preview .sys-head-sub {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
@@ -78,7 +73,7 @@
 .data-preview .sys-head-count {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	font-weight: var(--fw-semi); 
+	font-weight: var(--fw-semi);
 	color: var(--color-white);
 }
 
@@ -93,41 +88,6 @@
 	font-size: var(--fs-xs);
 	padding: 4px 10px;
 }
-
-.data-preview .sys-rows {
-	display: flex;
-	flex-direction: column;
-	background: var(--color-darkblue);
-	border-radius: 6px;
-	padding: 0;
-	min-height: 96px;
-}
-
-.data-preview .sys-row {
-	display: flex;
-	align-items: stretch;
-	gap: var(--sp-1);
-	flex: 1 1 0;
-	min-height: 0;
-}
-
-.data-preview .sys-row-lbl-outer {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	font-weight: var(--fw-bold);
-	color: var(--color-white);
-	background: color-mix(in srgb, var(--color-darkblue) 75%, transparent);
-	padding: 4px 10px;
-	border-radius: 6px;
-	border: 1px solid color-mix(in srgb, var(--color-white) 15%, transparent);
-	backdrop-filter: blur(4px);
-	-webkit-backdrop-filter: blur(4px);
-	white-space: nowrap;
-	text-align: center;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-	opacity: 0.95;
-}
-
 
 .data-preview .strip {
 	display: flex;
@@ -155,7 +115,7 @@
 	font-size: var(--fs-md);
 	color: var(--color-white);
 }
-	
+
 .data-preview .strip-legend {
 	display: flex;
 	gap: var(--sp-4);
@@ -179,7 +139,7 @@
 	font-size: var(--fs-md);
 	color: var(--color-primary);
 }
-	
+
 .data-preview .strip-note {
 	margin-top: 12px;
 	background: var(--color-darkblue-light);
@@ -190,8 +150,6 @@
 	color: var(--color-gray-opa80);
 	line-height: 1.7;
 }
-
-
 
 .preview-head {
   display: flex;

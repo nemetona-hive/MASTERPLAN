@@ -4,19 +4,8 @@
  * ----------------------------------------------------------
  */
 
-.num-unit-span {
-	display: flex;
-	align-items: center;
-	margin: 0 4px;
-}
-
 .strip-legend-mt {
 	margin-top: 10px;
-}
-
-.sys-rows-border {
-	border: 1px solid var(--color-gray-light);
-	border-radius: 6px;
 }
 
 /* Concrete Side-by-Side Layout */
@@ -109,7 +98,7 @@
 	.result-card-value {
 		font-size: var(--fs-xl);
 	}
-	
+
 	/* Refine secondary result info on mobile sticky bar */
 	.result-card span:not(.result-card-title):not(.result-card-value) {
 		font-size: var(--fs-sm);
@@ -318,8 +307,6 @@
 	color: var(--color-darkblue);
 }
 
-
-
 /* ── Material Presets Modal ──────────────────────────────────────────────── */
 
 .mp-modal-overlay {
@@ -370,10 +357,6 @@
   min-height: 360px;
   max-height: calc(100vh - 240px);
   overflow: auto;
-}
-
-.large-layout-vis-wrap .panel-seg-lbl {
-  font-size: var(--fs-lg);
 }
 
 @keyframes mp-slide-in {
@@ -430,15 +413,6 @@
   margin-top: var(--sp-7);
   border-top: 1px solid var(--border);
   padding-top: var(--sp-5);
-}
-
-/* Invalid layout note */
-.layout-invalid-note {
-  font-family: var(--mono);
-  font-size: var(--fs-sm);
-  color: var(--danger);
-  opacity: 0.8;
-  padding: var(--sp-1) 0;
 }
 
 .data-row-danger {

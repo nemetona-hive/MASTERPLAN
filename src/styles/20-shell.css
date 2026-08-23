@@ -65,8 +65,6 @@
 	overflow: visible;
 }
 
-
-
 /* DATA */
 
 .main-data {
@@ -99,14 +97,6 @@
 	max-width: 1024px;
 	margin: 0 auto;
 }
-
-.page-sub {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
-	margin-bottom: 22px;
-}
-
 
 .section {
 	overflow: visible;
