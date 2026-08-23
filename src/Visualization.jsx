@@ -229,7 +229,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
       <div style={{ display: "flex", alignItems: "stretch", gap: "var(--sp-2)" }}>
         <div style={{ position: "relative", flex: 1, aspectRatio, maxHeight: `${maxHeight}px` }}>
           {onLargePreview && (
-            <button type="button" className="viz-expand-btn" onClick={() => onLargePreview()} title={alwaysShowLabels ? "Close large preview" : "Open large preview"}>
+            <button type="button" className="viz-expand-btn ctl-icon" onClick={() => onLargePreview()} title={alwaysShowLabels ? "Close large preview" : "Open large preview"}>
               <Icon name={alwaysShowLabels ? "minimize" : "maximize"} />
             </button>
           )}

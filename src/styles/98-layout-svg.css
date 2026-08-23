@@ -5,31 +5,33 @@
  */
 
 .viz-expand-btn {
+  /* Position and stacking are this control's job as an overlay; the tier and
+     the step are the system's. .ctl-icon in the markup squares it off --ctl-h.
+     It sat at 30px and 50% round: a circle is for text selectors, and a
+     standalone icon button is md like any other. */
   position: absolute;
   top: -12px;
   right: -12px;
   z-index: 50;
-  width: 30px;
-  height: 30px;
+  height: var(--ctl-h-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-2);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  border: 1.5px solid var(--border-strong);
-  border-radius: 50%;
-  color: var(--text-muted);
+  border: 0;
+  background: var(--ctl-raised-bg);
+  /* --sh-2 on top of the tier shadow, because this one floats over a card
+     rather than sitting on the page. */
+  box-shadow: var(--ctl-raised), var(--sh-2);
+  border-radius: var(--btn-radius);
+  color: var(--text);
   cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-  font-size: 14px;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
 }
 
 .viz-expand-btn:hover {
-  background: var(--surface-hover);
-  color: var(--color-white);
-  border-color: var(--brand);
-  transform: scale(1.05);
+  background: var(--ctl-hover-bg);
+  box-shadow: var(--ctl-hover), var(--sh-2);
+  color: var(--text);
 }
 
 /* ── Visualization card ─────────────────────────────────── */

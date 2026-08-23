@@ -380,22 +380,25 @@
 }
 
 .mp-modal-close {
+  /* Dismissive, so ghost rather than raised. The destructive hover was already
+     the intent here — it is the token now instead of a hand-mixed copy. */
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
+  height: var(--ctl-h-md);
+  border: 0;
+  border-radius: var(--btn-radius);
   background: transparent;
+  box-shadow: inset 0 0 0 1px var(--edge);
   color: var(--text-muted);
-  font-size: var(--fs-md);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-size: var(--ctl-glyph);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.06s ease;
 }
 
 .mp-modal-close:hover {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  border-color: var(--danger);
+  background: var(--ctl-hover-danger-bg);
+  box-shadow: var(--ctl-hover-danger);
   color: var(--danger);
 }
 

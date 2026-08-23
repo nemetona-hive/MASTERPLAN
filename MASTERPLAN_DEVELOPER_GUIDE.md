@@ -73,8 +73,8 @@ the role, then check the same role elsewhere renders identically.**
 
 | Control | Tier | Step |
 |---|---|---|
-| `.ts-btn`, `.num-btn`, `.ts-copy` | raised | md |
-| `.ctl-ghost` (composable), `.ctrl-dir`, `.pill-btn` | ghost | lg / md |
+| `.ts-btn`, `.num-btn`, `.ts-copy`, `.viz-expand-btn` | raised | md |
+| `.ctl-ghost` (composable), `.ctrl-dir`, `.pill-btn`, `.mp-modal-close` | ghost | lg / md |
 | `.ctrl-dir.on`, `.pill-btn.on`, `.ctl-ghost.on` | solid active | — |
 | `.nav-*` | the rail, `--nav-ctl-h` | 40px, off the data scale |
 

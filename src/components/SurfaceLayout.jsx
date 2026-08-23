@@ -141,8 +141,8 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           <div className="mp-modal">
             <div className="mp-modal-head">
               <span>Manage Material Presets</span>
-              <button className="mp-modal-close" onClick={() => setShowModal(false)}>
-                <Icon name="minus" />
+              <button className="mp-modal-close ctl-icon" onClick={() => setShowModal(false)} aria-label="Close">
+                <Icon name="close" />
               </button>
             </div>
             <div className="mp-modal-body">
@@ -231,8 +231,8 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
             <div className="mp-modal mp-modal-large">
               <div className="mp-modal-head">
                 <span>Large layout preview — {largePreview.layout.title}</span>
-                <button className="mp-modal-close" onClick={closeLargePreview}>
-                  <Icon name="minus" />
+                <button className="mp-modal-close ctl-icon" onClick={closeLargePreview} aria-label="Close">
+                  <Icon name="close" />
                 </button>
               </div>
               <div className="mp-modal-body">

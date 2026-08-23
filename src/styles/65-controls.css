@@ -81,6 +81,8 @@
 .ctrl-dir:active,
 .pill-btn:active,
 .ts-copy:active,
+.viz-expand-btn:active,
+.mp-modal-close:active,
 .ctl-ghost:active {
 	transform: translateY(1px);
 	box-shadow: var(--ctl-pressed);
@@ -95,3 +97,7 @@
 .ts-copy {
 	border-radius: var(--btn-radius);
 }
+
+/* .viz-expand-btn and .mp-modal-close set their own radius alongside their
+   positioning, so they are not listed above — but they take the same press,
+   which is why they appear in the :active rule. */
