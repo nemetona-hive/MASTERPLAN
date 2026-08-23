@@ -182,34 +182,54 @@
 }
 
 /* Collapsed active icon rules removed as background tint handles highlight gracefully */
-/* ── Tooltip (collapsed only) ── */
+/* ── Tooltip (collapsed only) ──
+ * Rendered into <body> by a portal (see Nav.jsx), not into the strip. `left`
+ * and `top` come from the anchor's own rect as inline styles, which is why
+ * neither is set here. The reason is not a preference: `.nav` is
+ * `overflow-y: auto`, one scrollable axis makes the other `auto` too, and a
+ * tooltip positioned to the right of a 60px collapsed strip turned the
+ * sidebar into a horizontal scroller that arrow-key navigation would
+ * happily scroll to.
+ *
+ * It is also mounted only while it shows, rather than parked at opacity 0 —
+ * parked, it still occupied that width in every state, including expanded,
+ * where it can never be shown at all. */
 .nav-btn-wrap {
 	position: relative;
 	width: 100%;
 }
 
 .nav-tooltip {
-	position: absolute;
-	left: calc(100% + 10px);
-	top: 50%;
+	position: fixed;
 	transform: translateY(-50%);
 	background: var(--color-darkblue);
 	border: 1px solid var(--color-gray-light);
+	box-shadow: var(--sh-2);
 	color: var(--color-white);
 	font-family: var(--mono);
 	font-size: var(--nav-fs-tooltip);
 	padding: 4px 10px;
 	border-radius: 6px;
 	white-space: nowrap;
+	/* Never a hover target itself: it sits beside the thing that opened it,
+	   and one that could take the pointer would flicker at the gap. */
 	pointer-events: none;
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	z-index: 100;
+	/* An animation rather than a transition — the element is mounted on
+	   hover, and a transition from a starting state needs a frame that does
+	   not exist yet. */
+	animation: nav-tooltip-in 0.15s ease both;
+	z-index: 120;
 }
 
-.nav-collapsed .nav-btn-wrap:hover .nav-tooltip {
-	opacity: 1;
-	pointer-events: auto;
+@keyframes nav-tooltip-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nav-tooltip {
+		animation: none;
+	}
 }
 
 /* ── Header (HIVE + toggle icon) ── */
@@ -230,6 +250,15 @@
 .nav-toggle:hover {
 	border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+/* On the Home page (expanded only — collapsed disables the click-to-home
+   behaviour, see the comment on the header in Nav.jsx), the same ring the
+   nav items use for "you are here". */
+.nav-toggle.active {
+	border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent), 0 0 8px color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .nav-toggle-label {

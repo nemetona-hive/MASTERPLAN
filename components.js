@@ -2728,13 +2728,52 @@
     const childActive = PAGES.some((p) => p.parentId === pg.id && p.id === page);
     return page === pg.id && !childActive;
   }
-  function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, onKeyNav }) {
+  function useNavTooltip(isCollapsed) {
+    const wrapRef = React2.useRef(null);
+    const [tip, setTip] = React2.useState(null);
+    const showTip = () => {
+      if (!isCollapsed || !wrapRef.current) return;
+      const rect = wrapRef.current.getBoundingClientRect();
+      setTip({ left: rect.right + 10, top: rect.top + rect.height / 2 });
+    };
+    const hideTip = () => setTip(null);
+    React2.useEffect(() => {
+      if (!isCollapsed) setTip(null);
+    }, [isCollapsed]);
+    React2.useEffect(() => {
+      if (!tip) return void 0;
+      window.addEventListener("scroll", hideTip, true);
+      window.addEventListener("resize", hideTip);
+      return () => {
+        window.removeEventListener("scroll", hideTip, true);
+        window.removeEventListener("resize", hideTip);
+      };
+    }, [tip]);
+    return { wrapRef, tip, showTip, hideTip };
+  }
+  function NavTooltipPortal({ tip, label }) {
+    if (!tip) return null;
+    return ReactDOM.createPortal(
+      /* @__PURE__ */ React2.createElement(
+        "span",
+        {
+          className: "nav-tooltip",
+          "aria-hidden": "true",
+          style: { left: `${tip.left}px`, top: `${tip.top}px` }
+        },
+        label
+      ),
+      document.body
+    );
+  }
+  function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, onKeyNav, onToggleNav }) {
     const isGroup = item.isParent === true;
     const hasChildren = PAGES.some((pg) => pg.parentId === item.id);
     const isOpen = isGroup && hasChildren && !!openGroups[item.id];
     const childActive = isGroup && PAGES.some((pg) => pg.parentId === item.id && pg.id === page);
     const isActive = isNavPageActive(page, item);
     const isGroupActive = isGroup && hasChildren && isOpen && childActive;
+    const { wrapRef, tip, showTip, hideTip } = useNavTooltip(!navOpen);
     const classes = ["nav-btn"];
     if (isActive || isGroupActive) classes.push("active");
     if (isGroup) classes.push("nav-parent");
@@ -2779,22 +2818,34 @@
           break;
       }
     };
-    return /* @__PURE__ */ React2.createElement("div", { className: "nav-btn-wrap" }, /* @__PURE__ */ React2.createElement(
-      "button",
+    return /* @__PURE__ */ React2.createElement(
+      "div",
       {
-        className: classes.join(" "),
-        onClick: handleClick,
-        onKeyDown: handleKeyDown,
-        "aria-current": isActive ? "page" : void 0,
-        "aria-expanded": isGroup && hasChildren ? isOpen : void 0,
-        "aria-haspopup": isGroup && hasChildren ? "true" : void 0,
-        tabIndex: 0
+        className: "nav-btn-wrap",
+        ref: wrapRef,
+        onDoubleClick: onToggleNav,
+        onMouseEnter: showTip,
+        onMouseLeave: hideTip,
+        onFocus: showTip,
+        onBlur: hideTip
       },
-      /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-icon" }, /* @__PURE__ */ React2.createElement(Icon, { name: item.icon })),
-      /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-label" }, item.label),
-      isGroup && hasChildren && /* @__PURE__ */ React2.createElement("span", { className: "nav-parent-chevron " + (isOpen ? "open" : "closed") }, /* @__PURE__ */ React2.createElement(Icon, { name: isOpen ? "chevron-down" : "chevron-right" })),
-      /* @__PURE__ */ React2.createElement("span", { className: "nav-tooltip" }, item.label)
-    ));
+      /* @__PURE__ */ React2.createElement(
+        "button",
+        {
+          className: classes.join(" "),
+          onClick: handleClick,
+          onKeyDown: handleKeyDown,
+          "aria-current": isActive ? "page" : void 0,
+          "aria-expanded": isGroup && hasChildren ? isOpen : void 0,
+          "aria-haspopup": isGroup && hasChildren ? "true" : void 0,
+          tabIndex: 0
+        },
+        /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-icon" }, /* @__PURE__ */ React2.createElement(Icon, { name: item.icon })),
+        /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-label" }, item.label),
+        isGroup && hasChildren && /* @__PURE__ */ React2.createElement("span", { className: "nav-parent-chevron " + (isOpen ? "open" : "closed") }, /* @__PURE__ */ React2.createElement(Icon, { name: isOpen ? "chevron-down" : "chevron-right" }))
+      ),
+      /* @__PURE__ */ React2.createElement(NavTooltipPortal, { tip, label: item.label })
+    );
   }
   function initOpenGroups(isMob) {
     return PAGES.reduce((acc, pg) => {
@@ -2861,14 +2912,21 @@
       /* @__PURE__ */ React2.createElement(
         "div",
         {
-          className: "nav-section nav-toggle",
+          className: "nav-section nav-toggle" + (page === "home" && !isNavCollapsed ? " active" : ""),
           role: "button",
-          tabIndex: 0,
+          "aria-current": page === "home" && !isNavCollapsed ? "page" : void 0,
+          tabIndex: isNavCollapsed ? -1 : 0,
           onClick: () => {
+            if (isNavCollapsed) return;
             setPage("home");
             if (mobile) setMobileMenuOpen(false);
           },
-          onKeyDown: (e) => (e.key === "Enter" || e.key === " ") && (setPage("home"), mobile && setMobileMenuOpen(false))
+          onKeyDown: (e) => {
+            if (isNavCollapsed || e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            setPage("home");
+            if (mobile) setMobileMenuOpen(false);
+          }
         },
         /* @__PURE__ */ React2.createElement("span", { className: "nav-toggle-label" }, "HIVE"),
         /* @__PURE__ */ React2.createElement(
@@ -2881,7 +2939,8 @@
             },
             role: "button",
             tabIndex: 0,
-            "aria-label": mobile ? mobileMenuOpen ? "Close menu" : "Open menu" : navOpen ? "Collapse sidebar" : "Expand sidebar",
+            "aria-label": mobile ? mobileMenuOpen ? "Close menu" : "Open menu" : navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)",
+            title: mobile ? void 0 : navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)",
             onKeyDown: (e) => {
               e.stopPropagation();
               if (e.key === "Enter" || e.key === " ") handleToggle();
@@ -2903,21 +2962,38 @@
           },
           openGroups,
           setOpenGroups,
-          onKeyNav: handleKeyNav
+          onKeyNav: handleKeyNav,
+          onToggleNav: handleToggle
         }
       ))),
-      /* @__PURE__ */ React2.createElement("div", { className: "nav-bottom", role: "menubar", "aria-orientation": "vertical" }, /* @__PURE__ */ React2.createElement("div", { className: "nav-btn-wrap" }, /* @__PURE__ */ React2.createElement(
+      /* @__PURE__ */ React2.createElement("div", { className: "nav-bottom", role: "menubar", "aria-orientation": "vertical" }, /* @__PURE__ */ React2.createElement(NavThemeButton, { navOpen, theme, setTheme, onToggleNav: handleToggle }))
+    ));
+  }
+  function NavThemeButton({ navOpen, theme, setTheme, onToggleNav }) {
+    const { wrapRef, tip, showTip, hideTip } = useNavTooltip(!navOpen);
+    const label = `Theme: ${THEMES[theme]?.label}`;
+    return /* @__PURE__ */ React2.createElement(
+      "div",
+      {
+        className: "nav-btn-wrap",
+        ref: wrapRef,
+        onDoubleClick: onToggleNav,
+        onMouseEnter: showTip,
+        onMouseLeave: hideTip,
+        onFocus: showTip,
+        onBlur: hideTip
+      },
+      /* @__PURE__ */ React2.createElement(
         "button",
         {
           className: "nav-btn" + (!navOpen ? " nav-btn-icon-only" : ""),
-          onClick: () => setTheme(getNextTheme(theme)),
-          title: `Theme: ${THEMES[theme]?.label}`
+          onClick: () => setTheme(getNextTheme(theme))
         },
         /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-icon" }, THEMES[theme]?.icon ?? "◇"),
-        /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-label" }, THEMES[theme]?.label),
-        /* @__PURE__ */ React2.createElement("span", { className: "nav-tooltip" }, "Theme: ", THEMES[theme]?.label)
-      )))
-    ));
+        /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-label" }, THEMES[theme]?.label)
+      ),
+      /* @__PURE__ */ React2.createElement(NavTooltipPortal, { tip, label })
+    );
   }
   var init_Nav = __esm({
     "src/Nav.jsx"() {
@@ -3028,6 +3104,16 @@
           window.addEventListener("keydown", onEnterCommit, true);
           return () => window.removeEventListener("keydown", onEnterCommit, true);
         }, []);
+        React2.useEffect(() => {
+          const onToggleShortcut = (e) => {
+            if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "b") return;
+            e.preventDefault();
+            if (isMobile) setMobileMenuOpen((o) => !o);
+            else setNavOpen((o) => !o);
+          };
+          window.addEventListener("keydown", onToggleShortcut, true);
+          return () => window.removeEventListener("keydown", onToggleShortcut, true);
+        }, [isMobile]);
         React2.useEffect(() => {
           try {
             localStorage.setItem("theme", theme);

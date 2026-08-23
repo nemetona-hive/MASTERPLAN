@@ -462,27 +462,33 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .nav-tooltip {
-	position: absolute;
-	left: calc(100% + 10px);
-	top: 50%;
+	position: fixed;
 	transform: translateY(-50%);
 	background: var(--color-darkblue);
 	border: 1px solid var(--color-gray-light);
+	box-shadow: var(--sh-2);
 	color: var(--color-white);
 	font-family: var(--mono);
 	font-size: var(--nav-fs-tooltip);
 	padding: 4px 10px;
 	border-radius: 6px;
 	white-space: nowrap;
+
 	pointer-events: none;
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	z-index: 100;
+
+	animation: nav-tooltip-in 0.15s ease both;
+	z-index: 120;
 }
 
-.nav-collapsed .nav-btn-wrap:hover .nav-tooltip {
-	opacity: 1;
-	pointer-events: auto;
+@keyframes nav-tooltip-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nav-tooltip {
+		animation: none;
+	}
 }
 
 .nav-toggle {
@@ -502,6 +508,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .nav-toggle:hover {
 	border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.nav-toggle.active {
+	border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent), 0 0 8px color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .nav-toggle-label {

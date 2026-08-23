@@ -126,6 +126,18 @@ function App() {
     return () => window.removeEventListener("keydown", onEnterCommit, true);
   }, []);
 
+  // Ctrl/Cmd+B toggles the sidebar — mobile gets its overlay menu instead
+  React.useEffect(() => {
+    const onToggleShortcut = e => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "b") return;
+      e.preventDefault();
+      if (isMobile) setMobileMenuOpen(o => !o);
+      else setNavOpen(o => !o);
+    };
+    window.addEventListener("keydown", onToggleShortcut, true);
+    return () => window.removeEventListener("keydown", onToggleShortcut, true);
+  }, [isMobile]);
+
   React.useEffect(() => {
     try { localStorage.setItem("theme", theme); } catch {}
     applyTheme(theme);
