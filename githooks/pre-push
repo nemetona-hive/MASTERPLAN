@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# MASTERPLAN pre-push gate.
+#
+# Unlike MONEYFLOW, whose pre-push exists purely to block uploads, this repo is
+# public and published: GitHub Pages serves the tree directly, so a push IS the
+# deploy. There is no staging step and no build on the far side — whatever
+# components.js and app.css are in the commit are what visitors load.
+#
+# So this checks the things that would be broken *on the live site*:
+#   - the committed bundles match the source they claim to be built from
+#   - the tests pass
+#   - neither bundle has blown its download budget
+#
+# Skip once with:  git push --no-verify
+
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+# ---- committed bundles are current ------------------------------------------
+# Rebuild and see whether anything moved. A stale committed bundle is the one
+# failure that is invisible locally — the dev server rebuilds on start, so only
+# visitors see it.
+if ! npm run build >/dev/null 2>&1; then
+  echo "✖ pre-push: build failed. Run 'npm run build' to see the error." >&2
+  exit 1
+fi
+
+if ! git diff --quiet -- components.js app.css; then
+  echo "" >&2
+  echo "✖ pre-push: components.js/app.css are stale — rebuilding changed them." >&2
+  echo "  GitHub Pages serves these files as committed, so pushing now would" >&2
+  echo "  publish a bundle that does not match src/. Commit the rebuild first." >&2
+  echo "" >&2
+  exit 1
+fi
+
+# ---- tests -------------------------------------------------------------------
+if ! npm test --silent >/dev/null 2>&1; then
+  echo "✖ pre-push: unit tests failed. Run 'npm test' to see which." >&2
+  exit 1
+fi
+
+# ---- download budgets --------------------------------------------------------
+if ! npm run perf:check --silent; then
+  echo "✖ pre-push: bundle size over budget." >&2
+  exit 1
+fi
+
+exit 0
