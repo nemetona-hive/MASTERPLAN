@@ -329,21 +329,22 @@ Best layout = fewest total pieces among valid results.
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
 - `<NumInput id label value onChange step min unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
-- `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle; uses `useProtectedRangeSlider` for mobile touch-scroll protection. Starts locked; click row or tap lock icon to unlock.
+- `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
 - `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
+  (`Section`, `ControlPanel` and `DetailSection` are one internal `Collapsible`
+  wearing three variants; the base is not exported)
 - `<Section title bg>` — collapsible section for preview area
 - `<DetailSection title open>` — collapsible section for secondary information or management UI
-- `<Collapsible>` — base for Section, ControlPanel, and DetailSection (variant="section"|"panel"|"detail")
 - `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
-- `<SLabel>` — simple label div for section headings in controls
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
 - `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
-- `useClickOutside(refs, handler, active)` — Unified interaction hook using `pointerdown` for robust cross-device detection.
+- `useClickOutside(refs, handler, active)` — closes on a click away, listening to both `mousedown` and `touchstart` so a tap counts.
+- `useModeExit(inside, onExit, active)` — the other half: `useClickOutside` plus Escape. An armed mode should take both ways out. `inside` is an array of refs, or a CSS selector for a subtree that cannot forward one.
+- `downloadFile(name, data, mimeType)` — hands the browser a generated file. Revokes the object URL a tick late, because doing it in the same turn cancels the save in Firefox and Safari.
 - `useDropdownKeyboard(count, onSelect, onClose)` — Specialized hook for keyboard navigation (Arrow keys, Enter, Esc) within custom dropdowns.
-- `.seg-group` — Container for exclusive mode-switch toggles; provides a unified border/boundary for grouped buttons.
-- `.pill-btn` — Minimalist, rounded buttons used for quick-select presets.
-- `.ctrl-dir` / `.ts-btn` — Standardized button styles with "premium glow" hover/active feedback. Standalone buttons use `var(--fs-md)` while segmented controls are bumped for legibility.
+- `.seg-group` — a recessed track for exclusive mode switches. Its segments carry no ring of their own; the track supplies the edge.
+- `.pill-btn`, `.ctrl-dir`, `.ts-btn`, `.num-btn` — see [Controls And Buttons](#controls-and-buttons). Pick a tier by what the control does; do not write a new hover or active recipe.
 
 ## Icons
 
@@ -374,6 +375,13 @@ When running the application locally, a specialized persistence mechanism allows
 
 - `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost` or `127.0.0.1`.
 - `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
+- `safeSaveStaticDefaults(key, value)` in `shared.jsx` is what components call: it
+  rejects rather than throwing when the hook is absent, which is the case on
+  GitHub Pages, where there is no dev server behind the page.
+- The server **rewrites `config.js` in place** — a tracked source file — after
+  validating the payload. There is no backup snapshot, unlike MONEYFLOW's
+  `_personal/.backups/`. Check `git diff config.js` after a save you did not
+  intend.
 - Currently utilized by:
   - **Concrete Calculator**: To persist product presets.
   - **Surface Layout**: To persist material presets.
@@ -385,7 +393,16 @@ Defined in `themes.js` (loaded as global, not inside `src/`).
 - `THEMES` object maps theme keys to `{ name, label, icon, colors }` where `colors` is CSS var → value
 - `applyTheme(name)` sets CSS custom properties on `:root` and a `data-theme` attribute
 - App.jsx holds `theme` state (default: `"naviPro"`, persisted to `localStorage`), applies via `useEffect`
-- To add a theme: add entry to `THEMES` in `themes.js`
+- `:root` in `00-base.css` restates the default theme as the pre-JS fallback —
+  whatever it says is what the first paint uses, before `applyTheme` runs. A
+  test keeps the two in step; they had already drifted once
+- **To add a theme:** add an entry to `THEMES`, then run `npm run theme:check`.
+  It reads `themes.js` directly — there is no second copy of the palette, and
+  the one that used to exist reported green against colours nobody ever saw.
+  A theme must state all four control tokens (`--btn-active-bg`,
+  `--btn-active-fg`, `--edge-hi`, `--shadow-rgb`): the active fill flips in kind
+  between light and dark, so it cannot be derived. The gate is 4.5:1 for any
+  colour a word is drawn in, 3:1 for one that only draws a mark
 
 ## Golden Ratio tool
 
@@ -405,17 +422,24 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 - Hooks come from `react-globals.js`. Most call sites use `React.useXxx`; two
   files import `useState` by name. Either is fine — import what you use.
-- After editing files under `src/`, run `npm run build` so `components.js` is regenerated.
-- Treat `components.js` as generated output; do not hand-edit it except for emergency inspection/debugging.
+- After editing anything under `src/`, run `npm run build` — it regenerates both
+  `components.js` and `app.css`. `npm run watch` does it on save.
+- Both are generated output. Never hand-edit them; the next build overwrites it.
+  They are committed anyway, because GitHub Pages serves the tree directly.
+- Colour comes from a theme token, never a literal. `npm run audit:ui` blocks on
+  a hex or a tinted `rgba()` in `src/`.
 - If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
-- Buttons use the "Premium Glow" interaction language — subtle box-shadows and color-mix transitions.
 - No CSS-in-JS except inline style for dynamic values; use className strings
 - Local persistence uses `saveStaticDefaults` for dev-mode configuration updates.
 - CSS class names follow BEM-ish patterns: block, block-element, modifier
 
 ## What does NOT exist yet (possible future work)
 
-- Export / print functionality
-- Advanced User Persistence (localStorage is only used for theme choice, no database for end-users)
-- Unit tests
+- Export / print functionality — `downloadFile` in `shared.jsx` is the piece it
+  would build on
+- Advanced user persistence. `saveStaticDefaults` writes to `config.js` from the
+  dev server only, and localStorage holds nothing but the theme choice. There is
+  no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
+- A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
+  this theme has no answer for, so it is a design decision rather than a port
