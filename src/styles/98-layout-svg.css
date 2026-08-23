@@ -69,7 +69,7 @@
 }
 
 .viz-legend-h span {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: var(--fs-md);
 }
 
@@ -187,8 +187,8 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 0 var(--sp-4);
   background: var(--surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-radius: var(--btn-radius);
   overflow: hidden;
 }
 

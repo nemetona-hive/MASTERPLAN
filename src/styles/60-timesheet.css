@@ -62,7 +62,92 @@
 	.ts-grid-row > .ts-col-dec {
 		grid-column: span 1;
 	}
-	.ts-grid-row > /* Lunch presets ----------------------------------------------------------- */
+	.ts-grid-row > .ts-remove {
+		grid-column: span 1;
+		justify-self: end;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+	}
+}
+
+.ts-grid-hd {
+	margin-bottom: 2px;
+}
+
+.ts-grid-row {
+	padding: 2px 3px;
+	border-radius: 6px;
+	transition: background 0.08s;
+}
+
+.ts-grid-row--active {
+	background: var(--color-darkblue-light);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent), 0 0 10px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.ts-col-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	padding: 0 3px;
+}
+
+/* Input ------------------------------------------------------------------- */
+
+/* .num-input provides base styles; ts-input overrides for grid context */
+.ts-input {
+	width: 100%;
+	height: 32px;
+}
+
+.ts-input::placeholder {
+	color: var(--color-gray-light);
+	opacity: 1;
+}
+
+/* Duration / Decimal cells ------------------------------------------------ */
+
+.ts-duration,
+.ts-decimal {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-med);
+	color: var(--color-primary);
+	padding: 0 3px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+}
+
+.ts-decimal {
+	color: var(--color-gray-opa80);
+}
+
+.ts-duration--error {
+	color: var(--danger);
+	font-weight: var(--fw-reg);
+	font-size: var(--fs-sm);
+}
+
+.ts-duration--warn {
+	color: var(--warning);
+	font-weight: var(--fw-reg);
+	font-size: var(--fs-sm);
+}
+
+/* Remove button ----------------------------------------------------------- */
+
+/* .num-btn provides base styles; ts-remove overrides and adds danger hover */
+.ts-remove {
+	/* Tier, size and hover are composed in the markup — ctl-ghost, ctl-sm,
+	   ctl-icon, ctl-danger. What stays here is placement, which the mobile
+	   media query above also keys off. */
+	justify-self: end;
+}
+
+/* Lunch presets ----------------------------------------------------------- */
 
 .ts-pills {
 	display: flex;
@@ -70,24 +155,6 @@
 	flex-wrap: wrap;
 	align-items: flex-start;
 	margin-top: 6px;
-}
-
-.ts-pill {
-	font-size: var(--fs-sm);
-	font-family: var(--mono);
-	padding: 3px 9px;
-	border: 1px solid var(--color-gray-light);
-	border-radius: 999px;
-	background: none;
-	color: var(--color-gray-opa80);
-	cursor: pointer;
-	transition: background 0.1s, color 0.1s;
-}
-
-.ts-pill:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
 }
 
 /* Controls row ------------------------------------------------------------ */
@@ -146,8 +213,9 @@
 }
 
 .ts-copy:hover {
-	background: var(--color-gray-light);
-	color: var(--color-primary);
+	background: var(--ctl-hover-bg);
+	box-shadow: var(--ctl-hover);
+	color: var(--text);
 }
 
 .ts-copy--done {
@@ -200,7 +268,10 @@
 		padding: 4px 6px;
 	}
 
+	/* A row action wants a larger target on a touch screen, but that is still a
+	   step off the scale, not a number. --ctl-h so .ctl-icon squares off it. */
 	.ts-remove {
-		height: 34px;
+		--ctl-h: var(--ctl-h-md);
+		height: var(--ctl-h-md);
 	}
 }

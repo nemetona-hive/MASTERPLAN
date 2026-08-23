@@ -198,7 +198,12 @@ for (const file of cssFiles) {
 
   for (const [name, e] of where) {
     if (IGNORE_UNUSED.test(name)) continue;
-    if (markupText.includes(name)) continue;
+    /* Whole class token, not a substring. `.ts-remove` read as alive purely
+       because the markup contained `ts-remove-wrap`, so three grid-placement
+       rules keyed off a class no element carried and nothing reported it. A
+       name assembled from a prefix is handled below, deliberately separately —
+       that check knows it is looking at a prefix; this one must not. */
+    if (new RegExp(`(?<![\\w-])${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`).test(markupText)) continue;
 
     /* A name assembled at runtime never appears literally. Two shapes:
        a BEM-ish modifier concatenated onto its base, and a template hole —
