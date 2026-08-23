@@ -132,6 +132,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Several callers write <Icon .../> Label rather than two spans, leaning
+     on the JSX space between them for the gap. A flex container discards a
+     whitespace-only text run at a flex-item boundary instead of rendering
+     it, so that space collapsed to zero and the icon ran into the label
+     (e.g. SaveDefaultsButton's "✓Save Defaults"). A real gap, the same fix
+     .nav-btn already uses for its icon/label pair, doesn't depend on
+     whichever way a given call site wrote the JSX. */
+  gap: var(--sp-2);
   transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
 }
 

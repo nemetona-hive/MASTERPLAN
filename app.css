@@ -1067,6 +1067,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
+  gap: var(--sp-2);
   transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
 }
 
@@ -1663,6 +1665,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+
+	gap: var(--sp-2);
 }
 
 @media (max-width: 768px) {

@@ -189,6 +189,11 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	/* Same fix as .ctrl-dir's: a flex container drops the whitespace-only
+	   text run between <Icon .../> and a bare label instead of rendering it
+	   as a space, so callers like "Global Reset" ran the icon into the
+	   text. A real gap doesn't depend on that whitespace surviving. */
+	gap: var(--sp-2);
 }
 
 @media (max-width: 768px) {
