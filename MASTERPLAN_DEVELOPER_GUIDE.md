@@ -134,6 +134,23 @@ compose it with a base that carries a height or with `.ctl-sm`. With only a
 tier class the width falls back to 32px and the height to the glyph — a 32×19
 pill, not a square.
 
+`.ctrl-dir`'s `flex: 1` assumes a row (`.seg-group`, or a `Stack
+direction="row"`) — it lets siblings share the width axis and leaves height
+alone. Stood in a plain column `Stack` instead, `flex: 1`'s `flex-basis: 0%`
+collapses the *height* axis to content instead, since an auto-sized column
+has no spare cross space to grow into: the control comes out a squashed
+~17px sliver instead of the standard 36px, its 8px radius reading as a
+near-full pill. Add `ctrl-list` to the wrapping `Stack` for a vertical list
+of `.ctrl-dir` entries (a `ControlPanel`'s selectable list, a lone button
+stacked with inputs) to get the real height back.
+
+`.ctrl-dir`/`.ts-btn` icon+label buttons (`<Icon .../> Label`) need a real
+`gap` between the two — both classes already carry `gap: var(--sp-2)` for
+this. A flex container drops a whitespace-only text run sitting at a
+flex-item boundary instead of rendering it, so relying on the JSX space
+between the icon and the label collapses it to zero width and runs the icon
+into the text.
+
 Classes live in `65-controls.css`, deliberately after the base controls in
 30/40/60 — every one is a single class, so source order is what decides. Tokens
 live in `:root` in `00-base.css`; four are per-theme in `themes.js`
@@ -285,9 +302,21 @@ renders.
 Hash-based routing (`#page-id`). Home = no hash.
 Page render is handled in `MainPageContent` in App.jsx — add new pages there.
 Nav items come from `PAGES` global — add new pages in config (outside src/).
+`PAGES` entries can still nest under a parent via `parentId`/`isParent` —
+Nav.jsx's group machinery (expand/collapse, auto-open on navigate) is generic
+and unused today, not removed; nothing is currently grouped.
 
-Current pages: `home`, `layout` (parent), `pattern-layout`, `symmetric-layout`,
-`concrete`, `golden-ratio`, `pipe-wrap`, `guider`, `timesheet`.
+Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`,
+`golden-ratio`, `pipe-wrap`, `guider`, `timesheet`.
+
+Sidebar interaction (Nav.jsx): Ctrl/Cmd+B toggles collapse globally (App.jsx);
+double-clicking any nav button does the same. Collapsed-nav tooltips mount
+into `document.body` via a portal on hover/focus rather than sitting inside
+`.nav` — that container is `overflow-y: auto`, and a tooltip parked inside it
+either clips or forces the sidebar itself into horizontal scroll. The
+collapsed header disables click-to-home (Home stays reachable via its own
+nav item, which renders in every state) since the header shrinks to just the
+toggle icon but the div still spans the full strip.
 
 ## Page components
 
@@ -296,7 +325,7 @@ All calculators and pages are stored as standalone files inside `src/components/
 | Page ID | Component | Location | Description |
 |---|---|---|---|
 | `home` | `SheetHome` | `components/Home.jsx` | Main landing page menu |
-| `layout` | `SheetSurfaceLayout` | `components/SurfaceLayout.jsx` | Compares straight, shifted, stepped, and long-short layout strategies |
+| `pattern-layout` | `SheetSurfaceLayout` | `components/SurfaceLayout.jsx` | Compares straight, shifted, stepped, and long-short layout strategies |
 | `symmetric-layout` | `SheetSymmetricLayout` | `components/SymmetricLayout.jsx` | Equal edge pieces with full panels in the center |
 | `golden-ratio` | `SheetGoldenRatio` | `components/GoldenRatio.jsx` | Calculates Phi sequences |
 | `pipe-wrap` | `PipeWrapCalculator` | `components/PipeWrapCalculator.jsx` | Pipe wrap length calculator with SVG diagram |
