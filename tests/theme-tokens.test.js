@@ -21,10 +21,37 @@ describe("theme palette", () => {
     }
   });
 
-  it("uses six-digit hex everywhere, so the contrast check can read it", () => {
+  // Two tokens are deliberately not hex, and both would break contrastRatio if
+  // it were ever pointed at them: --edge-hi carries alpha, because a top edge
+  // highlight is a translucent line over whatever is beneath it, and
+  // --shadow-rgb is bare channels so shadows can compose their own opacity via
+  // rgb(... / %). Everything else is a flat colour the contrast gate compares.
+  const NON_HEX = new Set(["--edge-hi", "--shadow-rgb"]);
+
+  it("uses six-digit hex for every token the contrast check compares", () => {
     for (const name of themeNames) {
       for (const [token, value] of Object.entries(THEMES[name].colors)) {
+        if (NON_HEX.has(token)) continue;
         expect(value, `${name} ${token}`).toMatch(/^#[0-9a-fA-F]{6}$/);
+      }
+    }
+  });
+
+  it("keeps --edge-hi translucent and --shadow-rgb as bare channels", () => {
+    for (const name of themeNames) {
+      expect(THEMES[name].colors["--edge-hi"], `${name} --edge-hi`)
+        .toMatch(/^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/);
+      expect(THEMES[name].colors["--shadow-rgb"], `${name} --shadow-rgb`)
+        .toMatch(/^\d+ \d+ \d+$/);
+    }
+  });
+
+  it("defines the four control tokens in every theme", () => {
+    // The active fill flips in kind between light and dark themes, so these
+    // cannot be derived and a new theme has to state all four.
+    for (const name of themeNames) {
+      for (const token of ["--btn-active-bg", "--btn-active-fg", "--edge-hi", "--shadow-rgb"]) {
+        expect(THEMES[name].colors, `${name} ${token}`).toHaveProperty(token);
       }
     }
   });

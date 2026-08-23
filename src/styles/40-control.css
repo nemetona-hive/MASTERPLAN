@@ -71,11 +71,15 @@
 
 .seg-group {
   display: flex;
-  background: color-mix(in srgb, var(--color-darkblue) 70%, transparent);
+  /* A recessed track, so the segments inside need no ring of their own — the
+     track supplies the edge. .seg-group is neither tier: it is the well the
+     tiers sit in. */
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  box-shadow: var(--well), inset 0 0 0 1px var(--edge);
   border-radius: 10px;
   padding: 3px;
-  gap: 2px;
-  border: 1px solid var(--color-gray-light);
+  gap: var(--sp-05);
+  border: 0;
   width: 100%;
 }
 
@@ -85,29 +89,28 @@
 
 .seg-group .ctrl-dir {
   flex: 1;
-  padding: 6px 8px;
-  border-radius: 7px;               /* slightly less than wrapper */
-  border: none;                     /* no individual border */
+  padding: 0 var(--sp-2);
+  border-radius: 7px;               /* slightly less than the track */
+  /* No ring: the track already draws the boundary, and a ring per segment
+     would read as buttons parked in a box rather than one control. */
+  box-shadow: none;
   background: transparent;
-  color: var(--color-gray-opa80);
-  font-family: var(--mono);
-  font-size: var(--fs-md);          /* Bumped back up for legibility */
+  color: var(--text-muted);
   font-weight: var(--fw-reg);
-  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
   white-space: nowrap;
 }
 
 .seg-group .ctrl-dir:hover:not(.on) {
-  color: var(--color-white);
-  background: transparent;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  box-shadow: none;
+  color: var(--text);
 }
 
 .seg-group .ctrl-dir.on {
-  background: var(--color-gray-light);
-  color: var(--color-primary);
+  background: var(--btn-active-bg);
+  color: var(--btn-active-fg);
   font-weight: var(--fw-med);
-  box-shadow: 0 0 0 1px var(--color-gray), 0 0 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
-  border: none;                     /* override any inherited border */
+  box-shadow: var(--ctl-active);
 }
 
 /* ── ctrl-dir outside a seg-group ─────────────────────────────
@@ -116,28 +119,33 @@
 
 .ctrl-dir {
   flex: 1;
-  padding: 6px 0;
-  border-radius: 6px;
-  border: 1px solid var(--color-gray-light);
+  /* Segmented and page-level controls take the lg step. */
+  height: var(--ctl-h-lg);
+  padding: 0 var(--ctl-pad-x-md);
+  border: 0;
   background: transparent;
-  color: var(--color-gray-opa80);
+  box-shadow: inset 0 0 0 1px var(--edge);
+  color: var(--text-muted);
   font-family: var(--mono);
   font-size: var(--fs-md);
   cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
 }
 
 .ctrl-dir:hover:not(.on) {
-  border-color: var(--color-gray);
-  color: var(--color-white);
+  background: var(--ctl-hover-bg);
+  box-shadow: var(--ctl-hover);
+  color: var(--text);
 }
 
 .ctrl-dir.on {
-  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  background: var(--btn-active-bg);
+  color: var(--btn-active-fg);
   font-weight: var(--fw-semi);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  box-shadow: var(--ctl-active);
 }
 
 /* ── Pill button ──────────────────────────────────────────────
@@ -145,29 +153,34 @@
  * are shortcuts rather than exclusive mode switches. */
 
 .pill-btn {
-  padding: 5px 14px;
-  border-radius: 99px;
-  border: 1px solid var(--color-gray-light);
+  height: var(--ctl-h-md);
+  padding: 0 var(--ctl-pad-x-lg);
+  /* Only text selectors — chips and pills — take a full round. */
+  border-radius: 999px;
+  border: 0;
   background: transparent;
+  box-shadow: inset 0 0 0 1px var(--edge);
   font-family: var(--mono);
   font-size: var(--fs-sm);
-  color: var(--color-gray-opa80);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
   white-space: nowrap;
 }
 
 .pill-btn:hover:not(.on) {
-  border-color: var(--color-gray);
-  color: var(--color-white);
+  background: var(--ctl-hover-bg);
+  box-shadow: var(--ctl-hover);
+  color: var(--text);
 }
 
 .pill-btn.on {
-  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  background: var(--btn-active-bg);
+  color: var(--btn-active-fg);
   font-weight: var(--fw-med);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  box-shadow: var(--ctl-active);
 }
 
 /* ── Mobile adjustments ───────────────────────────────────────

@@ -63,7 +63,11 @@ const pairsToTest = [
   // border or a glow, not for a word.
   { fg: "--danger", bg: "--surface-1", target: 4.5 },
   { fg: "--success", bg: "--surface-1", target: 4.5 },
-  { fg: "--warning", bg: "--surface-1", target: 4.5 }
+  { fg: "--warning", bg: "--surface-1", target: 4.5 },
+  // The solid-active tier: a label drawn ON the active plate. The plate flips
+  // in kind between light and dark themes, so a new theme that forgets it, or
+  // picks a fill its label cannot sit on, fails here rather than on screen.
+  { fg: "--btn-active-fg", bg: "--btn-active-bg", target: 4.5 }
 ];
 
 let failed = false;

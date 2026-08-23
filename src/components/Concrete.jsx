@@ -466,9 +466,9 @@ export function SheetConcrete() {
             </div>
 
             <div style={{marginTop: 'var(--sp-4)'}}>
-              <button 
-                onClick={resetAll} 
-                style={{width: '100%', padding: '12px', fontSize: 'var(--fs-md)', borderRadius: '6px', textAlign: 'center', background: 'transparent', border: '1px solid color-mix(in srgb, var(--color-gray) 40%, transparent)', color: 'var(--color-gray)', cursor: 'pointer', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center'}}
+              <button
+                onClick={resetAll}
+                className="ts-btn ctl-ghost ctl-danger u-w-full"
               >
                 <Icon name="refresh-cw" /> Global Reset
               </button>

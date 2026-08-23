@@ -16,6 +16,7 @@ const STYLE_SOURCES = [
   "src/styles/40-control.css",
   "src/styles/50-preview.css",
   "src/styles/60-timesheet.css",
+  "src/styles/65-controls.css",
   "src/styles/70-home.css",
   "src/styles/80-mobile.css",
   "src/styles/85-accessibility.css",

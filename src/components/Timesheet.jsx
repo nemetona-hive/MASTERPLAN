@@ -1,5 +1,5 @@
 import { React, useState } from "../react-globals.js";
-import { Stack, useTimedState } from "../shared.jsx";
+import { Icon, Stack, useTimedState } from "../shared.jsx";
 import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
 
 // ── SheetTimesheet ────────────────────────────────────────────────────────────
@@ -201,8 +201,9 @@ export function SheetTimesheet() {
                             </div>
                             <div className="ts-remove-wrap">
                               <span className="pw-preset-lbl-hide">&nbsp;</span>
-                              <button className="num-btn ts-remove" tabIndex={-1}
-                                onClick={() => removeCalcRow(row.id)}>×</button>
+                              <button className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger" tabIndex={-1}
+                                aria-label="Remove row"
+                                onClick={() => removeCalcRow(row.id)}><Icon name="close" /></button>
                             </div>
                         </div>
                       );
@@ -227,7 +228,7 @@ export function SheetTimesheet() {
 
                     <Stack direction="row" gap={2} className="ts-controls">
                       <button className="ts-btn" onClick={addCalcRow}>+ Add row</button>
-                      <button className="ts-btn ts-btn--muted" onClick={clearCalc}>Clear all</button>
+                      <button className="ts-btn ctl-ghost ctl-danger" onClick={clearCalc}>Clear all</button>
                     </Stack>
                   </Stack>
 

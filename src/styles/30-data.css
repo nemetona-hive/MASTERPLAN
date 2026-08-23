@@ -65,16 +65,23 @@
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	min-width: 32px;
-	height: 32px;
-	padding: 0 8px;
-	border-radius: 6px;
-	border: 1px solid var(--color-gray);
-	background: var(--color-darkblue-light);
-	color: var(--color-primary);
+	min-width: var(--ctl-h-md);
+	height: var(--ctl-h-md);
+	padding: 0 var(--ctl-pad-x-md);
+	border: 0;
+	background: var(--ctl-raised-bg);
+	box-shadow: var(--ctl-raised);
+	color: var(--text);
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	transition: border-color 0.15s ease, color 0.15s ease;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
+}
+
+.num-btn:hover {
+	background: var(--ctl-hover-bg);
+	box-shadow: var(--ctl-hover);
+	color: var(--text);
 }
 
 .num-btn svg {

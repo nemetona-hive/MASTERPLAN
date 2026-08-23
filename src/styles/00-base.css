@@ -53,6 +53,82 @@ html, body, #root {
 	--viz-edge: #d0bd86;
 	--viz-carry: #d4a030;
 
+	/* ── The control system ────────────────────────────────────────────────────
+	 * Every interactive control composes from these rather than inventing its
+	 * own state treatment. Four tiers, picked by what the control DOES:
+	 *
+	 *   raised        it does something — add, apply, confirm. Push it.
+	 *   ghost         secondary next to a raised one, or a selector at rest.
+	 *   solid active  a selector that is on.
+	 *   pressed       the 1px nudge while held.
+	 *
+	 * The four below are per-theme and set in themes.js, because the active
+	 * fill flips in KIND between light and dark — brand-gold with a dark label
+	 * on the dark themes, a dark plate with a light label on Verdant. They
+	 * cannot be color-mix-derived the way the rest of this block is, so adding
+	 * a theme means adding all four. check-theme-contrast.js gates
+	 * --btn-active-fg on --btn-active-bg at 4.5:1.
+	 * ------------------------------------------------------------------------- */
+	--btn-active-bg: #b0a488;
+	--btn-active-fg: #0b1117;
+	--edge-hi:       rgba(255, 255, 255, 0.07);
+	--shadow-rgb:    0 0 0;
+
+	--edge: color-mix(in srgb, var(--text) 20%, transparent);
+	--btn-radius: 8px;
+
+	/* Composed elevation */
+	--sh-1: 0 1px 2px rgb(var(--shadow-rgb) / 45%);
+	--sh-2: 0 2px 6px rgb(var(--shadow-rgb) / 30%);
+	--well: inset 0 1px 2px rgb(var(--shadow-rgb) / 30%);
+
+	/* Raised: the fill and the shadow are one surface split across two
+	   properties and are never used apart. Both are tokens so the surface can
+	   be retuned in one place instead of at every raised control. */
+	--ctl-raised-bg: linear-gradient(180deg,
+	                 color-mix(in srgb, var(--surface-2) 88%, var(--text)) 0%,
+	                 var(--surface-2) 100%);
+	--ctl-raised: inset 0 1px 0 var(--edge-hi),
+	              inset 0 0 0 1px var(--edge),
+	              0 1px 2px rgb(var(--shadow-rgb) / 30%);
+	--ctl-pressed: var(--well), inset 0 0 0 1px var(--edge);
+	--ctl-active: var(--sh-1), var(--sh-2), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+	/* Hover on the action tier: brand wash, brand ring, soft glow. The label
+	   stays --text rather than --brand — brand on a brand-tinted fill is too
+	   low-contrast on Verdant, where --brand only clears 3.16:1 on the page. */
+	--ctl-hover-bg: linear-gradient(180deg,
+	                color-mix(in srgb, var(--brand) 15%, var(--surface-2)) 0%,
+	                color-mix(in srgb, var(--brand) 7%, var(--surface-2)) 100%);
+	--ctl-hover: inset 0 1px 0 var(--edge-hi),
+	             inset 0 0 0 1px color-mix(in srgb, var(--brand) 50%, transparent),
+	             var(--sh-1),
+	             0 0 10px color-mix(in srgb, var(--brand) 16%, transparent);
+
+	/* Destructive counterpart, same shape in --danger. Only for controls whose
+	   action removes or clears — not for every secondary button. */
+	--ctl-hover-danger-bg: color-mix(in srgb, var(--danger) 12%, transparent);
+	--ctl-hover-danger: inset 0 0 0 1px color-mix(in srgb, var(--danger) 55%, transparent),
+	                    0 0 10px color-mix(in srgb, var(--danger) 14%, transparent);
+
+	/* Size scale. A control picks a step; it does not invent a height — and
+	   not stating one is the same mistake, because the box then comes out as
+	   padding plus line-height, near a step without being on it.
+	   xs  a state marker inside a cell        sm  an action on a row
+	   md  the default, and any standalone     lg  page-level and segmented
+	   rail is the sidebar's own, deliberately off the data-view scale. */
+	--ctl-h-xs: 20px;
+	--ctl-h-sm: 24px;
+	--ctl-h-md: 32px;
+	--ctl-h-lg: 36px;
+	--nav-ctl-h: 40px;
+	--ctl-pad-x-sm: var(--sp-1);
+	--ctl-pad-x-md: var(--sp-2);
+	--ctl-pad-x-lg: 14px;
+	/* A glyph is not a label, so it does not take the step's label size — a
+	   remove × inheriting --fs-sm renders at 10px inside a 24px button. */
+	--ctl-glyph: 13px;
+
 	/* Legacy variables mapped to semantic tokens */
 	--color-primary: var(--brand);
 	--color-darkblue: var(--bg);

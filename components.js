@@ -680,7 +680,7 @@
       "button",
       {
         onClick: resetAll,
-        style: { width: "100%", padding: "12px", fontSize: "var(--fs-md)", borderRadius: "6px", textAlign: "center", background: "transparent", border: "1px solid color-mix(in srgb, var(--color-gray) 40%, transparent)", color: "var(--color-gray)", cursor: "pointer", display: "flex", justifyContent: "center", gap: "8px", alignItems: "center" }
+        className: "ts-btn ctl-ghost ctl-danger u-w-full"
       },
       /* @__PURE__ */ React2.createElement(Icon, { name: "refresh-cw" }),
       " Global Reset"
@@ -2681,11 +2681,12 @@
         /* @__PURE__ */ React2.createElement("div", { className: "ts-remove-wrap" }, /* @__PURE__ */ React2.createElement("span", { className: "pw-preset-lbl-hide" }, " "), /* @__PURE__ */ React2.createElement(
           "button",
           {
-            className: "num-btn ts-remove",
+            className: "num-btn ctl-ghost ctl-sm ctl-icon ctl-danger",
             tabIndex: -1,
+            "aria-label": "Remove row",
             onClick: () => removeCalcRow(row.id)
           },
-          "×"
+          /* @__PURE__ */ React2.createElement(Icon, { name: "close" })
         ))
       );
     })), /* @__PURE__ */ React2.createElement("div", { style: { height: "1px", background: "var(--divider-subtle)", margin: "var(--sp-2) 0" } }), /* @__PURE__ */ React2.createElement(Stack, { gap: 4 }, /* @__PURE__ */ React2.createElement(Stack, { gap: 2, className: "ts-pills" }, /* @__PURE__ */ React2.createElement("div", { className: "pw-preset-header", style: { display: "block", gridTemplateColumns: "none" } }, /* @__PURE__ */ React2.createElement("span", null, "Lunch presets:")), /* @__PURE__ */ React2.createElement("div", { className: "ctrl-btns", style: { flexWrap: "wrap", gap: "8px", justifyContent: "flex-start" } }, LUNCH_PRESETS.map(([label, val]) => /* @__PURE__ */ React2.createElement(
@@ -2696,7 +2697,7 @@
         onClick: () => applyLunchPreset(val)
       },
       label
-    )))), /* @__PURE__ */ React2.createElement(Stack, { direction: "row", gap: 2, className: "ts-controls" }, /* @__PURE__ */ React2.createElement("button", { className: "ts-btn", onClick: addCalcRow }, "+ Add row"), /* @__PURE__ */ React2.createElement("button", { className: "ts-btn ts-btn--muted", onClick: clearCalc }, "Clear all"))))))), /* @__PURE__ */ React2.createElement("div", { className: "u-sticky u-sticky-top", style: { marginTop: "var(--sticky-offset)", top: "20px" } }, /* @__PURE__ */ React2.createElement("div", { className: "result-card" }, /* @__PURE__ */ React2.createElement("span", { className: "result-card-title" }, "Total Hours"), /* @__PURE__ */ React2.createElement("span", { className: "result-card-value" }, fmtHHMM(calcTotalMins) || "0:00", " ", /* @__PURE__ */ React2.createElement("span", { className: "result-card-val-sub" }, "h")), /* @__PURE__ */ React2.createElement("div", { className: "result-card-footer" }, /* @__PURE__ */ React2.createElement("div", { className: "result-card-footer-item" }, /* @__PURE__ */ React2.createElement("span", { className: "result-card-footer-lbl" }, "Decimal time: "), /* @__PURE__ */ React2.createElement("span", { className: "result-card-footer-val" }, fmtDecimal(calcTotalMins) || "0.00")), /* @__PURE__ */ React2.createElement("div", { style: { marginTop: "var(--sp-4)" } }, /* @__PURE__ */ React2.createElement(
+    )))), /* @__PURE__ */ React2.createElement(Stack, { direction: "row", gap: 2, className: "ts-controls" }, /* @__PURE__ */ React2.createElement("button", { className: "ts-btn", onClick: addCalcRow }, "+ Add row"), /* @__PURE__ */ React2.createElement("button", { className: "ts-btn ctl-ghost ctl-danger", onClick: clearCalc }, "Clear all"))))))), /* @__PURE__ */ React2.createElement("div", { className: "u-sticky u-sticky-top", style: { marginTop: "var(--sticky-offset)", top: "20px" } }, /* @__PURE__ */ React2.createElement("div", { className: "result-card" }, /* @__PURE__ */ React2.createElement("span", { className: "result-card-title" }, "Total Hours"), /* @__PURE__ */ React2.createElement("span", { className: "result-card-value" }, fmtHHMM(calcTotalMins) || "0:00", " ", /* @__PURE__ */ React2.createElement("span", { className: "result-card-val-sub" }, "h")), /* @__PURE__ */ React2.createElement("div", { className: "result-card-footer" }, /* @__PURE__ */ React2.createElement("div", { className: "result-card-footer-item" }, /* @__PURE__ */ React2.createElement("span", { className: "result-card-footer-lbl" }, "Decimal time: "), /* @__PURE__ */ React2.createElement("span", { className: "result-card-footer-val" }, fmtDecimal(calcTotalMins) || "0.00")), /* @__PURE__ */ React2.createElement("div", { style: { marginTop: "var(--sp-4)" } }, /* @__PURE__ */ React2.createElement(
       "button",
       {
         className: "ts-copy" + (copied ? " ts-copy--done" : "") + (copyError ? " ts-copy--error" : ""),

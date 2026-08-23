@@ -44,6 +44,7 @@ const ICONS = {
 
   "plus": "fa-solid fa-plus",
   "minus": "fa-solid fa-minus",
+  "close": "fa-solid fa-xmark",
   "refresh-cw": "fa-solid fa-arrows-rotate",
   // Lock / Unlock
   "lock": "fa-solid fa-lock",
