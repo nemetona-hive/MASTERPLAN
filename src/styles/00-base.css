@@ -22,36 +22,36 @@ html, body, #root {
 
 :root {
 	/* Semantic Theme Tokens */
-	--bg: #0b1117;
-	--surface-1: #111a22;
-	--surface-2: #17232d;
-	--surface-hover: #1d2b36;
-	--border: #263846;
-	--border-strong: #365064;
+	--bg: #161718;
+	--surface-1: #1e2023;
+	--surface-2: #272a2e;
+	--surface-hover: #32363b;
+	--border: #3f444b;
+	--border-strong: #586069;
 
-	--text: #d7dde2;
-	--text-muted: #92a1ad;
-	--text-subtle: #7a8f9e;
+	--text: #e1e3e6;
+	--text-muted: #a0a7af;
+	--text-subtle: #758086;
 
-	--brand: #d0bd86;
-	--accent: #4fa3c7;
-	--accent-2: #79b88f;
+	--brand: #d4c07a;
+	--accent: #7e9fa8;
+	--accent-2: #7a8a92;
 
-	--success: #72bf83;
-	--warning: #d9a441;
-	--danger: #ef6b73;
+	--success: #73b381;
+	--warning: #c4a04a;
+	--danger: #eb737b;
 
 	/* System & Visualization Tokens */
-	--sys-s0: #d0bd86;
-	--sys-s1: #4fa3c7;
-	--sys-s2: #8da0ad;
-	--sys-s3: #79b88f;
-	--sys-s4: #b48ed8;
+	--sys-s0: #d4c07a;
+	--sys-s1: #7e9fa8;
+	--sys-s2: #8d969e;
+	--sys-s3: #84b782;
+	--sys-s4: #b592d6;
 
-	--viz-cut: #9aa8b3;
-	--viz-offcut: #6e7f8c;
-	--viz-edge: #d0bd86;
-	--viz-carry: #d4a030;
+	--viz-cut: #9ba4ab;
+	--viz-offcut: #6f7a82;
+	--viz-edge: #d4c07a;
+	--viz-carry: #c49830;
 
 	/* ── The control system ────────────────────────────────────────────────────
 	 * Every interactive control composes from these rather than inventing its
@@ -69,8 +69,8 @@ html, body, #root {
 	 * a theme means adding all four. check-theme-contrast.js gates
 	 * --btn-active-fg on --btn-active-bg at 4.5:1.
 	 * ------------------------------------------------------------------------- */
-	--btn-active-bg: #b0a488;
-	--btn-active-fg: #0b1117;
+	--btn-active-bg: #b3a684;
+	--btn-active-fg: #161718;
 	--edge-hi:       rgba(255, 255, 255, 0.07);
 	--shadow-rgb:    0 0 0;
 

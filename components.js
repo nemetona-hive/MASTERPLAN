@@ -2981,9 +2981,9 @@
         const [theme, setTheme] = useState(() => {
           try {
             const saved = localStorage.getItem("theme");
-            return saved && THEMES[saved] ? saved : "naviPro";
+            return saved && THEMES[saved] ? saved : "graphite";
           } catch {
-            return "naviPro";
+            return "graphite";
           }
         });
         const setPage = (id) => {

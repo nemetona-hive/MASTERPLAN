@@ -392,7 +392,7 @@ When running the application locally, a specialized persistence mechanism allows
 Defined in `themes.js` (loaded as global, not inside `src/`).
 - `THEMES` object maps theme keys to `{ name, label, icon, colors }` where `colors` is CSS var → value
 - `applyTheme(name)` sets CSS custom properties on `:root` and a `data-theme` attribute
-- App.jsx holds `theme` state (default: `"naviPro"`, persisted to `localStorage`), applies via `useEffect`
+- App.jsx holds `theme` state (default: `"graphite"`, persisted to `localStorage`), applies via `useEffect`
 - `:root` in `00-base.css` restates the default theme as the pre-JS fallback —
   whatever it says is what the first paint uses, before `applyTheme` runs. A
   test keeps the two in step; they had already drifted once

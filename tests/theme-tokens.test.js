@@ -10,7 +10,7 @@ const THEMES = new Function(`${themesSource}\n;return THEMES;`)();
 // silently drifted before these tests existed: scripts/check-theme-contrast.js
 // carried a whole stale copy and passed every run against colours no visitor
 // ever saw, and :root in 00-base.css — the fallback the page renders with
-// before applyTheme runs — disagreed with naviPro on --text-subtle.
+// before applyTheme runs — disagreed with the default theme on --text-subtle.
 describe("theme palette", () => {
   const themeNames = Object.keys(THEMES);
 

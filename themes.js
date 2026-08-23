@@ -11,42 +11,6 @@
  */
 
 const THEMES = {
-  naviPro: {
-    name: 'naviPro',
-    label: 'Navi Pro',
-    icon: '🔹',
-    colors: {
-      '--bg': '#0b1117',
-      '--surface-1': '#111a22',
-      '--surface-2': '#17232d',
-      '--surface-hover': '#1d2b36',
-      '--border': '#263846',
-      '--border-strong': '#365064',
-      '--text': '#d7dde2',
-      '--text-muted': '#92a1ad',
-      '--text-subtle': '#7a8f9e',
-      '--brand': '#d0bd86',
-      '--accent': '#4fa3c7',
-      '--accent-2': '#79b88f',
-      '--success': '#72bf83',
-      '--warning': '#d9a441',
-      '--danger': '#ef6b73',
-      // Control tiers -- see the button system in the developer guide.
-      '--btn-active-bg':  '#b0a488',
-      '--btn-active-fg':  '#0b1117',
-      '--edge-hi':        'rgba(255, 255, 255, 0.07)',
-      '--shadow-rgb':     '0 0 0',
-      '--sys-s0': '#d0bd86',
-      '--sys-s1': '#4fa3c7',
-      '--sys-s2': '#8da0ad',
-      '--sys-s3': '#79b88f',
-      '--sys-s4': '#b48ed8',
-      '--viz-cut': '#9aa8b3',
-      '--viz-offcut': '#6e7f8c',
-      '--viz-edge': '#d0bd86',
-      '--viz-carry': '#d4a030',
-    },
-  },
   graphite: {
     name: 'graphite',
     label: 'Graphite',
