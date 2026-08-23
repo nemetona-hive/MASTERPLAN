@@ -1496,7 +1496,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .ts-body {
 	flex: 1;
 	overflow-y: auto;
+
+	overflow-x: hidden;
 	min-height: 0;
+	min-width: 0;
 	padding: 18px 22px;
 	display: flex;
 	flex-direction: column;
@@ -1631,7 +1634,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .ts-btn {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	height: var(--ctl-h-md);
+
+	min-height: var(--ctl-h-md);
 	padding: 0 var(--ctl-pad-x-lg);
 	border: 0;
 	background: var(--ctl-raised-bg);
@@ -1646,7 +1650,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 @media (max-width: 768px) {
 	.ts-btn {
-		height: var(--ctl-h-lg);
+		min-height: var(--ctl-h-lg);
 		padding: 0 18px;
 	}
 }
@@ -1761,6 +1765,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .ctl-sm {
 	--ctl-h: var(--ctl-h-sm);
 	height: var(--ctl-h-sm);
+
+	min-height: var(--ctl-h);
+	min-width: var(--ctl-h);
 	padding: 0 var(--ctl-pad-x-sm);
 	font-size: var(--fs-sm);
 }
@@ -2699,7 +2706,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 .layout-split {
 	display: grid;
-	grid-template-columns: 1fr 340px;
+
+	grid-template-columns: minmax(0, 1fr) 340px;
 	gap: var(--sp-6);
 	align-items: start;
 }

@@ -57,6 +57,11 @@
 .ctl-sm {
 	--ctl-h: var(--ctl-h-sm);
 	height: var(--ctl-h-sm);
+	/* height alone is not a floor — a flex or grid row that runs short of space
+	   compresses the control below its step, and a 24px action becomes 18px in
+	   a crowded row. */
+	min-height: var(--ctl-h);
+	min-width: var(--ctl-h);
 	padding: 0 var(--ctl-pad-x-sm);
 	font-size: var(--fs-sm);
 }

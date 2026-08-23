@@ -17,7 +17,13 @@
 .ts-body {
 	flex: 1;
 	overflow-y: auto;
+	/* A flex child's min-width defaults to auto, so content wider than the
+	   column pushes the column wider rather than being clipped or scrolled.
+	   The pair is what keeps a wide row inside the page instead of stretching
+	   the shell — min-height: 0 already does the same on the other axis. */
+	overflow-x: hidden;
 	min-height: 0;
+	min-width: 0;
 	padding: 18px 22px;
 	display: flex;
 	flex-direction: column;
@@ -170,7 +176,9 @@
 .ts-btn {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	height: var(--ctl-h-md);
+	/* A floor, not a fixed box: the step is the smallest this may be, and a
+	   label that needs the room grows it rather than overflowing. */
+	min-height: var(--ctl-h-md);
 	padding: 0 var(--ctl-pad-x-lg);
 	border: 0;
 	background: var(--ctl-raised-bg);
@@ -185,7 +193,7 @@
 
 @media (max-width: 768px) {
 	.ts-btn {
-		height: var(--ctl-h-lg);
+		min-height: var(--ctl-h-lg);
 		padding: 0 18px;
 	}
 }

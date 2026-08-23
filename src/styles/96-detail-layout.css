@@ -42,7 +42,11 @@
 /* Responsive Split Layout (Desktop Left/Right, Mobile Top/Bottom) */
 .layout-split {
 	display: grid;
-	grid-template-columns: 1fr 340px;
+	/* minmax(0, 1fr), not 1fr: a 1fr track floors at its content's min-content
+	   width, so a wide visualisation in the main column pushes the whole split
+	   wider and the result column off the edge. The 340px is this app's own —
+	   MONEYFLOW clamps its result column to 260-300px, tuned to its grids. */
+	grid-template-columns: minmax(0, 1fr) 340px;
 	gap: var(--sp-6);
 	align-items: start;
 }

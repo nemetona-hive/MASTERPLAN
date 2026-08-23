@@ -106,6 +106,44 @@ live in `:root` in `00-base.css`; four are per-theme in `themes.js`
 active fill flips in kind between light and dark. **A new theme must state all
 four**, and `theme:check` gates the label on the plate at 4.5:1.
 
+## Shared layout vocabulary
+
+MONEYFLOW grew out of this app, so the page-shell classes are the same on both
+sides: `.ts-page`, `.ts-body`, `.calc-main-stack`, `.layout-split`, `.section`,
+`.section-head`, `.section-body`, `.result-card`, `.u-sticky`. 172 class
+selectors exist in both repos.
+
+**A shared name is a place where a fix can land on one side and not the
+other.** Everything that can be forced wider needs a floor stated, because the
+CSS defaults do not give it one:
+
+- a flex child's `min-width` defaults to `auto`, so wide content pushes the
+  column wider instead of being clipped or scrolled — `.ts-body` takes
+  `min-width: 0` and `overflow-x: hidden`, matching the `min-height: 0` it
+  already had on the other axis
+- a `1fr` grid track floors at its content's min-content width, so it is
+  `minmax(0, 1fr)` on `.layout-split`
+- a control's `height` is not a floor: a crowded flex or grid row compresses it
+  below its step, so `.ctl-sm` states `min-height`/`min-width`, and `.ts-btn`
+  takes `min-height` rather than a fixed `height` so a label that needs the room
+  grows the box instead of overflowing it
+
+Deliberately **not** matched to MONEYFLOW, so don't "fix" these:
+
+| | Why |
+|---|---|
+| `.section-head` uses `--mono` | this app is mono-first; MONEYFLOW moved to `--font-ui` |
+| `.section-body` draws a border, not a ring | MONEYFLOW's `--ring-soft` does not exist here |
+| `.result-card` | a stripped inline row here, a glass card there — different roles |
+| `.layout-split` result column is `340px` | MONEYFLOW clamps to 260–300px, tuned to its money grids |
+
+The money-grid `--mg-*` system is **not** used here and should not be adopted:
+it parameterises `lead | N repeating same-kind columns | total | action` across
+six grids, and this app has two data grids whose columns are each a different
+quantity. Its invariants — derived `min-width`, no-scrollbar fit, column role
+classes — solve problems these grids do not have, since they reflow on mobile
+rather than scroll.
+
 ## Stylesheets
 
 `app.css` is generated too, by `scripts/build-styles.js` from `src/styles/*.css`.
