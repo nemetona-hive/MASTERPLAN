@@ -242,7 +242,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
           >
             <defs>
               <pattern id={gapHatchId} patternUnits="userSpaceOnUse" width="16" height="16">
-                <rect width="16" height="16" fill="rgba(255,68,68,0.12)" />
+                <rect width="16" height="16" fill="color-mix(in srgb, var(--danger) 12%, transparent)" />
                 <path d="M0 16 L16 0" stroke="var(--danger)" strokeWidth="2" />
               </pattern>
             </defs>

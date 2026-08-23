@@ -1925,7 +1925,7 @@
           setSelectedSourceId(null);
         }
       },
-      /* @__PURE__ */ React2.createElement("defs", null, /* @__PURE__ */ React2.createElement("pattern", { id: gapHatchId, patternUnits: "userSpaceOnUse", width: "16", height: "16" }, /* @__PURE__ */ React2.createElement("rect", { width: "16", height: "16", fill: "rgba(255,68,68,0.12)" }), /* @__PURE__ */ React2.createElement("path", { d: "M0 16 L16 0", stroke: "var(--danger)", strokeWidth: "2" }))),
+      /* @__PURE__ */ React2.createElement("defs", null, /* @__PURE__ */ React2.createElement("pattern", { id: gapHatchId, patternUnits: "userSpaceOnUse", width: "16", height: "16" }, /* @__PURE__ */ React2.createElement("rect", { width: "16", height: "16", fill: "color-mix(in srgb, var(--danger) 12%, transparent)" }), /* @__PURE__ */ React2.createElement("path", { d: "M0 16 L16 0", stroke: "var(--danger)", strokeWidth: "2" }))),
       rowRects.map((r) => /* @__PURE__ */ React2.createElement("rect", { key: r.key, x: r.x + chartX, y: r.y + chartY, width: r.w, height: r.h, className: "layout-svg-row-bg" })),
       rects.map((rect) => {
         const isHighlighted = hoveredType && rect.type === hoveredType;

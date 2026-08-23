@@ -1,82 +1,29 @@
 "use strict";
 
-const THEMES = {
-  naviPro: {
-    '--bg': '#0b1117',
-    '--surface-1': '#111a22',
-    '--surface-2': '#17232d',
-    '--surface-hover': '#1d2b36',
-    '--border': '#263846',
-    '--border-strong': '#365064',
-    '--text': '#d7dde2',
-    '--text-muted': '#92a1ad',
-    '--text-subtle': '#7a8f9e',
-    '--brand': '#d0bd86',
-    '--accent': '#4fa3c7',
-    '--accent-2': '#79b88f',
-    '--success': '#72bf83',
-    '--warning': '#d9a441',
-    '--danger': '#ef6b73',
-    '--sys-s0': '#d0bd86',
-    '--sys-s1': '#4fa3c7',
-    '--sys-s2': '#8da0ad',
-    '--sys-s3': '#79b88f',
-    '--sys-s4': '#b48ed8',
-    '--viz-cut': '#9aa8b3',
-    '--viz-offcut': '#6e7f8c',
-    '--viz-edge': '#d0bd86',
-  },
-  graphite: {
-    '--bg': '#18191b',
-    '--surface-1': '#222427',
-    '--surface-2': '#2b2e32',
-    '--surface-hover': '#34383d',
-    '--border': '#41464d',
-    '--border-strong': '#5a626b',
-    '--text': '#e1e3e6',
-    '--text-muted': '#a0a7af',
-    '--text-subtle': '#7a8289',
-    '--brand': '#d4c07a',
-    '--accent': '#7e9fa8',
-    '--accent-2': '#84b782',
-    '--success': '#73b381',
-    '--warning': '#d4a84e',
-    '--danger': '#eb737b',
-    '--sys-s0': '#d4c07a',
-    '--sys-s1': '#7e9fa8',
-    '--sys-s2': '#919ba3',
-    '--sys-s3': '#84b782',
-    '--sys-s4': '#b592d6',
-    '--viz-cut': '#a1abb2',
-    '--viz-offcut': '#748089',
-    '--viz-edge': '#d4c07a',
-  },
-  verdant: {
-    '--bg': '#f0f4f2',
-    '--surface-1': '#ffffff',
-    '--surface-2': '#e6ebe9',
-    '--surface-hover': '#dde4e1',
-    '--border': '#ccd4d1',
-    '--border-strong': '#a3b2ac',
-    '--text': '#1a2622',
-    '--text-muted': '#54635e',
-    '--text-subtle': '#7d8c87',
-    '--brand': '#9e813a',
-    '--accent': '#1c7b69',
-    '--accent-2': '#327396',
-    '--success': '#2e8c4a',
-    '--warning': '#b8860b',
-    '--danger': '#d13b46',
-    '--sys-s0': '#9e813a',
-    '--sys-s1': '#1c7b69',
-    '--sys-s2': '#546b7a',
-    '--sys-s3': '#30804a',
-    '--sys-s4': '#7950a3',
-    '--viz-cut': '#5e707a',
-    '--viz-offcut': '#87969e',
-    '--viz-edge': '#9e813a',
-  }
-};
+/*
+ * Contrast gate for the theme palettes.
+ *
+ * Reads themes.js rather than carrying its own copy. It used to carry one, and
+ * the copy had drifted badly — graphite's --bg, verdant's --surface-1, and both
+ * themes' --accent-2 and --warning were all different from what actually
+ * shipped. Every run was green against a palette no visitor ever saw, which is
+ * worse than no check at all.
+ *
+ * Targets follow how a token is used, not what it is called:
+ *   4.5:1  a word is drawn in it, or sits on it
+ *   3:1    it only draws a mark — a border, a glow, a fill behind a shape
+ * Bold at 14px is not WCAG "large text", so nothing here gets the 3:1 pass for
+ * being bold.
+ *
+ * Exits non-zero on a miss. It is a gate.
+ */
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+const ROOT = path.resolve(__dirname, "..");
+const source = fs.readFileSync(path.join(ROOT, "themes.js"), "utf8");
+const THEMES = new Function(`${source}\n;return THEMES;`)();
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -98,33 +45,48 @@ function luminance(r, g, b) {
 function contrastRatio(hex1, hex2) {
   const rgb1 = hexToRgb(hex1);
   const rgb2 = hexToRgb(hex2);
+  if (!rgb1 || !rgb2) return null;
   const lum1 = luminance(rgb1.r, rgb1.g, rgb1.b);
   const lum2 = luminance(rgb2.r, rgb2.g, rgb2.b);
-  const brightest = Math.max(lum1, lum2);
-  const darkest = Math.min(lum1, lum2);
-  return (brightest + 0.05) / (darkest + 0.05);
+  return (Math.max(lum1, lum2) + 0.05) / (Math.min(lum1, lum2) + 0.05);
 }
 
 const pairsToTest = [
-  { fg: '--text', bg: '--bg', target: 7 },
-  { fg: '--text', bg: '--surface-1', target: 4.5 },
-  { fg: '--text-muted', bg: '--surface-1', target: 4.5 },
-  { fg: '--brand', bg: '--bg', target: 3 },
-  { fg: '--accent', bg: '--bg', target: 3 },
-  { fg: '--danger', bg: '--surface-1', target: 3 },
-  { fg: '--success', bg: '--surface-1', target: 3 }
+  { fg: "--text", bg: "--bg", target: 7 },
+  { fg: "--text", bg: "--surface-1", target: 4.5 },
+  { fg: "--text-muted", bg: "--surface-1", target: 4.5 },
+  { fg: "--brand", bg: "--bg", target: 3 },
+  { fg: "--accent", bg: "--bg", target: 3 },
+  // These three are drawn as text: --danger on .ts-duration--error and
+  // .ts-copy--error, --success on .num-btn--ok and .ts-copy--done, --warning on
+  // .ts-duration--warn. They were on the 3:1 mark tier, which is the tier for a
+  // border or a glow, not for a word.
+  { fg: "--danger", bg: "--surface-1", target: 4.5 },
+  { fg: "--success", bg: "--surface-1", target: 4.5 },
+  { fg: "--warning", bg: "--surface-1", target: 4.5 }
 ];
 
-for (const [themeName, colors] of Object.entries(THEMES)) {
+let failed = false;
+for (const [themeName, theme] of Object.entries(THEMES)) {
+  const colors = theme.colors || theme;
   console.log(`\n=== Theme: ${themeName} ===`);
   for (const { fg, bg, target } of pairsToTest) {
     const fgColor = colors[fg];
     const bgColor = colors[bg];
-    if (!fgColor || !bgColor) continue;
-    
+    if (!fgColor || !bgColor) {
+      console.log(`⚠️  ${fg} on ${bg}: not defined in this theme`);
+      continue;
+    }
+
     const ratio = contrastRatio(fgColor, bgColor);
     const pass = ratio >= target;
-    const marker = pass ? "✅" : "❌";
-    console.log(`${marker} ${fg} on ${bg}: ${ratio.toFixed(2)}:1 (Target: ${target}:1)`);
+    if (!pass) failed = true;
+    console.log(`${pass ? "✅" : "❌"} ${fg} on ${bg}: ${ratio.toFixed(2)}:1 (Target: ${target}:1)`);
   }
 }
+
+if (failed) {
+  console.error("\n❌ Contrast targets missed. Adjust the palette in themes.js.");
+  process.exit(1);
+}
+console.log("\n✅ All themes meet their contrast targets.");

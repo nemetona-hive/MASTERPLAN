@@ -189,18 +189,18 @@
 
 /* Apply button flash state — fires for 1200ms on click */
 .pw-preset-apply.pw-preset-flash {
-  border-color: color-mix(in srgb, #73c4a0 60%, transparent) !important;
-  background: color-mix(in srgb, #73c4a0 12%, transparent) !important;
-  color: #73c4a0 !important;
+  border-color: color-mix(in srgb, var(--success) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--success) 12%, transparent) !important;
+  color: var(--success) !important;
   transition: none; /* Instant feedback on click */
-  box-shadow: 0 0 10px color-mix(in srgb, #73c4a0 35%, transparent) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--success) 35%, transparent) !important;
 }
 
 /* Destination field highlight — fires simultaneously with button flash */
 .num-input-flash .num-input {
-  border-color: color-mix(in srgb, #73c4a0 60%, transparent) !important;
-  background: color-mix(in srgb, #73c4a0 12%, transparent) !important;
-  box-shadow: 0 0 8px color-mix(in srgb, #73c4a0 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--success) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--success) 12%, transparent) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--success) 20%, transparent) !important;
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
@@ -208,7 +208,7 @@
 .pw-updated-note {
   font-family: var(--mono);
   font-size: var(--fs-xs);
-  color: color-mix(in srgb, #73c4a0 90%, transparent);
+  color: color-mix(in srgb, var(--success) 90%, transparent);
   margin-left: var(--sp-2);
   opacity: 0;
   transition: opacity 0.3s ease;

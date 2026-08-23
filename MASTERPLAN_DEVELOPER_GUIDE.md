@@ -39,16 +39,19 @@ style contract, theme contrast, the code inventory, and the UI audit.
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
-`npm install` sets via `prepare`. `pre-commit` rebuilds, reports the UI audit
-and blocks on a test failure. `pre-push` matters more here than in most repos:
+`npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI
+audit error or a test failure. `pre-push` matters more here than in most repos:
 GitHub Pages serves this tree directly, so a push **is** the deploy — the hook
 refuses if the committed `components.js` or `app.css` no longer matches `src/`,
 which is a staleness only visitors would ever see. Bypass either with
 `--no-verify`.
 
-The UI audit currently reports 29 hardcoded colour literals that predate it, so
-`pre-commit` reports rather than blocks on it. Clear those and it can become a
-real gate — the hook says exactly what to change.
+Colour comes from theme tokens, never a literal — `--danger`, `--success`,
+`--warning`, `--brand`, `--accent`, or the `--color-*` aliases onto them. The
+audit blocks on a hex or a tinted `rgba()` anywhere in `src/`, and
+`theme:check` gates the palette itself: **4.5:1** for a colour a word is drawn
+in, **3:1** for one that only draws a mark. It reads `themes.js` directly, so
+there is no second copy to drift.
 
 ## Stylesheets
 

@@ -23,7 +23,7 @@ html, body, #root {
 
 	--text: #d7dde2;
 	--text-muted: #92a1ad;
-	--text-subtle: #667684;
+	--text-subtle: #7a8f9e;
 
 	--brand: #d0bd86;
 	--accent: #4fa3c7;
@@ -834,9 +834,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .num-input--req {
-	border-color: #ff4444 !important;
-	background: color-mix(in srgb, #ff4444 10%, var(--color-darkblue-light)) !important;
-	box-shadow: 0 0 4px rgba(255, 68, 68, 0.3);
+	border-color: var(--danger) !important;
+	background: color-mix(in srgb, var(--danger) 10%, var(--color-darkblue-light)) !important;
+	box-shadow: 0 0 4px color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 .num-btn {
@@ -857,9 +857,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .num-btn--ok {
-	border-color: #5da06a;
-	color: #6fbf73;
-	box-shadow: 0 0 6px color-mix(in srgb, #5da06a 30%, transparent);
+	border-color: color-mix(in srgb, var(--success) 70%, transparent);
+	color: var(--success);
+	box-shadow: 0 0 6px color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .num-btn svg {
@@ -1732,13 +1732,13 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .ts-duration--error {
-	color: #ff5555;
+	color: var(--danger);
 	font-weight: var(--fw-reg);
 	font-size: var(--fs-sm);
 }
 
 .ts-duration--warn {
-	color: #d4a24a;
+	color: var(--warning);
 	font-weight: var(--fw-reg);
 	font-size: var(--fs-sm);
 }
@@ -1751,9 +1751,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .ts-remove:hover {
-	background: color-mix(in srgb, #ff4444 12%, var(--color-darkblue));
-	color: #ff6666;
-	border-color: color-mix(in srgb, #ff4444 45%, transparent);
+	background: color-mix(in srgb, var(--danger) 12%, var(--color-darkblue));
+	color: var(--danger);
+	border-color: color-mix(in srgb, var(--danger) 45%, transparent);
 }
 
 .ts-pills {
@@ -1895,17 +1895,17 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .ts-copy--done {
-	color: #6fbf73;
-	border-color: color-mix(in srgb, #6fbf73 50%, transparent);
-	background: color-mix(in srgb, #6fbf73 8%, transparent);
-	box-shadow: 0 0 8px color-mix(in srgb, #6fbf73 25%, transparent);
+	color: var(--success);
+	border-color: color-mix(in srgb, var(--success) 50%, transparent);
+	background: color-mix(in srgb, var(--success) 8%, transparent);
+	box-shadow: 0 0 8px color-mix(in srgb, var(--success) 25%, transparent);
 }
 
 .ts-copy--error {
-	color: #ff6666;
-	border-color: color-mix(in srgb, #ff6666 50%, transparent);
-	background: color-mix(in srgb, #ff6666 8%, transparent);
-	box-shadow: 0 0 8px color-mix(in srgb, #ff6666 25%, transparent);
+	color: var(--danger);
+	border-color: color-mix(in srgb, var(--danger) 50%, transparent);
+	background: color-mix(in srgb, var(--danger) 8%, transparent);
+	box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 25%, transparent);
 }
 
 @media (max-width: 768px) {
@@ -2884,24 +2884,24 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .pw-preset-apply.pw-preset-flash {
-  border-color: color-mix(in srgb, #73c4a0 60%, transparent) !important;
-  background: color-mix(in srgb, #73c4a0 12%, transparent) !important;
-  color: #73c4a0 !important;
+  border-color: color-mix(in srgb, var(--success) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--success) 12%, transparent) !important;
+  color: var(--success) !important;
   transition: none;
-  box-shadow: 0 0 10px color-mix(in srgb, #73c4a0 35%, transparent) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--success) 35%, transparent) !important;
 }
 
 .num-input-flash .num-input {
-  border-color: color-mix(in srgb, #73c4a0 60%, transparent) !important;
-  background: color-mix(in srgb, #73c4a0 12%, transparent) !important;
-  box-shadow: 0 0 8px color-mix(in srgb, #73c4a0 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--success) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--success) 12%, transparent) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--success) 20%, transparent) !important;
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
 .pw-updated-note {
   font-family: var(--mono);
   font-size: var(--fs-xs);
-  color: color-mix(in srgb, #73c4a0 90%, transparent);
+  color: color-mix(in srgb, var(--success) 90%, transparent);
   margin-left: var(--sp-2);
   opacity: 0;
   transition: opacity 0.3s ease;

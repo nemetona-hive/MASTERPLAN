@@ -153,13 +153,13 @@
 }
 
 .ts-duration--error {
-	color: #ff5555;
+	color: var(--danger);
 	font-weight: var(--fw-reg);
 	font-size: var(--fs-sm);
 }
 
 .ts-duration--warn {
-	color: #d4a24a;
+	color: var(--warning);
 	font-weight: var(--fw-reg);
 	font-size: var(--fs-sm);
 }
@@ -175,9 +175,9 @@
 }
 
 .ts-remove:hover {
-	background: color-mix(in srgb, #ff4444 12%, var(--color-darkblue));
-	color: #ff6666;
-	border-color: color-mix(in srgb, #ff4444 45%, transparent);
+	background: color-mix(in srgb, var(--danger) 12%, var(--color-darkblue));
+	color: var(--danger);
+	border-color: color-mix(in srgb, var(--danger) 45%, transparent);
 }
 
 /* Lunch presets ----------------------------------------------------------- */
@@ -327,17 +327,17 @@
 }
 
 .ts-copy--done {
-	color: #6fbf73;
-	border-color: color-mix(in srgb, #6fbf73 50%, transparent);
-	background: color-mix(in srgb, #6fbf73 8%, transparent);
-	box-shadow: 0 0 8px color-mix(in srgb, #6fbf73 25%, transparent);
+	color: var(--success);
+	border-color: color-mix(in srgb, var(--success) 50%, transparent);
+	background: color-mix(in srgb, var(--success) 8%, transparent);
+	box-shadow: 0 0 8px color-mix(in srgb, var(--success) 25%, transparent);
 }
 
 .ts-copy--error {
-	color: #ff6666;
-	border-color: color-mix(in srgb, #ff6666 50%, transparent);
-	background: color-mix(in srgb, #ff6666 8%, transparent);
-	box-shadow: 0 0 8px color-mix(in srgb, #ff6666 25%, transparent);
+	color: var(--danger);
+	border-color: color-mix(in srgb, var(--danger) 50%, transparent);
+	background: color-mix(in srgb, var(--danger) 8%, transparent);
+	box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 25%, transparent);
 }
 
 @media (max-width: 768px) {

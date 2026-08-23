@@ -55,9 +55,9 @@
 }
 
 .num-input--req {
-	border-color: #ff4444 !important;
-	background: color-mix(in srgb, #ff4444 10%, var(--color-darkblue-light)) !important;
-	box-shadow: 0 0 4px rgba(255, 68, 68, 0.3);
+	border-color: var(--danger) !important;
+	background: color-mix(in srgb, var(--danger) 10%, var(--color-darkblue-light)) !important;
+	box-shadow: 0 0 4px color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 .num-btn {
@@ -78,9 +78,9 @@
 }
 
 .num-btn--ok {
-	border-color: #5da06a;
-	color: #6fbf73;
-	box-shadow: 0 0 6px color-mix(in srgb, #5da06a 30%, transparent);
+	border-color: color-mix(in srgb, var(--success) 70%, transparent);
+	color: var(--success);
+	box-shadow: 0 0 6px color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .num-btn svg {

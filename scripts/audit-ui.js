@@ -90,7 +90,7 @@ for (const file of cssFiles) {
     // live — :root and themes.js are the palette. Only usages are findings.
     if (/^\s*--[\w-]+\s*:/.test(code)) return;
 
-    const hex = /#[0-9a-fA-F]{3,8}\b/.exec(code);
+    const hex = /(?<!&)#[0-9a-fA-F]{3,8}\b/.exec(code);
     if (hex && !/#f{3,8}\b/i.test(hex[0])) {
       add("ERROR", "hardcoded-colour", file, i + 1,
         `${hex[0]} — use a theme token (--color-primary/--color-gray/--color-white/…).`);
@@ -133,7 +133,10 @@ for (const file of markupFiles) {
   const text = stripComments(fs.readFileSync(file, "utf8"))
     .replace(/(?<!:)\/\/[^\n]*/g, m => " ".repeat(m.length));
   text.split("\n").forEach((code, i) => {
-    for (const m of code.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+    // Not preceded by `&`: an HTML numeric entity is a code point, not a
+    // colour. `&#128161;` is the light-bulb emoji in Visualization.jsx and was
+    // reported as the hex #128161 until this landed.
+    for (const m of code.matchAll(/(?<!&)#[0-9a-fA-F]{3,8}\b/g)) {
       if (isNeutralHex(m[0])) continue;
       add("ERROR", "hardcoded-colour", file, i + 1,
         `${m[0]} in markup — use a theme token, or read one off the computed style at runtime.`);

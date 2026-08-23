@@ -5,19 +5,13 @@
 #   1. src still builds. components.js and app.css are committed here, so a
 #      commit that does not compile would publish a stale bundle to GitHub
 #      Pages alongside source that no longer produces it.
-#   2. UI system conformance (npm run audit:ui) — REPORTED, not enforced.
-#      See the note below.
+#   2. UI system conformance (npm run audit:ui) — blocks on ERROR only.
+#      Warnings (dead CSS) do not block.
 #   3. Unit tests (npm test). These cover the layout maths and the parsers —
 #      the failures that are silent and wrong rather than loud and broken.
 #
 # Rebuilding here also refreshes the working-tree bundle, so the running app
 # picks up the commit without a separate build.
-#
-# Why the audit does not block yet: it currently reports 29 hardcoded colour
-# literals that predate it, several of which are the naviPro palette written
-# out by hand. Making it blocking today would mean every commit needs
-# --no-verify, which trains the gate away. Clear that backlog, then change the
-# `|| true` below to an exit 1 and this becomes a real gate.
 #
 # Skip once with:  git commit --no-verify
 
@@ -36,8 +30,14 @@ if ! npm run build >/dev/null 2>&1; then
   exit 1
 fi
 
-# ---- 2. UI system audit (report only) ---------------------------------------
-npm run audit:ui --silent || true
+# ---- 2. UI system audit -----------------------------------------------------
+if ! npm run audit:ui --silent; then
+  echo "" >&2
+  echo "✖ pre-commit: UI audit found errors (warnings do not block)." >&2
+  echo "  Details above. Bypass with 'git commit --no-verify' if intentional." >&2
+  echo "" >&2
+  exit 1
+fi
 
 # ---- 3. unit tests ----------------------------------------------------------
 if ! npm test --silent >/dev/null 2>&1; then
