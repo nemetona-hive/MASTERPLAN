@@ -438,7 +438,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
 
   return (
     <ControlPanel id="control-material" title="Material Specification" noToggle>
-      <Stack gap={3}>
+      <Stack gap={3} className="ctrl-list">
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
           <NumInput
             id="input-PLa"

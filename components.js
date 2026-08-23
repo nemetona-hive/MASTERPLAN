@@ -2364,7 +2364,7 @@
       (idx) => localApply(validPresets[idx], presets.indexOf(validPresets[idx])),
       () => setActivePresetDropdown(null)
     );
-    return /* @__PURE__ */ React2.createElement(ControlPanel, { id: "control-material", title: "Material Specification", noToggle: true }, /* @__PURE__ */ React2.createElement(Stack, { gap: 3 }, /* @__PURE__ */ React2.createElement("div", { className: fieldFlash ? "num-input-flash" : "", ref: widWrapRef, style: { position: "relative" } }, /* @__PURE__ */ React2.createElement(
+    return /* @__PURE__ */ React2.createElement(ControlPanel, { id: "control-material", title: "Material Specification", noToggle: true }, /* @__PURE__ */ React2.createElement(Stack, { gap: 3, className: "ctrl-list" }, /* @__PURE__ */ React2.createElement("div", { className: fieldFlash ? "num-input-flash" : "", ref: widWrapRef, style: { position: "relative" } }, /* @__PURE__ */ React2.createElement(
       NumInput,
       {
         id: "input-PLa",
