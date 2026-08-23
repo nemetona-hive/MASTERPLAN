@@ -148,6 +148,21 @@
   box-shadow: var(--ctl-active);
 }
 
+/* ── ctrl-dir stacked in a vertical list ──────────────────────
+ * .ctrl-dir's flex: 1 assumes a row: it distributes the *width* axis
+ * among siblings and leaves the explicit height alone. Stood in a
+ * column Stack instead, flex: 1's flex-basis: 0% collapses the
+ * *height* axis to content, because an auto-sized column has no spare
+ * cross space to grow a sibling into — every entry came out a ~17px
+ * sliver instead of the standard 36px control height, its 8px radius
+ * reading as a full pill against a bar that thin. A vertical list of
+ * selectable entries (Guider's panel, and any future one like it)
+ * needs .ctrl-list on the wrapping Stack. */
+.ctrl-list .ctrl-dir {
+  flex: none;
+  width: 100%;
+}
+
 /* ── Pill button ──────────────────────────────────────────────
  * Used for quick-set presets (pipe Ø, S4 sizes) where options
  * are shortcuts rather than exclusive mode switches. */

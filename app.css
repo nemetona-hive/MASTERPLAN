@@ -1083,6 +1083,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   box-shadow: var(--ctl-active);
 }
 
+.ctrl-list .ctrl-dir {
+  flex: none;
+  width: 100%;
+}
+
 .pill-btn {
   height: var(--ctl-h-md);
   padding: 0 var(--ctl-pad-x-lg);

@@ -1477,7 +1477,7 @@
       // more entries added here later
     ];
     const selected = ENTRIES.find((e) => e.id === selectedId) || null;
-    return /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement("div", { id: "data-control", className: "data-control" }, /* @__PURE__ */ React2.createElement(ControlPanel, { id: "control-guider-list", title: "Electrism", open: listOpen, setOpen: setListOpen }, /* @__PURE__ */ React2.createElement(Stack, { gap: 1 }, ENTRIES.map((entry) => /* @__PURE__ */ React2.createElement(
+    return /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement("div", { id: "data-control", className: "data-control" }, /* @__PURE__ */ React2.createElement(ControlPanel, { id: "control-guider-list", title: "Electrism", open: listOpen, setOpen: setListOpen }, /* @__PURE__ */ React2.createElement(Stack, { gap: 1, className: "ctrl-list" }, ENTRIES.map((entry) => /* @__PURE__ */ React2.createElement(
       "button",
       {
         key: entry.id,

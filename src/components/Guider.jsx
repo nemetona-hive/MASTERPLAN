@@ -439,7 +439,7 @@ export function SheetGuider() {
     <>
       <div id="data-control" className="data-control">
         <ControlPanel id="control-guider-list" title="Electrism" open={listOpen} setOpen={setListOpen}>
-          <Stack gap={1}>
+          <Stack gap={1} className="ctrl-list">
             {ENTRIES.map(entry => (
               <button
                 key={entry.id}
