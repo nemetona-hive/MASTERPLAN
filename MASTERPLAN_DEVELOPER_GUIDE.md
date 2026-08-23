@@ -22,6 +22,34 @@ Everything that lives *outside* `src/` — `config.js`, `simulation.js`,
 `themes.js` — is still loaded as its own `<script>` and reached as a bare
 global. Do NOT import those; they are not modules.
 
+## Running it
+
+`./run.sh` from WSL, or the desktop shortcut.
+
+The shortcut is a three-part chain, matching MONEYFLOW and VLOGBOOK:
+
+```
+Desktop\MASTERPLAN.lnk  ->  wscript.exe  %LOCALAPPDATA%\MASTERPLAN\launch-hidden.vbs
+                                            -> wsl.exe -d Ubuntu --cd <repo> -e bash ./run.sh
+```
+
+Two constraints explain the shape. A `.lnk` has no "hidden" window style — only
+Normal, Maximized or Minimized — so pointing one at `wsl.exe` always leaves a
+console somewhere; `WScript.Shell.Run` takes `0` for hidden, which is the only
+way to get none. And the `.vbs` is **copied to `%LOCALAPPDATA%`** rather than
+run from the repo, because a script on a `\\wsl.localhost\...` UNC path sits in
+an untrusted zone and trips Windows' security prompt.
+
+`launch-hidden.vbs` and `masterplan.ico` live in the repo as the source of
+truth; the copies under `%LOCALAPPDATA%\MASTERPLAN\` are what the shortcut
+actually uses. Change one, copy it across.
+
+The cost of hiding the console is that a failed start is silent — the browser
+opens and fails to connect, and that is the only signal. Run `./run.sh` from a
+WSL shell to see why. The likeliest cause is node: it is **not** on PATH in the
+non-interactive shell the shortcut spawns, which is what the NVM block at the
+top of `run.sh` is for.
+
 ## Checks
 
 `npm test` runs the vitest suite (`tests/`), covering the layout maths in
