@@ -115,6 +115,48 @@ export function useClickOutside(refs, handler, active = true) {
   }, [handler, active]);
 }
 
+/**
+ * Hands the browser a generated file to save.
+ *
+ * The object URL is revoked on a later tick rather than straight after
+ * `click()` — the download reads from that URL asynchronously, and revoking it
+ * in the same turn cancels the save in Firefox and Safari before it starts.
+ */
+export function downloadFile(fileName, data, mimeType) {
+  const url = URL.createObjectURL(new Blob([data], { type: mimeType }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+// Every armed mode — an open dropdown, a preset being renamed — takes the same
+// two ways out: click away, or Escape. useClickOutside already gives the first
+// half; leaving the second to each caller is how the same control ends up
+// behaving differently on two pages.
+//
+// `inside` is an array of refs, or a CSS selector for a subtree that cannot
+// forward one. Pass a stable handler: it re-subscribes on identity change, the
+// same as useClickOutside.
+export function useModeExit(inside, onExit, active = true) {
+  const isSelector = typeof inside === "string";
+
+  useClickOutside(isSelector ? [] : inside, event => {
+    if (isSelector && event.target?.closest?.(inside)) return;
+    onExit(event);
+  }, active);
+
+  React.useEffect(() => {
+    if (!active) return;
+    const onKeyDown = event => { if (event.key === "Escape") onExit(event); };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [active, onExit]);
+}
+
 export function useDropdownKeyboard(itemsLength, onSelect, onClose) {
   const [hoveredIndex, setHoveredIndex] = React.useState(-1);
 
@@ -462,7 +504,7 @@ export function Stack({ children, gap = 2, direction = "column", className = "",
  * @param {"reg"|"med"|"semi"|"bold"|"black"} weight - Font weight level
  * @param {"sans"|"mono"} variant - Font family variant
  */
-function Text({ children, size, weight, variant, color, className = "", style = {}, as: Tag = "span", ...props }) {
+export function Text({ children, size, weight, variant, color, className = "", style = {}, as: Tag = "span", ...props }) {
   const classes = [
     size && `u-fs-${size}`,
     weight && `u-fw-${weight}`,

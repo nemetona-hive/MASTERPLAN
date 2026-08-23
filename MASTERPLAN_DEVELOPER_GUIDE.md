@@ -22,6 +22,34 @@ Everything that lives *outside* `src/` — `config.js`, `simulation.js`,
 `themes.js` — is still loaded as its own `<script>` and reached as a bare
 global. Do NOT import those; they are not modules.
 
+## Checks
+
+`npm test` runs the vitest suite (`tests/`), covering the layout maths in
+`simulation.js`, the timesheet parsers, the number coercions and the shared
+primitives. `npm run verify` runs everything: tests, build, bundle budgets, the
+style contract, theme contrast, the code inventory, and the UI audit.
+
+| Command | What it guards |
+|---|---|
+| `npm test` | behaviour — parsers, layout maths, primitives |
+| `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them) |
+| `npm run theme:check` | contrast ratios across all three themes |
+| `npm run perf:check` | download budgets for the two committed bundles |
+| `npm run style:check` | load-bearing selectors still exist in `app.css` |
+| `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
+
+Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
+`npm install` sets via `prepare`. `pre-commit` rebuilds, reports the UI audit
+and blocks on a test failure. `pre-push` matters more here than in most repos:
+GitHub Pages serves this tree directly, so a push **is** the deploy — the hook
+refuses if the committed `components.js` or `app.css` no longer matches `src/`,
+which is a staleness only visitors would ever see. Bypass either with
+`--no-verify`.
+
+The UI audit currently reports 29 hardcoded colour literals that predate it, so
+`pre-commit` reports rather than blocks on it. Clear those and it can become a
+real gate — the hook says exactly what to change.
+
 ## Stylesheets
 
 `app.css` is generated too, by `scripts/build-styles.js` from `src/styles/*.css`.
