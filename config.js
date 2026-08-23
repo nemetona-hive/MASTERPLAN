@@ -18,7 +18,6 @@ const ICONS = {
 
   // Navigation sidebar
   "panel-left-close": "fa-solid fa-kaaba",   // Toggle sidebar
-  "layout-template": "fa-solid fa-table-cells-large",// Nav: Layout
   "rows-3": "fa-solid fa-table-list",       // Nav: Pattern Layouts
   "columns-2": "fa-solid fa-columns",          // Nav: Symmetric Layout
   "layer-group": "fa-solid fa-layer-group",       // Nav: Concrete
@@ -133,26 +132,17 @@ var PAGES = [{
   icon: "home",
   noNav: true
 }, {
-  id: "layout",
-  label: "Layout",
-  title: "Layout",
-  desc: "Choose a layout tool from the submenu.",
-  icon: "layout-template",
-  isParent: true
-}, {
   id: "pattern-layout",
   label: "Pattern Layouts",
   title: "Pattern Layouts",
   desc: "Compare straight, shifted, stepped and long-short panel strategies. Highlights the fewest-piece option automatically.",
-  icon: "rows-3",
-  parentId: "layout"
+  icon: "rows-3"
 }, {
   id: "symmetric-layout",
   label: "Symmetric Layout",
   title: "Symmetric Layout",
   desc: "Equal edge pieces with full panels in the center. Asymmetric and custom first-piece modes included.",
-  icon: "columns-2",
-  parentId: "layout"
+  icon: "columns-2"
 }, {
   id: "concrete",
   label: "Concrete",
