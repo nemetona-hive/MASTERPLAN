@@ -44,6 +44,13 @@ an untrusted zone and trips Windows' security prompt.
 truth; the copies under `%LOCALAPPDATA%\MASTERPLAN\` are what the shortcut
 actually uses. Change one, copy it across.
 
+The icon is generated, not drawn: `npm run icon` renders the
+`fa-compass-drafting` glyph (U+F568, the same one `ICONS.home` uses) out of the
+vendored `fa-solid-900.woff2`, so it is the face the app itself renders with
+rather than a lookalike. `node scripts/make-icon.js --deploy` also copies it
+across. Windows caches shortcut icons, so the desktop may keep showing the old
+one until the cache is cleared.
+
 The cost of hiding the console is that a failed start is silent — the browser
 opens and fails to connect, and that is the only signal. Run `./run.sh` from a
 WSL shell to see why. The likeliest cause is node: it is **not** on PATH in the

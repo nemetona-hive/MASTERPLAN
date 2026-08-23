@@ -15,7 +15,8 @@
     "perf:check": "node scripts/check-bundle-size.js",
     "style:check": "node scripts/check-style-contract.js",
     "analyze:code": "node scripts/analyze-code.js",
-    "verify": "npm test && npm run build && npm run perf:check && npm run style:check && npm run theme:check && npm run analyze:code && npm run audit:ui"
+    "verify": "npm test && npm run build && npm run perf:check && npm run style:check && npm run theme:check && npm run analyze:code && npm run audit:ui",
+    "icon": "node scripts/make-icon.js"
   },
   "keywords": [],
   "author": "",
