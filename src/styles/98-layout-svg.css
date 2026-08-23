@@ -1,0 +1,245 @@
+/*
+ * ----------------------------------------------------------
+ * LAYOUT SVG VISUALIZATION
+ * ----------------------------------------------------------
+ */
+
+.viz-expand-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  z-index: 50;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  font-size: 14px;
+}
+
+.viz-expand-btn:hover {
+  background: var(--surface-hover);
+  color: var(--color-white);
+  border-color: var(--brand);
+  transform: scale(1.05);
+}
+
+.ts-btn--icon-only {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  font-size: 16px;
+}
+
+.ts-btn--icon-only:hover {
+  color: var(--brand);
+}
+
+.layout-svg-wrap {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+}
+
+/* ── Visualization card ─────────────────────────────────── */
+.viz-card {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* The SVG chart element — border via CSS, not SVG rect */
+.viz-card svg {
+  background: var(--color-darkblue);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 8px;
+  outline: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Dimension legend row */
+.viz-legends {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.viz-legend-h {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.viz-legend-h span {
+  color: var(--text-secondary);
+  font-size: var(--fs-md);
+}
+
+/* Small panel cap */
+.data-preview .layout-svg,
+.data-preview svg.layout-svg {
+  max-height: 420px;
+}
+
+.layout-svg-seg {
+  stroke: color-mix(in srgb, var(--color-darkblue) 45%, transparent);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: filter 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+  cursor: pointer;
+}
+
+.layout-svg-seg.is-highlighted {
+  stroke: var(--color-white);
+  stroke-width: 2;
+  filter: brightness(1.15);
+}
+
+.layout-svg-seg.is-selected {
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+  filter: brightness(1.25);
+}
+
+.layout-svg-seg.is-selected.is-highlighted {
+  stroke: var(--color-white);
+  stroke-width: 3;
+}
+
+.layout-svg-gap {
+  fill: url(#layout-gap-hatch);
+  stroke: var(--danger);
+}
+
+.layout-svg-row-bg {
+  fill: var(--surface-1);
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Fill colors matching legacy background colors */
+.layout-svg-seg.color-s0 { fill: var(--sys-s0); }
+.layout-svg-seg.color-s1 { fill: var(--sys-s1); }
+.layout-svg-seg.color-s2l { fill: var(--sys-s2); }
+.layout-svg-seg.color-s2d { fill: color-mix(in srgb, var(--sys-s2) 60%, transparent); }
+.layout-svg-seg.color-s3l { fill: color-mix(in srgb, var(--sys-s3) 60%, transparent); }
+.layout-svg-seg.color-s3d { fill: var(--sys-s3); }
+.layout-svg-seg.color-s4l { fill: var(--sys-s4); }
+.layout-svg-seg.color-s4s { fill: color-mix(in srgb, var(--sys-s4) 60%, transparent); }
+.layout-svg-seg.color-offcut { fill: var(--viz-offcut); }
+.layout-svg-seg.color-cut { fill: var(--viz-cut); }
+.layout-svg-seg.color-edge { fill: var(--viz-edge); }
+.layout-svg-seg.color-sys1 { fill: var(--sys-s1); }
+
+.layout-svg-seg.is-carry {
+  stroke: var(--viz-carry);
+  stroke-width: 2;
+}
+
+.layout-svg-seg.is-carry.is-highlighted {
+  stroke: var(--color-white);
+}
+
+.layout-svg-carry-line {
+  stroke: var(--viz-carry);
+  stroke-width: 2;
+  opacity: 0.65;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.layout-svg-label {
+  pointer-events: none;
+  fill: var(--color-white);
+  font-family: var(--mono);
+  font-size: 67px;
+  font-weight: var(--fw-semi);
+}
+
+.layout-svg-row-label {
+  pointer-events: none;
+  fill: var(--color-gray-opa80);
+  font-family: var(--mono);
+  font-size: 80px;
+  font-weight: var(--fw-semi);
+  letter-spacing: 0.02em;
+}
+
+.layout-svg-source {
+  pointer-events: none;
+  fill: var(--color-white);
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: var(--fw-bold);
+  opacity: 0.8;
+}
+
+@media (max-width: 1024px) {
+  .layout-svg-label,
+  .layout-svg-source,
+  .u-hide-mobile {
+    display: none !important;
+  }
+  
+  .large-preview-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .large-layout-vis-wrap {
+    max-height: none !important;
+    min-height: 480px !important;
+  }
+
+  .large-layout-vis-wrap svg {
+    width: auto !important;
+    height: 100% !important;
+    min-width: 100%;
+    object-fit: contain;
+  }
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 var(--sp-4);
+  background: var(--surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.large-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: var(--sp-6);
+  align-items: start;
+}

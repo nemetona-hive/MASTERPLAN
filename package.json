@@ -4,7 +4,7 @@
   "description": "",
   "main": "components.js",
   "scripts": {
-    "build": "node scripts/build-components.js",
+    "build": "node scripts/build-components.js && node scripts/build-styles.js",
     "watch": "node scripts/watch-components.js",
     "dev": "node scripts/local-dev-server.js",
     "theme:check": "node scripts/check-theme-contrast.js",

@@ -3,6 +3,7 @@
 const path = require("path");
 const fs = require("fs");
 const { build } = require("./build-components");
+const { buildStyles, STYLE_SOURCES } = require("./build-styles");
 
 const ROOT = path.resolve(__dirname, "..");
 const SRC_DIR = path.join(ROOT, "src");
@@ -20,6 +21,7 @@ function listSourceFiles(dir) {
   for (const entry of entries) {
     const absPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
+      if (entry.name === "styles") continue;
       files.push(...listSourceFiles(absPath));
     } else if (/\.(js|jsx)$/.test(entry.name)) {
       files.push(absPath);
@@ -38,7 +40,8 @@ async function runBuild() {
   running = true;
   try {
     await build();
-    process.stdout.write(`[watch] Built components.js at ${new Date().toLocaleTimeString()}\n`);
+    buildStyles();
+    process.stdout.write(`[watch] Built components.js and app.css at ${new Date().toLocaleTimeString()}\n`);
   } catch (err) {
     process.stderr.write(`[watch] Build failed: ${err.message}\n`);
   } finally {
@@ -57,9 +60,12 @@ function scheduleBuild() {
 
 runBuild();
 
-const filesToWatch = listSourceFiles(SRC_DIR);
+const filesToWatch = [
+  ...listSourceFiles(SRC_DIR),
+  ...STYLE_SOURCES.map(relPath => path.join(ROOT, relPath))
+];
 filesToWatch.forEach(absPath => {
   fs.watch(absPath, { persistent: true }, scheduleBuild);
 });
 
-process.stdout.write(`[watch] Watching ${filesToWatch.length} JS/JSX source files...\n`);
+process.stdout.write(`[watch] Watching ${filesToWatch.length} JS/CSS source files...\n`);

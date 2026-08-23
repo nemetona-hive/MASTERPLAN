@@ -1,0 +1,374 @@
+/*
+ * ----------------------------------------------------------
+ * MOBILE
+ * ----------------------------------------------------------
+ */
+
+@media (max-width: 768px), (max-height: 500px) {
+
+	:root {
+		--row-h: 22px;
+	}
+
+	.app {
+		height: 100svh;
+		height: 100dvh;
+		position: fixed;
+		width: 100%;
+		top: 0;
+		left: 0;
+	}
+
+	.app-head {
+		position: relative;
+		z-index: 1000;
+	}
+
+	.app-page {
+		flex-direction: column;
+	}
+
+	.page-side {
+		position: relative;
+		z-index: 1000;
+		border-right: none;
+		border-bottom: 1px solid var(--color-gray-light);
+	}
+
+	/* Nav becomes a vertical drawer list */
+	.nav {
+		width: 100% !important;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--sp-2);
+		padding: var(--sp-2) var(--sp-3);
+		overflow-x: hidden;
+		overflow-y: auto;
+		max-height: 56vh;
+		background: color-mix(in srgb, var(--color-darkblue) 92%, transparent);
+	}
+
+	/* Mobile: hide items by default, show when menu is open */
+	.nav-items,
+	.nav-bottom {
+		display: none;
+	}
+
+	.nav.nav-collapsed {
+		width: 100% !important;
+		padding: var(--sp-2) var(--sp-3);
+	}
+
+	.nav.nav-mobile-open {
+		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+	}
+
+	/* Show items only when mobile menu is open */
+	.nav.nav-mobile-open .nav-items,
+	.nav.nav-mobile-open .nav-bottom {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 auto;
+		gap: var(--sp-1);
+		margin-top: 0;
+		padding-top: 8px;
+		border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+		border-left: none;
+		padding-left: 0;
+	}
+
+	.nav-bottom:empty {
+		display: none;
+	}
+
+	/* Toggle goes to the left */
+	.nav-section.nav-toggle {
+		order: 0;
+		margin-left: 0;
+		margin-bottom: 0;
+		flex-shrink: 0;
+		cursor: pointer;
+	}
+
+	/* Nav buttons: compact, touch-friendly */
+	.nav-btn {
+		padding: 8px 10px;
+		white-space: normal;
+		flex-shrink: 0;
+		width: 100%;
+		min-height: 44px;
+		border: 1px solid color-mix(in srgb, var(--color-gray-light) 48%, transparent);
+		background: color-mix(in srgb, var(--color-darkblue) 85%, transparent);
+		border-radius: 8px;
+	}
+
+	/* Keep hierarchy readable */
+	.nav-sub-btn {
+		padding-left: 22px;
+		max-height: none;
+		opacity: 1;
+	}
+
+	/* Hide tooltip on mobile — no hover */
+	.nav-tooltip {
+		display: none;
+	}
+
+	.nav-menu-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.page-main {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		position: relative;
+	}
+
+	/* Mobile menu backdrop */
+	.page-main::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.4);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.3s ease;
+		z-index: 999;
+	}
+
+	.app-page.nav-open .page-main::before {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.main-data {
+		flex-direction: column;
+		flex: 0 0 auto;
+		height: auto;
+		overflow: visible;
+	}
+
+
+
+	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
+	/* Modern mobile touch targets: 44px min height for controls */
+	input[type="number"],
+	input[type="text"],
+	.num-input,
+	.num-btn {
+		font-size: 16px !important;
+		min-height: 44px;
+		height: auto;
+	}
+
+	.data-row {
+		padding: 5px 10px;
+	}
+
+	.data-control {
+		width: 100%;
+		border-right: none;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-gray-light));
+		padding: var(--sp-2) var(--sp-3);
+		gap: var(--sp-2);
+		overflow: visible;
+	}
+
+	.data-control .control-panel,
+	.data-control .control-panel .panel-data {
+		gap: var(--sp-3);
+	}
+
+	.data-control .gr-control-card .panel-data {
+		gap: var(--sp-3);
+	}
+
+	.data-preview {
+		overflow: visible;
+		flex: 0 0 auto;
+		padding: var(--sp-2) var(--sp-3);
+		border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 45%, transparent);
+		padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
+	}
+
+	.data-preview .sys-block {
+		margin-bottom: 10px;
+	}
+
+	.data-preview .sys-rows {
+		padding: 5px 4px;
+	}
+
+	.data-preview .strip {
+		height: 28px;
+	}
+
+	.data-preview .strip-note {
+		padding: 7px 10px;
+		line-height: 1.5;
+	}
+
+	.section-pad {
+		padding: var(--sp-2);
+	}
+
+	.panel-body {
+		padding: 10px;
+		gap: var(--sp-2);
+	}
+
+	.data-preview .gr-row-marker {
+		min-width: 16px;
+		height: 16px;
+		padding: 0 4px;
+		font-size: var(--fs-xs);
+	}
+
+	.data-preview .sys-head {
+		flex-wrap: wrap;
+		align-items: flex-start;
+		padding: 6px 10px;
+		gap: 3px var(--sp-2);
+	}
+
+	.data-preview .sys-title {
+		min-width: 0;
+	}
+
+	.data-preview .sys-head-sub {
+		flex-basis: 100%;
+		padding-left: 20px;
+		line-height: 1.4;
+		letter-spacing: 0.02em;
+		text-transform: none;
+	}
+
+	.data-preview .sys-head-count {
+		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	.data-preview .sys-row-lbl,
+	.data-preview .panel-seg-lbl,
+	.data-preview .strip-seg-lbl,
+	.data-preview .strip-legend-lbl,
+	.data-preview .strip-note {
+		font-size: var(--fs-sm);
+	}
+
+	.data-preview .strip-legend {
+		flex-wrap: wrap;
+		gap: var(--sp-2) var(--sp-3);
+	}
+
+	.page-scroll {
+		padding: 16px;
+	}
+
+	.page-inner {
+		max-width: 100%;
+	}
+
+	input[type="number"],
+	input[type="range"],
+	.num-input,
+	.num-btn {
+		min-height: 44px;
+		height: auto;
+		font-size: 16px;
+	}
+
+	input[type="number"] {
+		padding: 7px 10px;
+		border-radius: 6px;
+	}
+
+	input[type="range"] {
+		height: 10px;
+		touch-action: pan-y;
+	}
+
+	/* Snappier animations on mobile */
+	button,
+	.nav-btn,
+	.nav-parent-chevron {
+		transition-duration: 0.08s;
+	}
+}
+
+/*
+ * ----------------------------------------------------------
+ * LANDSCAPE ORIENTATION
+ * ----------------------------------------------------------
+ * Overrides for landscape-specific UX on top of the shared
+ * mobile rules already applied by the combined media query above.
+ */
+
+@media (max-height: 500px) {
+	/* Logo bar wastes vertical space in landscape — nav HIVE label is enough */
+	.app-head {
+		display: none;
+	}
+
+	/* Tighter nav to leave more room for content */
+	.nav {
+		max-height: 40vh;
+		padding: var(--sp-1) var(--sp-2);
+		gap: var(--sp-1);
+	}
+
+	.nav-section.nav-toggle {
+		padding: 4px var(--sp-2);
+	}
+
+	.nav-btn {
+		min-height: 36px;
+		padding: 6px 10px;
+	}
+
+	/* Landscape home: 2-column cards, tighter spacing */
+	.home-scroll {
+		padding: 10px 12px;
+	}
+
+	.home-inner {
+		gap: var(--sp-2);
+	}
+
+	.home-cards {
+		grid-template-columns: 1fr 1fr;
+		gap: var(--sp-2);
+	}
+
+	.home-card {
+		padding: 9px 11px;
+	}
+}
+
+/*
+ * ----------------------------------------------------------
+ * ULTRA-SMALL DEVICES
+ * ----------------------------------------------------------
+ */
+
+@media (max-width: 360px) {
+	:root {
+		--fs-xs: 12px;
+		--fs-sm: 11px;
+		--fs-md: 14px;
+	}
+
+	.nav-btn {
+		padding: 8px 10px;
+		min-height: 40px;
+	}
+
+	.page-scroll {
+		padding: 12px;
+	}
+
+
+}

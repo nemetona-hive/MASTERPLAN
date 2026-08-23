@@ -1,0 +1,151 @@
+/*
+ * ----------------------------------------------------------
+ * HEADER
+ * ----------------------------------------------------------
+ *
+ * ELEMENT
+ */
+
+.header-logo {
+	display: block;
+	height: 32px;
+}
+
+/*
+ * ----------------------------------------------------------
+ * WRAPPER
+ * ----------------------------------------------------------
+ *
+ * APP
+ */
+
+.app,
+.app-head,
+.app-page {
+	display: flex;
+}
+
+.app {
+	flex-direction: column;
+	height: 100vh;
+}
+
+.app-head {
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	padding: 8px 24px;
+	border-bottom: 1px solid var(--color-gray-light);
+}
+
+.app-page {
+	flex: 1;
+	overflow: hidden;
+}
+
+/*
+ * PAGE
+ */
+
+.page-side,
+.page-main {
+	display: flex;
+	flex-direction: column;
+}
+
+.page-main {
+	flex: 1;
+	overflow: hidden;
+	background: var(--color-darkblue-light);
+}
+
+.page-side {
+	flex-shrink: 0;
+	border-right: 1px solid var(--color-darkblue);
+	overflow: visible;
+}
+
+
+
+/* DATA */
+
+.main-data {
+	flex: 1;
+	overflow: hidden;
+	display: flex;
+	height: 100%;
+}
+
+.page-main-full {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+/*
+ * ----------------------------------------------------------
+ * LAYOUT
+ * ----------------------------------------------------------
+ */
+
+.page-scroll {
+	flex: 1;
+	overflow-y: auto;
+	padding: 26px 30px;
+}
+
+.page-inner {
+	max-width: 1024px;
+	margin: 0 auto;
+}
+
+.page-sub {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	margin-bottom: 22px;
+}
+
+
+.section {
+	overflow: visible;
+}
+
+.section-head {
+	padding: 10px 0;
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-bold);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--color-gray-opa80);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	cursor: pointer;
+	user-select: none;
+}
+
+.section-body {
+	background: var(--color-darkblue);
+	border: 1px solid var(--color-gray-light);
+	border-radius: 8px;
+}
+
+.section.unboxed .section-body {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+}
+
+.section-pad {
+	padding: var(--sp-3);
+}
+
+.panel-body {
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+}

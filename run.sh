@@ -24,12 +24,13 @@ if ! command -v node >/dev/null 2>&1; then
     exit 1
 fi
 
-# Unlike MONEYFLOW, components.js is a tracked file here rather than gitignored
-# build output, so it is present in a fresh clone. It can still be stale, and it
-# is missing only if something deleted it — build in that case rather than
-# serving an index.html that loads nothing.
-if [ ! -f components.js ]; then
-    echo "components.js missing. Running npm run build..."
+# Unlike MONEYFLOW, components.js and app.css are tracked files here rather than
+# gitignored build output — GitHub Pages serves the tree directly — so a fresh
+# clone has both. Either can still be stale, and is missing only if something
+# deleted it: build in that case rather than serving an index.html that loads
+# nothing. This is not a staleness check — use `npm run watch` while developing.
+if [ ! -f components.js ] || [ ! -f app.css ]; then
+    echo "Build output missing. Running npm run build..."
     if ! npm run build; then
         echo "Build failed. Run 'npm install' first if this is a fresh clone."
         exit 1

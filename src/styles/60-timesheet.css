@@ -1,0 +1,386 @@
+/*
+ * ----------------------------------------------------------
+ * TIMESHEET
+ * ----------------------------------------------------------
+ */
+
+/* Layout ------------------------------------------------------------------ */
+
+.ts-page {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.ts-body {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+	padding: 18px 22px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+}
+
+/* Tabs -------------------------------------------------------------------- */
+
+.ts-tabs {
+	display: flex;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 6px;
+	overflow: hidden;
+	width: fit-content;
+}
+
+.ts-tab {
+	padding: 6px 16px;
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	background: none;
+	border: none;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	transition: background 0.1s, color 0.1s;
+}
+
+.ts-tab--on {
+	background: var(--color-gray-light);
+	color: var(--color-primary);
+	font-weight: var(--fw-semi);
+}
+
+/* Section card ------------------------------------------------------------ */
+
+.ts-section,
+.calc-main-stack {
+	background: var(--color-darkblue);
+	border: 1px solid var(--color-gray-light);
+	border-radius: 10px;
+	padding: var(--sp-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-5);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Grid -------------------------------------------------------------------- */
+
+.ts-grid-hd,
+.ts-grid-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr 72px 94px 70px 44px;
+	gap: var(--sp-2);
+	align-items: center;
+}
+
+@media (max-width: 768px) {
+	.ts-grid-hd {
+		display: none;
+	}
+	.ts-grid-row {
+		grid-template-columns: 1fr 1fr;
+		gap: var(--sp-3) var(--sp-2);
+		padding: 12px 8px;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+	}
+	/* Grid items layout on mobile */
+	.ts-grid-row > .ts-col-dec {
+		grid-column: span 1;
+	}
+	.ts-grid-row > .ts-remove {
+		grid-column: span 1;
+		justify-self: end;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+	}
+}
+
+.ts-grid-hd {
+	margin-bottom: 2px;
+}
+
+.ts-grid-row {
+	padding: 2px 3px;
+	border-radius: 6px;
+	transition: background 0.08s;
+}
+
+.ts-grid-row--active {
+	background: var(--color-darkblue-light);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent), 0 0 10px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.ts-col-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	padding: 0 3px;
+}
+
+/* Input ------------------------------------------------------------------- */
+
+/* .num-input provides base styles; ts-input overrides for grid context */
+.ts-input {
+	width: 100%;
+	height: 32px;
+}
+
+.ts-input::placeholder {
+	color: var(--color-gray-light);
+	opacity: 1;
+}
+
+/* Duration / Decimal cells ------------------------------------------------ */
+
+.ts-duration,
+.ts-decimal {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-med);
+	color: var(--color-primary);
+	padding: 0 3px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+}
+
+.ts-decimal {
+	color: var(--color-gray-opa80);
+}
+
+.ts-duration--error {
+	color: #ff5555;
+	font-weight: var(--fw-reg);
+	font-size: var(--fs-sm);
+}
+
+.ts-duration--warn {
+	color: #d4a24a;
+	font-weight: var(--fw-reg);
+	font-size: var(--fs-sm);
+}
+
+/* Remove button ----------------------------------------------------------- */
+
+/* .num-btn provides base styles; ts-remove overrides and adds danger hover */
+.ts-remove {
+	background: none;
+	color: var(--color-gray-opa80);
+	font-size: var(--fs-lg);
+	transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.ts-remove:hover {
+	background: color-mix(in srgb, #ff4444 12%, var(--color-darkblue));
+	color: #ff6666;
+	border-color: color-mix(in srgb, #ff4444 45%, transparent);
+}
+
+/* Lunch presets ----------------------------------------------------------- */
+
+.ts-pills {
+	display: flex;
+	gap: var(--sp-1);
+	flex-wrap: wrap;
+	align-items: flex-start;
+	margin-top: 6px;
+}
+
+.ts-pill-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray);
+}
+
+.ts-pill {
+	font-size: var(--fs-sm);
+	font-family: var(--mono);
+	padding: 3px 9px;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 999px;
+	background: none;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	transition: background 0.1s, color 0.1s;
+}
+
+.ts-pill:hover {
+	background: var(--color-gray-light);
+	color: var(--color-primary);
+}
+
+/* Controls row ------------------------------------------------------------ */
+
+.ts-controls {
+	display: flex;
+	gap: var(--sp-2);
+	margin-top: 8px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.ts-btn {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	padding: 5px 14px;
+	border: 1px solid var(--color-gray-light);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+@media (max-width: 768px) {
+	.ts-btn {
+		min-height: 44px;
+		padding: 5px 18px;
+	}
+}
+
+.ts-btn:hover {
+	border-color: var(--color-gray);
+	color: var(--color-white);
+}
+
+.ts-btn--muted {
+	border-color: color-mix(in srgb, var(--color-gray) 50%, transparent);
+	color: color-mix(in srgb, var(--color-gray-opa80) 70%, transparent);
+}
+
+.ts-btn--muted:hover {
+	border-color: var(--color-gray-light);
+	color: var(--color-white);
+}
+
+/* Sum tab row ------------------------------------------------------------- */
+
+.ts-sum-row {
+	display: grid;
+	grid-template-columns: 1fr 34px;
+	gap: var(--sp-2);
+	align-items: center;
+}
+
+/* Total bar --------------------------------------------------------------- */
+
+.ts-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	padding: 8px 3px;
+	border-top: 1px solid var(--color-gray);
+	margin-top: 6px;
+}
+
+.ts-total-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.ts-total-vals {
+	display: flex;
+	align-items: baseline;
+	gap: var(--sp-3);
+}
+
+.ts-total-val {
+	font-family: var(--mono);
+	font-size: var(--fs-lg);
+	font-weight: var(--fw-semi);
+	color: var(--color-primary);
+}
+
+.ts-total-dec {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	color: var(--color-gray-opa80);
+}
+
+.ts-copy {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	padding: 4px 12px;
+	border: 1px solid var(--color-gray);
+	border-radius: 6px;
+	background: none;
+	color: var(--color-gray-opa80);
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.ts-copy:hover {
+	background: var(--color-gray-light);
+	color: var(--color-primary);
+}
+
+.ts-copy--done {
+	color: #6fbf73;
+	border-color: color-mix(in srgb, #6fbf73 50%, transparent);
+	background: color-mix(in srgb, #6fbf73 8%, transparent);
+	box-shadow: 0 0 8px color-mix(in srgb, #6fbf73 25%, transparent);
+}
+
+.ts-copy--error {
+	color: #ff6666;
+	border-color: color-mix(in srgb, #ff6666 50%, transparent);
+	background: color-mix(in srgb, #ff6666 8%, transparent);
+	box-shadow: 0 0 8px color-mix(in srgb, #ff6666 25%, transparent);
+}
+
+@media (max-width: 768px) {
+	.ts-copy {
+		min-height: 44px;
+		padding: 8px 16px;
+	}
+}
+
+/* Mobile ------------------------------------------------------------------ */
+
+@media (max-width: 768px), (max-height: 500px) {
+	.ts-body {
+		padding: 12px;
+		gap: var(--sp-3);
+	}
+
+	.ts-grid-hd,
+	.ts-grid-row {
+		grid-template-columns: 1fr 1fr 56px 72px 32px;
+		gap: var(--sp-1);
+	}
+
+	/* Hide decimal column on narrow screens */
+	.ts-col-dec {
+		display: none;
+	}
+
+	.ts-section {
+		padding: 10px;
+	}
+
+	.ts-input {
+		height: 34px;
+		font-size: 16px; /* prevent iOS zoom */
+		padding: 4px 6px;
+	}
+
+	.ts-remove {
+		height: 34px;
+	}
+
+	.ts-footer {
+		padding: 8px 12px;
+	}
+}

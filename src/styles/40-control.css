@@ -1,0 +1,391 @@
+/*
+ * ----------------------------------------------------------
+ * CONTROL
+ * ----------------------------------------------------------
+ */ 
+
+.data-control {
+	width: 384px;
+	flex-shrink: 0;
+	border-right: 1px solid var(--color-gray);
+	padding: var(--sp-4) var(--sp-3);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+	overflow-y: auto;
+}
+
+.data-control .control-panel,
+.data-control .control-panel .panel-data {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-4);
+}
+
+.data-control .control-panel .panel-head {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	color: var(--color-blue);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 14px;
+}
+
+.data-control .control-panel .panel-head.panel-head-spacer {
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.data-control .slabel {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	color: var(--color-blue);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	border-bottom: 1px solid var(--color-blue);
+	padding-bottom: 7px;
+	margin-top: 2px;
+}
+
+.ctrl-lbl {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-1);
+}
+
+.ctrl-sublbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-primary);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.ctrl-btns {
+	display: flex;
+	gap: var(--sp-1);
+	flex-wrap: wrap;
+}
+
+/* ── Segmented control wrapper ────────────────────────────────
+ * Applied to the 5 mode-switch groups via .seg-group class.
+ * The outer border lives here — individual buttons have none. */
+
+.seg-group {
+  display: flex;
+  background: color-mix(in srgb, var(--color-darkblue) 70%, transparent);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--color-gray-light);
+  width: 100%;
+}
+
+/* ── ctrl-dir inside a seg-group ──────────────────────────────
+ * Resets the individual button border/radius so only the
+ * wrapper reads as the control boundary. */
+
+.seg-group .ctrl-dir {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 7px;               /* slightly less than wrapper */
+  border: none;                     /* no individual border */
+  background: transparent;
+  color: var(--color-gray-opa80);
+  font-family: var(--mono);
+  font-size: var(--fs-md);          /* Bumped back up for legibility */
+  font-weight: var(--fw-reg);
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  white-space: nowrap;
+}
+
+.seg-group .ctrl-dir:hover:not(.on) {
+  color: var(--color-white);
+  background: transparent;
+}
+
+.seg-group .ctrl-dir.on {
+  background: var(--color-gray-light);
+  color: var(--color-primary);
+  font-weight: var(--fw-med);
+  box-shadow: 0 0 0 1px var(--color-gray), 0 0 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border: none;                     /* override any inherited border */
+}
+
+/* ── ctrl-dir outside a seg-group ─────────────────────────────
+ * Keeps existing look for action buttons (Apply, Add Row etc.)
+ * that are NOT mode switches and stay as standalone buttons. */
+
+.ctrl-dir {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 6px;
+  border: 1px solid var(--color-gray-light);
+  background: transparent;
+  color: var(--color-gray-opa80);
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ctrl-dir:hover:not(.on) {
+  border-color: var(--color-gray);
+  color: var(--color-white);
+}
+
+.ctrl-dir.on {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: var(--fw-semi);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+/* ── Pill button ──────────────────────────────────────────────
+ * Used for quick-set presets (pipe Ø, S4 sizes) where options
+ * are shortcuts rather than exclusive mode switches. */
+
+.pill-btn {
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--color-gray-light);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  color: var(--color-gray-opa80);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  white-space: nowrap;
+}
+
+.pill-btn:hover:not(.on) {
+  border-color: var(--color-gray);
+  color: var(--color-white);
+}
+
+.pill-btn.on {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: var(--fw-med);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+/* ── Mobile adjustments ───────────────────────────────────────
+ * Segmented buttons already have generous touch targets via
+ * padding. Pill wraps naturally via flex-wrap. */
+
+@media (max-width: 768px), (max-height: 500px) {
+  .seg-group .ctrl-dir {
+    padding: 8px 6px;              /* taller touch target */
+    font-size: var(--fs-sm);       /* Reverted to keep readable */
+  }
+
+  .pill-btn {
+    padding: 6px 16px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.ctrl-range-val {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	color: var(--color-primary);
+	text-align: center;
+}
+
+/* Text field sized to match NumInput's input area (excluding commit button width) */
+.data-control .ctrl-text-input {
+	width: calc(100% - 36px);
+	flex: 0 0 auto;
+}
+
+.data-control .gr-label-input {
+	color: var(--color-white);
+}
+
+.data-control .gr-label-input::placeholder {
+	color: var(--color-gray-opa80);
+}
+
+/* Golden Ratio A/B visual grouping */
+.data-control .gr-control-card {
+	position: relative;
+	border: 1px solid color-mix(in srgb, var(--color-gray) 55%, transparent);
+	border-radius: 10px;
+	padding: 10px;
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--color-darkblue-light) 78%, transparent) 0%,
+		color-mix(in srgb, var(--color-darkblue) 92%, transparent) 100%
+	);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gray-light) 30%, transparent);
+	overflow: hidden;
+}
+
+.data-control .gr-control-card::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+}
+
+.data-control .gr-control-card::after {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	padding: 2px 6px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--color-gray) 60%, transparent);
+	background: color-mix(in srgb, var(--color-darkblue) 82%, transparent);
+	color: var(--color-white);
+	letter-spacing: 0.08em;
+}
+
+.data-control .gr-control-card .panel-head {
+	margin: -10px -10px 10px;
+	padding: 8px 14px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-gray) 45%, transparent);
+	background: color-mix(in srgb, var(--color-darkblue-light) 80%, transparent);
+}
+
+/* Golden Ratio spacing polish */
+.data-control #control-base-number > .panel-data {
+	gap: var(--sp-5);
+}
+
+.data-control .gr-control-card .panel-data {
+	gap: var(--sp-5);
+}
+
+.data-control .gr-control-card .num-wrap {
+	gap: var(--sp-2);
+}
+
+.data-control .gr-control-card .num-row {
+	margin-top: 1px;
+}
+
+.data-control .gr-control-card .ctrl-lbl {
+	gap: var(--sp-2);
+}
+
+.data-control .gr-control-card-a::before { background: var(--color-gray); }
+.data-control .gr-control-card-b::before { background: var(--color-gray); }
+.data-control .gr-control-card-c::before { background: var(--color-gray); }
+.data-control .gr-control-card-d::before { background: var(--color-gray); }
+.data-control .gr-control-card-a::after  { content: "A"; }
+.data-control .gr-control-card-b::after  { content: "B"; }
+.data-control .gr-control-card-c::after  { content: "C"; }
+.data-control .gr-control-card-d::after  { content: "D"; }
+
+.data-preview .gr-preview-card {
+	position: relative;
+	border: 1px solid color-mix(in srgb, var(--color-gray) 45%, transparent);
+	border-radius: 8px;
+	padding: 0;
+	overflow: hidden;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.data-preview .gr-preview-card::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	z-index: 1;
+}
+
+.data-preview .gr-preview-card-a::before { background: var(--color-gray); }
+.data-preview .gr-preview-card-b::before { background: var(--color-gray); }
+.data-preview .gr-preview-card-c::before { background: var(--color-gray); }
+.data-preview .gr-preview-card-d::before { background: var(--color-gray); }
+
+.data-control .gr-control-card.gr-card-saved::before,
+.data-preview .gr-preview-card.gr-card-saved::before {
+	background: var(--color-primary);
+}
+
+.data-preview .gr-preview-card.gr-preview-card-active,
+.data-preview .gr-preview-card.linked-preview-active {
+	border-color: color-mix(in srgb, var(--color-primary) 65%, var(--color-gray));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 8px 16px color-mix(in srgb, var(--color-primary) 12%, transparent);
+	transform: translateY(-1px);
+}
+
+.data-preview .gr-row-marker {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	margin-left: 8px;
+	margin-right: 0;
+	padding: 0 5px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--color-gray) 55%, transparent);
+	background: color-mix(in srgb, var(--color-darkblue) 80%, transparent);
+	color: var(--color-white);
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	line-height: 1;
+}
+
+.data-preview .gr-section-pad {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+}
+
+.gr-preview-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+}
+
+.gr-preview-list > .sys-head {
+	padding-bottom: var(--sp-2);
+	border-bottom: 1px solid var(--color-gray-light);
+	margin-bottom: 0;
+}
+
+.gr-preview-list .sys-block {
+	margin-bottom: 0;
+}
+
+.data-preview .gr-steps-wrap {
+	border: 1px solid var(--color-gray);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.data-preview .gr-step-row {
+	display: grid;
+	grid-template-columns: 56px 1fr;
+	border-top: 1px solid var(--color-gray);
+}
+
+.data-preview .gr-step-row.gr-step-row-first {
+	border-top: none;
+}
+
+.data-preview .gr-step-cell {
+	border-bottom: none;
+}
+
+.data-preview .gr-step-cell-index {
+	border-right: 1px solid var(--color-gray);
+}

@@ -22,6 +22,38 @@ Everything that lives *outside* `src/` — `config.js`, `simulation.js`,
 `themes.js` — is still loaded as its own `<script>` and reached as a bare
 global. Do NOT import those; they are not modules.
 
+## Stylesheets
+
+`app.css` is generated too, by `scripts/build-styles.js` from `src/styles/*.css`.
+It is a plain concatenation in the order that script lists, with comments
+stripped on the way out — so **order is the cascade**. Moving a file in
+`STYLE_SOURCES`, or moving a rule between files, changes which rule wins.
+Nothing else enforces that order; the numeric prefixes only leave room to
+insert without renumbering.
+
+Read and edit the sources. Comments are roughly a fifth of them and none of it
+survives into the bundle, so the reasoning behind a rule lives in `src/styles/`
+and nowhere else. Like `components.js`, the generated `app.css` is committed
+because GitHub Pages serves the tree directly.
+
+```
+00-base.css            root variables, legend colours, form elements
+10-nav.css             nav buttons, collapse, theme toggle and menu
+20-shell.css           header, wrapper, page, layout
+30-data.css            main data area, num input, data row
+40-control.css         control panel, segmented controls, golden-ratio cards
+50-preview.css         sys block, panel row/seg, strip visualisation
+60-timesheet.css       timesheet page
+70-home.css            home page
+80-mobile.css          @media: mobile, landscape, ultra-small
+85-accessibility.css   reduced motion and focus preferences
+90-range-slider.css    lockable range slider
+92-pipe-wrap.css       pipe wrap calculator
+94-utilities.css       small shared helpers
+96-detail-layout.css   shared tool styles, primary-result/progressive-detail
+98-layout-svg.css      SVG layout visualisation
+```
+
 ## Module graph
 
 There is no hand-maintained file order any more: esbuild derives it from the

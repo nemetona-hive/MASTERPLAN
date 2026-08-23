@@ -1,0 +1,257 @@
+/*
+ * ----------------------------------------------------------
+ * PIPE WRAP CALCULATOR
+ * ----------------------------------------------------------
+ */
+
+.pw-head-adj {
+	padding: 0 !important;
+}
+
+.pw-grid-2col {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--sp-4);
+	margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+	.pw-grid-2col {
+		grid-template-columns: 1fr;
+		gap: var(--sp-3);
+	}
+}
+
+.pw-preset-label {
+	margin-bottom: 8px;
+}
+
+.pw-adj-row {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-3);
+	flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+	.pw-adj-label {
+		width: 100% !important;
+		margin-bottom: -4px;
+	}
+}
+
+.pw-adj-row.mb {
+	margin-bottom: 14px;
+}
+
+.pw-adj-label {
+	width: 160px;
+	flex-shrink: 0;
+}
+
+.pw-adj-range {
+	flex: 1;
+}
+
+.pw-adj-val {
+	width: 64px;
+	min-width: 50px;
+	flex-shrink: 0;
+	text-align: right;
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	padding: 4px 6px;
+	border-radius: 6px;
+	border: 1px solid color-mix(in srgb, var(--color-gray-light) 50%, transparent);
+	background: color-mix(in srgb, var(--color-darkblue-light) 80%, transparent);
+	color: var(--color-white);
+	transition: border-color 0.15s ease;
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+.pw-adj-val:focus {
+	outline: none;
+	border-color: var(--color-primary);
+}
+
+.pw-adj-val::-webkit-inner-spin-button,
+.pw-adj-val::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.pw-res-wrap {
+	border-bottom: 1px solid var(--color-gray);
+}
+
+.pw-res-row-last {
+	border-bottom: none !important;
+}
+
+.pw-diag-wrap {
+	padding: 14px 16px;
+}
+
+.pw-diag-svg {
+	display: block;
+}
+
+.pw-formula-wrap {
+	padding: 0 16px 14px;
+}
+
+.pw-formula-text {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+}
+
+/* Product Preset Row */
+.pw-preset-row {
+	display: block;
+	padding: 10px 8px;
+	margin: 0 -8px;
+	border-radius: 8px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-gray) 15%, transparent);
+	transition: background 0.2s ease, outline 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pw-preset-row:last-child {
+	border-bottom: none;
+}
+
+.pw-preset-header {
+	display: grid;
+	grid-template-columns: 2.2fr 1fr 1fr 1fr 84px;
+	gap: var(--sp-2);
+	margin-bottom: var(--sp-2);
+	padding: 6px 8px;
+	background: color-mix(in srgb, var(--color-gray-light) 8%, transparent);
+	border-radius: 4px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-gray-light) 15%, transparent);
+}
+
+.pw-preset-header span {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--color-gray-opa80);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.pw-preset-fields {
+	display: grid;
+	grid-template-columns: 2.2fr 1fr 1fr 1fr 84px;
+	gap: var(--sp-2);
+}
+
+.pw-preset-apply {
+	padding: 8px 16px !important;
+	height: 32px !important;
+	font-weight: var(--fw-bold) !important;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+}
+
+/* Active preset row — persists until different preset applied
+   or user manually edits a field */
+.pw-preset-active {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Active badge — replaces Apply button on the active row */
+.pw-preset-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 84px; /* Matches the button column width exactly */
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 33%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-radius: 6px;
+  white-space: nowrap;
+  padding: 0 16px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+/* Apply button flash state — fires for 1200ms on click */
+.pw-preset-apply.pw-preset-flash {
+  border-color: color-mix(in srgb, #73c4a0 60%, transparent) !important;
+  background: color-mix(in srgb, #73c4a0 12%, transparent) !important;
+  color: #73c4a0 !important;
+  transition: none; /* Instant feedback on click */
+  box-shadow: 0 0 10px color-mix(in srgb, #73c4a0 35%, transparent) !important;
+}
+
+/* Destination field highlight — fires simultaneously with button flash */
+.num-input-flash .num-input {
+  border-color: color-mix(in srgb, #73c4a0 60%, transparent) !important;
+  background: color-mix(in srgb, #73c4a0 12%, transparent) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, #73c4a0 20%, transparent) !important;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+/* "updated" note in section head — fades in/out */
+.pw-updated-note {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: color-mix(in srgb, #73c4a0 90%, transparent);
+  margin-left: var(--sp-2);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pw-updated-note.pw-updated-note-visible {
+  opacity: 1;
+}
+
+.pw-preset-lbl-hide {
+	display: none;
+}
+
+@media (max-width: 768px) {
+	.pw-preset-header {
+		display: none; /* Hide shared header on mobile, use per-field labels instead */
+	}
+	.pw-preset-fields {
+		grid-template-columns: 1fr 1fr;
+		gap: var(--sp-3) var(--sp-2);
+	}
+	/* Name field takes full width */
+	.pw-preset-fields > *:first-child {
+		grid-column: span 2;
+	}
+	/* Price and Button on the same row */
+	.pw-preset-fields > *:nth-child(4) {
+		grid-column: span 1;
+	}
+	.pw-preset-fields > *:last-child {
+		grid-column: span 1;
+		display: flex;
+		align-items: flex-end;
+	}
+	.pw-preset-apply, .pw-preset-badge {
+		width: 100% !important;
+	}
+	.pw-preset-lbl-hide {
+		display: block;
+		font-family: var(--mono);
+		font-size: var(--fs-xs);
+		color: var(--color-gray-opa80);
+		text-transform: uppercase;
+		margin-bottom: 4px;
+	}
+}
