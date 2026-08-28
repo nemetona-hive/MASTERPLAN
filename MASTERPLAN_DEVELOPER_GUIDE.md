@@ -429,6 +429,10 @@ is what makes the identity key sound — keep it that way.
 - **Large Preview Modal**: Full-screen analytical dashboard.
   - **Live Synchronization**: Edits to material or surface inputs within the modal reflect immediately in the visualization and stats.
   - **Dashboard Layout**: Uses a 3-column split (Material/Surface, Layout Engine, and Detailed Statistics).
+  - `MaterialSpecification` takes an `isLargePreview` flag (set by the
+    `LargePreviewMaterialSpec` wrapper); it hides the "Manage Presets" button
+    there, since preset management belongs to the main control panel, not the
+    modal.
   - **Mobile Optimization**: Hides secondary settings on mobile to maximize visualization space; enables horizontal scrolling for wide room layouts.
 - **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
 - `PanelSummary` — displays detailed statistics and counts for segments.
