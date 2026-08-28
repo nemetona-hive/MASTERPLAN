@@ -1,7 +1,9 @@
 /* ============================================================
  * ICON CONFIGURATION
  * Edit the Font Awesome class on the right to change any icon.
- * Format: "fa-solid fa-[name]" or "fa-regular fa-[name]"
+ * Format: "fa-solid fa-[name]" — solid only. The brands and regular faces are
+ * no longer shipped (fa-brands-400.woff2 was 115 KB to draw one icon), and
+ * scripts/build-icons.js fails the build if an icon asks for them.
  * Reference: https://fontawesome.com/icons
  * ============================================================ */
 const ICONS = {
@@ -22,10 +24,10 @@ const ICONS = {
   "columns-2": "fa-solid fa-columns",          // Nav: Symmetric Layout
   "layer-group": "fa-solid fa-layer-group",       // Nav: Concrete
   "golden-phi": "fa-solid fa-dharmachakra",     // Nav: Golden Ratio
-  "guider": "fa-brands fa-readme",               // Nav: Guider
+  "guider": "fa-solid fa-book-open",             // Nav: Guider
 
   // Layout system title icons
-  "s0": "fa-solid fa-circle-0",         // S0: Symmetric layout
+  "s0": "fa-solid fa-0",                // S0: Symmetric layout
   "s1": "fa-solid fa-1",                // S1: Straight layout
   "s2": "fa-solid fa-2",                // S2: Shifted layout
   "s3": "fa-solid fa-3",                // S3: Stepped layout

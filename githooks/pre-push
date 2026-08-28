@@ -27,9 +27,9 @@ if ! npm run build >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! git diff --quiet -- components.js app.css; then
+if ! git diff --quiet -- components.js app.css vendor/fontawesome.subset.css; then
   echo "" >&2
-  echo "✖ pre-push: components.js/app.css are stale — rebuilding changed them." >&2
+  echo "✖ pre-push: a committed build output is stale — rebuilding changed it." >&2
   echo "  GitHub Pages serves these files as committed, so pushing now would" >&2
   echo "  publish a bundle that does not match src/. Commit the rebuild first." >&2
   echo "" >&2

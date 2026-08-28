@@ -5,7 +5,7 @@
   "main": "components.js",
   "scripts": {
     "prepare": "git config core.hooksPath githooks || true; npm run build",
-    "build": "node scripts/build-components.js && node scripts/build-styles.js",
+    "build": "node scripts/build-components.js && node scripts/build-styles.js && node scripts/build-icons.js",
     "watch": "node scripts/watch-components.js",
     "dev": "node scripts/local-dev-server.js",
     "test": "node scripts/run-tests.js",
