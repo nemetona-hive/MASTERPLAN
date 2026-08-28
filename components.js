@@ -328,14 +328,24 @@
     }
     return /* @__PURE__ */ React2.createElement("div", { className: "section" }, /* @__PURE__ */ React2.createElement("div", { className: "section-head", style: headStyle, onClick: noToggle ? void 0 : () => setOpen(!open) }, /* @__PURE__ */ React2.createElement("span", null, title), !noToggle && /* @__PURE__ */ React2.createElement("span", { className: "sys-head-toggle" }, /* @__PURE__ */ React2.createElement(Icon, { name: open ? "minus" : "plus" }))), open && /* @__PURE__ */ React2.createElement("div", { className: "section-body" }, children));
   }
+  function linkedHighlightProps(type, hoveredType, setHoveredType, { toggleOnTap = true } = {}) {
+    if (!type || !setHoveredType) return {};
+    if (canHover()) {
+      return {
+        onMouseEnter: () => setHoveredType(type),
+        onMouseLeave: () => setHoveredType(null)
+      };
+    }
+    if (!toggleOnTap) return {};
+    return { onClick: () => setHoveredType(hoveredType === type ? null : type) };
+  }
   function Row({ label, value, unit, hi, danger, hoverType, hoveredType, setHoveredType }) {
     const isHovered = hoverType && hoveredType === hoverType;
     return /* @__PURE__ */ React2.createElement("div", { className: "data-row" }, /* @__PURE__ */ React2.createElement(
       "span",
       {
         className: "data-row-lbl" + (hoverType ? " hoverable" : "") + (isHovered ? " hovered" : "") + (danger ? " data-row-danger" : ""),
-        onMouseEnter: hoverType && setHoveredType ? () => setHoveredType(hoverType) : void 0,
-        onMouseLeave: hoverType && setHoveredType ? () => setHoveredType(null) : void 0
+        ...linkedHighlightProps(hoverType, hoveredType, setHoveredType)
       },
       label
     ), /* @__PURE__ */ React2.createElement("span", { className: (hi ? "data-row-val hi" : "data-row-val") + (danger ? " data-row-danger" : "") }, value), unit && /* @__PURE__ */ React2.createElement("span", { className: "data-row-unit" }, unit));
@@ -1986,8 +1996,7 @@
               height: rect.h,
               className: `layout-svg-seg ${rect.segClass}${rect.isCarry ? " is-carry" : ""}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`,
               style: rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : void 0,
-              onMouseEnter: () => setHoveredType && setHoveredType(rect.type),
-              onMouseLeave: () => setHoveredType && setHoveredType(null)
+              ...linkedHighlightProps(rect.type, hoveredType, setHoveredType, { toggleOnTap: false })
             },
             /* @__PURE__ */ React2.createElement("title", null, `${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`)
           ),

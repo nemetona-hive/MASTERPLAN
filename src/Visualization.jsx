@@ -1,5 +1,5 @@
 import { React } from "./react-globals.js";
-import { Icon, Row, Stack } from "./shared.jsx";
+import { Icon, linkedHighlightProps, Row, Stack } from "./shared.jsx";
 
 export function PanelSummary({ rows, hoveredType, setHoveredType }) {
   return (
@@ -271,8 +271,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                     x={rect.x + chartX} y={rect.y + chartY} width={rect.w} height={rect.h}
                     className={`layout-svg-seg ${rect.segClass}${rect.isCarry ? " is-carry" : ""}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
                     style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
-                    onMouseEnter={() => setHoveredType && setHoveredType(rect.type)}
-                    onMouseLeave={() => setHoveredType && setHoveredType(null)}
+                    {...linkedHighlightProps(rect.type, hoveredType, setHoveredType, { toggleOnTap: false })}
                   >
                     <title>{`${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`}</title>
                   </rect>

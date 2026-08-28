@@ -418,6 +418,11 @@ is what makes the identity key sound — keep it that way.
   `isKeyboardFocus()` (i.e. `:focus-visible`) for the keyboard. A tap fires
   `mouseenter` and focus with no `mouseleave`/blur behind them, so an ungated
   tooltip appeared and then stayed over the page the tap navigated to
+- The linked highlight (summary row <-> matching layout segments) goes through
+  `linkedHighlightProps`. Hover devices get `mouseenter`/`mouseleave` as before;
+  touch gets a tap that toggles, since there is no `mouseleave` to clear it.
+  Pass `toggleOnTap: false` where a tap already means something — the layout
+  segments use it, because the `<g>` above them already handles selection
 - `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
 - Large Preview modal is optimized for mobile by hiding non-essential controls and prioritizing visualization and statistics.
 

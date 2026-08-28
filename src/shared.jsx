@@ -500,14 +500,38 @@ export const Section = (props) => <Collapsible {...props} />;
 export const ControlPanel = (props) => <Collapsible {...props} variant="panel" />;
 export const DetailSection = (props) => <Collapsible {...props} variant="detail" />;
 
+/* Handlers for an element that highlights its linked counterparts elsewhere —
+   a summary row lighting up the matching segments, and the reverse.
+
+   On a pointer that really hovers this is mouseenter/mouseleave, unchanged. On
+   touch there is no mouseleave to answer the mouseenter a tap fires, so the
+   highlight used to latch on with nothing able to clear it. The tap becomes a
+   toggle instead: it is reversible, and it is the only way a finger can turn
+   the thing off again.
+
+   toggleOnTap: false where a tap already means something else. On the layout
+   segments it means select, and the <g> above them handles that — a second
+   meaning for the same tap would fire both at once, so the highlight stands
+   aside there and lets selection speak. */
+export function linkedHighlightProps(type, hoveredType, setHoveredType, { toggleOnTap = true } = {}) {
+  if (!type || !setHoveredType) return {};
+  if (canHover()) {
+    return {
+      onMouseEnter: () => setHoveredType(type),
+      onMouseLeave: () => setHoveredType(null)
+    };
+  }
+  if (!toggleOnTap) return {};
+  return { onClick: () => setHoveredType(hoveredType === type ? null : type) };
+}
+
 export function Row({ label, value, unit, hi, danger, hoverType, hoveredType, setHoveredType }) {
   const isHovered = hoverType && hoveredType === hoverType;
   return (
     <div className="data-row">
       <span
         className={"data-row-lbl" + (hoverType ? " hoverable" : "") + (isHovered ? " hovered" : "") + (danger ? " data-row-danger" : "")}
-        onMouseEnter={hoverType && setHoveredType ? () => setHoveredType(hoverType) : undefined}
-        onMouseLeave={hoverType && setHoveredType ? () => setHoveredType(null) : undefined}
+        {...linkedHighlightProps(hoverType, hoveredType, setHoveredType)}
       >{label}</span>
       <span className={(hi ? "data-row-val hi" : "data-row-val") + (danger ? " data-row-danger" : "")}>{value}</span>
       {unit && <span className="data-row-unit">{unit}</span>}
