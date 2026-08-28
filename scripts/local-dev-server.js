@@ -3,7 +3,40 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 3005;
+// Bind loopback only. /api/save-defaults writes straight to config.js and has
+// no credentials on it — the app-side canSaveStaticDefaults() hostname check is
+// client-side and so protects nobody. Binding 0.0.0.0 handed every machine on
+// the network an unauthenticated write to a source file in this repo.
+const HOST = '127.0.0.1';
 const ROOT_DIR = path.join(__dirname, '..');
+
+// Loopback still leaves the endpoint reachable from the user's own browser, so
+// a page on any origin could post to it (and a DNS-rebinding host resolving to
+// 127.0.0.1 would pass the bind). Browsers always send Origin on a cross-origin
+// POST; a missing one means a non-browser client such as curl, which is fine.
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
+
+const hostnameOf = value => {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+  // Strip the port without tripping over an IPv6 literal's own colons.
+  const withoutPort = trimmed.startsWith('[')
+    ? trimmed.slice(0, trimmed.indexOf(']') + 1)
+    : trimmed.split(':')[0];
+  return withoutPort.toLowerCase();
+};
+
+function isLocalRequest(req) {
+  if (!LOCAL_HOSTS.has(hostnameOf(req.headers.host))) return false;
+
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  try {
+    return LOCAL_HOSTS.has(hostnameOf(new URL(origin).host));
+  } catch {
+    return false;
+  }
+}
 
 // ==========================================
 // STATIC DEFAULTS ALLOWLIST
@@ -211,6 +244,11 @@ function replaceConstant(source, constName, newValue) {
 const server = http.createServer((req, res) => {
   // API Endpoint for saving defaults
   if (req.method === 'POST' && req.url === '/api/save-defaults') {
+    if (!isLocalRequest(req)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'save-defaults is available to local requests only' }));
+      return;
+    }
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
     req.on('end', () => {
@@ -291,7 +329,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   console.log(`Local dev server running at http://localhost:${PORT}/`);
   console.log(`Ready to save static defaults for: ${Object.keys(DEFAULT_WRITES).join(', ')}`);
 });
