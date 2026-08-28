@@ -452,13 +452,15 @@ export function SheetConcrete() {
                 {bags > 0 ? bags : "0"} 
                 <span style={{fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-reg)', opacity: 0.8, marginLeft: '4px'}}>pcs</span>
               </span>
-              <span style={{fontFamily: 'var(--mono)', fontSize: 'var(--fs-md)', color: 'var(--color-gray-opa80)', marginTop: '-2px'}}>
+              <span className="result-card-note">
                 exact: {bagsExact > 0 ? bagsExact.toFixed(2) : "0.00"} pcs
               </span>
-              
-              <div style={{marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-4)', borderTop: '1px solid color-mix(in srgb, var(--color-white) 15%, transparent)'}}>
+
+              {/* Classes, not inline styles: the mobile bar has to override the
+                  spacing and a rule cannot outrank a style attribute. */}
+              <div className="result-card-split">
                 <span className="result-card-title">Total Price</span>
-                <span className="result-card-value" style={{fontSize: 'var(--fs-xl)', display: 'flex', alignItems: 'baseline', gap: '6px'}}>
+                <span className="result-card-value">
                   {totalPrice !== null ? (
                     <>
                       <span style={{ fontSize: 'var(--fs-lg)', opacity: 0.8 }}>€</span>
@@ -469,12 +471,12 @@ export function SheetConcrete() {
               </div>
             </div>
 
-            <div style={{marginTop: 'var(--sp-4)'}}>
+            <div className="result-card-action">
               <button
                 onClick={resetAll}
                 className="ts-btn ctl-ghost ctl-danger u-w-full"
               >
-                <Icon name="refresh-cw" /> Global Reset
+                <Icon name="refresh-cw" /> <span className="result-card-action-long">Global </span>Reset
               </button>
             </div>
           </div>

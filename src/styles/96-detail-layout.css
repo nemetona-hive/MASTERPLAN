@@ -115,6 +115,54 @@
 		border-top: none !important;
 	}
 
+	/* The bar is a fixed-width row, and a flex item's min-width defaults to
+	   auto — so a child wider than its share pushes the row out rather than
+	   shrinking, which is what clipped the Global Reset button off the right
+	   edge at 360px. */
+	.layout-split > *:nth-child(2) > *,
+	.result-card > * {
+		min-width: 0;
+	}
+
+	/* The exact figure is a second decimal reading of the number already shown
+	   beside it. It is the first thing to go when there is no room. */
+	.result-card-note {
+		display: none;
+	}
+
+	/* Stacked under the headline on desktop; beside it here, with the rule
+	   turned on its side to keep the two stats legibly apart. */
+	.result-card-split {
+		margin-top: 0;
+		padding-top: 0;
+		border-top: none;
+		padding-left: var(--sp-3);
+		border-left: 1px solid color-mix(in srgb, var(--color-white) 15%, transparent);
+	}
+
+	.result-card-split .result-card-value {
+		font-size: var(--fs-xl);
+	}
+
+	/* Keeps its label — resetAll clears every field with no confirmation, so
+	   this is not a control to reduce to an unlabelled icon in the thumb zone.
+	   It sizes to that label instead of filling the row. */
+	.result-card-action {
+		margin-top: 0;
+		flex-shrink: 0;
+	}
+
+	.result-card-action .ts-btn {
+		width: auto;
+	}
+
+	/* "Global Reset" is ~150px of a ~320px bar. Dropping the first word leaves
+	   a control that still reads as Reset — an unlabelled icon was the wrong
+	   trade for something that clears every field without confirming. */
+	.result-card-action-long {
+		display: none;
+	}
+
 	/* Large preview modal should use a normal stacked flow on mobile */
 	.mp-modal-large .layout-split {
 		grid-template-columns: 1fr;
@@ -218,6 +266,33 @@
 	font-size: var(--fs-xxl);
 	font-weight: var(--fw-bold);
 	color: var(--color-white);
+}
+
+/* Concrete's result card carries a second stat and a note under the headline
+   figure. These were inline styles; they are classes so the mobile bar can
+   override them, which a rule cannot do against a style attribute. */
+.result-card-note {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	color: var(--color-gray-opa80);
+	margin-top: -2px;
+}
+
+.result-card-split {
+	margin-top: var(--sp-4);
+	padding-top: var(--sp-4);
+	border-top: 1px solid color-mix(in srgb, var(--color-white) 15%, transparent);
+}
+
+.result-card-split .result-card-value {
+	font-size: var(--fs-xl);
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+}
+
+.result-card-action {
+	margin-top: var(--sp-4);
 }
 
 /* Secondary Collapsible Section styling */

@@ -200,6 +200,24 @@ Deliberately **not** matched to MONEYFLOW, so don't "fix" these:
 | `.result-card` | a stripped inline row here, a glass card there — different roles |
 | `.layout-split` result column is `340px` | MONEYFLOW clamps to 260–300px, tuned to its money grids |
 
+**The `.result-card` mobile contract.** Below 1024px the `.layout-split` result
+column stops being a sidebar and becomes a fixed bottom bar, so everything in it
+competes for one 360px-wide row. Build cards out of the shared vocabulary rather
+than inline styles, or the bar's rules cannot reach them:
+
+| Class | Role | In the bar |
+|---|---|---|
+| `.result-card-title` / `-value` | the headline stat | kept, shrunk |
+| `.result-card-footer-item` | a label/value detail pair | hidden |
+| `.result-card-note` | a secondary reading of the headline | hidden |
+| `.result-card-split` | a second stat under a rule | rule turns vertical, sits beside |
+| `.result-card-action` | a button belonging to the card | sizes to its label |
+
+Inline styles are the trap: a `style` attribute outranks any rule, so a card
+built with them keeps its desktop spacing in the bar and pushes the row wide.
+Concrete's card did exactly that — its Global Reset was clipped off the right
+edge at 360px — while Timesheet's, built from these classes, was fine.
+
 The money-grid `--mg-*` system is **not** used here and should not be adopted:
 it parameterises `lead | N repeating same-kind columns | total | action` across
 six grids, and this app has two data grids whose columns are each a different
