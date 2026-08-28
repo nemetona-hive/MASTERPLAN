@@ -2907,7 +2907,6 @@
           onKeyDown: handleKeyDown,
           "aria-current": isActive ? "page" : void 0,
           "aria-expanded": isGroup && hasChildren ? isOpen : void 0,
-          "aria-haspopup": isGroup && hasChildren ? "true" : void 0,
           tabIndex: 0
         },
         /* @__PURE__ */ React2.createElement("span", { className: "nav-btn-icon" }, /* @__PURE__ */ React2.createElement(Icon, { name: item.icon })),
@@ -3004,7 +3003,7 @@
         },
         /* @__PURE__ */ React2.createElement(Icon, { name: "panel-left-close" })
       )),
-      /* @__PURE__ */ React2.createElement("div", { className: "nav-items", role: "menubar", "aria-orientation": "vertical" }, navItems.map((item) => /* @__PURE__ */ React2.createElement(
+      /* @__PURE__ */ React2.createElement("div", { className: "nav-items" }, navItems.map((item) => /* @__PURE__ */ React2.createElement(
         NavButton,
         {
           key: item.id,
@@ -3021,7 +3020,7 @@
           onToggleNav: handleToggle
         }
       ))),
-      /* @__PURE__ */ React2.createElement("div", { className: "nav-bottom", role: "menubar", "aria-orientation": "vertical" }, /* @__PURE__ */ React2.createElement(NavThemeButton, { navOpen, theme, setTheme, onToggleNav: handleToggle }))
+      /* @__PURE__ */ React2.createElement("div", { className: "nav-bottom" }, /* @__PURE__ */ React2.createElement(NavThemeButton, { navOpen, theme, setTheme, onToggleNav: handleToggle }))
     ));
   }
   function NavThemeButton({ navOpen, theme, setTheme, onToggleNav }) {
@@ -3223,7 +3222,7 @@
             setTheme
           }
         ), /* @__PURE__ */ React2.createElement(
-          "div",
+          "main",
           {
             id: "page-main",
             className: "page-main",

@@ -168,7 +168,11 @@
 .home-footer {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	color: color-mix(in srgb, var(--color-gray-light) 60%, transparent);
+	/* --color-gray-light is --border, and a border tone knocked back to 60%
+	   composited to #32363b on #1e2023 — 1.34:1, against the 4.5:1 this 10px
+	   text needs. --color-gray-opa80 is --text-muted, which check-theme-contrast
+	   already gates on this surface, and is what .home-card-desc uses. */
+	color: var(--color-gray-opa80);
 	letter-spacing: 0.15em;
 	text-transform: uppercase;
 }

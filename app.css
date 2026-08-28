@@ -2026,7 +2026,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .home-footer {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	color: color-mix(in srgb, var(--color-gray-light) 60%, transparent);
+
+	color: var(--color-gray-opa80);
 	letter-spacing: 0.15em;
 	text-transform: uppercase;
 }

@@ -153,7 +153,6 @@ function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, on
         onKeyDown={handleKeyDown}
         aria-current={isActive ? "page" : undefined}
         aria-expanded={isGroup && hasChildren ? isOpen : undefined}
-        aria-haspopup={isGroup && hasChildren ? "true" : undefined}
         tabIndex={0}>
         <span className="nav-btn-icon"><Icon name={item.icon} /></span>
         <span className="nav-btn-label">{item.label}</span>
@@ -279,7 +278,13 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
         </div>
 
         {/* Main nav items */}
-        <div className="nav-items" role="menubar" aria-orientation="vertical">
+        {/* No role="menubar". These are links to pages, not commands in an
+            application menu, and the buttons underneath were never menuitems —
+            axe flagged the menubar as having children that are not allowed. The
+            <nav> above already names the region for a screen reader, which is
+            the semantic that was actually doing the work. Arrow-key roving is
+            unaffected: handleKeyNav walks .nav-btn elements directly. */}
+        <div className="nav-items">
           {navItems.map(item => (
             <NavButton key={item.id} page={page} item={item}
               navOpen={mobile ? mobileMenuOpen : navOpen}
@@ -290,7 +295,7 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
         </div>
 
         {/* Bottom pinned section — add utility items here */}
-        <div className="nav-bottom" role="menubar" aria-orientation="vertical">
+        <div className="nav-bottom">
           <NavThemeButton navOpen={navOpen} theme={theme} setTheme={setTheme} onToggleNav={handleToggle} />
         </div>
 

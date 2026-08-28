@@ -224,12 +224,15 @@ function App() {
         <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpen}
           mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile}
           theme={theme} setTheme={setTheme} />
-        <div id="page-main" className="page-main"
+        {/* <main>, not a div: every page needs exactly one main landmark for a
+            screen reader to skip the nav with. Styling is unchanged — .page-main
+            is a class and nothing selects on the tag. */}
+        <main id="page-main" className="page-main"
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
           panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} />
-        </div>
+        </main>
       </div>
     </div>
   );

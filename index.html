@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Construction layout and estimating tools: tiling and panel pattern layouts, symmetric layouts, concrete volume, pipe wrap, golden ratio and timesheets.">
   <title>Nemetona MASTERPLAN</title>
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 45'><polygon fill='%23c4b48a' points='20.37 13.36 6.72 44.52 0 44.35 20.37 0 40.03 44.31 33.6 44.53 20.37 13.36' /></svg>">
@@ -11,8 +13,11 @@
   <link rel="stylesheet" href="app.css">
 
   <link rel="stylesheet" href="vendor/fontawesome.min.css">
-  <script src="vendor/react.production.min.js"></script>
-  <script src="vendor/react-dom.production.min.js"></script>
+  <!-- defer, so neither blocks first paint. Deferred scripts run in document
+       order, so React is still in place before components.js reads window.React
+       from the body below. -->
+  <script src="vendor/react.production.min.js" defer></script>
+  <script src="vendor/react-dom.production.min.js" defer></script>
 
 </head>
 

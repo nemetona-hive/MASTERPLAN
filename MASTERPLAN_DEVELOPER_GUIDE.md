@@ -575,6 +575,20 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   for them is redundant.
 - `role="img"` needs an accessible name. Per-part `<title>`s do not supply one
   for the whole graphic.
+- The sidebar is **not** a `menubar`. It links to pages rather than issuing
+  commands, and its buttons were never `menuitem`s — axe fails a `menubar` whose
+  children are plain buttons. `<nav aria-label="Main navigation">` carries the
+  semantics; arrow-key roving is plain JS over `.nav-btn` and does not need the
+  role. `aria-haspopup` went with it: without a menu, it announces a popup that
+  never opens. Parent buttons keep `aria-expanded`, which is the disclosure they
+  actually are.
+- `#page-main` is a `<main>` element — one main landmark per page is what lets a
+  screen reader skip the nav. Nothing selects on the tag, so it is safe to move.
+- Contrast is judged on the rendered pair, not the token name.
+  `check-theme-contrast` gates a fixed list of pairs, so a colour outside that
+  list can fail silently: `.home-footer` drew 10px text in `--color-gray-light`
+  (which is `--border`) at 60% and shipped at 1.34:1. Prefer an already-gated
+  token — `--color-gray-opa80` is `--text-muted` — over mixing a new one.
 - Anything reached only through `navigator.clipboard` needs a fallback. It is
   undefined outside a secure context — `file://`, plain http on a LAN address —
   which is how this app often gets opened.
