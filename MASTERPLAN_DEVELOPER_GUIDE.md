@@ -13,7 +13,10 @@ overwrites it silently. It is committed anyway, because GitHub Pages serves the
 repo directly and there is no build step on that side.
 
 React and ReactDOM are plain `<script>` tags in `index.html`, loaded from
-`vendor/`, not bundled. `src/react-globals.js` re-exports those two window
+`vendor/`, not bundled. Both carry `defer`, and must keep it — unmarked they
+block first paint, which Lighthouse costed at 400ms on desktop and 4.4s on
+throttled mobile. Deferred scripts still run in document order, so React is in
+place before `components.js` reads `window.React`. `src/react-globals.js` re-exports those two window
 globals so source files can `import { React } from "./react-globals.js"` like
 any other module. This is also why the build sets `jsxFactory` to
 `React.createElement` rather than importing the react package.
@@ -227,7 +230,7 @@ because GitHub Pages serves the tree directly.
 50-preview.css         sys block, panel row/seg, strip visualisation
 60-timesheet.css       timesheet page
 70-home.css            home page
-80-mobile.css          @media: mobile, landscape, ultra-small
+80-mobile.css          @media: narrow-stacking, mobile, landscape, ultra-small
 85-accessibility.css   reduced motion and focus preferences
 90-range-slider.css    lockable range slider
 92-pipe-wrap.css       pipe wrap calculator
@@ -465,8 +468,31 @@ is what makes the identity key sound — keep it that way.
 ## Icons
 
 - Icons are rendered via `<Icon name="..." />`, which maps a logical name to a FontAwesome class string through the `ICONS` global (`config.js`).
-- FontAwesome is vendored locally (`vendor/fontawesome.min.css`), not loaded from a CDN — the app must work fully offline.
-- Only the **Solid** (`vendor/fa-solid-900.woff2`), **Regular** (`vendor/fa-regular-400.woff2`), and **Brands** (`vendor/fa-brands-400.woff2`) webfonts are vendored. Using an icon class outside these three styles (e.g. Duotone, Sharp) will render as a fallback box — check which style a FontAwesome class belongs to before using it, and vendor the matching webfont if it's missing.
+- Font Awesome is vendored, never a CDN — the app must work fully offline.
+- **Solid only.** The regular and brands faces are gone. `fa-brands-400.woff2`
+  was 115 KB downloaded to draw a single nav icon, and regular was declared but
+  never requested. An icon class from any other style (brands, regular, duotone,
+  sharp) has no face behind it, so `build-icons.js` fails the build rather than
+  letting it render as a blank box.
+- What ships is generated, not the vendored originals. `scripts/build-icons.js`
+  reads `vendor/fontawesome.min.css` and `vendor/fa-solid-900.woff2` and writes:
+  - `vendor/fontawesome.subset.css` — the 30 icons `ICONS` names, 1.4 KiB, from
+    a 72 KiB sheet of 1,895 that was the largest render-blocking request on the
+    page
+  - `vendor/fa-solid-900.subset.woff2` — 3.0 KiB, from 155 KiB, subset through
+    harfbuzz (`subset-font`) to just the glyphs that CSS emits
+
+  The two originals stay in the repo as inputs. Nothing links them, so they cost
+  nothing on the wire. With the brands face dropped that is 342 KB of icon
+  assets down to 4.4 KB, and 35% off the page.
+- Add an icon by editing `ICONS` in `config.js`, then rebuild. If the name is not
+  a real Font Awesome icon the build fails — which is how `fa-circle-0`, an icon
+  Font Awesome has never had, sat in `ICONS` drawing nothing on the Symmetric
+  Layout title. A missing glyph is silent in the browser; that is the whole
+  reason this is generated rather than hand-maintained.
+- The font output is byte-identical run to run, which is what lets
+  `githooks/pre-push` diff it like any other committed build output. If that ever
+  stops holding, the fix is to drop it from that diff — not to bypass the hook.
 
 ## Visualization
 
@@ -556,36 +582,28 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 - Hooks come from `react-globals.js`. Most call sites use `React.useXxx`; two
   files import `useState` by name. Either is fine — import what you use.
 - After editing anything under `src/`, run `npm run build` — it regenerates
-  `components.js`, `app.css` and `vendor/fontawesome.subset.css`. `npm run watch`
-  does the first two on save.
-- All three are generated output. Never hand-edit them; the next build overwrites
+  `components.js`, `app.css`, `vendor/fontawesome.subset.css` and
+  `vendor/fa-solid-900.subset.woff2`. `npm run watch` does the first two on save.
+- All four are generated output. Never hand-edit them; the next build overwrites
   it. They are committed anyway, because GitHub Pages serves the tree directly,
   and `githooks/pre-push` refuses a push where any of them has gone stale.
 
-### Icons
-
-- `scripts/build-icons.js` generates **both** icon assets from the vendored
-  originals, which stay in the repo as its inputs and never ship because nothing
-  links them:
-  - `vendor/fontawesome.subset.css` — 30 icons, 1.4 KiB, from a 72 KiB sheet of
-    1,895 that was the largest render-blocking request on the page
-  - `vendor/fa-solid-900.subset.woff2` — 3.0 KiB, from 155 KiB, subset through
-    harfbuzz (`subset-font`) to just the glyphs the CSS emits
-  Together with dropping the brands face that is 342 KB of icon assets down to
-  4.4 KB, and 35% off the page.
-- The font output is byte-identical run to run, which is what lets
-  `githooks/pre-push` diff it like any other committed build output. If that ever
-  stops being true the gate will fail every push, and the fix is to drop it from
-  that diff — not to bypass the hook.
-- **Solid only.** The brands and regular faces are gone; `fa-brands-400.woff2`
-  was 115 KB to draw one nav icon. `build-icons.js` fails the build if `ICONS`
-  asks for a family that no longer ships.
-- Add an icon by editing `ICONS` in `config.js` and rebuilding. If the name is
-  not a real Font Awesome icon the build fails rather than shipping a blank box —
-  which is how `fa-circle-0`, an icon that has never existed, sat in `ICONS`
-  drawing nothing on the Symmetric Layout title.
 - Colour comes from a theme token, never a literal. `npm run audit:ui` blocks on
   a hex or a tinted `rgba()` in `src/`.
+- Three Lighthouse findings are **declined on purpose** — do not "fix" them
+  without reading this first:
+  - *Minify CSS / JavaScript.* `components.js` and `app.css` are committed
+    unminified so they stay readable in a public repo and so `githooks/pre-push`
+    can diff them against a fresh build. Minifying breaks that gate's premise.
+  - *Reduce unused CSS / JavaScript.* One bundle serves eight pages; everything
+    is "unused" from the perspective of whichever page you landed on.
+  - *Use efficient cache lifetimes.* Measured against the dev server's headers.
+    GitHub Pages sends its own, so the finding does not transfer — re-run against
+    the deployed URL before believing it.
+- A Lighthouse score can be vacuously high. A mobile run once reported
+  Accessibility 100 while three real defects were live, because its audits came
+  back `notApplicable` with zero items — the elements were not rendered at that
+  width. Check that an audit evaluated something before trusting that it passed.
 - If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
 - Interactive means a real `<button>`, and one never nests inside another. The
