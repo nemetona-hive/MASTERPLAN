@@ -76,7 +76,15 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
     setState:  stateSetters[sys.id] || (() => {}),
     compute: () => sys.compute(sh)
   }));
-  const panelResults      = layoutRegistry.map(layout => ({ layout, result: layout.compute() }));
+  // Each compute() runs a full simulate() pass, so all four together are by far
+  // the most expensive thing on this page. They depend only on `sh`, which is
+  // replaced wholesale by setSh — so keying the memo on it skips the work for
+  // renders driven by hover, panel collapse, preset flashes and the like.
+  const computedResults = React.useMemo(
+    () => LAYOUT_REGISTRY.map(sys => sys.compute(sh)),
+    [sh]
+  );
+  const panelResults      = layoutRegistry.map((layout, i) => ({ layout, result: computedResults[i] }));
   const panelResultsById  = panelResults.reduce((acc, p) => { acc[p.layout.id] = p; return acc; }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
   const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;

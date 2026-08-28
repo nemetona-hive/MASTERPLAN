@@ -83,7 +83,7 @@ export function PipeWrapCalculator() {
                       {PRESETS.map(p => (
                         <button
                           key={p}
-                          className={`pill-btn${pipeDiam === p ? " on" : ""}`}
+                          className={`pill-btn${d === p ? " on" : ""}`}
                           onClick={() => setPipeDiam(p)}
                         >
                           Ø {p}

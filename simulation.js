@@ -32,10 +32,16 @@ function getSourceId(index) {
   return id;
 }
 
+// Safety cap: prevent runaway loops with extreme values. Shared by both
+// simulators and by the compute* wrappers, so the UI can tell "capped" apart
+// from "legitimately empty" instead of silently rendering a valid 0-panel
+// layout.
+const MAX_SIM_STEPS = 2000;
+const exceedsSimCap = (span, step) => !(step > 0) || span / step > MAX_SIM_STEPS;
+
 const simulate = (W, H, PP, PL, offset, minJ, sys, useSymmetry = false, startOff = 0, mirror = false) => {
   if (W <= 0 || H <= 0 || PP <= 0 || PL <= 0) return [];
-  // Safety cap: prevent runaway loops with extreme values
-  if (W / PL > 2000 || H / PP > 2000) return [];
+  if (exceedsSimCap(W, PL) || exceedsSimCap(H, PP)) return [];
   const heights = mkRowHeights(H, PP, useSymmetry);
   const startRemainder = startOff > 0 ? Math.max(0, Math.min(startOff, PL)) : 0;
   const rows = [];
@@ -86,6 +92,7 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, useSymmetry = false, startOff
 
 function simulateS4(W, H, PP, PLong, minJ, useSymmetry, mirror = false) {
   if (W <= 0 || H <= 0 || PP <= 0 || PLong <= 0) return [];
+  if (exceedsSimCap(W, PLong) || exceedsSimCap(H, PP)) return [];
   const heights = mkRowHeights(H, PP, useSymmetry);
   const rows = [];
 
@@ -142,6 +149,18 @@ const gapWidth = rows => sumSegWidth(rows, "gap");
 
 function emptyLayoutResult() {
   return { valid: false, rows: [], stats: { full: 0, cut: 0, total: 0 }, summaryRows: [], meta: {} };
+}
+
+// Same shape as emptyLayoutResult, but carries a summary row so the user sees
+// why the visualization is blank rather than a silent "0 panels".
+function cappedLayoutResult() {
+  return {
+    ...emptyLayoutResult(),
+    capped: true,
+    summaryRows: [
+      { label: `Surface needs more than ${MAX_SIM_STEPS} pieces per axis \u2014 increase the material size.`, value: "Too large", unit: "", hi: true, danger: true }
+    ]
+  };
 }
 function makeStats(rows) {
   let full = 0, cut = 0;
@@ -230,9 +249,11 @@ function computeStandard(sh, sysNum, offset, palKey) {
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
+  const sH = vSym ? W : H;
+  if (exceedsSimCap(sW, PLa) || exceedsSimCap(sH, PPi)) return cappedLayoutResult();
   const activePatternStart = patternStart || (vSym ? "bottom" : "left");
   const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
-  const rows = simulate(sW, vSym ? W : H, PLa, PPi, offset, minJ, sysNum, false, startOff, isMirror);
+  const rows = simulate(sW, sH, PLa, PPi, offset, minJ, sysNum, false, startOff, isMirror);
   const stats = makeStats(rows);
   const gaps = nGap(rows);
   const totalGapWidth = gapWidth(rows);
@@ -252,7 +273,7 @@ function computeStandard(sh, sysNum, offset, palKey) {
 	  ] : []),
 	  { label: valid ? L.status : "Uncovered gaps \u2014 increase min remainder or adjust panel size.", value: valid ? "Valid" : "Invalid", unit: "", hi: !valid, danger: !valid }
 	],
-	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey], surfaceW: sh.W, surfaceH: sh.H, simW: sW, simH: vSym ? W : H, PPi: sh.PPi, PLa: sh.PLa, direction: sh.direction }
+	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey], surfaceW: sh.W, surfaceH: sh.H, simW: sW, simH: sH, PPi: sh.PPi, PLa: sh.PLa, direction: sh.direction }
   };
 }
 
@@ -266,6 +287,7 @@ function computeS4(sh) {
   const vSym = direction === "V";
   const sW = vSym ? H : W;
   const sH = vSym ? W : H;
+  if (exceedsSimCap(sW, s4Long) || exceedsSimCap(sH, PLa)) return cappedLayoutResult();
   const activePatternStart = patternStart || (vSym ? "bottom" : "left");
   const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
   const rows = simulateS4(sW, sH, PLa, s4Long, minJ, false, isMirror);

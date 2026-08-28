@@ -97,8 +97,7 @@ export function SheetTimesheet() {
     if (nextRow) {
       startRefs.current[nextRow.id]?.focus();
     } else {
-      const newId = nextCalcId.current++;
-      setCalcRows(prev => [...prev, { id: newId, start: '', end: '', lunch: '' }]);
+      const newId = addCalcRow();
       setTimeout(() => startRefs.current[newId]?.focus(), 0);
     }
   };

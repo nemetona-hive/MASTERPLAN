@@ -27,7 +27,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
   const resetItem = id => {
     setBaseItems(items => items.map(item => (
       item.id === id
-        ? { ...item, value: "", suffix: "", savedCommitted: false }
+        ? { ...item, value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }
         : item
     )));
   };

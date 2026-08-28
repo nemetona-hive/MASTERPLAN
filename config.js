@@ -99,11 +99,16 @@ const SYSTEMS = [{
   subtitle: (s4Long) => `long ${s4Long}mm / short auto`
 }];
 // Text formatting utilities
+// Values reach these straight from user input, so a NaN or Infinity can arrive
+// here and .toFixed() would render it verbatim in the UI. Fall back to an em
+// dash instead of showing "NaN" next to a millimetre unit.
+const fmtFixed = (v, d) => Number.isFinite(Number(v)) ? Number(v).toFixed(d) : "\u2014";
+
 const fmt = {
-  mm: (v) => v.toFixed(0),
-  decimal: (v) => v.toFixed(1),
-  area: (v) => v.toFixed(2),
-  decimals: (v, d) => v.toFixed(d)
+  mm: (v) => fmtFixed(v, 0),
+  decimal: (v) => fmtFixed(v, 1),
+  area: (v) => fmtFixed(v, 2),
+  decimals: (v, d) => fmtFixed(v, d)
 };
 
 const getDescription = (id, sh) => {
@@ -185,7 +190,7 @@ const DEFAULT_SH = {
   offset: 0.5,
   direction: "H",
   rowStart: "top",
-  rowStartH: "bottom",
+  rowStartH: "top",
   rowStartV: "top",
   patternStartH: "left",
   patternStartV: "bottom",

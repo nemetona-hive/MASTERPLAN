@@ -44,7 +44,7 @@ export function SheetConcrete() {
     ).map(p => ({ ...p }))
   );
 
-  const [presetSaveStatus, setPresetSaveStatus] = React.useState("");
+  const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
 
   const saveConcreteDefaults = async () => {
     setPresetSaveStatus("saving", 0);

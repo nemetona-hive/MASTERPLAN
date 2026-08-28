@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 // publishes its top-level names, so they are read off globalThis here rather
 // than imported.
 const { symEdge, mkRowHeights, getSourceId, simulate, simulateS4,
-        countSegs, computeS0, computeS1, computeS2 } = globalThis;
+        countSegs, computeS0, computeS1, computeS2, computeS4 } = globalThis;
 
 const widthsOf = row => row.segs.map(s => s.w);
 const totalWidth = row => row.segs.reduce((a, s) => a + s.w, 0);
@@ -138,6 +138,12 @@ describe("simulate", () => {
     expect(simulate(3000, 10000, 1, 1200, 0.5, 100, 1)).toEqual([]);
   });
 
+  it("caps runaway geometry in the S4 simulator too", () => {
+    // s4Long is unclamped in the UI, so a 1mm long piece is reachable by typo.
+    expect(simulateS4(10000, 2000, 300, 1, 100, false)).toEqual([]);
+    expect(simulateS4(3000, 10000, 1, 1200, 100, false)).toEqual([]);
+  });
+
   it("mirrors a layout without changing what it is made of", () => {
     const plain = simulate(3000, 2000, 300, 1200, 0.5, 100, 2, false, 0, false);
     const mirrored = simulate(3000, 2000, 300, 1200, 0.5, 100, 2, false, 0, true);
@@ -245,5 +251,19 @@ describe("computeS1 / computeS2", () => {
   it("returns an empty result for a surface with no size", () => {
     expect(computeS1({ ...sheet, W: 0 }).valid).toBe(false);
     expect(computeS1({ ...sheet, PLa: 0 }).rows).toEqual([]);
+  });
+
+  it("reports capped geometry as invalid rather than a valid empty layout", () => {
+    // Without the cap check in computeStandard, simulate() returns [] here,
+    // nGap([]) is 0, and the panel renders "Valid" over zero panels.
+    const capped = computeS1({ ...sheet, PLa: 1 });
+    expect(capped.valid).toBe(false);
+    expect(capped.capped).toBe(true);
+    expect(capped.summaryRows).toHaveLength(1);
+    expect(capped.summaryRows[0].danger).toBe(true);
+
+    const cappedS4 = computeS4({ ...sheet, s4Long: 1 });
+    expect(cappedS4.valid).toBe(false);
+    expect(cappedS4.capped).toBe(true);
   });
 });

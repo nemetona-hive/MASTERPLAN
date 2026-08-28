@@ -449,7 +449,7 @@
         { name: "", rate: "", bagKg: "", bagPrice: "" }
       ]).map((p) => ({ ...p }))
     );
-    const [presetSaveStatus, setPresetSaveStatus] = React2.useState("");
+    const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
     const saveConcreteDefaults = async () => {
       setPresetSaveStatus("saving", 0);
       try {
@@ -710,7 +710,7 @@
       setBaseItems((items) => items.map((item) => item.id === id ? { ...item, saved: { value: item.value, suffix: item.suffix }, savedCommitted: true } : item));
     };
     const resetItem = (id) => {
-      setBaseItems((items) => items.map((item) => item.id === id ? { ...item, value: "", suffix: "", savedCommitted: false } : item));
+      setBaseItems((items) => items.map((item) => item.id === id ? { ...item, value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false } : item));
     };
     const commitBaseValue = (id, flash = false) => {
       setBaseItems((items) => items.map((item) => {
@@ -1579,7 +1579,7 @@
       "button",
       {
         key: p,
-        className: `pill-btn${pipeDiam === p ? " on" : ""}`,
+        className: `pill-btn${d === p ? " on" : ""}`,
         onClick: () => setPipeDiam(p)
       },
       "Ø ",
@@ -2088,7 +2088,11 @@
       }),
       compute: () => sys.compute(sh)
     }));
-    const panelResults = layoutRegistry.map((layout) => ({ layout, result: layout.compute() }));
+    const computedResults = React2.useMemo(
+      () => LAYOUT_REGISTRY.map((sys) => sys.compute(sh)),
+      [sh]
+    );
+    const panelResults = layoutRegistry.map((layout, i) => ({ layout, result: computedResults[i] }));
     const panelResultsById = panelResults.reduce((acc, p) => {
       acc[p.layout.id] = p;
       return acc;
@@ -2605,8 +2609,7 @@
       if (nextRow) {
         startRefs.current[nextRow.id]?.focus();
       } else {
-        const newId = nextCalcId.current++;
-        setCalcRows((prev) => [...prev, { id: newId, start: "", end: "", lunch: "" }]);
+        const newId = addCalcRow();
         setTimeout(() => startRefs.current[newId]?.focus(), 0);
       }
     };
