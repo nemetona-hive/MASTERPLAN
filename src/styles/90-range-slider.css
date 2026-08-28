@@ -21,9 +21,11 @@
 	cursor: pointer;
 }
 
-.range-slider-wrap.is-locked:hover {
-	background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-	border-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+@media (hover: hover) {
+	.range-slider-wrap.is-locked:hover {
+		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+		border-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
 }
 
 .range-slider-wrap.is-unlocked {
@@ -72,9 +74,11 @@
 	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-.range-lock-btn:hover {
-	background: color-mix(in srgb, var(--color-gray-light) 20%, transparent);
-	color: var(--color-white);
+@media (hover: hover) {
+	.range-lock-btn:hover {
+		background: color-mix(in srgb, var(--color-gray-light) 20%, transparent);
+		color: var(--color-white);
+	}
 }
 
 .range-lock-btn:active {

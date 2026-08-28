@@ -409,6 +409,15 @@ is what makes the identity key sound — keep it that way.
   `resize` — one re-render per real crossing rather than one per URL-bar nudge.
   `orientationchange` closes the drawer separately, since a rotate usually stays
   on the same side of the query
+- Hover is treated as a capability, not an assumption. Every `:hover` rule sits
+  inside `@media (hover: hover)`, so a tap does not leave a button stuck in its
+  hover state. Where a selector list mixed `:hover` with a real state
+  (`.active`, `.focused`, `.hovered`, `.home-card-active`) the two were split —
+  the state half stays unconditional, or touch would lose it
+- Collapsed-nav tooltips are gated the same way: `canHover()` for the pointer,
+  `isKeyboardFocus()` (i.e. `:focus-visible`) for the keyboard. A tap fires
+  `mouseenter` and focus with no `mouseleave`/blur behind them, so an ungated
+  tooltip appeared and then stayed over the page the tap navigated to
 - `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
 - Large Preview modal is optimized for mobile by hiding non-essential controls and prioritizing visualization and statistics.
 

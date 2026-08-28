@@ -203,10 +203,12 @@
 	}
 }
 
-.ts-btn:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.ts-btn:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .ts-copy {
@@ -225,10 +227,12 @@
 	transition: background 0.1s, color 0.1s, box-shadow 0.1s, transform 0.06s ease;
 }
 
-.ts-copy:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.ts-copy:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .ts-copy--done {

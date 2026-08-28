@@ -241,8 +241,10 @@
 	transition: color 0.2s ease;
 }
 
-.detail-section-head:hover {
-	color: var(--color-primary);
+@media (hover: hover) {
+	.detail-section-head:hover {
+		color: var(--color-primary);
+	}
 }
 
 .detail-section-body {
@@ -282,11 +284,13 @@
 	font-size: 10px;
 }
 
-.section-head:hover .sys-head-toggle,
-.panel-head:hover .sys-head-toggle,
-.detail-section-head:hover .sys-head-toggle {
-	background: var(--color-primary);
-	color: var(--color-darkblue);
+@media (hover: hover) {
+	.section-head:hover .sys-head-toggle,
+	.panel-head:hover .sys-head-toggle,
+	.detail-section-head:hover .sys-head-toggle {
+		background: var(--color-primary);
+		color: var(--color-darkblue);
+	}
 }
 
 /* ── Material Presets Modal ──────────────────────────────────────────────── */
@@ -388,10 +392,12 @@
   transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.06s ease;
 }
 
-.mp-modal-close:hover {
-  background: var(--ctl-hover-danger-bg);
-  box-shadow: var(--ctl-hover-danger);
-  color: var(--danger);
+@media (hover: hover) {
+	.mp-modal-close:hover {
+	  background: var(--ctl-hover-danger-bg);
+	  box-shadow: var(--ctl-hover-danger);
+	  color: var(--danger);
+	}
 }
 
 .mp-modal-body {

@@ -25,10 +25,12 @@
 	color: var(--text-muted);
 }
 
-.ctl-ghost:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.ctl-ghost:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .ctl-ghost.is-active,
@@ -42,10 +44,12 @@
 /* Destructive hover, composed onto any tier. Marked explicitly rather than
    assumed from "secondary", because a secondary button is just as often a
    harmless one. */
-.ctl-danger:hover {
-	background: var(--ctl-hover-danger-bg);
-	box-shadow: var(--ctl-hover-danger);
-	color: var(--danger);
+@media (hover: hover) {
+	.ctl-danger:hover {
+		background: var(--ctl-hover-danger-bg);
+		box-shadow: var(--ctl-hover-danger);
+		color: var(--danger);
+	}
 }
 
 /* ── Size scale ────────────────────────────────────────────────────────────

@@ -100,10 +100,12 @@
   white-space: nowrap;
 }
 
-.seg-group .ctrl-dir:hover:not(.on) {
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-  box-shadow: none;
-  color: var(--text);
+@media (hover: hover) {
+	.seg-group .ctrl-dir:hover:not(.on) {
+	  background: color-mix(in srgb, var(--text) 6%, transparent);
+	  box-shadow: none;
+	  color: var(--text);
+	}
 }
 
 .seg-group .ctrl-dir.on {
@@ -143,10 +145,12 @@
   transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
 }
 
-.ctrl-dir:hover:not(.on) {
-  background: var(--ctl-hover-bg);
-  box-shadow: var(--ctl-hover);
-  color: var(--text);
+@media (hover: hover) {
+	.ctrl-dir:hover:not(.on) {
+	  background: var(--ctl-hover-bg);
+	  box-shadow: var(--ctl-hover);
+	  color: var(--text);
+	}
 }
 
 .ctrl-dir.on {
@@ -193,10 +197,12 @@
   white-space: nowrap;
 }
 
-.pill-btn:hover:not(.on) {
-  background: var(--ctl-hover-bg);
-  box-shadow: var(--ctl-hover);
-  color: var(--text);
+@media (hover: hover) {
+	.pill-btn:hover:not(.on) {
+	  background: var(--ctl-hover-bg);
+	  box-shadow: var(--ctl-hover);
+	  color: var(--text);
+	}
 }
 
 .pill-btn.on {

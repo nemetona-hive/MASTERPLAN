@@ -28,10 +28,12 @@
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
 }
 
-.viz-expand-btn:hover {
-  background: var(--ctl-hover-bg);
-  box-shadow: var(--ctl-hover), var(--sh-2);
-  color: var(--text);
+@media (hover: hover) {
+  .viz-expand-btn:hover {
+    background: var(--ctl-hover-bg);
+    box-shadow: var(--ctl-hover), var(--sh-2);
+    color: var(--text);
+  }
 }
 
 /* ── Visualization card ─────────────────────────────────── */

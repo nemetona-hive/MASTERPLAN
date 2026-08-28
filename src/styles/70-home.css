@@ -87,17 +87,21 @@
 	transition: background 0.2s ease;
 }
 
-.home-card:hover {
-	border-color: color-mix(in srgb, var(--color-blue) 55%, transparent);
-	background: color-mix(in srgb, var(--color-blue) 6%, var(--color-darkblue));
+@media (hover: hover) {
+	.home-card:hover {
+		border-color: color-mix(in srgb, var(--color-blue) 55%, transparent);
+		background: color-mix(in srgb, var(--color-blue) 6%, var(--color-darkblue));
+	}
 }
 
-.home-card:hover::before {
-	background: linear-gradient(
-		90deg,
-		var(--color-blue),
-		color-mix(in srgb, var(--color-blue) 44%, transparent)
-	);
+@media (hover: hover) {
+	.home-card:hover::before {
+		background: linear-gradient(
+			90deg,
+			var(--color-blue),
+			color-mix(in srgb, var(--color-blue) 44%, transparent)
+		);
+	}
 }
 
 .home-card:focus-visible {
@@ -117,9 +121,14 @@
 	transition: color 0.15s ease;
 }
 
-.home-card:hover .home-card-icon,
 .home-card-active .home-card-icon {
 	color: var(--color-primary);
+}
+
+@media (hover: hover) {
+	.home-card:hover .home-card-icon {
+		color: var(--color-primary);
+	}
 }
 
 .home-card-title {
@@ -149,9 +158,11 @@
 	transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.home-card:hover .home-card-arrow {
-	opacity: 1;
-	transform: translateX(0);
+@media (hover: hover) {
+	.home-card:hover .home-card-arrow {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .home-footer {

@@ -38,8 +38,10 @@
 	color: var(--color-gray-opa80);
 }
 
-.data-preview .sys-head:hover .sys-head-toggle {
-	opacity: 1;
+@media (hover: hover) {
+	.data-preview .sys-head:hover .sys-head-toggle {
+		opacity: 1;
+	}
 }
 
 .data-preview .sys-head-toggle {

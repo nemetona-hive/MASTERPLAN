@@ -64,6 +64,27 @@ export function isMobileViewport() {
   return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
 }
 
+/* Whether hover is a real thing on this device, rather than something a tap
+   fakes for one event and never takes back. Falls back to true where matchMedia
+   is missing (jsdom), which keeps the desktop behaviour under test. */
+export function canHover() {
+  if (typeof window === "undefined") return false;
+  if (typeof window.matchMedia !== "function") return true;
+  return window.matchMedia("(hover: hover)").matches;
+}
+
+/* Whether focus landed by keyboard rather than by a tap or a click.
+   :focus-visible is exactly that question, and the browser already answers it —
+   a tap focuses the button without matching. Engines that cannot parse the
+   selector throw, and there the old always-show behaviour is the safer miss. */
+export function isKeyboardFocus(target) {
+  try {
+    return typeof target?.matches === "function" && target.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
+
 export function safeSaveStaticDefaults(key, value) {
   if (typeof saveStaticDefaults === "undefined") {
     return Promise.reject(new Error("saveStaticDefaults is not available"));

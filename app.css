@@ -341,13 +341,17 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	cursor: pointer;
 }
 
-.nav-btn:not(.nav-sub-btn):hover {
-	background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	color: var(--color-white);
+@media (hover: hover) {
+	.nav-btn:not(.nav-sub-btn):hover {
+		background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+		color: var(--color-white);
+	}
 }
 
-.nav-sub-btn:hover {
-	color: var(--color-white);
+@media (hover: hover) {
+	.nav-sub-btn:hover {
+		color: var(--color-white);
+	}
 }
 
 .nav-btn.active {
@@ -451,9 +455,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: none;
 }
 
-.nav-collapsed .nav-sub-btn:hover,
 .nav-collapsed .nav-sub-btn.active {
 	opacity: 1;
+}
+
+@media (hover: hover) {
+	.nav-collapsed .nav-sub-btn:hover {
+		opacity: 1;
+	}
 }
 
 .nav-btn-wrap {
@@ -505,9 +514,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.nav-toggle:hover {
-	border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+@media (hover: hover) {
+	.nav-toggle:hover {
+		border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+	}
 }
 
 .nav-toggle.active {
@@ -538,8 +549,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: max-width 0.2s ease, opacity 0.1s ease 0.15s, color 0.15s ease;
 }
 
-.nav-toggle-label:hover:not(:disabled) {
-	opacity: 1;
+@media (hover: hover) {
+	.nav-toggle-label:hover:not(:disabled) {
+		opacity: 1;
+	}
 }
 
 .nav-toggle-label:disabled {
@@ -559,9 +572,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	flex-shrink: 0;
 }
 
-.nav-menu-icon:hover {
-	color: var(--color-white);
-	background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+@media (hover: hover) {
+	.nav-menu-icon:hover {
+		color: var(--color-white);
+		background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+	}
 }
 
 .nav.nav-collapsed {
@@ -807,10 +822,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
 }
 
-.num-btn:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.num-btn:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .num-btn svg {
@@ -882,9 +899,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	border-bottom: none;
 }
 
-.rate-preset-item:hover,
 .rate-preset-item.focused {
 	background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+@media (hover: hover) {
+	.rate-preset-item:hover {
+		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
 }
 
 .rate-preset-item.active {
@@ -945,9 +967,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: opacity 0.15s;
 }
 
-.data-row-lbl.hoverable:hover,
 .data-row-lbl.hoverable.hovered {
 	opacity: 1;
+}
+
+@media (hover: hover) {
+	.data-row-lbl.hoverable:hover {
+		opacity: 1;
+	}
 }
 
 .data-row-val
@@ -1052,10 +1079,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   white-space: nowrap;
 }
 
-.seg-group .ctrl-dir:hover:not(.on) {
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-  box-shadow: none;
-  color: var(--text);
+@media (hover: hover) {
+	.seg-group .ctrl-dir:hover:not(.on) {
+	  background: color-mix(in srgb, var(--text) 6%, transparent);
+	  box-shadow: none;
+	  color: var(--text);
+	}
 }
 
 .seg-group .ctrl-dir.on {
@@ -1085,10 +1114,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
 }
 
-.ctrl-dir:hover:not(.on) {
-  background: var(--ctl-hover-bg);
-  box-shadow: var(--ctl-hover);
-  color: var(--text);
+@media (hover: hover) {
+	.ctrl-dir:hover:not(.on) {
+	  background: var(--ctl-hover-bg);
+	  box-shadow: var(--ctl-hover);
+	  color: var(--text);
+	}
 }
 
 .ctrl-dir.on {
@@ -1121,10 +1152,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   white-space: nowrap;
 }
 
-.pill-btn:hover:not(.on) {
-  background: var(--ctl-hover-bg);
-  box-shadow: var(--ctl-hover);
-  color: var(--text);
+@media (hover: hover) {
+	.pill-btn:hover:not(.on) {
+	  background: var(--ctl-hover-bg);
+	  box-shadow: var(--ctl-hover);
+	  color: var(--text);
+	}
 }
 
 .pill-btn.on {
@@ -1368,8 +1401,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	color: var(--color-gray-opa80);
 }
 
-.data-preview .sys-head:hover .sys-head-toggle {
-	opacity: 1;
+@media (hover: hover) {
+	.data-preview .sys-head:hover .sys-head-toggle {
+		opacity: 1;
+	}
 }
 
 .data-preview .sys-head-toggle {
@@ -1675,10 +1710,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 }
 
-.ts-btn:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.ts-btn:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .ts-copy {
@@ -1697,10 +1734,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: background 0.1s, color 0.1s, box-shadow 0.1s, transform 0.06s ease;
 }
 
-.ts-copy:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.ts-copy:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .ts-copy--done {
@@ -1762,10 +1801,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	color: var(--text-muted);
 }
 
-.ctl-ghost:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.ctl-ghost:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .ctl-ghost.is-active,
@@ -1776,10 +1817,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	font-weight: var(--fw-semi);
 }
 
-.ctl-danger:hover {
-	background: var(--ctl-hover-danger-bg);
-	box-shadow: var(--ctl-hover-danger);
-	color: var(--danger);
+@media (hover: hover) {
+	.ctl-danger:hover {
+		background: var(--ctl-hover-danger-bg);
+		box-shadow: var(--ctl-hover-danger);
+		color: var(--danger);
+	}
 }
 
 .ctl-sm {
@@ -1902,17 +1945,21 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: background 0.2s ease;
 }
 
-.home-card:hover {
-	border-color: color-mix(in srgb, var(--color-blue) 55%, transparent);
-	background: color-mix(in srgb, var(--color-blue) 6%, var(--color-darkblue));
+@media (hover: hover) {
+	.home-card:hover {
+		border-color: color-mix(in srgb, var(--color-blue) 55%, transparent);
+		background: color-mix(in srgb, var(--color-blue) 6%, var(--color-darkblue));
+	}
 }
 
-.home-card:hover::before {
-	background: linear-gradient(
-		90deg,
-		var(--color-blue),
-		color-mix(in srgb, var(--color-blue) 44%, transparent)
-	);
+@media (hover: hover) {
+	.home-card:hover::before {
+		background: linear-gradient(
+			90deg,
+			var(--color-blue),
+			color-mix(in srgb, var(--color-blue) 44%, transparent)
+		);
+	}
 }
 
 .home-card:focus-visible {
@@ -1932,9 +1979,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: color 0.15s ease;
 }
 
-.home-card:hover .home-card-icon,
 .home-card-active .home-card-icon {
 	color: var(--color-primary);
+}
+
+@media (hover: hover) {
+	.home-card:hover .home-card-icon {
+		color: var(--color-primary);
+	}
 }
 
 .home-card-title {
@@ -1964,9 +2016,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.home-card:hover .home-card-arrow {
-	opacity: 1;
-	transform: translateX(0);
+@media (hover: hover) {
+	.home-card:hover .home-card-arrow {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .home-footer {
@@ -2412,9 +2466,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	cursor: pointer;
 }
 
-.range-slider-wrap.is-locked:hover {
-	background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-	border-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+@media (hover: hover) {
+	.range-slider-wrap.is-locked:hover {
+		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+		border-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
 }
 
 .range-slider-wrap.is-unlocked {
@@ -2463,9 +2519,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
-.range-lock-btn:hover {
-	background: color-mix(in srgb, var(--color-gray-light) 20%, transparent);
-	color: var(--color-white);
+@media (hover: hover) {
+	.range-lock-btn:hover {
+		background: color-mix(in srgb, var(--color-gray-light) 20%, transparent);
+		color: var(--color-white);
+	}
 }
 
 .range-lock-btn:active {
@@ -2916,8 +2974,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	transition: color 0.2s ease;
 }
 
-.detail-section-head:hover {
-	color: var(--color-primary);
+@media (hover: hover) {
+	.detail-section-head:hover {
+		color: var(--color-primary);
+	}
 }
 
 .detail-section-body {
@@ -2956,11 +3016,13 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	font-size: 10px;
 }
 
-.section-head:hover .sys-head-toggle,
-.panel-head:hover .sys-head-toggle,
-.detail-section-head:hover .sys-head-toggle {
-	background: var(--color-primary);
-	color: var(--color-darkblue);
+@media (hover: hover) {
+	.section-head:hover .sys-head-toggle,
+	.panel-head:hover .sys-head-toggle,
+	.detail-section-head:hover .sys-head-toggle {
+		background: var(--color-primary);
+		color: var(--color-darkblue);
+	}
 }
 
 .mp-modal-overlay {
@@ -3054,10 +3116,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.06s ease;
 }
 
-.mp-modal-close:hover {
-  background: var(--ctl-hover-danger-bg);
-  box-shadow: var(--ctl-hover-danger);
-  color: var(--danger);
+@media (hover: hover) {
+	.mp-modal-close:hover {
+	  background: var(--ctl-hover-danger-bg);
+	  box-shadow: var(--ctl-hover-danger);
+	  color: var(--danger);
+	}
 }
 
 .mp-modal-body {
@@ -3100,10 +3164,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
 }
 
-.viz-expand-btn:hover {
-  background: var(--ctl-hover-bg);
-  box-shadow: var(--ctl-hover), var(--sh-2);
-  color: var(--text);
+@media (hover: hover) {
+  .viz-expand-btn:hover {
+    background: var(--ctl-hover-bg);
+    box-shadow: var(--ctl-hover), var(--sh-2);
+    color: var(--text);
+  }
 }
 
 .viz-card {

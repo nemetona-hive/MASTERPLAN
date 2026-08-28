@@ -48,6 +48,18 @@
     }
     return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
   }
+  function canHover() {
+    if (typeof window === "undefined") return false;
+    if (typeof window.matchMedia !== "function") return true;
+    return window.matchMedia("(hover: hover)").matches;
+  }
+  function isKeyboardFocus(target) {
+    try {
+      return typeof target?.matches === "function" && target.matches(":focus-visible");
+    } catch {
+      return true;
+    }
+  }
   function safeSaveStaticDefaults(key, value) {
     if (typeof saveStaticDefaults === "undefined") {
       return Promise.reject(new Error("saveStaticDefaults is not available"));
@@ -2779,8 +2791,9 @@
   function useNavTooltip(isCollapsed) {
     const wrapRef = React2.useRef(null);
     const [tip, setTip] = React2.useState(null);
-    const showTip = () => {
+    const showTip = (event) => {
       if (!isCollapsed || !wrapRef.current) return;
+      if (event && event.type === "focus" ? !isKeyboardFocus(event.target) : !canHover()) return;
       const rect = wrapRef.current.getBoundingClientRect();
       setTip({ left: rect.right + 10, top: rect.top + rect.height / 2 });
     };

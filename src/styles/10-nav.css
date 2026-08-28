@@ -48,13 +48,17 @@
 }
 
 /* ── Hover states ── */
-.nav-btn:not(.nav-sub-btn):hover {
-	background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	color: var(--color-white);
+@media (hover: hover) {
+	.nav-btn:not(.nav-sub-btn):hover {
+		background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+		color: var(--color-white);
+	}
 }
 
-.nav-sub-btn:hover {
-	color: var(--color-white);
+@media (hover: hover) {
+	.nav-sub-btn:hover {
+		color: var(--color-white);
+	}
 }
 
 /* ── Active — shared ── */
@@ -176,9 +180,14 @@
 	transition: none;
 }
 
-.nav-collapsed .nav-sub-btn:hover,
 .nav-collapsed .nav-sub-btn.active {
 	opacity: 1;
+}
+
+@media (hover: hover) {
+	.nav-collapsed .nav-sub-btn:hover {
+		opacity: 1;
+	}
 }
 
 /* Collapsed active icon rules removed as background tint handles highlight gracefully */
@@ -247,9 +256,11 @@
 	transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.nav-toggle:hover {
-	border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+@media (hover: hover) {
+	.nav-toggle:hover {
+		border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+	}
 }
 
 /* On the Home page (expanded only — collapsed disables the click-to-home
@@ -286,8 +297,10 @@
 	transition: max-width 0.2s ease, opacity 0.1s ease 0.15s, color 0.15s ease;
 }
 
-.nav-toggle-label:hover:not(:disabled) {
-	opacity: 1;
+@media (hover: hover) {
+	.nav-toggle-label:hover:not(:disabled) {
+		opacity: 1;
+	}
 }
 
 .nav-toggle-label:disabled {
@@ -307,9 +320,11 @@
 	flex-shrink: 0;
 }
 
-.nav-menu-icon:hover {
-	color: var(--color-white);
-	background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+@media (hover: hover) {
+	.nav-menu-icon:hover {
+		color: var(--color-white);
+		background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+	}
 }
 
 /* ── Nav structure ── */

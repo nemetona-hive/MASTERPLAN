@@ -78,10 +78,12 @@
 	transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
 }
 
-.num-btn:hover {
-	background: var(--ctl-hover-bg);
-	box-shadow: var(--ctl-hover);
-	color: var(--text);
+@media (hover: hover) {
+	.num-btn:hover {
+		background: var(--ctl-hover-bg);
+		box-shadow: var(--ctl-hover);
+		color: var(--text);
+	}
 }
 
 .num-btn svg {
@@ -153,9 +155,14 @@
 	border-bottom: none;
 }
 
-.rate-preset-item:hover,
 .rate-preset-item.focused {
 	background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+@media (hover: hover) {
+	.rate-preset-item:hover {
+		background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
 }
 
 .rate-preset-item.active {
@@ -220,9 +227,14 @@
 	transition: opacity 0.15s;
 }
 
-.data-row-lbl.hoverable:hover,
 .data-row-lbl.hoverable.hovered {
 	opacity: 1;
+}
+
+@media (hover: hover) {
+	.data-row-lbl.hoverable:hover {
+		opacity: 1;
+	}
 }
 
 .data-row-val

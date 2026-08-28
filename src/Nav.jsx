@@ -1,5 +1,5 @@
 import { React, ReactDOM } from "./react-globals.js";
-import { Icon } from "./shared.jsx";
+import { Icon, canHover, isKeyboardFocus } from "./shared.jsx";
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 
@@ -15,8 +15,19 @@ function useNavTooltip(isCollapsed) {
   const wrapRef = React.useRef(null);
   const [tip, setTip] = React.useState(null);
 
-  const showTip = () => {
+  /* A tap is not a hover. It fires mouseenter with no mouseleave behind it and
+     focuses the button on the way, so a tooltip built for a pointer that will
+     move away instead appears and stays — over whatever page the tap just
+     navigated to. Since the sidebar started collapsing at 1280px, every tablet
+     reaches this code, where before only a narrow desktop window did.
+
+     Two gates, because the two triggers ask different questions. The pointer
+     one asks whether hover exists at all; the keyboard one asks
+     :focus-visible, so the label still follows Tab and no longer follows a
+     fingertip. */
+  const showTip = event => {
     if (!isCollapsed || !wrapRef.current) return;
+    if (event && event.type === "focus" ? !isKeyboardFocus(event.target) : !canHover()) return;
     const rect = wrapRef.current.getBoundingClientRect();
     setTip({ left: rect.right + 10, top: rect.top + rect.height / 2 });
   };
