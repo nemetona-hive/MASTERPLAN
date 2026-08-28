@@ -475,6 +475,7 @@
     const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
     const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
     const [showUpdated, setShowUpdated] = useTimedState(false, 2500);
+    const [resetArmed, armReset, disarmReset] = useTimedState(false, 4e3);
     const rateInputRef = React2.useRef(null);
     const [showRatePresets, setShowRatePresets] = React2.useState(false);
     const [presets, setPresets] = React2.useState(
@@ -513,6 +514,14 @@
       setFlashIdx(null);
       setFieldFlash(false);
       setShowUpdated(false);
+    };
+    const handleReset = () => {
+      if (!resetArmed) {
+        armReset(true);
+        return;
+      }
+      disarmReset();
+      resetAll();
     };
     const updatePreset = (idx, field, val) => {
       const next = [...presets];
@@ -717,11 +726,14 @@
     ), /* @__PURE__ */ React2.createElement("div", { className: "pw-formula-wrap", style: { marginTop: "1rem" } }, /* @__PURE__ */ React2.createElement("span", { className: "pw-formula-text" }, "mass = area × avg thickness × consumption rate")), /* @__PURE__ */ React2.createElement("div", { className: "pw-formula-wrap", style: { paddingBottom: "1rem" } }, /* @__PURE__ */ React2.createElement("span", { className: "pw-formula-text" }, "Results are approximate — actual consumption may vary due to substrate absorption and mixing residue."))))), /* @__PURE__ */ React2.createElement("div", { className: "form-action" }, /* @__PURE__ */ React2.createElement(
       "button",
       {
-        onClick: resetAll,
-        className: "ts-btn ctl-ghost ctl-danger"
+        onClick: handleReset,
+        onBlur: disarmReset,
+        className: "ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : ""),
+        "aria-label": resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first"
       },
       /* @__PURE__ */ React2.createElement(Icon, { name: "refresh-cw" }),
-      " Global Reset"
+      " ",
+      resetArmed ? "Confirm reset?" : "Global Reset"
     ))), /* @__PURE__ */ React2.createElement("div", { className: "u-sticky u-sticky-top", style: { marginTop: "var(--sticky-offset)", top: "20px" } }, /* @__PURE__ */ React2.createElement("div", { className: "result-card" }, /* @__PURE__ */ React2.createElement("span", { className: "result-card-title" }, "Bags Needed"), /* @__PURE__ */ React2.createElement("span", { className: "result-card-value" }, bags > 0 ? bags : "0", /* @__PURE__ */ React2.createElement("span", { style: { fontSize: "var(--fs-md)", fontWeight: "var(--fw-reg)", opacity: 0.8, marginLeft: "4px" } }, "pcs")), /* @__PURE__ */ React2.createElement("span", { className: "result-card-note" }, "exact: ", bagsExact > 0 ? bagsExact.toFixed(2) : "0.00", " pcs"), /* @__PURE__ */ React2.createElement("div", { className: "result-card-split" }, /* @__PURE__ */ React2.createElement("span", { className: "result-card-title" }, "Total Price"), /* @__PURE__ */ React2.createElement("span", { className: "result-card-value" }, totalPrice !== null ? /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement("span", { style: { fontSize: "var(--fs-lg)", opacity: 0.8 } }, "€"), /* @__PURE__ */ React2.createElement("span", null, fmtEur(totalPrice))) : "—")))))));
   }
   var init_Concrete = __esm({

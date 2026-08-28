@@ -3001,6 +3001,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	justify-content: flex-end;
 }
 
+.form-action .ts-btn.is-armed {
+	background: var(--ctl-hover-danger-bg);
+	box-shadow: var(--ctl-hover-danger);
+	color: var(--danger);
+}
+
 .detail-section {
 	margin-top: var(--sp-4);
 	border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);

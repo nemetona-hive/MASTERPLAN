@@ -217,6 +217,13 @@ built with them keeps its desktop spacing in the bar and pushes the row wide.
 Concrete's card did exactly that — its Global Reset was clipped off the right
 edge at 360px — while Timesheet's, built from these classes, was fine.
 
+Destructive actions arm before they fire. Concrete's Global Reset clears every
+field, so the first click swaps its label to "Confirm reset?" and gives it the
+danger treatment; the second does the work. It disarms on a timeout and on focus
+leaving, both via `useTimedState`, which is how this codebase already holds
+transient UI state. No modal — a button that changes its own label needs no focus
+trap and keeps working from the keyboard.
+
 Put in the column only what belongs to the *result*. Everything there lands in
 the bar, so it must be worth the width and safe to tap above the thumb.
 Timesheet's Copy button qualifies. Concrete's Global Reset did not — it clears

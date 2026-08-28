@@ -28,6 +28,10 @@ export function SheetConcrete() {
   const [flashIdx,     setFlashIdx]     = useTimedState(null, 1200);
   const [fieldFlash,   setFieldFlash]   = useTimedState(false, 900);
   const [showUpdated,  setShowUpdated]  = useTimedState(false, 2500);
+  /* Reset arms on the first click and fires on the second. useTimedState is
+     already how this file holds transient UI state, and it disarms itself, so
+     a click made and thought better of expires on its own. */
+  const [resetArmed,   armReset, disarmReset] = useTimedState(false, 4000);
   const rateInputRef   = React.useRef(null);
 
   const [showRatePresets, setShowRatePresets] = React.useState(false);
@@ -72,6 +76,15 @@ export function SheetConcrete() {
     setFlashIdx(null);
     setFieldFlash(false);
     setShowUpdated(false);
+  };
+
+  const handleReset = () => {
+    if (!resetArmed) {
+      armReset(true);
+      return;
+    }
+    disarmReset();
+    resetAll();
   };
 
   const updatePreset = (idx, field, val) => {
@@ -444,14 +457,21 @@ export function SheetConcrete() {
 
             {/* Ends the form rather than riding in the result column. Below
                 1024px that column becomes a fixed bottom bar, and a control
-                that clears every field without confirming does not belong
-                pinned under the thumb — nor competing for the bar's width. */}
+                that clears every field does not belong pinned under the thumb
+                — nor competing for the bar's width. */}
             <div className="form-action">
               <button
-                onClick={resetAll}
-                className="ts-btn ctl-ghost ctl-danger"
+                onClick={handleReset}
+                /* Focus leaving is as good a change of mind as the timeout. */
+                onBlur={disarmReset}
+                className={"ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : "")}
+                /* The visible label is short enough to sit in the row; the
+                   accessible one says what the second click actually does. */
+                aria-label={resetArmed
+                  ? "Confirm global reset — clears every field"
+                  : "Global reset — clears every field, asks first"}
               >
-                <Icon name="refresh-cw" /> Global Reset
+                <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : "Global Reset"}
               </button>
             </div>
 

@@ -281,6 +281,15 @@
 	justify-content: flex-end;
 }
 
+/* Armed, waiting for the second click. A ghost button reads as "an option";
+   the click that actually clears the form should not, so it takes the danger
+   treatment permanently instead of only under a cursor that may not exist. */
+.form-action .ts-btn.is-armed {
+	background: var(--ctl-hover-danger-bg);
+	box-shadow: var(--ctl-hover-danger);
+	color: var(--danger);
+}
+
 /* Secondary Collapsible Section styling */
 .detail-section {
 	margin-top: var(--sp-4);
