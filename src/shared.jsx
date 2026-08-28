@@ -25,6 +25,32 @@ const SHORT_MAX_W  = 950;
 export const MOBILE_MEDIA_QUERY =
   `(max-width: ${MOBILE_MAX_W}px), (max-height: ${SHORT_MAX_H}px) and (max-width: ${SHORT_MAX_W}px)`;
 
+/* The nav's own threshold, wider than the mobile one and deliberately separate.
+   The sidebar is 260px and .data-control a fixed 384px, so on a portrait tablet
+   the preview column — the part of the page the tool exists to show — was down
+   to 190px and clipped by .main-data's overflow. Collapsing the sidebar to its
+   icon strip hands 200px of that back before the columns have to stack at all.
+
+   1024px because this repo already treats it as the tablet line (.layout-split
+   and .u-hide-mobile both turn there); a new number would be a third breakpoint
+   to keep in step for no gain.
+
+   Read by App.jsx, which owns navOpen. CSS cannot do this on its own: the
+   collapsed nav is a JS state — .nav-collapsed, icon-only buttons, tooltips
+   swapped in for labels — and not merely a narrower width. Styling it collapsed
+   without telling JS is exactly the split that produced the 768/1024 bug. */
+const COMPACT_NAV_MAX_W = 1024;
+
+export const COMPACT_NAV_MEDIA_QUERY = `(max-width: ${COMPACT_NAV_MAX_W}px)`;
+
+export function isCompactNavViewport() {
+  if (typeof window === "undefined") return false;
+  if (typeof window.matchMedia !== "function") {
+    return window.innerWidth <= COMPACT_NAV_MAX_W;
+  }
+  return window.matchMedia(COMPACT_NAV_MEDIA_QUERY).matches;
+}
+
 export function isMobileViewport() {
   if (typeof window === "undefined") return false;
   /* jsdom implements no layout and therefore no matchMedia, so tests read the

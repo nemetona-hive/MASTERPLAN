@@ -34,6 +34,13 @@
     const faClass = ICONS[name] || "fa-solid fa-circle-question";
     return /* @__PURE__ */ React2.createElement("i", { className: [faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ") });
   }
+  function isCompactNavViewport() {
+    if (typeof window === "undefined") return false;
+    if (typeof window.matchMedia !== "function") {
+      return window.innerWidth <= COMPACT_NAV_MAX_W;
+    }
+    return window.matchMedia(COMPACT_NAV_MEDIA_QUERY).matches;
+  }
   function isMobileViewport() {
     if (typeof window === "undefined") return false;
     if (typeof window.matchMedia !== "function") {
@@ -411,7 +418,7 @@
       document.body
     );
   }
-  var MOBILE_MAX_W, SHORT_MAX_H, SHORT_MAX_W, MOBILE_MEDIA_QUERY, Section, ControlPanel, DetailSection;
+  var MOBILE_MAX_W, SHORT_MAX_H, SHORT_MAX_W, MOBILE_MEDIA_QUERY, COMPACT_NAV_MAX_W, COMPACT_NAV_MEDIA_QUERY, Section, ControlPanel, DetailSection;
   var init_shared = __esm({
     "src/shared.jsx"() {
       init_react_globals();
@@ -419,6 +426,8 @@
       SHORT_MAX_H = 500;
       SHORT_MAX_W = 950;
       MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_MAX_W}px), (max-height: ${SHORT_MAX_H}px) and (max-width: ${SHORT_MAX_W}px)`;
+      COMPACT_NAV_MAX_W = 1024;
+      COMPACT_NAV_MEDIA_QUERY = `(max-width: ${COMPACT_NAV_MAX_W}px)`;
       Section = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props });
       ControlPanel = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props, variant: "panel" });
       DetailSection = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props, variant: "detail" });
@@ -3076,7 +3085,7 @@
       function App() {
         const [page, setPageState] = useState(getHashPage);
         const [isMobile, setIsMobile] = React2.useState(getIsMobile);
-        const [navOpen, setNavOpen] = React2.useState(!getIsMobile());
+        const [navOpen, setNavOpen] = React2.useState(() => !getIsMobile() && !isCompactNavViewport());
         const [mobileMenuOpen, setMobileMenuOpen] = React2.useState(false);
         const [theme, setTheme] = useState(() => {
           try {
@@ -3105,13 +3114,20 @@
           const onCross = (e) => {
             setIsMobile(e.matches);
             setMobileMenuOpen(false);
-            if (!e.matches) setNavOpen(true);
+            if (!e.matches) setNavOpen(!isCompactNavViewport());
           };
           const onRotate = () => setMobileMenuOpen(false);
+          const compact = typeof window.matchMedia === "function" ? window.matchMedia(COMPACT_NAV_MEDIA_QUERY) : null;
+          const onCompact = (e) => {
+            if (isMobileViewport()) return;
+            setNavOpen(!e.matches);
+          };
           mq.addEventListener("change", onCross);
+          if (compact) compact.addEventListener("change", onCompact);
           window.addEventListener("orientationchange", onRotate);
           return () => {
             mq.removeEventListener("change", onCross);
+            if (compact) compact.removeEventListener("change", onCompact);
             window.removeEventListener("orientationchange", onRotate);
           };
         }, []);

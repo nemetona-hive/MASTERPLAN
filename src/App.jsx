@@ -8,7 +8,7 @@ import { SheetSurfaceLayout } from "./components/SurfaceLayout.jsx";
 import { SheetSymmetricLayout } from "./components/SymmetricLayout.jsx";
 import { SheetTimesheet } from "./components/Timesheet.jsx";
 import { AppNav } from "./Nav.jsx";
-import { MOBILE_MEDIA_QUERY, isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
+import { COMPACT_NAV_MEDIA_QUERY, MOBILE_MEDIA_QUERY, isCompactNavViewport, isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
 
 // ── App root ──────────────────────────────────────────────────────────────────
 
@@ -63,7 +63,9 @@ function App() {
   
   // Track mobile state reactively — updates on resize/rotate
   const [isMobile, setIsMobile]            = React.useState(getIsMobile);
-  const [navOpen, setNavOpen]               = React.useState(!getIsMobile());
+  /* Expanded only when there is room for it: mobile has its own drawer, and a
+     tablet cannot afford 260px of sidebar next to a 384px control column. */
+  const [navOpen, setNavOpen]               = React.useState(() => !getIsMobile() && !isCompactNavViewport());
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [theme, setTheme]                   = useState(() => {
     try {
@@ -104,17 +106,32 @@ function App() {
     const onCross = e => {
       setIsMobile(e.matches);
       setMobileMenuOpen(false);
-      if (!e.matches) setNavOpen(true);
+      // Leaving mobile does not automatically mean there is room for the full
+      // sidebar — 800px is desktop layout on a tablet-width screen.
+      if (!e.matches) setNavOpen(!isCompactNavViewport());
     };
     // Rotating usually stays on the same side of the query, so it arrives as no
     // change event — but every button has moved out from under the thumb that
     // was reaching for it, so the drawer closes on that too.
     const onRotate = () => setMobileMenuOpen(false);
 
+    /* Collapse the sidebar to its icon strip once the viewport can no longer
+       carry it beside the control column. Mobile owns the nav below its own
+       breakpoint, so this stands aside there. */
+    const compact = typeof window.matchMedia === "function"
+      ? window.matchMedia(COMPACT_NAV_MEDIA_QUERY)
+      : null;
+    const onCompact = e => {
+      if (isMobileViewport()) return;
+      setNavOpen(!e.matches);
+    };
+
     mq.addEventListener("change", onCross);
+    if (compact) compact.addEventListener("change", onCompact);
     window.addEventListener("orientationchange", onRotate);
     return () => {
       mq.removeEventListener("change", onCross);
+      if (compact) compact.removeEventListener("change", onCompact);
       window.removeEventListener("orientationchange", onRotate);
     };
   }, []);

@@ -15,6 +15,48 @@
  * phone and the narrowest tablet.
  */
 
+/*
+ * ----------------------------------------------------------
+ * NARROW: STACK THE DATA COLUMNS
+ * ----------------------------------------------------------
+ *
+ * .data-control is a fixed 384px and the sidebar 260px, so the preview column
+ * is whatever is left — 190px on a portrait tablet, and clipped by .main-data's
+ * overflow rather than wrapped or scrolled. Collapsing the nav (App.jsx does it
+ * at 1024px) buys back 200px and carries the split down to about 900px; below
+ * that the two columns stop fitting beside each other at any nav width, so they
+ * stack.
+ *
+ * Structure only. The mobile block below adds padding, touch sizing and the nav
+ * drawer on top of this, and inherits the stacking rather than restating it.
+ */
+
+@media (max-width: 900px) {
+	.page-main {
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.main-data {
+		flex-direction: column;
+		flex: 0 0 auto;
+		height: auto;
+		overflow: visible;
+	}
+
+	.data-control {
+		width: 100%;
+		border-right: none;
+		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-gray-light));
+		overflow: visible;
+	}
+
+	.data-preview {
+		flex: 0 0 auto;
+		overflow: visible;
+	}
+}
+
 @media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 
 	:root {
@@ -156,13 +198,6 @@
 		pointer-events: auto;
 	}
 
-	.main-data {
-		flex-direction: column;
-		flex: 0 0 auto;
-		height: auto;
-		overflow: visible;
-	}
-
 	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
 	/* Modern mobile touch targets: 44px min height for controls */
 	input[type="number"],
@@ -179,12 +214,8 @@
 	}
 
 	.data-control {
-		width: 100%;
-		border-right: none;
-		border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-gray-light));
 		padding: var(--sp-2) var(--sp-3);
 		gap: var(--sp-2);
-		overflow: visible;
 	}
 
 	.data-control .control-panel,
@@ -197,8 +228,6 @@
 	}
 
 	.data-preview {
-		overflow: visible;
-		flex: 0 0 auto;
 		padding: var(--sp-2) var(--sp-3);
 		border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 45%, transparent);
 		padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));

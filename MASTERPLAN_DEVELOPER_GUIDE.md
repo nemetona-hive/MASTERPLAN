@@ -386,6 +386,17 @@ is what makes the identity key sound — keep it that way.
   landscape half, so one spelling cannot quietly fork into two
 - The height arm is bounded by width on purpose: a soft keyboard shrinks a
   landscape tablet below 500px too, and unbounded it collapsed the nav mid-edit
+- Two further thresholds sit above the mobile one, because the desktop split is
+  a 260px sidebar plus a fixed 384px `.data-control` and the preview column is
+  only what is left over:
+  - **≤ 1024px** — the nav auto-collapses to its icon strip, handing ~200px back
+    to the preview. JS-driven (`COMPACT_NAV_MEDIA_QUERY`, read by App.jsx), because
+    collapsed is a state — `.nav-collapsed`, icon-only buttons, tooltips instead
+    of labels — not just a narrower width. Styling it collapsed from CSS alone
+    recreates the 768/1024 class of bug
+  - **≤ 900px** — the control and preview columns stack (`80-mobile.css`,
+    structure only). Below this they do not fit side by side at any nav width.
+    The mobile block inherits this stacking rather than restating it
 - Nav collapses to hamburger on mobile, sidebar on desktop
 - `isMobile` state in App.jsx tracks the media query itself (`change`), not
   `resize` — one re-render per real crossing rather than one per URL-bar nudge.
