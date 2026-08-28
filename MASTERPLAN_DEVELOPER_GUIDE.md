@@ -397,9 +397,13 @@ is what makes the identity key sound — keep it that way.
     narrower width. Styling it collapsed from CSS alone recreates the 768/1024
     class of bug. It has no `@media` counterpart on purpose, and `audit:ui`
     exempts named `*_MEDIA_QUERY` constants from its stray-literal warning
-  - **≤ 900px** — the control and preview columns stack (`80-mobile.css`,
-    structure only). Below this they do not fit side by side at any nav width.
-    The mobile block inherits this stacking rather than restating it
+  - **≤ 1024px** — the control and preview columns stack (`80-mobile.css`,
+    structure only). Even with the nav collapsed the preview is only `W - 444`
+    below this, so the split is not worth defending; stacking gives it the full
+    width instead. Side by side resumes at 1025px with 581px, which is the
+    narrowest the preview gets at any width above the phone breakpoint. Reuses
+    the 1024px line rather than adding one, and the mobile block inherits this
+    stacking rather than restating it
 - Nav collapses to hamburger on mobile, sidebar on desktop
 - `isMobile` state in App.jsx tracks the media query itself (`change`), not
   `resize` — one re-render per real crossing rather than one per URL-bar nudge.

@@ -23,15 +23,21 @@
  * .data-control is a fixed 384px and the sidebar 260px, so the preview column
  * is whatever is left — 190px on a portrait tablet, and clipped by .main-data's
  * overflow rather than wrapped or scrolled. Collapsing the nav (App.jsx does it
- * at 1024px) buys back 200px and carries the split down to about 900px; below
- * that the two columns stop fitting beside each other at any nav width, so they
- * stack.
+ * at 1280px) buys back 200px, but with the icon strip the preview is still only
+ * W - 444: 457px at 900px, which is the narrowest it gets anywhere. Below 1024
+ * the split is not worth defending, so the columns stack and the preview takes
+ * the full width instead. Side by side resumes at 1025px with 581px, and the
+ * pinched band disappears rather than being made slightly less pinched.
+ *
+ * 1024px because .layout-split and .u-hide-mobile already turn there — the
+ * alternative was shrinking .data-control, which buys about 64px and leaves the
+ * same shape of problem.
  *
  * Structure only. The mobile block below adds padding, touch sizing and the nav
  * drawer on top of this, and inherits the stacking rather than restating it.
  */
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
 	.page-main {
 		overflow-y: auto;
 		overflow-x: hidden;

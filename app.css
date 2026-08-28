@@ -2035,7 +2035,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
 	.page-main {
 		overflow-y: auto;
 		overflow-x: hidden;
