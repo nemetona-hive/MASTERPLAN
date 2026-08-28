@@ -479,7 +479,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
           />
           {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" hoveredIndex={lenHovered} />}
         </div>
-        {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
+        {!isLargePreview && typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
           <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
             <Icon name="plus" /> Manage Presets
           </button>

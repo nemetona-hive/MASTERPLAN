@@ -2405,7 +2405,7 @@
         onCommit: () => setActivePresetDropdown(null),
         onKeyDown: onLenKeyDown
       }
-    ), activePresetDropdown === "len" && validPresets.length > 0 && /* @__PURE__ */ React2.createElement(MaterialPresetDropdown, { anchorRef: lenWrapRef, presets: validPresets, activePreset, onApply: localApply, field: "length", hoveredIndex: lenHovered })), typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /* @__PURE__ */ React2.createElement("button", { className: "ctrl-dir", style: { marginTop: "var(--sp-1)" }, onClick: () => setShowModal(true) }, /* @__PURE__ */ React2.createElement(Icon, { name: "plus" }), " Manage Presets")));
+    ), activePresetDropdown === "len" && validPresets.length > 0 && /* @__PURE__ */ React2.createElement(MaterialPresetDropdown, { anchorRef: lenWrapRef, presets: validPresets, activePreset, onApply: localApply, field: "length", hoveredIndex: lenHovered })), !isLargePreview && typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && /* @__PURE__ */ React2.createElement("button", { className: "ctrl-dir", style: { marginTop: "var(--sp-1)" }, onClick: () => setShowModal(true) }, /* @__PURE__ */ React2.createElement(Icon, { name: "plus" }), " Manage Presets")));
   }
   function SurfaceInputs({ sh, setSh, setSurf }) {
     const { W, H } = sh;
