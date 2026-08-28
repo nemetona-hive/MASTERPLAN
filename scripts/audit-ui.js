@@ -13,7 +13,8 @@
  * back if MASTERPLAN ever adopts the systems.
  *
  * Findings are split by confidence:
- *   ERROR - deterministic. A theme token exists for this and a literal is used.
+ *   ERROR - deterministic. A theme token exists for this and a literal is used,
+ *           or JS and the stylesheets disagree about the mobile breakpoint.
  *   WARN  - heuristic. Usually real, but read it before acting; a class only
  *           ever assembled at runtime looks dead when it is not.
  *
@@ -238,6 +239,129 @@ for (const file of cssFiles) {
         `.${name} is gone from the markup but is only used here to EXCLUDE. ` +
         `The rule still applies — drop the :not(.${name}) and keep it. Do not delete the rule.`);
     }
+  }
+}
+
+/* --------------------------------------------- 3. breakpoint drift (JS <-> CSS)
+ * The nav is told which layout it is in by JS and painted by CSS, so the two
+ * have to name the same breakpoint. For a while they did not: isMobileViewport()
+ * said 1024px while every @media said 768px, and each tablet in between got the
+ * mobile branch of the component tree under desktop styling — a combination
+ * neither side had rules for. Nothing caught it, because nothing read both.
+ *
+ * shared.jsx now builds MOBILE_MEDIA_QUERY out of named constants, and app.css
+ * opens its mobile blocks with that same string. This is the invariant: the
+ * query JS builds must exist verbatim as an @media prelude. Verbatim, not
+ * equivalent — a differently-spelled query selects the same viewports today and
+ * is exactly what drifts the next time one side alone is edited. */
+
+const BREAKPOINT_SOURCE = path.join(COMPONENT_DIR, "shared.jsx");
+
+/** `const NAME = 123;` declarations in a source file, as name -> literal. */
+function numericConsts(src) {
+  const out = new Map();
+  for (const m of src.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*(-?\d+)\s*;/g)) {
+    out.set(m[1], m[2]);
+  }
+  return out;
+}
+
+const lineAt = (text, index) => text.slice(0, index).split("\n").length;
+
+/** Every @media prelude in the stylesheets, with where it was seen, plus the
+ *  raw px numbers they test. */
+const mediaPreludes = new Map();
+const cssBreakpoints = new Set();
+for (const file of cssFiles) {
+  const text = stripComments(fs.readFileSync(file, "utf8"));
+  for (const m of text.matchAll(/@media([^{]*)\{/g)) {
+    const prelude = m[1].trim().replace(/\s+/g, " ");
+    if (!mediaPreludes.has(prelude)) mediaPreludes.set(prelude, []);
+    mediaPreludes.get(prelude).push({ file, line: lineAt(text, m.index) });
+    for (const px of prelude.matchAll(/\((?:min|max)-(?:width|height):\s*(\d+)px\)/g)) {
+      cssBreakpoints.add(px[1]);
+    }
+  }
+}
+
+if (fs.existsSync(BREAKPOINT_SOURCE)) {
+  const src = fs.readFileSync(BREAKPOINT_SOURCE, "utf8");
+  const decl = /MOBILE_MEDIA_QUERY\s*=\s*`([^`]*)`/.exec(src);
+
+  if (!decl) {
+    add("ERROR", "breakpoint-drift", BREAKPOINT_SOURCE, 1,
+      "MOBILE_MEDIA_QUERY is gone. The mobile breakpoint is shared with app.css " +
+      "through that constant — without it, nothing holds JS and CSS together.");
+  } else {
+    /* Fill the template holes from the constants declared alongside it. Only
+       `${NAME}` is understood, and an unresolvable hole is reported rather than
+       skipped: a check that quietly passes when it cannot read its own input is
+       worse than no check, because the badge still says clean. */
+    const unresolved = [];
+    const consts = numericConsts(src);
+    const query = decl[1].replace(/\$\{([^}]*)\}/g, (whole, expr) => {
+      const name = expr.trim();
+      if (consts.has(name)) return consts.get(name);
+      unresolved.push(whole);
+      return whole;
+    });
+
+    if (unresolved.length) {
+      add("ERROR", "breakpoint-drift", BREAKPOINT_SOURCE, lineAt(src, decl.index),
+        `cannot resolve ${unresolved.join(", ")} in MOBILE_MEDIA_QUERY, so the query ` +
+        "it builds cannot be compared against app.css. Keep it a template over " +
+        "plain numeric consts declared in this file.");
+    } else {
+      if (!mediaPreludes.has(query)) {
+        add("ERROR", "breakpoint-drift", BREAKPOINT_SOURCE, lineAt(src, decl.index),
+          `JS builds "@media ${query}" but no rule in src/styles opens with it. ` +
+          "The nav reads this query and is painted by those blocks, so viewports " +
+          "between the two versions land in a state neither side styles. Update " +
+          "whichever side is stale — the string has to match character for character.");
+      }
+
+      /* Finding the query SOMEWHERE is too weak on its own: four stylesheets
+         open with it, and editing one of them leaves the other three matching
+         so the check above still passes. What actually needs holding is that
+         the breakpoint has exactly one spelling.
+
+         A `max-height` arm is how this codebase says "mobile" — no other rule
+         has a reason to test viewport height — so every prelude carrying one
+         must be the shared query or its landscape half, which 80-mobile.css
+         uses alone to reach landscape phones only. Anything else is a second
+         opinion about which viewports are mobile, and shared.jsx cannot
+         follow it. (min-height is untouched: 00-base.css tests it for very
+         large displays, which is a different question.) */
+      const sanctioned = new Set([query, ...query.split(",").map(part => part.trim())]);
+      for (const [prelude, sites] of mediaPreludes) {
+        if (!/max-height:/.test(prelude) || sanctioned.has(prelude)) continue;
+        for (const site of sites) {
+          add("ERROR", "breakpoint-drift", site.file, site.line,
+            `@media ${prelude} tests viewport height, which in this codebase means ` +
+            `it is spelling the mobile breakpoint — but not the way shared.jsx does. ` +
+            `Use "${query}", or its landscape half alone for landscape-only rules.`);
+        }
+      }
+    }
+  }
+}
+
+/* The same drift written the other way: a viewport number compared straight off
+   `window` that no media query tests. Heuristic, because not every read of
+   innerWidth is a layout breakpoint — but a layout one belongs in the shared
+   query, where the stylesheet can see it. */
+
+for (const file of markupFiles) {
+  if (!/\.jsx?$/.test(file)) continue;
+  const src = stripComments(fs.readFileSync(file, "utf8"))
+    .replace(/(?<!:)\/\/[^\n]*/g, m => " ".repeat(m.length));
+  const consts = numericConsts(src);
+  for (const m of src.matchAll(/\binner(Width|Height)\s*(?:<=|<|>=|>)\s*([A-Za-z_$][\w$]*|\d+)/g)) {
+    const value = /^\d+$/.test(m[2]) ? m[2] : consts.get(m[2]);
+    if (value === undefined || cssBreakpoints.has(value)) continue;
+    add("WARN", "breakpoint-drift", file, lineAt(src, m.index),
+      `inner${m[1]} is compared against ${value}px, which no @media in src/styles tests. ` +
+      "If that is a layout breakpoint it belongs in MOBILE_MEDIA_QUERY, so CSS shares it.");
   }
 }
 

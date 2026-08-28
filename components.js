@@ -35,7 +35,11 @@
     return /* @__PURE__ */ React2.createElement("i", { className: [faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ") });
   }
   function isMobileViewport() {
-    return typeof window !== "undefined" && (window.innerWidth <= 1024 || window.innerHeight <= 500);
+    if (typeof window === "undefined") return false;
+    if (typeof window.matchMedia !== "function") {
+      return window.innerWidth <= MOBILE_MAX_W || window.innerHeight <= SHORT_MAX_H && window.innerWidth <= SHORT_MAX_W;
+    }
+    return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
   }
   function safeSaveStaticDefaults(key, value) {
     if (typeof saveStaticDefaults === "undefined") {
@@ -407,10 +411,14 @@
       document.body
     );
   }
-  var Section, ControlPanel, DetailSection;
+  var MOBILE_MAX_W, SHORT_MAX_H, SHORT_MAX_W, MOBILE_MEDIA_QUERY, Section, ControlPanel, DetailSection;
   var init_shared = __esm({
     "src/shared.jsx"() {
       init_react_globals();
+      MOBILE_MAX_W = 768;
+      SHORT_MAX_H = 500;
+      SHORT_MAX_W = 950;
+      MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_MAX_W}px), (max-height: ${SHORT_MAX_H}px) and (max-width: ${SHORT_MAX_W}px)`;
       Section = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props });
       ControlPanel = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props, variant: "panel" });
       DetailSection = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props, variant: "detail" });
@@ -3092,21 +3100,19 @@
           return () => window.removeEventListener("popstate", onPop);
         }, []);
         React2.useEffect(() => {
-          const handler = () => {
-            const nowMobile = getIsMobile();
-            setIsMobile(nowMobile);
-            if (!nowMobile) {
-              setMobileMenuOpen(false);
-              setNavOpen(true);
-            } else {
-              setMobileMenuOpen(false);
-            }
+          const mq = typeof window.matchMedia === "function" ? window.matchMedia(MOBILE_MEDIA_QUERY) : null;
+          if (!mq) return void 0;
+          const onCross = (e) => {
+            setIsMobile(e.matches);
+            setMobileMenuOpen(false);
+            if (!e.matches) setNavOpen(true);
           };
-          window.addEventListener("resize", handler);
-          window.addEventListener("orientationchange", handler);
+          const onRotate = () => setMobileMenuOpen(false);
+          mq.addEventListener("change", onCross);
+          window.addEventListener("orientationchange", onRotate);
           return () => {
-            window.removeEventListener("resize", handler);
-            window.removeEventListener("orientationchange", handler);
+            mq.removeEventListener("change", onCross);
+            window.removeEventListener("orientationchange", onRotate);
           };
         }, []);
         React2.useEffect(() => {

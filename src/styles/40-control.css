@@ -210,7 +210,7 @@
  * Segmented buttons already have generous touch targets via
  * padding. Pill wraps naturally via flex-wrap. */
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
   .seg-group .ctrl-dir {
     padding: 8px 6px;              /* taller touch target */
     font-size: var(--fs-sm);       /* Reverted to keep readable */

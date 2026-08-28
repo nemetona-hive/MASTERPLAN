@@ -7,8 +7,33 @@ export function Icon({ name, className = "" }) {
   return <i className={[faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")} />;
 }
 
+/* The mobile breakpoint, written down once. app.css asks the same question in
+   the same words (src/styles/80-mobile.css and every other @media that opens
+   with these numbers), so the two cannot drift: this used to say 1024px while
+   the stylesheet said 768px, which left every tablet between the two in a state
+   neither side had styling for — JS handed the nav its mobile props while CSS
+   was still laying it out as a desktop sidebar.
+
+   The height arm is bounded by width because a short viewport is not proof of a
+   phone: opening the soft keyboard on a landscape tablet shrinks innerHeight
+   past 500 too, and an unbounded arm collapsed the nav to icons mid-edit. No
+   phone is wider than 950px in landscape; no tablet is narrower. */
+const MOBILE_MAX_W = 768;
+const SHORT_MAX_H  = 500;
+const SHORT_MAX_W  = 950;
+
+export const MOBILE_MEDIA_QUERY =
+  `(max-width: ${MOBILE_MAX_W}px), (max-height: ${SHORT_MAX_H}px) and (max-width: ${SHORT_MAX_W}px)`;
+
 export function isMobileViewport() {
-  return typeof window !== "undefined" && (window.innerWidth <= 1024 || window.innerHeight <= 500);
+  if (typeof window === "undefined") return false;
+  /* jsdom implements no layout and therefore no matchMedia, so tests read the
+     same thresholds straight off the window rather than losing the check. */
+  if (typeof window.matchMedia !== "function") {
+    return window.innerWidth <= MOBILE_MAX_W
+      || (window.innerHeight <= SHORT_MAX_H && window.innerWidth <= SHORT_MAX_W);
+  }
+  return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
 }
 
 export function safeSaveStaticDefaults(key, value) {

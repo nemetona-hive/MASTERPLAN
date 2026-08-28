@@ -8,7 +8,7 @@ import { SheetSurfaceLayout } from "./components/SurfaceLayout.jsx";
 import { SheetSymmetricLayout } from "./components/SymmetricLayout.jsx";
 import { SheetTimesheet } from "./components/Timesheet.jsx";
 import { AppNav } from "./Nav.jsx";
-import { isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
+import { MOBILE_MEDIA_QUERY, isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
 
 // ── App root ──────────────────────────────────────────────────────────────────
 
@@ -91,23 +91,31 @@ function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  // Handle resize and orientation changes
+  // Follow the stylesheet's own breakpoint rather than a second opinion about
+  // it — MOBILE_MEDIA_QUERY is the string app.css is written against. Listening
+  // to the query also means one re-render per actual crossing, where the old
+  // resize listener fired on every URL-bar nudge and every soft-keyboard open.
   React.useEffect(() => {
-    const handler = () => {
-      const nowMobile = getIsMobile();
-      setIsMobile(nowMobile);
-      if (!nowMobile) {
-        setMobileMenuOpen(false);
-        setNavOpen(true);
-      } else {
-        setMobileMenuOpen(false); // always close on rotate/resize within mobile
-      }
+    const mq = typeof window.matchMedia === "function"
+      ? window.matchMedia(MOBILE_MEDIA_QUERY)
+      : null;
+    if (!mq) return undefined;
+
+    const onCross = e => {
+      setIsMobile(e.matches);
+      setMobileMenuOpen(false);
+      if (!e.matches) setNavOpen(true);
     };
-    window.addEventListener("resize", handler);
-    window.addEventListener("orientationchange", handler);
+    // Rotating usually stays on the same side of the query, so it arrives as no
+    // change event — but every button has moved out from under the thumb that
+    // was reaching for it, so the drawer closes on that too.
+    const onRotate = () => setMobileMenuOpen(false);
+
+    mq.addEventListener("change", onCross);
+    window.addEventListener("orientationchange", onRotate);
     return () => {
-      window.removeEventListener("resize", handler);
-      window.removeEventListener("orientationchange", handler);
+      mq.removeEventListener("change", onCross);
+      window.removeEventListener("orientationchange", onRotate);
     };
   }, []);
 

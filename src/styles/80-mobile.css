@@ -2,9 +2,20 @@
  * ----------------------------------------------------------
  * MOBILE
  * ----------------------------------------------------------
+ *
+ * This query is the mobile breakpoint, and src/shared.jsx builds the same
+ * string for isMobileViewport() — JS and CSS have to agree about which layout
+ * is on screen, because the nav reads one and is painted by the other. They
+ * disagreed for a while: JS said 1024px, this said 768px, and every tablet
+ * between them got mobile props under desktop styling.
+ *
+ * The height arm carries a width bound because a short viewport is not proof
+ * of a phone. A soft keyboard on a landscape tablet shrinks the viewport the
+ * same way a landscape phone does, and 950px is the gap between the widest
+ * phone and the narrowest tablet.
  */
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 
 	:root {
 		--row-h: 22px;
@@ -45,6 +56,7 @@
 		overflow-x: hidden;
 		overflow-y: auto;
 		max-height: 56vh;
+		max-height: 56dvh;
 		background: color-mix(in srgb, var(--color-darkblue) 92%, transparent);
 	}
 
@@ -295,9 +307,11 @@
  * ----------------------------------------------------------
  * Overrides for landscape-specific UX on top of the shared
  * mobile rules already applied by the combined media query above.
+ * Same width bound, same reason: a tablet with the keyboard up is
+ * short, but it is not a phone on its side.
  */
 
-@media (max-height: 500px) {
+@media (max-height: 500px) and (max-width: 950px) {
 	/* Logo bar wastes vertical space in landscape — nav HIVE label is enough */
 	.app-head {
 		display: none;
@@ -306,6 +320,7 @@
 	/* Tighter nav to leave more room for content */
 	.nav {
 		max-height: 40vh;
+		max-height: 40dvh;
 		padding: var(--sp-1) var(--sp-2);
 		gap: var(--sp-1);
 	}

@@ -1134,7 +1134,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   box-shadow: var(--ctl-active);
 }
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
   .seg-group .ctrl-dir {
     padding: 8px 6px;
     font-size: var(--fs-sm);
@@ -1562,23 +1562,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	.ts-grid-hd {
 		display: none;
 	}
-	.ts-grid-row {
-		grid-template-columns: 1fr 1fr;
-		gap: var(--sp-3) var(--sp-2);
-		padding: 12px 8px;
-		border-bottom: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	}
 
-	.ts-grid-row > .ts-col-dec {
-		grid-column: span 1;
-	}
-	.ts-grid-row > .ts-remove {
-		grid-column: span 1;
-		justify-self: end;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 100%;
+	.ts-grid-row {
+		border-bottom: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
 	}
 }
 
@@ -1738,7 +1724,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 }
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 	.ts-body {
 		padding: 12px;
 		gap: var(--sp-3);
@@ -1991,7 +1977,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	text-transform: uppercase;
 }
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 	.home-scroll {
 		align-items: flex-start;
 		padding: 16px 14px;
@@ -2049,7 +2035,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 }
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 
 	:root {
 		--row-h: 22px;
@@ -2089,6 +2075,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		overflow-x: hidden;
 		overflow-y: auto;
 		max-height: 56vh;
+		max-height: 56dvh;
 		background: color-mix(in srgb, var(--color-darkblue) 92%, transparent);
 	}
 
@@ -2323,7 +2310,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 }
 
-@media (max-height: 500px) {
+@media (max-height: 500px) and (max-width: 950px) {
 
 	.app-head {
 		display: none;
@@ -2331,6 +2318,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 	.nav {
 		max-height: 40vh;
+		max-height: 40dvh;
 		padding: var(--sp-1) var(--sp-2);
 		gap: var(--sp-1);
 	}
@@ -2855,43 +2843,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	}
 }
 
-@media (max-width: 768px) and (orientation: landscape) {
-	.mp-modal-large .data-preview {
-		display: block !important;
-	}
-}
-
-@media (max-width: 768px) and (orientation: portrait) {
-	.mp-modal-large .data-preview {
-		display: grid !important;
-		grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.35fr);
-		gap: var(--sp-4);
-		align-items: start;
-		min-width: 0;
-	}
-
-	.mp-modal-large .data-preview > .large-layout-vis-wrap {
-		grid-column: 2;
-		grid-row: 1 / span 2;
-		min-width: 0;
-	}
-
-	.mp-modal-large .data-preview > .control-panel,
-	.mp-modal-large .data-preview > .data-row {
-		grid-column: 1;
-	}
-
-	.mp-modal-large .data-preview .panel-data {
-		min-width: 0;
-	}
-
-	.mp-modal-large .data-preview > .large-layout-vis-wrap,
-	.mp-modal-large .data-preview > .control-panel,
-	.mp-modal-large .data-preview > .data-row {
-		min-width: 0;
-	}
-}
-
 .u-sticky {
 	position: sticky;
 	z-index: 10;
@@ -3028,17 +2979,22 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px color-mix(in srgb, var(--brand) 10%, transparent);
   width: 100%;
   max-width: 680px;
+
   max-height: 80vh;
+  max-height: 80dvh;
   display: flex;
   flex-direction: column;
   animation: mp-slide-in 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.1);
 }
 
 .mp-modal-large {
-  max-width: 100vw;
+
+  max-width: 100%;
   max-height: 100vh;
-  width: 100vw;
+  max-height: 100dvh;
+  width: 100%;
   height: 100vh;
+  height: 100dvh;
   box-sizing: border-box;
   overflow: hidden;
 }

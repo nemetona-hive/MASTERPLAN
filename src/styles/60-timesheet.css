@@ -54,27 +54,27 @@
 	align-items: center;
 }
 
+/* Narrow portrait only, which is why this is its own query rather than part of
+   the combined mobile block further down: a landscape phone is short but wide
+   enough to keep the column headings, and the block below already gives it the
+   narrow grid.
+
+   What used to be here was a two-column row template and a set of grid-column
+   placements, none of which reached the page. The template and gap were both
+   overridden by the combined block below, `padding` by the plain `.ts-grid-row`
+   rule a few lines down (later in the cascade, same specificity), and the
+   `> .ts-remove` selector never matched at all — the button sits inside a
+   `.ts-remove-wrap`, so it is a grandchild of the row. `.ts-remove` gets its
+   placement unconditionally from its own rule below, and `.ts-col-dec` is
+   display:none at this width, so its placement was moot too. These two
+   declarations are what was actually painting. */
 @media (max-width: 768px) {
 	.ts-grid-hd {
 		display: none;
 	}
+
 	.ts-grid-row {
-		grid-template-columns: 1fr 1fr;
-		gap: var(--sp-3) var(--sp-2);
-		padding: 12px 8px;
 		border-bottom: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	}
-	/* Grid items layout on mobile */
-	.ts-grid-row > .ts-col-dec {
-		grid-column: span 1;
-	}
-	.ts-grid-row > .ts-remove {
-		grid-column: span 1;
-		justify-self: end;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 100%;
 	}
 }
 
@@ -254,7 +254,7 @@
 
 /* Mobile ------------------------------------------------------------------ */
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 	.ts-body {
 		padding: 12px;
 		gap: var(--sp-3);

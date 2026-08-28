@@ -67,7 +67,7 @@ style contract, theme contrast, the code inventory, and the UI audit.
 | Command | What it guards |
 |---|---|
 | `npm test` | behaviour — parsers, layout maths, primitives |
-| `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them) |
+| `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them), JS/CSS breakpoint drift |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
@@ -376,9 +376,21 @@ is what makes the identity key sound — keep it that way.
 
 ## Mobile / responsive
 
-- Mobile/Tablet breakpoint: width ≤ 1024px OR height ≤ 500px
+- Mobile breakpoint: width ≤ 768px, OR height ≤ 500px on a viewport ≤ 950px wide
+- The breakpoint is written once, as `MOBILE_MEDIA_QUERY` in shared.jsx, and the
+  `@media` rules in app.css open with the same string. Change one and you must
+  change the other — when they drifted (JS 1024px, CSS 768px), tablets in
+  between got the nav's mobile props under desktop styling. `npm run audit:ui`
+  now blocks on that: the query JS builds must appear verbatim as an `@media`
+  prelude, and any prelude testing `max-height` must be that query or its
+  landscape half, so one spelling cannot quietly fork into two
+- The height arm is bounded by width on purpose: a soft keyboard shrinks a
+  landscape tablet below 500px too, and unbounded it collapsed the nav mid-edit
 - Nav collapses to hamburger on mobile, sidebar on desktop
-- `isMobile` state in App.jsx drives nav behavior reactively on resize/rotate
+- `isMobile` state in App.jsx tracks the media query itself (`change`), not
+  `resize` — one re-render per real crossing rather than one per URL-bar nudge.
+  `orientationchange` closes the drawer separately, since a rotate usually stays
+  on the same side of the query
 - `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
 - Large Preview modal is optimized for mobile by hiding non-essential controls and prioritizing visualization and statistics.
 

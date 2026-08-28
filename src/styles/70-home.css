@@ -162,7 +162,7 @@
 	text-transform: uppercase;
 }
 
-@media (max-width: 768px), (max-height: 500px) {
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 	.home-scroll {
 		align-items: flex-start;
 		padding: 16px 14px;
