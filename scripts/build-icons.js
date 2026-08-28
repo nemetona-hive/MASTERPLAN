@@ -13,6 +13,13 @@
  * emitted. Upstream stays in the repo unreferenced, as the source this reads —
  * it costs nothing on the wire, because nothing links it.
  *
+ * The font binary gets the same treatment. fa-solid-900.woff2 carries 1,403
+ * glyphs in 155 KB to draw thirty of them, so it is subset here too, through
+ * harfbuzz (subset-font). Same source-and-generated split: the full face stays
+ * in vendor/ as the input, fa-solid-900.subset.woff2 is what the page loads.
+ * The output is byte-identical run to run, which is what lets the pre-push
+ * staleness gate diff it like any other committed build output.
+ *
  * The point of generating rather than hand-maintaining: a missing icon is
  * silent. The class simply matches nothing and the glyph renders as a blank
  * box, which is how "fa-circle-0" — an icon Font Awesome has never had — sat in
@@ -23,10 +30,14 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const subsetFont = require("subset-font");
 
 const ROOT = path.resolve(__dirname, "..");
 const UPSTREAM = path.join(ROOT, "vendor", "fontawesome.min.css");
 const OUT = path.join(ROOT, "vendor", "fontawesome.subset.css");
+const FONT_IN = path.join(ROOT, "vendor", "fa-solid-900.woff2");
+const FONT_OUT_NAME = "fa-solid-900.subset.woff2";
+const FONT_OUT = path.join(ROOT, "vendor", FONT_OUT_NAME);
 
 const upstream = fs.readFileSync(UPSTREAM, "utf8");
 
@@ -80,9 +91,12 @@ const face = upstream.match(
   /@font-face\{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;[^}]*\}/
 );
 /* Upstream lists a .ttf after the .woff2; only the woff2 is vendored here, so
-   the ttf url is dropped rather than shipped as a 404 waiting for a browser
-   old enough to reach for it. */
-const faceCss = face && face[0].replace(/,url\(fa-solid-900\.ttf\)\s*format\("truetype"\)/, "");
+   the ttf url is dropped rather than shipped as a 404 waiting for a browser old
+   enough to reach for it. The remaining url is repointed at the subset face
+   this script writes below — the full one is input, not output. */
+const faceCss = face && face[0]
+  .replace(/,url\(fa-solid-900\.ttf\)\s*format\("truetype"\)/, "")
+  .replace("url(fa-solid-900.woff2)", `url(${FONT_OUT_NAME})`);
 
 if (!face) {
   console.error("✖ build-icons: could not find the Free/900 @font-face upstream.");
@@ -107,7 +121,24 @@ const css = [
   ...names.map(name => `.${name}{--fa:${glyphs.get(name)}}`)
 ].join("\n") + "\n";
 
-fs.writeFileSync(OUT, css);
 const kb = n => (n / 1024).toFixed(1) + " KiB";
-console.log(`Built vendor/fontawesome.subset.css — ${names.length} icons, ` +
-  `${kb(css.length)} (from ${kb(upstream.length)})`);
+
+/* The glyphs are addressed by the characters themselves, which is what the
+   \f00c escapes in the CSS above are — turn each back into a codepoint and hand
+   harfbuzz the string. Anything not in it is dropped from cmap, glyf and hmtx. */
+const text = names
+  .map(name => glyphs.get(name).slice(1, -1))
+  .map(esc => String.fromCodePoint(parseInt(esc.replace(/^\\/, ""), 16)))
+  .join("");
+
+subsetFont(fs.readFileSync(FONT_IN), text, { targetFormat: "woff2" }).then(font => {
+  fs.writeFileSync(OUT, css);
+  fs.writeFileSync(FONT_OUT, font);
+  console.log(`Built vendor/fontawesome.subset.css — ${names.length} icons, ` +
+    `${kb(css.length)} (from ${kb(upstream.length)})`);
+  console.log(`Built vendor/${FONT_OUT_NAME} — ` +
+    `${kb(font.length)} (from ${kb(fs.statSync(FONT_IN).size)})`);
+}).catch(err => {
+  console.error("✖ build-icons: subsetting the font failed — " + err.message);
+  process.exit(1);
+});
