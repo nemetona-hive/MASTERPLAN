@@ -2889,19 +2889,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		font-size: var(--fs-xl);
 	}
 
-	.result-card-action {
-		margin-top: 0;
-		flex-shrink: 0;
-	}
-
-	.result-card-action .ts-btn {
-		width: auto;
-	}
-
-	.result-card-action-long {
-		display: none;
-	}
-
 	.mp-modal-large .layout-split {
 		grid-template-columns: 1fr;
 		gap: var(--sp-4);
@@ -3009,8 +2996,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	gap: 6px;
 }
 
-.result-card-action {
-	margin-top: var(--sp-4);
+.form-action {
+	display: flex;
+	justify-content: flex-end;
 }
 
 .detail-section {

@@ -211,12 +211,17 @@ than inline styles, or the bar's rules cannot reach them:
 | `.result-card-footer-item` | a label/value detail pair | hidden |
 | `.result-card-note` | a secondary reading of the headline | hidden |
 | `.result-card-split` | a second stat under a rule | rule turns vertical, sits beside |
-| `.result-card-action` | a button belonging to the card | sizes to its label |
 
 Inline styles are the trap: a `style` attribute outranks any rule, so a card
 built with them keeps its desktop spacing in the bar and pushes the row wide.
 Concrete's card did exactly that — its Global Reset was clipped off the right
 edge at 360px — while Timesheet's, built from these classes, was fine.
+
+Put in the column only what belongs to the *result*. Everything there lands in
+the bar, so it must be worth the width and safe to tap above the thumb.
+Timesheet's Copy button qualifies. Concrete's Global Reset did not — it clears
+every field without confirming — and now closes the form column instead, as
+`.form-action`.
 
 The money-grid `--mg-*` system is **not** used here and should not be adopted:
 it parameterises `lead | N repeating same-kind columns | total | action` across

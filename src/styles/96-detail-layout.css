@@ -144,24 +144,6 @@
 		font-size: var(--fs-xl);
 	}
 
-	/* Keeps its label — resetAll clears every field with no confirmation, so
-	   this is not a control to reduce to an unlabelled icon in the thumb zone.
-	   It sizes to that label instead of filling the row. */
-	.result-card-action {
-		margin-top: 0;
-		flex-shrink: 0;
-	}
-
-	.result-card-action .ts-btn {
-		width: auto;
-	}
-
-	/* "Global Reset" is ~150px of a ~320px bar. Dropping the first word leaves
-	   a control that still reads as Reset — an unlabelled icon was the wrong
-	   trade for something that clears every field without confirming. */
-	.result-card-action-long {
-		display: none;
-	}
 
 	/* Large preview modal should use a normal stacked flow on mobile */
 	.mp-modal-large .layout-split {
@@ -291,8 +273,12 @@
 	gap: 6px;
 }
 
-.result-card-action {
-	margin-top: var(--sp-4);
+/* The form's own closing action. Spacing comes from the Stack gap around it;
+   it sizes to its label rather than spanning the column, which for a
+   destructive control is the difference between an option and a target. */
+.form-action {
+	display: flex;
+	justify-content: flex-end;
 }
 
 /* Secondary Collapsible Section styling */

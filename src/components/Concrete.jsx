@@ -442,6 +442,19 @@ export function SheetConcrete() {
               </div>
             </div>
 
+            {/* Ends the form rather than riding in the result column. Below
+                1024px that column becomes a fixed bottom bar, and a control
+                that clears every field without confirming does not belong
+                pinned under the thumb — nor competing for the bar's width. */}
+            <div className="form-action">
+              <button
+                onClick={resetAll}
+                className="ts-btn ctl-ghost ctl-danger"
+              >
+                <Icon name="refresh-cw" /> Global Reset
+              </button>
+            </div>
+
           </Stack>
 
           {/* Sticky Result Column */}
@@ -471,14 +484,6 @@ export function SheetConcrete() {
               </div>
             </div>
 
-            <div className="result-card-action">
-              <button
-                onClick={resetAll}
-                className="ts-btn ctl-ghost ctl-danger u-w-full"
-              >
-                <Icon name="refresh-cw" /> <span className="result-card-action-long">Global </span>Reset
-              </button>
-            </div>
           </div>
 
         </div>
