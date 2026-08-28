@@ -130,6 +130,7 @@ export function SheetConcrete() {
     diff = Math.max(va, vb, vc, vd) - Math.min(va, vb, vc, vd);
   }
 
+  const volume = area * (computedAvgH / 1000);
   const mass = area * computedAvgH * parseNum(rate);
   const bagsExact = parseNum(bagKg) > 0 ? (mass / parseNum(bagKg)) : 0;
   const bags = Math.ceil(bagsExact);
@@ -418,6 +419,7 @@ export function SheetConcrete() {
                   {diff !== null && (
                     <Row label="Height difference" value={Math.round(diff)}          unit="mm" />
                   )}
+                  <Row label="Volume"           value={volume > 0 ? volume.toFixed(3) : "0.000"} unit="m³" />
                   <Row label="Total mix mass"   value={mass > 0 ? mass.toFixed(1) : "0.0"} unit="kg" />
                   <Row 
                     label="Exact bags calculated" 
