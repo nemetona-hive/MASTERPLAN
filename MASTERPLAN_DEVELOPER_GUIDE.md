@@ -73,6 +73,13 @@ style contract, theme contrast, the code inventory, and the UI audit.
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 
+What none of these cover is UI interaction. The suite tests the computation
+engine and the primitives; preset application, direction switching with
+per-direction state save, panel collapse and the `LayoutPanel` controlled /
+uncontrolled toggle have no test behind them, so `verify` going green says the
+build is sound, not that the page still works. Check a UI change in the browser
+as well.
+
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI
 audit error or a test failure. `pre-push` matters more here than in most repos:
@@ -262,7 +269,7 @@ renders.
 | `DEFAULT_GR` | Default items for golden ratio tool |
 | `ICONS` | Map of icon name → FontAwesome class string (defined in config.js) |
 | `PAL_CLASSES` | Palette class maps for segment coloring (s1, s4l, s4s) |
-| `fmt` | Formatting helpers: fmt.decimals(v,n), fmt.area(v), fmt.decimal(v), fmt.mm(v) |
+| `fmt` | Formatting helpers: fmt.decimals(v,n), fmt.area(v), fmt.decimal(v), fmt.mm(v). Renders `—` for a non-finite value rather than letting `.toFixed()` print `NaN` next to a unit |
 | `SUMMARY_LABELS` | Label maps for result summary rows (s0, s1s2s3, s4 keys) |
 | `computeS0` | Symmetric layout compute (takes sym state) |
 | `computeS1/S2/S3/S4` | Surface layout computes (each takes sh state) |
@@ -346,6 +353,27 @@ All calculators and pages are stored as standalone files inside `src/components/
 LAYOUT_REGISTRY in Controls.jsx maps s1–s4 to their compute functions and control components.
 Best layout = fewest total pieces among valid results.
 
+Every `compute*` returns one of three shapes, and a caller that only looks at
+`rows` cannot tell them apart:
+
+| Shape | When | Marker |
+|---|---|---|
+| A real layout | normal | `valid: true` (or `false` for uncovered gaps) |
+| `emptyLayoutResult()` | a dimension is zero or missing | `valid: false`, no summary rows |
+| `cappedLayoutResult()` | geometry exceeds `MAX_SIM_STEPS` (2000) pieces per axis | `valid: false`, `capped: true`, one danger summary row |
+
+The cap exists because `simulate`/`simulateS4` loop per piece and `s4Long` is
+unclamped in the UI, so a typo is an unbounded loop. Both simulators share
+`exceedsSimCap`, and `computeStandard`/`computeS4` check it up front — do not
+infer "capped" from an empty `rows`, because `nGap([])` is `0`, which reads as
+a *valid* zero-panel layout. That was a real bug: the panel showed "Valid" over
+nothing.
+
+`SheetSurfaceLayout` runs all four computes inside a `useMemo` keyed on `sh`.
+Each is a full `simulate()` pass, so unmemoized they re-ran on every hover,
+panel collapse and preset flash. `setSh` always replaces `sh` wholesale, which
+is what makes the identity key sound — keep it that way.
+
 ## Mobile / responsive
 
 - Mobile/Tablet breakpoint: width ≤ 1024px OR height ≤ 500px
@@ -361,13 +389,27 @@ Best layout = fewest total pieces among valid results.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
 - `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
   (`Section`, `ControlPanel` and `DetailSection` are one internal `Collapsible`
-  wearing three variants; the base is not exported)
+  wearing three variants; the base is not exported). Pass **both** `open` and
+  `setOpen` to control it. `open` on its own is read once as the initial state
+  and never again — every such call site passes a literal, and the effect that
+  used to copy it on change only bought a second render and a way to clobber a
+  user's toggle mid-interaction.
 - `<Section title bg>` — collapsible section for preview area
 - `<DetailSection title open>` — collapsible section for secondary information or management UI
 - `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
 - `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
+- `<SaveDefaultsButton status onClick errorMessage labels />` — renders nothing
+  unless `canSaveStaticDefaults()`. `status` is `""|"saving"|"saved"|"error"`;
+  pass `errorMessage` so the failure reason reaches a tooltip instead of only
+  the console.
+- `useTimedState(initial, delay)` — state that reverts to `initial` after
+  `delay`. The setter takes a **per-call delay** as its second argument
+  (`set("saving", 0)` means "hold until I say otherwise"). This is the reason to
+  reach for it over `useState`: a plain `useState` setter silently ignores that
+  second argument, which is exactly how a save badge got stuck on "saving"
+  forever. If you pass a delay, make sure the hook is this one.
 - `useClickOutside(refs, handler, active)` — closes on a click away, listening to both `mousedown` and `touchstart` so a tap counts.
 - `useModeExit(inside, onExit, active)` — the other half: `useClickOutside` plus Escape. An armed mode should take both ways out. `inside` is an array of refs, or a CSS selector for a subtree that cannot forward one.
 - `downloadFile(name, data, mimeType)` — hands the browser a generated file. Revokes the object URL a tick late, because doing it in the same turn cancels the save in Firefox and Safari.
@@ -402,8 +444,21 @@ Best layout = fewest total pieces among valid results.
 
 When running the application locally, a specialized persistence mechanism allows saving UI state (presets, defaults) directly back into the source code (`config.js`).
 
-- `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost` or `127.0.0.1`.
+- `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost`
+  or `127.0.0.1`. This decides whether the Save Defaults **button renders** —
+  it runs in the browser and is not a security control. Do not add a second
+  caller that treats it as one.
 - `saveStaticDefaults(key, value)`: Asynchronous function that sends a POST request to `/api/save-defaults`. This endpoint is provided by the development server to update the project's static configuration files.
+- The endpoint writes to a tracked source file and has no credentials, so the
+  server is what keeps it private, in two layers:
+  - It binds `127.0.0.1` explicitly. Listening on every interface handed any
+    machine on the network an unauthenticated write to `config.js`.
+  - `isLocalRequest()` additionally requires a loopback `Host` and, when one is
+    sent, a loopback `Origin` — loopback alone still leaves the endpoint
+    reachable from the user's own browser, so any page could post to it, and a
+    DNS-rebinding host resolving to `127.0.0.1` would satisfy the bind. A
+    *missing* `Origin` is allowed: browsers always send it on a cross-origin
+    POST, so its absence means a non-browser client like curl.
 - `safeSaveStaticDefaults(key, value)` in `shared.jsx` is what components call: it
   rejects rather than throwing when the hook is absent, which is the case on
   GitHub Pages, where there is no dev server behind the page.
@@ -459,6 +514,22 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   a hex or a tinted `rgba()` in `src/`.
 - If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
+- Interactive means a real `<button>`, and one never nests inside another. The
+  nav header used to be a `<div role="button">` (go home) wrapping a
+  `<span role="button" tabIndex={0}>` (toggle sidebar): two overlapping focus
+  stops that looked like one target. It is now two sibling buttons, with the
+  label taking `flex: 1` so the click area is unchanged and `disabled` — not
+  `tabIndex={-1}` plus an early return — keeping it out of the tab order when
+  collapsed. `.nav-btn`, `.nav-toggle-label` and `.nav-menu-icon` all strip the
+  default button chrome (`border: none; background: transparent`); do the same
+  for any new one rather than reaching for a `<div>`.
+- A `<button>` already fires `onClick` on Enter and Space. Adding an `onKeyDown`
+  for them is redundant.
+- `role="img"` needs an accessible name. Per-part `<title>`s do not supply one
+  for the whole graphic.
+- Anything reached only through `navigator.clipboard` needs a fallback. It is
+  undefined outside a secure context — `file://`, plain http on a LAN address —
+  which is how this app often gets opened.
 - No CSS-in-JS except inline style for dynamic values; use className strings
 - Local persistence uses `saveStaticDefaults` for dev-mode configuration updates.
 - CSS class names follow BEM-ish patterns: block, block-element, modifier
@@ -472,3 +543,13 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
+- UI interaction tests. See [Checks](#checks) for what is uncovered; this is the
+  largest remaining gap and the reason `verify` cannot catch an interaction
+  regression
+- Element-level descriptions inside the Guider wiring diagrams. Both carry a
+  top-level `aria-label`, but the individual lines and connection paths convey
+  nothing — a real gap in a technical reference drawing
+- A Content Security Policy. `index.html` has none. Weighed and deferred rather
+  than missed: the app leans on inline `style` attributes throughout, an inline
+  `<style>` in the logo SVG and a data-URI favicon, so any workable policy would
+  need `unsafe-inline` and would buy close to nothing
