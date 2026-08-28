@@ -68,6 +68,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
   }));
 
   const [saveStatus, setSaveStatus] = useTimedState("");
+  const [saveError, setSaveError] = React.useState("");
   
   const saveGoldenRatioDefaults = async () => {
     setSaveStatus("saving", 0);
@@ -77,6 +78,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
       setSaveStatus("saved");
     } catch (err) {
       console.error(err);
+      setSaveError(err.message || String(err));
       setSaveStatus("error");
     }
   };
@@ -86,7 +88,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
       <div id="data-control" className="data-control">
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
           <div style={{ padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" }}>
-            <SaveDefaultsButton status={saveStatus} onClick={saveGoldenRatioDefaults} />
+            <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveGoldenRatioDefaults} />
           </div>
           <Stack gap={2}>
             {baseItems.map(item => {

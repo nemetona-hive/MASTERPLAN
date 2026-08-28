@@ -233,37 +233,38 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
 
         {/* Header
             Collapsed, this shrinks to just the centered toggle icon — the
-            HIVE label goes to zero width but the div still spans the full
-            strip, so a click anywhere near the icon would otherwise fire
-            setPage("home") as a side effect of trying to toggle. Disabled
-            when collapsed for that reason; Home stays reachable as its own
-            item in the list below, which renders in every state. */}
-        <div
-          className={"nav-section nav-toggle" + (page === "home" && !isNavCollapsed ? " active" : "")}
-          role="button"
-          aria-current={page === "home" && !isNavCollapsed ? "page" : undefined}
-          tabIndex={isNavCollapsed ? -1 : 0}
-          onClick={() => {
-            if (isNavCollapsed) return;
-            setPage("home");
-            if (mobile) setMobileMenuOpen(false);
-          }}
-          onKeyDown={e => {
-            if (isNavCollapsed || (e.key !== "Enter" && e.key !== " ")) return;
-            e.preventDefault();
-            setPage("home");
-            if (mobile) setMobileMenuOpen(false);
-          }}
-        >
-          <span className="nav-toggle-label">HIVE</span>
-          <span className="nav-menu-icon"
-            onClick={e => { e.stopPropagation(); handleToggle(); }}
-            role="button" tabIndex={0}
+            HIVE label goes to zero width, so a click near the icon would
+            otherwise fire setPage("home") as a side effect of trying to
+            toggle. The label button is disabled when collapsed for that
+            reason, which also takes it out of the tab order; Home stays
+            reachable as its own item in the list below, which renders in
+            every state. */}
+        <div className={"nav-section nav-toggle" + (page === "home" && !isNavCollapsed ? " active" : "")}>
+          {/* Two separate controls, not one nested inside the other: a
+              role="button" wrapping another role="button" is two overlapping
+              focus stops that look like one target. The label button stretches
+              to fill the strip (flex: 1), so the click area is what it always
+              was — everything left of the icon — minus the ambiguous overlap. */}
+          <button
+            type="button"
+            className="nav-toggle-label"
+            disabled={isNavCollapsed}
+            aria-current={page === "home" && !isNavCollapsed ? "page" : undefined}
+            onClick={() => {
+              setPage("home");
+              if (mobile) setMobileMenuOpen(false);
+            }}
+          >HIVE</button>
+          <button
+            type="button"
+            className="nav-menu-icon"
+            onClick={handleToggle}
             aria-label={mobile ? (mobileMenuOpen ? "Close menu" : "Open menu") : (navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)")}
+            aria-expanded={mobile ? mobileMenuOpen : navOpen}
             title={mobile ? undefined : (navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)")}
-            onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" || e.key === " ") handleToggle(); }}>
+          >
             <Icon name="panel-left-close" />
-          </span>
+          </button>
         </div>
 
         {/* Main nav items */}

@@ -105,17 +105,44 @@ export function SheetTimesheet() {
 
   // ── Copy ───────────────────────────────────────────────────────────────────
 
+  // navigator.clipboard is undefined outside a secure context — file://, plain
+  // http on a LAN address, older browsers — which is exactly how this page gets
+  // opened. Falling back to the deprecated execCommand keeps the copy working
+  // there instead of leaving the user at a dead "Error" badge.
+  const legacyCopy = text => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    // Keep it off-screen but still selectable; display:none is not.
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    try {
+      ta.select();
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(ta);
+    }
+  };
+
   const handleCopy = () => {
     if (!hasCalcTotal) return;
+    const text = fmtDecimal(calcTotalMins);
+
     if (!navigator.clipboard) {
-      setCopyError(true);
+      if (legacyCopy(text)) setCopied(true);
+      else setCopyError(true);
       return;
     }
-    navigator.clipboard.writeText(fmtDecimal(calcTotalMins)).then(() => {
+
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
     }).catch(err => {
       console.error('Clipboard copy failed:', err);
-      setCopyError(true);
+      if (legacyCopy(text)) setCopied(true);
+      else setCopyError(true);
     });
   };
 

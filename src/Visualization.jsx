@@ -165,6 +165,15 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     () => buildLayoutSvgRects(result, orderedRows, rowStart),
     [result, orderedRows, rowStart]
   );
+  // role="img" without a name announces as an unlabelled graphic. The
+  // per-segment <title>s do not supply one for the diagram as a whole.
+  const svgLabel = [
+    `${isS4 ? "Long-short" : "Row"} layout diagram`,
+    `${surfaceW} by ${surfaceH} mm surface`,
+    `${result.rows.length} ${result.rows.length === 1 ? "row" : "rows"} running ${isV ? "vertically" : "horizontally"}`,
+    `${result.stats.full} full and ${result.stats.cut} cut pieces`
+  ].join(", ") + ".";
+
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
 
@@ -237,6 +246,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
             viewBox={`0 0 ${totalVW} ${totalVH}`}
             preserveAspectRatio="xMidYMid meet"
             role="img"
+            aria-label={svgLabel}
             style={{ display: "block", width: "100%", height: "100%", borderRadius: "8px" }}
             onClick={() => { setSelectedKey(null); setSelectedSourceId(null); }}
           >

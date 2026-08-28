@@ -291,11 +291,6 @@
     const isControlled = openProp !== void 0 && setOpenProp !== void 0;
     const defaultOpen = variant === "detail" ? false : true;
     const [openLocal, setOpenLocal] = React2.useState(openProp !== void 0 ? openProp : defaultOpen);
-    React2.useEffect(() => {
-      if (openProp !== void 0 && !isControlled) {
-        setOpenLocal(openProp);
-      }
-    }, [openProp, isControlled]);
     const open = noToggle ? true : isControlled ? openProp : openLocal;
     const setOpen = isControlled ? setOpenProp : setOpenLocal;
     const headStyle = {
@@ -356,7 +351,7 @@
     const dClass = `u-flex-${direction === "row" ? "row" : "col"}`;
     return /* @__PURE__ */ React2.createElement(Tag, { className: [dClass, gClass, className].filter(Boolean).join(" "), style, ...props }, children);
   }
-  function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, className = "", style = {} }) {
+  function SaveDefaultsButton({ status, onClick, disabled = false, errorMessage = "", labels = {}, className = "", style = {} }) {
     if (typeof canSaveStaticDefaults === "undefined" || !canSaveStaticDefaults()) return null;
     const {
       savingLabel = "Saving...",
@@ -371,6 +366,7 @@
         type: "button",
         onClick,
         disabled: disabled || status === "saving",
+        title: status === "error" && errorMessage ? errorMessage : void 0,
         style
       },
       status === "saving" ? savingLabel : status === "saved" ? savedLabel : status === "error" ? errorLabel : defaultLabel
@@ -450,6 +446,7 @@
       ]).map((p) => ({ ...p }))
     );
     const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+    const [saveError, setSaveError] = React2.useState("");
     const saveConcreteDefaults = async () => {
       setPresetSaveStatus("saving", 0);
       try {
@@ -457,6 +454,7 @@
         setPresetSaveStatus("saved");
       } catch (err) {
         console.error(err);
+        setSaveError(err.message || String(err));
         setPresetSaveStatus("error");
       }
     };
@@ -669,7 +667,7 @@
         title: "Apply these values to the calculator"
       },
       flashIdx === idx ? /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement(Icon, { name: "check" }), " Applied") : /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement(Icon, { name: "check" }), " Apply")
-    )))))), /* @__PURE__ */ React2.createElement(Stack, { direction: "row", gap: 2 }, /* @__PURE__ */ React2.createElement("button", { className: "ctrl-dir", onClick: addPreset }, /* @__PURE__ */ React2.createElement(Icon, { name: "plus" }), " Add Row"), /* @__PURE__ */ React2.createElement(SaveDefaultsButton, { status: presetSaveStatus, onClick: saveConcreteDefaults })), /* @__PURE__ */ React2.createElement("div", { className: "pw-formula-text", style: { opacity: 0.7 } }, 'Fill product data above and click "Apply" to update the calculator values.'))), /* @__PURE__ */ React2.createElement("div", { className: "section unboxed", style: { marginTop: "var(--sp-4)" } }, /* @__PURE__ */ React2.createElement("div", { className: "section-head" }, /* @__PURE__ */ React2.createElement("span", null, "Calculation Details")), /* @__PURE__ */ React2.createElement("div", { className: "section-body" }, /* @__PURE__ */ React2.createElement(Stack, { className: "section-pad", gap: 1 }, /* @__PURE__ */ React2.createElement(Row, { label: "Floor area", value: area.toFixed(1), unit: "m²" }), /* @__PURE__ */ React2.createElement(Row, { label: "Avg thickness", value: Math.round(computedAvgH), unit: "mm" }), diff !== null && /* @__PURE__ */ React2.createElement(Row, { label: "Height difference", value: Math.round(diff), unit: "mm" }), /* @__PURE__ */ React2.createElement(Row, { label: "Total mix mass", value: mass > 0 ? mass.toFixed(1) : "0.0", unit: "kg" }), /* @__PURE__ */ React2.createElement(
+    )))))), /* @__PURE__ */ React2.createElement(Stack, { direction: "row", gap: 2 }, /* @__PURE__ */ React2.createElement("button", { className: "ctrl-dir", onClick: addPreset }, /* @__PURE__ */ React2.createElement(Icon, { name: "plus" }), " Add Row"), /* @__PURE__ */ React2.createElement(SaveDefaultsButton, { status: presetSaveStatus, errorMessage: saveError, onClick: saveConcreteDefaults })), /* @__PURE__ */ React2.createElement("div", { className: "pw-formula-text", style: { opacity: 0.7 } }, 'Fill product data above and click "Apply" to update the calculator values.'))), /* @__PURE__ */ React2.createElement("div", { className: "section unboxed", style: { marginTop: "var(--sp-4)" } }, /* @__PURE__ */ React2.createElement("div", { className: "section-head" }, /* @__PURE__ */ React2.createElement("span", null, "Calculation Details")), /* @__PURE__ */ React2.createElement("div", { className: "section-body" }, /* @__PURE__ */ React2.createElement(Stack, { className: "section-pad", gap: 1 }, /* @__PURE__ */ React2.createElement(Row, { label: "Floor area", value: area.toFixed(1), unit: "m²" }), /* @__PURE__ */ React2.createElement(Row, { label: "Avg thickness", value: Math.round(computedAvgH), unit: "mm" }), diff !== null && /* @__PURE__ */ React2.createElement(Row, { label: "Height difference", value: Math.round(diff), unit: "mm" }), /* @__PURE__ */ React2.createElement(Row, { label: "Total mix mass", value: mass > 0 ? mass.toFixed(1) : "0.0", unit: "kg" }), /* @__PURE__ */ React2.createElement(
       Row,
       {
         label: "Exact bags calculated",
@@ -745,6 +743,7 @@
       savedCommitted: String(item.value).trim() !== ""
     }));
     const [saveStatus, setSaveStatus] = useTimedState("");
+    const [saveError, setSaveError] = React2.useState("");
     const saveGoldenRatioDefaults = async () => {
       setSaveStatus("saving", 0);
       try {
@@ -753,10 +752,11 @@
         setSaveStatus("saved");
       } catch (err) {
         console.error(err);
+        setSaveError(err.message || String(err));
         setSaveStatus("error");
       }
     };
-    return /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement("div", { id: "data-control", className: "data-control" }, /* @__PURE__ */ React2.createElement(ControlPanel, { id: "control-base-number", title: "Base Number", open: baseOpen, setOpen: setBaseOpen }, /* @__PURE__ */ React2.createElement("div", { style: { padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" } }, /* @__PURE__ */ React2.createElement(SaveDefaultsButton, { status: saveStatus, onClick: saveGoldenRatioDefaults })), /* @__PURE__ */ React2.createElement(Stack, { gap: 2 }, baseItems.map((item) => {
+    return /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement("div", { id: "data-control", className: "data-control" }, /* @__PURE__ */ React2.createElement(ControlPanel, { id: "control-base-number", title: "Base Number", open: baseOpen, setOpen: setBaseOpen }, /* @__PURE__ */ React2.createElement("div", { style: { padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" } }, /* @__PURE__ */ React2.createElement(SaveDefaultsButton, { status: saveStatus, errorMessage: saveError, onClick: saveGoldenRatioDefaults })), /* @__PURE__ */ React2.createElement(Stack, { gap: 2 }, baseItems.map((item) => {
       const tone = getLinkedCardTone(item.id);
       const trimmedSuffix = item.suffix.trim();
       const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
@@ -1508,8 +1508,7 @@
           as: "button",
           className: "home-card" + (isActive ? " home-card-active" : ""),
           gap: 3,
-          onClick: () => setPage(pg.id),
-          onKeyDown: (e) => (e.key === "Enter" || e.key === " ") && setPage(pg.id)
+          onClick: () => setPage(pg.id)
         },
         /* @__PURE__ */ React.createElement("span", { className: "home-card-icon" }, /* @__PURE__ */ React.createElement(Icon, { name: pg.icon })),
         /* @__PURE__ */ React.createElement("span", { className: "home-card-title" }, pg.title),
@@ -1863,6 +1862,12 @@
       () => buildLayoutSvgRects(result, orderedRows, rowStart),
       [result, orderedRows, rowStart]
     );
+    const svgLabel = [
+      `${isS4 ? "Long-short" : "Row"} layout diagram`,
+      `${surfaceW} by ${surfaceH} mm surface`,
+      `${result.rows.length} ${result.rows.length === 1 ? "row" : "rows"} running ${isV ? "vertically" : "horizontally"}`,
+      `${result.stats.full} full and ${result.stats.cut} cut pieces`
+    ].join(", ") + ".";
     const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
     const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
     const carryLines = React2.useMemo(() => {
@@ -1919,6 +1924,7 @@
         viewBox: `0 0 ${totalVW} ${totalVH}`,
         preserveAspectRatio: "xMidYMid meet",
         role: "img",
+        "aria-label": svgLabel,
         style: { display: "block", width: "100%", height: "100%", borderRadius: "8px" },
         onClick: () => {
           setSelectedKey(null);
@@ -2038,6 +2044,7 @@
     const [largePreview, setLargePreview] = React2.useState(null);
     const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
     const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+    const [saveError, setSaveError] = React2.useState("");
     const [activePresetDropdown, setActivePresetDropdown] = React2.useState(null);
     const openLargePreview = (layout, result) => setLargePreview({ layout, result });
     const closeLargePreview = () => setLargePreview(null);
@@ -2060,6 +2067,7 @@
         setPresetSaveStatus("saved");
       } catch (err) {
         console.error(err);
+        setSaveError(err.message || String(err));
         setPresetSaveStatus("error");
       }
     };
@@ -2197,7 +2205,7 @@
         title: "Apply these values to the calculator"
       },
       flashIdx === idx ? /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement(Icon, { name: "check" }), " Applied") : /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement(Icon, { name: "check" }), " Apply")
-    )))))), /* @__PURE__ */ React2.createElement(Stack, { direction: "row", gap: 2 }, /* @__PURE__ */ React2.createElement("button", { className: "ctrl-dir", onClick: addPreset }, /* @__PURE__ */ React2.createElement(Icon, { name: "plus" }), " Add Row"), /* @__PURE__ */ React2.createElement(SaveDefaultsButton, { status: presetSaveStatus, onClick: saveMaterialDefaults })), /* @__PURE__ */ React2.createElement("div", { className: "pw-formula-text", style: { opacity: 0.7 } }, 'Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.'))))), largePreview && (() => {
+    )))))), /* @__PURE__ */ React2.createElement(Stack, { direction: "row", gap: 2 }, /* @__PURE__ */ React2.createElement("button", { className: "ctrl-dir", onClick: addPreset }, /* @__PURE__ */ React2.createElement(Icon, { name: "plus" }), " Add Row"), /* @__PURE__ */ React2.createElement(SaveDefaultsButton, { status: presetSaveStatus, errorMessage: saveError, onClick: saveMaterialDefaults })), /* @__PURE__ */ React2.createElement("div", { className: "pw-formula-text", style: { opacity: 0.7 } }, 'Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.'))))), largePreview && (() => {
       const currentResult = panelResultsById[largePreview.layout.id]?.result || largePreview.result;
       return /* @__PURE__ */ React2.createElement("div", { className: "mp-modal-overlay", onMouseDown: (e) => {
         if (e.target === e.currentTarget) closeLargePreview();
@@ -2613,17 +2621,36 @@
         setTimeout(() => startRefs.current[newId]?.focus(), 0);
       }
     };
+    const legacyCopy = (text) => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-9999px";
+      document.body.appendChild(ta);
+      try {
+        ta.select();
+        return document.execCommand("copy");
+      } catch {
+        return false;
+      } finally {
+        document.body.removeChild(ta);
+      }
+    };
     const handleCopy = () => {
       if (!hasCalcTotal) return;
+      const text = fmtDecimal(calcTotalMins);
       if (!navigator.clipboard) {
-        setCopyError(true);
+        if (legacyCopy(text)) setCopied(true);
+        else setCopyError(true);
         return;
       }
-      navigator.clipboard.writeText(fmtDecimal(calcTotalMins)).then(() => {
+      navigator.clipboard.writeText(text).then(() => {
         setCopied(true);
       }).catch((err) => {
         console.error("Clipboard copy failed:", err);
-        setCopyError(true);
+        if (legacyCopy(text)) setCopied(true);
+        else setCopyError(true);
       });
     };
     return /* @__PURE__ */ React2.createElement("div", { className: "ts-page" }, /* @__PURE__ */ React2.createElement(Stack, { className: "ts-body", gap: 3 }, /* @__PURE__ */ React2.createElement("div", { className: "layout-split" }, /* @__PURE__ */ React2.createElement(Stack, { className: "ts-section", gap: 3 }, /* @__PURE__ */ React2.createElement("div", { className: "section unboxed" }, /* @__PURE__ */ React2.createElement("div", { className: "section-head" }, /* @__PURE__ */ React2.createElement("span", null, "Time Entries")), /* @__PURE__ */ React2.createElement("div", { className: "section-body" }, /* @__PURE__ */ React2.createElement(Stack, { className: "section-pad", gap: 4 }, /* @__PURE__ */ React2.createElement(Stack, { gap: 1 }, /* @__PURE__ */ React2.createElement("div", { className: "ts-grid-hd", style: { marginTop: "var(--sp-2)" } }, /* @__PURE__ */ React2.createElement("span", { className: "ts-col-lbl" }, "Start"), /* @__PURE__ */ React2.createElement("span", { className: "ts-col-lbl" }, "End"), /* @__PURE__ */ React2.createElement("span", { className: "ts-col-lbl" }, "Lunch"), /* @__PURE__ */ React2.createElement("span", { className: "ts-col-lbl" }, "Duration"), /* @__PURE__ */ React2.createElement("span", { className: "ts-col-lbl ts-col-dec" }, "Decimal"), /* @__PURE__ */ React2.createElement("span", null)), calcRows.map((row, idx) => {
@@ -2912,46 +2939,31 @@
         role: "navigation",
         "aria-label": "Main navigation"
       },
-      /* @__PURE__ */ React2.createElement(
-        "div",
+      /* @__PURE__ */ React2.createElement("div", { className: "nav-section nav-toggle" + (page === "home" && !isNavCollapsed ? " active" : "") }, /* @__PURE__ */ React2.createElement(
+        "button",
         {
-          className: "nav-section nav-toggle" + (page === "home" && !isNavCollapsed ? " active" : ""),
-          role: "button",
+          type: "button",
+          className: "nav-toggle-label",
+          disabled: isNavCollapsed,
           "aria-current": page === "home" && !isNavCollapsed ? "page" : void 0,
-          tabIndex: isNavCollapsed ? -1 : 0,
           onClick: () => {
-            if (isNavCollapsed) return;
-            setPage("home");
-            if (mobile) setMobileMenuOpen(false);
-          },
-          onKeyDown: (e) => {
-            if (isNavCollapsed || e.key !== "Enter" && e.key !== " ") return;
-            e.preventDefault();
             setPage("home");
             if (mobile) setMobileMenuOpen(false);
           }
         },
-        /* @__PURE__ */ React2.createElement("span", { className: "nav-toggle-label" }, "HIVE"),
-        /* @__PURE__ */ React2.createElement(
-          "span",
-          {
-            className: "nav-menu-icon",
-            onClick: (e) => {
-              e.stopPropagation();
-              handleToggle();
-            },
-            role: "button",
-            tabIndex: 0,
-            "aria-label": mobile ? mobileMenuOpen ? "Close menu" : "Open menu" : navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)",
-            title: mobile ? void 0 : navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)",
-            onKeyDown: (e) => {
-              e.stopPropagation();
-              if (e.key === "Enter" || e.key === " ") handleToggle();
-            }
-          },
-          /* @__PURE__ */ React2.createElement(Icon, { name: "panel-left-close" })
-        )
-      ),
+        "HIVE"
+      ), /* @__PURE__ */ React2.createElement(
+        "button",
+        {
+          type: "button",
+          className: "nav-menu-icon",
+          onClick: handleToggle,
+          "aria-label": mobile ? mobileMenuOpen ? "Close menu" : "Open menu" : navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)",
+          "aria-expanded": mobile ? mobileMenuOpen : navOpen,
+          title: mobile ? void 0 : navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)"
+        },
+        /* @__PURE__ */ React2.createElement(Icon, { name: "panel-left-close" })
+      )),
       /* @__PURE__ */ React2.createElement("div", { className: "nav-items", role: "menubar", "aria-orientation": "vertical" }, navItems.map((item) => /* @__PURE__ */ React2.createElement(
         NavButton,
         {

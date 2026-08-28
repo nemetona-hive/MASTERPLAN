@@ -45,6 +45,7 @@ export function SheetConcrete() {
   );
 
   const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+  const [saveError, setSaveError] = React.useState("");
 
   const saveConcreteDefaults = async () => {
     setPresetSaveStatus("saving", 0);
@@ -53,6 +54,7 @@ export function SheetConcrete() {
       setPresetSaveStatus("saved");
     } catch (err) {
       console.error(err);
+      setSaveError(err.message || String(err));
       setPresetSaveStatus("error");
     }
   };
@@ -395,7 +397,7 @@ export function SheetConcrete() {
                   <button className="ctrl-dir" onClick={addPreset}>
                     <Icon name="plus" /> Add Row
                   </button>
-                  <SaveDefaultsButton status={presetSaveStatus} onClick={saveConcreteDefaults} />
+                  <SaveDefaultsButton status={presetSaveStatus} errorMessage={saveError} onClick={saveConcreteDefaults} />
                 </Stack>
 
                 <div className="pw-formula-text" style={{ opacity: 0.7 }}>

@@ -25,7 +25,6 @@ export function SheetHome({ page, setPage }) {
                 className={"home-card" + (isActive ? " home-card-active" : "")}
                 gap={3}
                 onClick={() => setPage(pg.id)}
-                onKeyDown={e => (e.key === "Enter" || e.key === " ") && setPage(pg.id)}
               >
                 <span className="home-card-icon">
                   <Icon name={pg.icon} />

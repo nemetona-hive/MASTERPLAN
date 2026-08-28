@@ -361,14 +361,12 @@ function SLabel({ children }) {
 function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "", noToggle = false }) {
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const defaultOpen = variant === "detail" ? false : true;
+  // Uncontrolled: `open` seeds the initial state and nothing more. Every
+  // uncontrolled call site passes a literal (open={false}, open={true}
+  // noToggle), so the effect that used to copy openProp into local state on
+  // every change never had a value to copy — it only cost a second render and
+  // stood ready to clobber a user's toggle mid-interaction.
   const [openLocal, setOpenLocal] = React.useState(openProp !== undefined ? openProp : defaultOpen);
-
-  // Sync local state if openProp changes and we are not in controlled mode
-  React.useEffect(() => {
-    if (openProp !== undefined && !isControlled) {
-      setOpenLocal(openProp);
-    }
-  }, [openProp, isControlled]);
 
   const open = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
@@ -522,7 +520,7 @@ export function Text({ children, size, weight, variant, color, className = "", s
   );
 }
 
-export function SaveDefaultsButton({ status, onClick, disabled = false, labels = {}, className = "", style = {} }) {
+export function SaveDefaultsButton({ status, onClick, disabled = false, errorMessage = "", labels = {}, className = "", style = {} }) {
   if (typeof canSaveStaticDefaults === "undefined" || !canSaveStaticDefaults()) return null;
   const {
     savingLabel = "Saving...",
@@ -537,6 +535,9 @@ export function SaveDefaultsButton({ status, onClick, disabled = false, labels =
       type="button"
       onClick={onClick}
       disabled={disabled || status === "saving"}
+      /* A bare "Error Saving" badge sent the only diagnostic to the console.
+         Hand the reason to anyone who hovers the button. */
+      title={status === "error" && errorMessage ? errorMessage : undefined}
       style={style}
     >
       {status === "saving" ? savingLabel : status === "saved" ? savedLabel : status === "error" ? errorLabel : defaultLabel}

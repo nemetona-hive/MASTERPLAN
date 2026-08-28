@@ -23,6 +23,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const [largePreview,    setLargePreview]    = React.useState(null);
   const [fieldFlash,      setFieldFlash]      = useTimedState(false, 900);
   const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+  const [saveError, setSaveError] = React.useState("");
   const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
@@ -50,6 +51,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
       setPresetSaveStatus("saved");
     } catch (err) {
       console.error(err);
+      setSaveError(err.message || String(err));
       setPresetSaveStatus("error");
     }
   };
@@ -221,7 +223,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   <button className="ctrl-dir" onClick={addPreset}>
                     <Icon name="plus" /> Add Row
                   </button>
-                  <SaveDefaultsButton status={presetSaveStatus} onClick={saveMaterialDefaults} />
+                  <SaveDefaultsButton status={presetSaveStatus} errorMessage={saveError} onClick={saveMaterialDefaults} />
                 </Stack>
 
                 <div className="pw-formula-text" style={{ opacity: 0.7 }}>
