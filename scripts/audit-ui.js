@@ -348,20 +348,39 @@ if (fs.existsSync(BREAKPOINT_SOURCE)) {
 
 /* The same drift written the other way: a viewport number compared straight off
    `window` that no media query tests. Heuristic, because not every read of
-   innerWidth is a layout breakpoint — but a layout one belongs in the shared
-   query, where the stylesheet can see it. */
+   innerWidth is a layout breakpoint — but a layout one belongs in a shared
+   query, where the stylesheet can see it.
+
+   A number feeding an exported *_MEDIA_QUERY is exempt. That is a declared
+   breakpoint with a name, which is the opposite of the ad-hoc literal this is
+   looking for, and not every one of them has a CSS counterpart to match:
+   COMPACT_NAV_MEDIA_QUERY collapses the sidebar, which is a JS state rather
+   than a width, so no @media tests it and none should. Without the exemption
+   the check punishes exactly the pattern it is meant to encourage. */
+
+/** Constants interpolated into an exported `*_MEDIA_QUERY` in this file. */
+function declaredBreakpointConsts(src) {
+  const names = new Set();
+  for (const q of src.matchAll(/[A-Z][A-Z0-9_]*_MEDIA_QUERY\s*=\s*`([^`]*)`/g)) {
+    for (const hole of q[1].matchAll(/\$\{([^}]*)\}/g)) names.add(hole[1].trim());
+  }
+  return names;
+}
 
 for (const file of markupFiles) {
   if (!/\.jsx?$/.test(file)) continue;
   const src = stripComments(fs.readFileSync(file, "utf8"))
     .replace(/(?<!:)\/\/[^\n]*/g, m => " ".repeat(m.length));
   const consts = numericConsts(src);
+  const declared = declaredBreakpointConsts(src);
   for (const m of src.matchAll(/\binner(Width|Height)\s*(?:<=|<|>=|>)\s*([A-Za-z_$][\w$]*|\d+)/g)) {
+    if (declared.has(m[2])) continue;
     const value = /^\d+$/.test(m[2]) ? m[2] : consts.get(m[2]);
     if (value === undefined || cssBreakpoints.has(value)) continue;
     add("WARN", "breakpoint-drift", file, lineAt(src, m.index),
-      `inner${m[1]} is compared against ${value}px, which no @media in src/styles tests. ` +
-      "If that is a layout breakpoint it belongs in MOBILE_MEDIA_QUERY, so CSS shares it.");
+      `inner${m[1]} is compared against ${value}px, which no @media in src/styles tests ` +
+      "and which is not a named *_MEDIA_QUERY. If it is a layout breakpoint, declare it " +
+      "as one so CSS can share it.");
   }
 }
 

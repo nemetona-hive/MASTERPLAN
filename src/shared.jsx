@@ -31,15 +31,17 @@ export const MOBILE_MEDIA_QUERY =
    to 190px and clipped by .main-data's overflow. Collapsing the sidebar to its
    icon strip hands 200px of that back before the columns have to stack at all.
 
-   1024px because this repo already treats it as the tablet line (.layout-split
-   and .u-hide-mobile both turn there); a new number would be a third breakpoint
-   to keep in step for no gain.
+   1280px covers tablet landscape as well as portrait — an 11" iPad on its side
+   is 1194-1210px, which cleared the old 1024px line and got the full sidebar
+   back at the preview's expense. Above 1280 a 260px sidebar still leaves the
+   preview 640px+, which is enough, so laptops are left alone; 1366x768 is a
+   common one and sits just clear of this.
 
    Read by App.jsx, which owns navOpen. CSS cannot do this on its own: the
    collapsed nav is a JS state — .nav-collapsed, icon-only buttons, tooltips
    swapped in for labels — and not merely a narrower width. Styling it collapsed
    without telling JS is exactly the split that produced the 768/1024 bug. */
-const COMPACT_NAV_MAX_W = 1024;
+const COMPACT_NAV_MAX_W = 1280;
 
 export const COMPACT_NAV_MEDIA_QUERY = `(max-width: ${COMPACT_NAV_MAX_W}px)`;
 

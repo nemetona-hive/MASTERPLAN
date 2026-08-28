@@ -426,7 +426,7 @@
       SHORT_MAX_H = 500;
       SHORT_MAX_W = 950;
       MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_MAX_W}px), (max-height: ${SHORT_MAX_H}px) and (max-width: ${SHORT_MAX_W}px)`;
-      COMPACT_NAV_MAX_W = 1024;
+      COMPACT_NAV_MAX_W = 1280;
       COMPACT_NAV_MEDIA_QUERY = `(max-width: ${COMPACT_NAV_MAX_W}px)`;
       Section = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props });
       ControlPanel = (props) => /* @__PURE__ */ React2.createElement(Collapsible, { ...props, variant: "panel" });

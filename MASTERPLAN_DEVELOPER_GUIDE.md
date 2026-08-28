@@ -389,11 +389,14 @@ is what makes the identity key sound — keep it that way.
 - Two further thresholds sit above the mobile one, because the desktop split is
   a 260px sidebar plus a fixed 384px `.data-control` and the preview column is
   only what is left over:
-  - **≤ 1024px** — the nav auto-collapses to its icon strip, handing ~200px back
-    to the preview. JS-driven (`COMPACT_NAV_MEDIA_QUERY`, read by App.jsx), because
-    collapsed is a state — `.nav-collapsed`, icon-only buttons, tooltips instead
-    of labels — not just a narrower width. Styling it collapsed from CSS alone
-    recreates the 768/1024 class of bug
+  - **≤ 1280px** — the nav auto-collapses to its icon strip, handing ~200px back
+    to the preview. Covers tablet landscape (an 11" iPad on its side is
+    1194–1210px) as well as portrait, and leaves 1366px laptops alone. JS-driven
+    (`COMPACT_NAV_MEDIA_QUERY`, read by App.jsx), because collapsed is a state —
+    `.nav-collapsed`, icon-only buttons, tooltips instead of labels — not just a
+    narrower width. Styling it collapsed from CSS alone recreates the 768/1024
+    class of bug. It has no `@media` counterpart on purpose, and `audit:ui`
+    exempts named `*_MEDIA_QUERY` constants from its stray-literal warning
   - **≤ 900px** — the control and preview columns stack (`80-mobile.css`,
     structure only). Below this they do not fit side by side at any nav width.
     The mobile block inherits this stacking rather than restating it
