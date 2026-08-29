@@ -194,7 +194,7 @@
 		flex-direction: row;
 		align-items: baseline;
 		gap: var(--sp-2);
-		opacity: 0.6;
+		opacity: 0.75; /* 0.6 dims below WCAG AA contrast (4.5:1) on this background */
 	}
 
 	.home-brand-name {

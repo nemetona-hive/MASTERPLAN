@@ -26,7 +26,7 @@ async function build(options = {}) {
 }
 
 if (require.main === module) {
-  build()
+  build({ minify: true })
     .then(() => process.stdout.write("Built components.js\n"))
     .catch(err => {
       process.stderr.write(`Build failed: ${err.message}\n`);

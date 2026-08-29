@@ -2048,7 +2048,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		flex-direction: row;
 		align-items: baseline;
 		gap: var(--sp-2);
-		opacity: 0.6;
+		opacity: 0.75;
 	}
 
 	.home-brand-name {
