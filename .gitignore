@@ -136,4 +136,4 @@ dist
 .pnp.*
 
 # Scratch: screenshots and throwaway files. Never part of the published tree.
-_temp/
+_temp_masterplan/
