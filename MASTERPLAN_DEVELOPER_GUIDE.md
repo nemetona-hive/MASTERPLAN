@@ -596,6 +596,36 @@ have. `tests/version.test.js` pins the determinism and asserts the generator
 touches neither `Date` nor git — the failure mode is a push blocked days later,
 long after the cause is obvious.
 
+### The two clocks
+
+A push does not become visible all at once, and the stamp reads differently
+depending on where you look at it. Measured on the deploy that introduced it:
+
+| | Delay | What it reflects |
+|---|---|---|
+| `npm run deploy:check` | **~40 s** | the Pages *origin* — it fetches with `cache: "no-store"` |
+| The nav footer in your browser | **up to 10 min** | whatever your browser has cached |
+
+The gap is `cache-control: max-age=600`, which Pages sets on HTML and gives no
+way to override — there is no header configuration on Pages. Within that window
+a browser that visited before the push keeps its old `index.html`, which has no
+`version.js` tag, so no stamp renders at all. That is the case `NavBuildStamp`'s
+`typeof BUILD` guard exists for: the nav renders intact and the stamp is simply
+absent, rather than a `ReferenceError` taking the sidebar down.
+
+**So when the two disagree, neither is broken — the gap *is* the propagation
+delay.** `deploy:check` is authoritative for what is deployed; a missing or
+stale footer on a site it has called current means your own cache. Skip the wait
+with a hard reload, or with a query string, which changes the cache key:
+
+```
+https://nemetona-hive.github.io/MASTERPLAN/?v=<build id>
+```
+
+Diagnosing a deploy that really has not landed: `curl -s <site>/version.js`
+shows the id at the origin, and `curl -sI <site>/index.html` reports `age`, how
+many seconds the edge has been holding its copy.
+
 Two consequences worth knowing:
 
 - `version.js` must be committed with the rebuild, like `components.js`. A test
