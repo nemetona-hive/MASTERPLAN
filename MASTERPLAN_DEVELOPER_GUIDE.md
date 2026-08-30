@@ -77,6 +77,7 @@ audit.
 | `npm run build` | rebuilds `components.js`, `app.css` and the icon subset |
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
+| `npm run deploy:check` | whether the live site is serving the build you have (network; not part of `verify`) |
 
 UI interaction is covered in one place only. `tests/nav.test.jsx` drives
 `AppNav` through jsdom — roving focus, the collapsed strip, the portalled
@@ -315,6 +316,7 @@ renders.
 | `getDescription(id, sh)` | Human-readable description for a layout system |
 | `getSegmentClass(seg, palClasses)` | Returns CSS class for a row segment |
 | `THEMES` | Theme definitions (name, label, icon, colors map of CSS vars) |
+| `BUILD` | `{ id }` — content hash of the deployed files, from the generated `version.js`. Read it through `typeof BUILD !== "undefined"`: a browser on a cached pre-versioning `index.html` never loaded the script |
 | `DEFAULT_CONCRETE_PRESETS` | Initial product list for Concrete calculator (name, rate, bagKg, bagPrice) |
 | `DEFAULT_MATERIAL_PRESETS` | Initial material list for Surface Layout (name, length, width) |
 | `canSaveStaticDefaults()` | Boolean check for local dev environment |
@@ -564,6 +566,43 @@ is what makes the identity key sound — keep it that way.
 - In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.
 - In `direction === "H"`, rows render horizontally and segment positions use `left`/`width`.
 
+## Build stamp — verifying what is live
+
+A push is the deploy, and nothing on the far side reports back, so the app
+carries a build id: `version.js` defines a `BUILD` global, and the nav footer
+prints it under the theme button (expanded only — the collapsed strip is 60px
+and the stamp has no icon to shrink to).
+
+```
+npm run deploy:check     # fetches <site>/version.js and compares to local
+```
+
+`OK live matches local — 788db7e4`, or it names both ids. Override the URL with
+`MASTERPLAN_SITE` if the Pages address ever changes.
+
+**The id is a content hash, not a timestamp, and that is load-bearing.**
+`scripts/build-version.js` hashes `index.html`, `components.js`, `app.css` and
+the two font subsets — the same set `githooks/pre-push` guards. That hook
+rebuilds and refuses the push if a generated file moved, so a stamp that read
+the clock would change on every build and wedge the gate shut permanently.
+`git rev-parse HEAD` fails the same way and is wrong besides: at `pre-commit`
+time HEAD is still the *parent* commit, so the stamp would ship one commit
+behind. A hash of the output is stable for a given source tree, which is the
+property the hooks already assume.
+
+It also answers a better question. A date says when someone ran a build; a
+content hash of the served bytes says whether the live site *is* the tree you
+have. `tests/version.test.js` pins the determinism and asserts the generator
+touches neither `Date` nor git — the failure mode is a push blocked days later,
+long after the cause is obvious.
+
+Two consequences worth knowing:
+
+- `version.js` must be committed with the rebuild, like `components.js`. A test
+  fails at commit time if it is stale, rather than leaving it for `pre-push`.
+- Editing `index.html` changes the id even when nothing else moved, because the
+  page itself is part of what gets served.
+
 ## Local Static Defaults (Dev environment only)
 
 When running the application locally, a specialized persistence mechanism allows saving UI state (presets, defaults) directly back into the source code (`config.js`).
@@ -634,8 +673,9 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   something actually imports it, rather than keeping a set nothing reads.
 - After editing anything under `src/`, run `npm run build` — it regenerates
   `components.js`, `app.css`, `vendor/fontawesome.subset.css` and
-  `vendor/fa-solid-900.subset.woff2`. `npm run watch` does the first two on save.
-- All four are generated output. Never hand-edit them; the next build overwrites
+  `vendor/fa-solid-900.subset.woff2` and `version.js`. `npm run watch` does the
+  first two on save.
+- All five are generated output. Never hand-edit them; the next build overwrites
   it. They are committed anyway, because GitHub Pages serves the tree directly,
   and `githooks/pre-push` refuses a push where any of them has gone stale.
 

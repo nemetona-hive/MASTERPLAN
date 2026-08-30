@@ -17,10 +17,10 @@ globalThis.window = globalThis.window || {};
 globalThis.window.React = React;
 globalThis.window.ReactDOM = { ...ReactDOM, createRoot };
 
-// index.html loads config.js, simulation.js and themes.js as classic scripts
-// before components.js, so their top-level `const`s (ICONS, PAGES, SYSTEMS,
-// THEMES, simulate, …) are plain globals that the rest of the app reads without
-// importing — shared.jsx's Icon reads ICONS that way, and simulation.js reads
+// index.html loads version.js, config.js, simulation.js and themes.js as
+// classic scripts before components.js, so their top-level `const`s (BUILD,
+// ICONS, PAGES, SYSTEMS, THEMES, simulate, …) are plain globals that the rest of
+// the app reads without importing — shared.jsx's Icon reads ICONS that way, and simulation.js reads
 // SUMMARY_LABELS and fmt straight out of config.js.
 //
 // Exposed for every test, not just the DOM ones, because the layout maths in
@@ -38,7 +38,7 @@ globalThis.window.ReactDOM = { ...ReactDOM, createRoot };
   const path = await import("node:path");
   const root = path.resolve(import.meta.dirname, "..");
 
-  for (const file of ["config.js", "simulation.js", "themes.js"]) {
+  for (const file of ["version.js", "config.js", "simulation.js", "themes.js"]) {
     const source = fs.readFileSync(path.join(root, file), "utf8");
     const names = [...source.matchAll(/^(?:const|var|let|function)\s+([A-Za-z_$][\w$]*)/gm)]
       .map(match => match[1]);

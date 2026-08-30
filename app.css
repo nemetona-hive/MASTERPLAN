@@ -555,6 +555,17 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .nav-bottom:empty {
 	display: none;
 }
+
+.nav-build {
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	color: color-mix(in srgb, var(--color-gray) 65%, transparent);
+	padding: 2px var(--sp-2) 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	user-select: text;
+}
 .nav svg {
 	width: 18px;
 	height: 18px;

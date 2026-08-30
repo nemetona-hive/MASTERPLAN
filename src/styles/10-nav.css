@@ -293,6 +293,20 @@
 .nav-bottom:empty {
 	display: none;
 }
+
+/* ── Build stamp ──
+ * Deliberately quiet: it is a reference number, not information anyone reads
+ * on the way to doing something. Nav.jsx drops it entirely when collapsed. */
+.nav-build {
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	color: color-mix(in srgb, var(--color-gray) 65%, transparent);
+	padding: 2px var(--sp-2) 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	user-select: text;
+}
 .nav svg {
 	width: 18px;
 	height: 18px;

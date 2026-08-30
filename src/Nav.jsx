@@ -220,9 +220,27 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
         {/* Bottom pinned section — add utility items here */}
         <div className="nav-bottom">
           <NavThemeButton navOpen={navOpen} theme={theme} setTheme={setTheme} onToggleNav={handleToggle} />
+          <NavBuildStamp navOpen={navOpen} />
         </div>
 
       </nav>
+    </div>
+  );
+}
+
+/* The deployed build id, so what is on screen can be checked against what was
+   pushed. BUILD comes from version.js, a generated classic script — read
+   through `typeof` because a browser holding a cached index.html from before
+   versioning would not have loaded it, and a bare reference would throw.
+
+   Hidden while collapsed: the strip is 60px and this is the one thing in the
+   nav that has no icon to shrink to. */
+function NavBuildStamp({ navOpen }) {
+  const id = typeof BUILD !== "undefined" ? BUILD.id : null;
+  if (!id || !navOpen) return null;
+  return (
+    <div className="nav-build" title={`Build ${id} — compare with 'npm run deploy:check'`}>
+      build {id}
     </div>
   );
 }

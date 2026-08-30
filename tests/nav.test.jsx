@@ -227,6 +227,39 @@ describe("AppNav", () => {
     });
   });
 
+  describe("build stamp", () => {
+    // The whole point is being able to read the deployed id off the page and
+    // compare it with `npm run deploy:check`, so it has to actually render.
+    it("shows the build id from version.js when expanded", () => {
+      const { container } = render(<AppNav {...props({ navOpen: true })} />);
+      const stamp = container.querySelector(".nav-build");
+      expect(stamp).not.toBeNull();
+      expect(stamp.textContent).toContain(BUILD.id);
+    });
+
+    it("disappears when the nav collapses", () => {
+      // 60px of strip, and this is the one nav item with no icon to shrink to.
+      const { container } = render(<AppNav {...props({ navOpen: false })} />);
+      expect(container.querySelector(".nav-build")).toBeNull();
+    });
+
+    it("renders the rest of the nav when version.js never loaded", () => {
+      // A browser holding a cached index.html from before versioning has no
+      // BUILD global at all; a bare reference would throw and take the whole
+      // sidebar down with it.
+      const original = globalThis.BUILD;
+      // eslint-disable-next-line no-undef
+      delete globalThis.BUILD;
+      try {
+        const { container } = render(<AppNav {...props()} />);
+        expect(container.querySelector(".nav-build")).toBeNull();
+        expect(navButtons().length).toBeGreaterThan(0);
+      } finally {
+        globalThis.BUILD = original;
+      }
+    });
+  });
+
   describe("theme button", () => {
     it("shows the current theme and advances to the next one", async () => {
       const p = props({ theme: "graphite" });
