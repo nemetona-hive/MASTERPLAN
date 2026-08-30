@@ -79,10 +79,10 @@ audit.
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 | `npm run deploy:check` | whether the live site is serving the build you have (network; not part of `verify`) |
 
-UI interaction is covered in one place only. `tests/nav.test.jsx` drives
-`AppNav` through jsdom — roving focus, the collapsed strip, the portalled
-tooltip, the mobile/desktop split — and none of the calculator pages have an
-equivalent. Preset application, direction switching with per-direction state
+UI interaction is covered in two places. `tests/nav.test.jsx` drives `AppNav`
+through jsdom — roving focus, the collapsed strip, the portalled tooltip, the
+mobile/desktop split — and `tests/home.test.jsx` covers `SheetHome`'s cards and
+build stamp. None of the calculator pages have an equivalent. Preset application, direction switching with per-direction state
 save, panel collapse and the `LayoutPanel` controlled / uncontrolled toggle
 still have no test behind them, so `verify` going green says the build is
 sound, not that the page still works. Check a UI change in the browser as well
@@ -286,7 +286,7 @@ shared.jsx        → Icon, RangeSlider, NumInput, Collapsible, Section, Control
                     DetailSection, Row, Stack, MaterialPresetDropdown, SaveDefaultsButton,
                     useTimedState, useTimedSet, useClickOutside, useDropdownKeyboard,
                     useLinkedCardHighlight, getLinkedCardTone, getLinkedCardMarker,
-                    isMobileViewport, safeSaveStaticDefaults, toNumber, clampNumber
+                    isMobileViewport, safeSaveStaticDefaults, getBuildId, toNumber, clampNumber
 Visualization.jsx → PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
 Controls.jsx      → LAYOUT_REGISTRY
 utils/timesheet.js→ parseTime, parseLunch, fmtHHMM, fmtDecimal
@@ -569,9 +569,28 @@ is what makes the identity key sound — keep it that way.
 ## Build stamp — verifying what is live
 
 A push is the deploy, and nothing on the far side reports back, so the app
-carries a build id: `version.js` defines a `BUILD` global, and the nav footer
-prints it under the theme button (expanded only — the collapsed strip is 60px
-and the stamp has no icon to shrink to).
+carries a build id: `version.js` defines a `BUILD` global, read through
+`getBuildId()` in `shared.jsx`.
+
+It is displayed in **two mutually exclusive places, one per breakpoint** —
+never both at once:
+
+| | Where | Gated by |
+|---|---|---|
+| Desktop | bottom of the nav rail, under the theme button | JS — `NavBuildStamp` bails when `mobile`, and when the rail is collapsed (the strip is 60px and this is the one nav item with no icon to shrink to) |
+| Mobile | Home page footer, under `NEMETONA HIVE` | CSS — `.home-build` is `display: none` until the mobile media query, so it re-evaluates on resize without the component tracking the viewport |
+
+Mobile does not use the nav for this: the drawer is shut by default, which puts
+the stamp two taps behind a hamburger for anyone who does not already know it is
+there. A test in `home.test.jsx` reads `70-home.css` to pin the exclusion — if
+that default stopped being `none`, desktop would render the stamp twice and
+nothing else would catch it.
+
+The rail's copy only reaches the bottom because `.nav` takes `flex: 1`: it is a
+column flex item in `.page-side` with no height of its own, so without that it
+is content-sized and `.nav-bottom`'s `margin-top: auto` has no free space to
+push into. `min-height: 0` alongside it is what lets the nav's `overflow-y`
+scroll rather than the item just growing.
 
 ```
 npm run deploy:check     # fetches <site>/version.js and compares to local
@@ -599,11 +618,11 @@ long after the cause is obvious.
 ### The two clocks
 
 A push does not become visible all at once, and the stamp reads differently
-depending on where you look at it. Measured on the deploy that introduced it:
+depending on where you look at it. Measured across three deploys:
 
 | | Delay | What it reflects |
 |---|---|---|
-| `npm run deploy:check` | **~40 s** | the Pages *origin* — it fetches with `cache: "no-store"` |
+| `npm run deploy:check` | **40–50 s** | the Pages *origin* — it fetches with `cache: "no-store"` |
 | The nav footer in your browser | **up to 10 min** | whatever your browser has cached |
 
 The gap is `cache-control: max-age=600`, which Pages sets on HTML and gives no
@@ -773,8 +792,8 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
-- UI interaction tests for the calculator pages. `AppNav` has them; none of the
-  `Sheet*` components do. See [Checks](#checks) for what is uncovered — this is
+- UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have
+  them; none of the other `Sheet*` components do. See [Checks](#checks) for what is uncovered — this is
   the largest remaining gap and the reason `verify` cannot catch an interaction
   regression on a page
 - Element-level descriptions inside the Guider wiring diagrams. Both carry a
