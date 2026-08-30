@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 // publishes its top-level names, so they are read off globalThis here rather
 // than imported.
 const { symEdge, mkRowHeights, getSourceId, simulate, simulateS4,
-        countSegs, computeS0, computeS1, computeS2, computeS4 } = globalThis;
+        countSegs, computeS0, computeS1, computeS2, computeS3, computeS4 } = globalThis;
 
 const widthsOf = row => row.segs.map(s => s.w);
 const totalWidth = row => row.segs.reduce((a, s) => a + s.w, 0);
@@ -113,6 +113,30 @@ describe("simulate", () => {
     expect(widthsOf(s2[1])).not.toEqual(widthsOf(s2[0]));
     const s3 = simulate(3000, 2000, 300, 1200, 0, 100, 3);
     expect(widthsOf(s3[1])).not.toEqual(widthsOf(s3[0]));
+  });
+
+  it("repeats system 3's offset every third row", () => {
+    // The stagger is (i % 3) * (plank / 3), so rows 0 and 3 sit at the same
+    // offset and rows 1 and 2 sit a third and two thirds along. That cycle is
+    // the whole difference between system 3 and system 2, and the alternating
+    // test above cannot see it — a plain odd/even stagger passes that one too.
+    //
+    // minJ is set past the surface width so no offcut is ever carried into the
+    // next row: with the carry in play each row's start depends on the row
+    // before it, which hides the offset being tested. Pieces that would have
+    // been cuts read as gaps here for the same reason, which is why this
+    // asserts on widths rather than on validity.
+    const rows = simulate(3000, 4000, 1000, 1200, 0, 99999, 3);
+    expect(rows).toHaveLength(4);
+    expect(widthsOf(rows[3])).toEqual(widthsOf(rows[0]));
+    expect(widthsOf(rows[1])).not.toEqual(widthsOf(rows[0]));
+    expect(widthsOf(rows[2])).not.toEqual(widthsOf(rows[0]));
+    expect(widthsOf(rows[2])).not.toEqual(widthsOf(rows[1]));
+    // Offset 400 leaves 1200 - 400 of the first plank showing, offset 800
+    // leaves 400. Read off the leading piece, this is the cycle itself.
+    expect(rows[0].segs[0].w).toBe(1200);
+    expect(rows[1].segs[0].w).toBe(800);
+    expect(rows[2].segs[0].w).toBe(400);
   });
 
   it("a half offset that matches the offcut leaves the row widths unchanged", () => {
@@ -229,6 +253,89 @@ describe("computeS0", () => {
     // No custom first piece: the run starts on a full panel and any remainder
     // lands at the far end.
     expect(result.rows[0].segs[0].type).toBe("full");
+  });
+});
+
+describe("computeS3", () => {
+  // computeStandard(sh, 3, 0, "s3"). Only ever reached through the simulate
+  // stagger test before this block, which exercised the row maths but nothing
+  // of the wrapper: the cap check, the summary shape, the direction swap.
+  //
+  // Note computeStandard passes the sheet through as simulate(sW, sH, PLa,
+  // PPi, ...) — PLa is the row pitch and PPi the piece length along the row,
+  // the opposite way round to how the names read. Sizes here are chosen to
+  // give four rows, so the three-row offset cycle actually occurs.
+  const sheet = { W: 3000, H: 4000, PPi: 1200, PLa: 1000, direction: "H", minJ: 100, offset: 0, startOff: 0 };
+
+  it("covers the surface and reports it valid", () => {
+    const result = computeS3(sheet);
+    expect(result.valid).toBe(true);
+    expect(result.rows).toHaveLength(4);
+    for (const row of result.rows) expect(totalWidth(row)).toBeCloseTo(3000, 6);
+  });
+
+  it("lays a different layout than the straight system on the same sheet", () => {
+    // Both are computeStandard with a different sysNum, so a wiring mistake
+    // that dropped the offset would leave S3 silently identical to S1. Four
+    // rows are needed to see it: at two rows the two systems can agree by
+    // coincidence.
+    const s3 = computeS3(sheet);
+    const s1 = computeS1(sheet);
+    expect(s3.stats.total).not.toBe(s1.stats.total);
+  });
+
+  it("carries the surface and simulation dimensions through to meta", () => {
+    const result = computeS3(sheet);
+    expect(result.meta.visualization).toBe("rows");
+    expect(result.meta.surfaceW).toBe(3000);
+    expect(result.meta.surfaceH).toBe(4000);
+    expect(result.meta.simW).toBe(3000);
+    expect(result.meta.simH).toBe(4000);
+    // s1, s2 and s3 deliberately share one segment colour — the systems are
+    // told apart by their layout, not by tinting the planks differently.
+    expect(result.meta.palClasses).toEqual(["color-s1"]);
+  });
+
+  it("swaps the simulated axes in the vertical direction", () => {
+    const result = computeS3({ ...sheet, direction: "V" });
+    expect(result.meta.simW).toBe(4000);
+    expect(result.meta.simH).toBe(3000);
+    // The surface itself is unchanged — only the axis the rows run along is.
+    expect(result.meta.surfaceW).toBe(3000);
+    expect(result.meta.surfaceH).toBe(4000);
+  });
+
+  it("returns an empty result for a surface with no size", () => {
+    expect(computeS3({ ...sheet, W: 0 }).valid).toBe(false);
+    expect(computeS3({ ...sheet, PPi: 0 }).rows).toEqual([]);
+  });
+
+  it("reports capped geometry as invalid rather than a valid empty layout", () => {
+    const capped = computeS3({ ...sheet, PLa: 1 });
+    expect(capped.valid).toBe(false);
+    expect(capped.capped).toBe(true);
+    expect(capped.summaryRows).toHaveLength(1);
+    expect(capped.summaryRows[0].danger).toBe(true);
+  });
+
+  it("names the invalid status from config rather than inline", () => {
+    // minJ above the surface width turns every part piece into a gap, which is
+    // what makes a layout invalid. The label has to come from SUMMARY_LABELS so
+    // the wording lives with the others.
+    const invalid = computeS3({ ...sheet, minJ: 99999 });
+    expect(invalid.valid).toBe(false);
+    const status = invalid.summaryRows.at(-1);
+    expect(status.value).toBe("Invalid");
+    expect(status.danger).toBe(true);
+    expect(status.label).toBe(SUMMARY_LABELS.s1s2s3.statusInvalid);
+  });
+
+  it("counts each offcut once in the placed total", () => {
+    const result = computeS3(sheet);
+    const placed = result.summaryRows.find(r => r.label === SUMMARY_LABELS.s1s2s3.placed);
+    const remainder = result.summaryRows.find(r => r.label === SUMMARY_LABELS.s1s2s3.remainder);
+    expect(placed.value).toBe(result.stats.full + result.stats.cut + remainder.value);
+    expect(remainder.value).toBe(countSegs(result.rows, "offcut"));
   });
 });
 

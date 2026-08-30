@@ -65,6 +65,49 @@ describe("parseLunch", () => {
   it("still rejects an out-of-range minute field", () => {
     expect(parseLunch("1:60")).toBeNull();
   });
+
+  it("does not read a comma prefix as the dot-prefix shorthand", () => {
+    // The dot rule is checked before the comma is normalised. If that order
+    // ever flips, ",30" starts meaning 30 minutes and a mistyped ",30" lunch
+    // silently becomes a real break.
+    expect(parseLunch(",30")).toBeNull();
+  });
+});
+
+// parseTime and parseLunch were near-verbatim copies of one another until the
+// clock-shaped forms moved into a shared parser. These pin the two rules that
+// are genuinely theirs, so a future edit to the shared body cannot quietly
+// merge them.
+describe("parseTime and parseLunch share one parser", () => {
+  const clockForms = ["8:30", "8.30", "8,30", "08:05", "830", "0830", "8", "16", "0000", "2359"];
+
+  it("agree on every clock-shaped form", () => {
+    for (const raw of clockForms) {
+      expect(parseLunch(raw), raw).toBe(parseTime(raw));
+    }
+  });
+
+  it("agree on every rejection except blank input", () => {
+    for (const raw of ["lunch", "8:3", "12345", "8:60", "870", "0899", "-1", "8:", ",30"]) {
+      expect(parseLunch(raw), raw).toBeNull();
+      expect(parseTime(raw), raw).toBeNull();
+    }
+  });
+
+  it("differ only on blank input and the dot prefix", () => {
+    expect(parseTime("")).toBeNull();
+    expect(parseLunch("")).toBe(0);
+    expect(parseTime(".30")).toBeNull();
+    expect(parseLunch(".30")).toBe(30);
+  });
+
+  it("read the boundaries of each digit-run form", () => {
+    expect(parseTime("0000")).toBe(0);
+    expect(parseTime("2359")).toBe(1439);
+    expect(parseTime("059")).toBe(59);     // 3 digits: single leading hour
+    expect(parseTime("0:59")).toBe(59);
+    expect(parseTime("99")).toBe(5940);    // bare hours are not range-checked
+  });
 });
 
 describe("fmtHHMM", () => {
