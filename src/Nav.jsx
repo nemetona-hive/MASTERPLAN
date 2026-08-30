@@ -220,7 +220,7 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
         {/* Bottom pinned section — add utility items here */}
         <div className="nav-bottom">
           <NavThemeButton navOpen={navOpen} theme={theme} setTheme={setTheme} onToggleNav={handleToggle} />
-          <NavBuildStamp navOpen={navOpen} />
+          <NavBuildStamp navOpen={mobile ? mobileMenuOpen : navOpen} />
         </div>
 
       </nav>
@@ -234,7 +234,9 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
    versioning would not have loaded it, and a bare reference would throw.
 
    Hidden while collapsed: the strip is 60px and this is the one thing in the
-   nav that has no icon to shrink to. */
+   nav that has no icon to shrink to. On mobile the same flag has to come from
+   `mobileMenuOpen` — `navOpen` is the desktop rail's state and initialises to
+   false below 1280px, so reading it there hides the stamp on every phone. */
 function NavBuildStamp({ navOpen }) {
   const id = typeof BUILD !== "undefined" ? BUILD.id : null;
   if (!id || !navOpen) return null;

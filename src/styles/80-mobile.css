@@ -99,6 +99,10 @@
 		width: 100% !important;
 		flex-direction: column;
 		align-items: stretch;
+		/* Desktop makes .nav fill the rail so the bottom section pins to the
+		   floor. A drawer has no floor to pin to — it is as tall as it needs to
+		   be, up to the cap below — so hand the height back to the content. */
+		flex: 0 1 auto;
 		gap: var(--sp-2);
 		padding: var(--sp-2) var(--sp-3);
 		overflow-x: hidden;
@@ -139,6 +143,12 @@
 
 	.nav-bottom:empty {
 		display: none;
+	}
+
+	/* The stamp is the last thing in a drawer that already scrolls, so it needs
+	   room under it — flush against the drawer edge it reads as clipped. */
+	.nav-build {
+		padding-bottom: var(--sp-2);
 	}
 
 	/* Toggle goes to the left */

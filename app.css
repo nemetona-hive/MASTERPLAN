@@ -526,6 +526,9 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	display: flex;
 	flex-direction: column;
 	gap: var(--sp-05);
+
+	flex: 1;
+	min-height: 0;
 	overflow-y: auto;
 	overflow-x: visible;
 	scrollbar-width: none;
@@ -2096,6 +2099,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		width: 100% !important;
 		flex-direction: column;
 		align-items: stretch;
+
+		flex: 0 1 auto;
 		gap: var(--sp-2);
 		padding: var(--sp-2) var(--sp-3);
 		overflow-x: hidden;
@@ -2134,6 +2139,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 	.nav-bottom:empty {
 		display: none;
+	}
+
+	.nav-build {
+		padding-bottom: var(--sp-2);
 	}
 
 	.nav-section.nav-toggle {

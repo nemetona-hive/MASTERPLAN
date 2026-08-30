@@ -264,6 +264,13 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--sp-05);
+	/* Fill the sidebar's full height. Without this the nav is content-sized, and
+	   .nav-bottom's `margin-top: auto` has no free space to push into — the
+	   theme button and build stamp end up floating under the last page rather
+	   than pinned to the bottom of the rail. `min-height: 0` is what lets the
+	   overflow below actually scroll instead of expanding the flex item. */
+	flex: 1;
+	min-height: 0;
 	overflow-y: auto;
 	overflow-x: visible;
 	scrollbar-width: none;

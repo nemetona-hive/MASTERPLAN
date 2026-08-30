@@ -237,6 +237,28 @@ describe("AppNav", () => {
       expect(stamp.textContent).toContain(BUILD.id);
     });
 
+    it("shows in the mobile drawer, and only while it is open", () => {
+      // The flag has to come from mobileMenuOpen on mobile. navOpen is the
+      // desktop rail's state and initialises to false below 1280px, so reading
+      // it here hid the stamp on every phone.
+      const { container, unmount } = render(
+        <AppNav {...props({ isMobile: true, mobileMenuOpen: true, navOpen: false })} />);
+      expect(container.querySelector(".nav-build")).not.toBeNull();
+      unmount();
+
+      const { container: shut } = render(
+        <AppNav {...props({ isMobile: true, mobileMenuOpen: false, navOpen: true })} />);
+      expect(shut.querySelector(".nav-build")).toBeNull();
+    });
+
+    it("sits last in the nav's bottom section", () => {
+      // .nav-bottom carries margin-top:auto and .nav fills the rail, so last
+      // child of that section is the floor of the sidebar.
+      const { container } = render(<AppNav {...props({ navOpen: true })} />);
+      const bottom = container.querySelector(".nav-bottom");
+      expect(bottom.lastElementChild.className).toContain("nav-build");
+    });
+
     it("disappears when the nav collapses", () => {
       // 60px of strip, and this is the one nav item with no icon to shrink to.
       const { container } = render(<AppNav {...props({ navOpen: false })} />);
