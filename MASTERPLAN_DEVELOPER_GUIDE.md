@@ -63,13 +63,14 @@ top of `run.sh` is for.
 ## Checks
 
 `npm test` runs the vitest suite (`tests/`), covering the layout maths in
-`simulation.js`, the timesheet parsers, the number coercions and the shared
-primitives. `npm run verify` runs everything: tests, build, bundle budgets, the
-style contract, theme contrast, the code inventory, and the UI audit.
+`simulation.js`, the timesheet parsers, the number coercions, the shared
+primitives and the nav. `npm run verify` runs everything: tests, build, bundle
+budgets, the style contract, theme contrast, the code inventory, and the UI
+audit.
 
 | Command | What it guards |
 |---|---|
-| `npm test` | behaviour — parsers, layout maths, primitives |
+| `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
 | `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them), JS/CSS breakpoint drift |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
@@ -77,12 +78,16 @@ style contract, theme contrast, the code inventory, and the UI audit.
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 
-What none of these cover is UI interaction. The suite tests the computation
-engine and the primitives; preset application, direction switching with
-per-direction state save, panel collapse and the `LayoutPanel` controlled /
-uncontrolled toggle have no test behind them, so `verify` going green says the
-build is sound, not that the page still works. Check a UI change in the browser
-as well.
+UI interaction is covered in one place only. `tests/nav.test.jsx` drives
+`AppNav` through jsdom — roving focus, the collapsed strip, the portalled
+tooltip, the mobile/desktop split — and none of the calculator pages have an
+equivalent. Preset application, direction switching with per-direction state
+save, panel collapse and the `LayoutPanel` controlled / uncontrolled toggle
+still have no test behind them, so `verify` going green says the build is
+sound, not that the page still works. Check a UI change in the browser as well
+— jsdom has no layout engine, so anything that depends on a real box (the
+collapsed strip's width, where a tooltip lands) is asserted structurally here
+and verified only by eye.
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI
@@ -275,7 +280,7 @@ There is no hand-maintained file order any more: esbuild derives it from the
 imports, so adding a file means importing it, nothing else.
 
 ```
-react-globals.js  → React, ReactDOM, hooks (re-exported window globals)
+react-globals.js  → React, ReactDOM, useState (re-exported window globals)
 shared.jsx        → Icon, RangeSlider, NumInput, Collapsible, Section, ControlPanel,
                     DetailSection, Row, Stack, MaterialPresetDropdown, SaveDefaultsButton,
                     useTimedState, useTimedSet, useClickOutside, useDropdownKeyboard,
@@ -296,13 +301,13 @@ renders.
 
 | Global | Purpose |
 |---|---|
-| `PAGES` | Navigation page definitions (id, label, title, desc, icon, parentId, isParent, noNav) |
+| `PAGES` | Navigation page definitions (id, label, title, desc, icon, noNav) — a flat list |
 | `SYSTEMS` | Layout system metadata (id, title, icon, subtitle — subtitle can be a function) |
 | `DEFAULT_SH` | Default state for surface layout (W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, s4Short, rowStart) |
 | `DEFAULT_SYM` | Default state for symmetric layout (roomWidth, panelWidth, oneFullEdge, customFirstPieceWidth) |
 | `DEFAULT_GR` | Default items for golden ratio tool |
 | `ICONS` | Map of icon name → FontAwesome class string (defined in config.js) |
-| `PAL_CLASSES` | Palette class maps for segment coloring (s1, s4l, s4s) |
+| `PAL_CLASSES` | Palette class maps for segment coloring (s1, s2, s3, s4l, s4s — the three row systems deliberately share one colour) |
 | `fmt` | Formatting helpers: fmt.decimals(v,n), fmt.area(v), fmt.decimal(v), fmt.mm(v). Renders `—` for a non-finite value rather than letting `.toFixed()` print `NaN` next to a unit |
 | `SUMMARY_LABELS` | Label maps for result summary rows (s0, s1s2s3, s4 keys) |
 | `computeS0` | Symmetric layout compute (takes sym state) |
@@ -343,15 +348,23 @@ renders.
 Hash-based routing (`#page-id`). Home = no hash.
 Page render is handled in `MainPageContent` in App.jsx — add new pages there.
 Nav items come from `PAGES` global — add new pages in config (outside src/).
-`PAGES` entries can still nest under a parent via `parentId`/`isParent` —
-Nav.jsx's group machinery (expand/collapse, auto-open on navigate) is generic
-and unused today, not removed; nothing is currently grouped.
+The list is **flat**. Nav.jsx used to carry generic group machinery — nested
+pages via `parentId`/`isParent`, expand/collapse, a chevron, auto-open on
+navigating to a child — kept against a grouped page that was never added. It is
+gone, along with its stylesheet half (`.nav-parent`, `.nav-sub-btn`,
+`.child-active`, `.nav-parent-chevron`). Grouping the nav means writing it
+again, deliberately, against a real requirement.
 
 Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`,
 `golden-ratio`, `pipe-wrap`, `guider`, `timesheet`.
 
 Sidebar interaction (Nav.jsx): Ctrl/Cmd+B toggles collapse globally (App.jsx);
-double-clicking any nav button does the same. Collapsed-nav tooltips mount
+double-clicking any nav button does the same. Arrow keys rove the list on both
+axes — Down/Right step forward, Up/Left step back — over `.nav-btn` elements
+found in the DOM, which includes the pinned theme button at the bottom. Roving
+deliberately stops at both ends rather than wrapping.
+
+Collapsed-nav tooltips mount
 into `document.body` via a portal on hover/focus rather than sitting inside
 `.nav` — that container is `overflow-y: auto`, and a tooltip parked inside it
 either clips or forces the sidebar itself into horizontal scroll. The
@@ -399,9 +412,9 @@ Every `compute*` returns one of three shapes, and a caller that only looks at
 The cap exists because `simulate`/`simulateS4` loop per piece and `s4Long` is
 unclamped in the UI, so a typo is an unbounded loop. Both simulators share
 `exceedsSimCap`, and `computeStandard`/`computeS4` check it up front — do not
-infer "capped" from an empty `rows`, because `nGap([])` is `0`, which reads as
-a *valid* zero-panel layout. That was a real bug: the panel showed "Valid" over
-nothing.
+infer "capped" from an empty `rows`, because `countSegs([], "gap")` is `0`,
+which reads as a *valid* zero-panel layout. That was a real bug: the panel
+showed "Valid" over nothing.
 
 `SheetSurfaceLayout` runs all four computes inside a `useMemo` keyed on `sh`.
 Each is a full `simulate()` pass, so unmemoized they re-ran on every hover,
@@ -534,6 +547,12 @@ is what makes the identity key sound — keep it that way.
     `LargePreviewMaterialSpec` wrapper); it hides the "Manage Presets" button
     there, since preset management belongs to the main control panel, not the
     modal.
+  - The main-page instance also takes `largePreviewOpen`, which disables its
+    `useClickOutside` while the modal is up so it cannot swallow clicks aimed
+    at the modal's own dropdown. Pass the state, not a DOM probe: this was a
+    `document.querySelector` for a class that never existed, so the guard was
+    dead for as long as it had been written — and a query during render reads
+    the *previous* commit even when the selector is right.
   - **Mobile Optimization**: Hides secondary settings on mobile to maximize visualization space; enables horizontal scrolling for wide room layouts.
 - **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
 - `PanelSummary` — displays detailed statistics and counts for segments.
@@ -609,8 +628,10 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 ## Important conventions
 
-- Hooks come from `react-globals.js`. Most call sites use `React.useXxx`; two
-  files import `useState` by name. Either is fine — import what you use.
+- Hooks come from `react-globals.js`. Most call sites use `React.useXxx`, which
+  reaches every hook; `useState` is additionally re-exported by name because two
+  files import it that way. It is the only one — re-export another only when
+  something actually imports it, rather than keeping a set nothing reads.
 - After editing anything under `src/`, run `npm run build` — it regenerates
   `components.js`, `app.css`, `vendor/fontawesome.subset.css` and
   `vendor/fa-solid-900.subset.woff2`. `npm run watch` does the first two on save.
@@ -620,11 +641,14 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 - Colour comes from a theme token, never a literal. `npm run audit:ui` blocks on
   a hex or a tinted `rgba()` in `src/`.
-- Three Lighthouse findings are **declined on purpose** — do not "fix" them
-  without reading this first:
-  - *Minify CSS / JavaScript.* `components.js` and `app.css` are committed
-    unminified so they stay readable in a public repo and so `githooks/pre-push`
-    can diff them against a fresh build. Minifying breaks that gate's premise.
+- Three Lighthouse findings need **context before you act on them** — do not
+  "fix" any of them without reading this first:
+  - *Minify CSS / JavaScript.* Half done, on purpose. `components.js` **is**
+    minified (esbuild, since the mobile brand-mark fix); `app.css` is not, only
+    comment-stripped, so it stays readable in a public repo that GitHub Pages
+    serves directly. `githooks/pre-push` diffs both against a fresh build, which
+    works either way because the build is deterministic. Read the sources under
+    `src/`, never the two generated files.
   - *Reduce unused CSS / JavaScript.* One bundle serves eight pages; everything
     is "unused" from the perspective of whichever page you landed on.
   - *Use efficient cache lifetimes.* Measured against the dev server's headers.
@@ -679,9 +703,10 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
-- UI interaction tests. See [Checks](#checks) for what is uncovered; this is the
-  largest remaining gap and the reason `verify` cannot catch an interaction
-  regression
+- UI interaction tests for the calculator pages. `AppNav` has them; none of the
+  `Sheet*` components do. See [Checks](#checks) for what is uncovered — this is
+  the largest remaining gap and the reason `verify` cannot catch an interaction
+  regression on a page
 - Element-level descriptions inside the Guider wiring diagrams. Both carry a
   top-level `aria-label`, but the individual lines and connection paths convey
   nothing — a real gap in a technical reference drawing
