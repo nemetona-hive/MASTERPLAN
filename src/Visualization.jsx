@@ -84,20 +84,21 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const vW = isV ? visualCursor : canvasW;
   const vH = isV ? canvasW : Math.max(canvasH, visualCursor);
 
-  // Centering / Offset logic
-  let xOffset = 0;
+  // Centering / Offset logic. Only the vertical axis is ever offset: a
+  // bottom-anchored horizontal layout shorter than the canvas is pushed down
+  // so the last row sits on the floor of the chart.
   let yOffset = 0;
 
   if (!isV && visualCursor < canvasH && rowStart === "bottom") {
     yOffset = (canvasH - visualCursor);
   }
 
-  if (xOffset > 0 || yOffset > 0) {
-    rects.forEach(r => { r.x += xOffset; r.y += yOffset; });
-    rowRects.forEach(r => { r.x += xOffset; r.y += yOffset; });
+  if (yOffset > 0) {
+    rects.forEach(r => { r.y += yOffset; });
+    rowRects.forEach(r => { r.y += yOffset; });
   }
 
-  return { rects, rowRects, vW, vH, xOffset, yOffset };
+  return { rects, rowRects, vW, vH, yOffset };
 }
 
 // ── LayoutVisualization (rewritten from scratch) ──────────────────────────────

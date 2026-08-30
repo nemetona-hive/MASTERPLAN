@@ -7,11 +7,7 @@ if (!ReactGlobal || !ReactDOMGlobal) {
 
 export const React = ReactGlobal;
 export const ReactDOM = ReactDOMGlobal;
-export const {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-  useLayoutEffect
-} = ReactGlobal;
+// Components reach for hooks through the React object (React.useEffect, ...).
+// useState is the one that is also imported by name, so it is the only hook
+// re-exported here; add another only when something actually imports it.
+export const { useState } = ReactGlobal;

@@ -68,8 +68,9 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const setS4PanelState = patch => setSh(s => ({ ...s,
     s4Long: patch.s4Long !== undefined ? patch.s4Long : s.s4Long
   }));
-  const stateGetters = { s1: () => ({}), s2: () => ({ offset }), s3: () => ({}), s4: () => ({ s4Long }) };
-  const stateSetters = { s1: () => {}, s2: setS2PanelState, s3: () => {}, s4: setS4PanelState };
+  // s1 and s3 have no per-panel state; the fallbacks below cover them.
+  const stateGetters = { s2: () => ({ offset }), s4: () => ({ s4Long }) };
+  const stateSetters = { s2: setS2PanelState, s4: setS4PanelState };
   const layoutRegistry = LAYOUT_REGISTRY.map(sys => ({
     ...sys,
     description: getDescription(sys.id, sh),
@@ -100,6 +101,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
             presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
             fieldFlash={fieldFlash} setShowModal={setShowModal}
             activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
+            largePreviewOpen={!!largePreview}
           />
           <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         </Stack>
@@ -117,6 +119,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
           fieldFlash={fieldFlash} setShowModal={setShowModal}
           activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
+          largePreviewOpen={!!largePreview}
         />
         <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
@@ -415,7 +418,7 @@ function LargePreviewMaterialSpec({ sh, setSh, setMat, presets, activePreset, ap
   );
 }
 
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false }) {
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false, largePreviewOpen = false }) {
   const { PLa, PPi } = sh;
   const validPresets = presets.filter(p => p.name);
   
@@ -423,8 +426,10 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
   const lenWrapRef = React.useRef(null);
 
   // If we are in the main page but Large Preview is open, disable our click-outside
-  // to prevent us from closing dropdowns that belong to the modal.
-  const isBackground = !isLargePreview && document.querySelector('.large-preview-overlay');
+  // to prevent us from closing dropdowns that belong to the modal. This reads the
+  // caller's state rather than probing the DOM: a render-time querySelector sees
+  // the *previous* commit, so it cannot answer this reliably.
+  const isBackground = !isLargePreview && largePreviewOpen;
   useClickOutside([widWrapRef, lenWrapRef], () => {
     setActivePresetDropdown(null);
   }, activePresetDropdown !== null && !isBackground);

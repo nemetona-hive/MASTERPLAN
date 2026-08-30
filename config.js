@@ -63,39 +63,30 @@ const PAL_CLASSES = {
   s4s: ["color-s4s"]
 };
 
-// System definitions with colors and labels
+// System definitions. Only id/icon/title/subtitle are read (Controls.jsx builds
+// LAYOUT_REGISTRY, getDescription resolves subtitle) — keep this shape minimal.
 const SYSTEMS = [{
   id: 0,
-  label: "S0",
-  color: "var(--sys-s0)",
   icon: "s0",
   title: "Symmetric layout",
   subtitle: "equal edge pieces, full pieces in center"
 }, {
   id: 1,
-  label: "S1",
-  color: "var(--sys-s1)",
   icon: "s1",
   title: "Straight layout",
   subtitle: "remainder carries over to next row"
 }, {
   id: 2,
-  label: "S2",
-  color: "var(--sys-s2)",
   icon: "s2",
   title: "Shifted layout",
   subtitle: (offset) => `offset ${offset.toFixed(2)} \xD7 panel length`
 }, {
   id: 3,
-  label: "S3",
-  color: "var(--sys-s3)",
   icon: "s3",
   title: "Stepped layout",
   subtitle: "offset +\u2153 per row (0 \u2192 \u2153 \u2192 \u2154 \u2192 0\u2026)"
 }, {
   id: 4,
-  label: "S4",
-  color: "var(--sys-s4)",
   icon: "s4",
   title: "Long-Short",
   subtitle: (s4Long) => `long ${s4Long}mm / short auto`
@@ -299,7 +290,7 @@ const SUMMARY_LABELS = {
     gaps: "Uncovered gaps",
     gapWidth: "Gap width total",
     status: "Status",
-    statusInvalid: "increase min remainder or adjust panel size"
+    statusInvalid: "Uncovered gaps \u2014 increase min remainder or adjust panel size."
   },
   s4: {
     full: "Full panels",

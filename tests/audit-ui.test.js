@@ -46,13 +46,18 @@ describe("audit-ui", () => {
   it("still reports a class that nothing builds", () => {
     // A guard against the reachability heuristic being loosened until it
     // marks everything alive: a name with no prefix in the markup must fail.
-    const styles = path.join(ROOT, "src", "styles", "94-utilities.css");
-    const original = fs.readFileSync(styles, "utf8");
+    //
+    // audit-ui.js walks src/styles for *.css, so the probe goes into a scratch
+    // file of its own rather than being appended to a tracked stylesheet. If
+    // this process is killed mid-test the worst case is a stray untracked file,
+    // not a corrupted source file. build-styles.js reads an explicit
+    // STYLE_SOURCES list, so the scratch file never reaches app.css.
+    const probe = path.join(ROOT, "src", "styles", "zz-audit-probe.tmp.css");
     try {
-      fs.writeFileSync(styles, `${original}\n.zzz-definitely-not-used { color: red; }\n`);
+      fs.writeFileSync(probe, ".zzz-definitely-not-used { color: red; }\n");
       expect(run()).toContain(".zzz-definitely-not-used has no reference");
     } finally {
-      fs.writeFileSync(styles, original);
+      fs.rmSync(probe, { force: true });
     }
   });
 });

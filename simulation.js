@@ -131,16 +131,12 @@ function simulateS4(W, H, PP, PLong, minJ, useSymmetry, mirror = false) {
   return rows;
 }
 
-// Single helper replaces nPanels, nCut, nGap, nOffcut
+// Single helper replaces the old per-type nPanels/nCut/nGap/nOffcut wrappers.
 const countSegs = (rows, type) =>
   Array.isArray(rows) ? rows.reduce((a, r) =>
     a + (Array.isArray(r.segs) ? r.segs.filter(s => s.type === type).length : 0)
   , 0) : 0;
 
-const nPanels = rows => countSegs(rows, "full");
-const nCut    = rows => countSegs(rows, "cut");
-const nGap    = rows => countSegs(rows, "gap");
-const nOffcut = rows => countSegs(rows, "offcut");
 const sumSegWidth = (rows, type) =>
   Array.isArray(rows) ? rows.reduce((a, r) =>
     a + (Array.isArray(r.segs) ? r.segs.reduce((acc, s) => acc + (s.type === type ? s.w : 0), 0) : 0)
@@ -210,7 +206,7 @@ function computeS0(state) {
       summaryRows: [
         ...(hasCustom && firstPieceWidth > 0 ? [{ label: "First piece width", value: fmt.decimal(firstPieceWidth), unit: "mm", hi: true, hoverType: "edge" }] : []),
         { label: L.fullPanels,   value: Math.max(0, finalFullCount),  unit: "pcs", hi: true, hoverType: "full" },
-        { label: hasCustom ? "Last piece width" : "Last piece width", value: fmt.decimal(Math.max(0, remainder)), unit: "mm", hi: true, hoverType: "edge" },
+        { label: "Last piece width", value: fmt.decimal(Math.max(0, remainder)), unit: "mm", hi: true, hoverType: "edge" },
         { label: L.cutEdge,      value: cutCount.toString(),          unit: "pcs", hoverType: "edge" },
         { label: L.totalToBuy,   value: totalToBuy,   unit: "pcs", hi: true },
         { label: L.layoutLength, value: layoutLength, unit: "mm" },
@@ -255,7 +251,8 @@ function computeStandard(sh, sysNum, offset, palKey) {
   const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
   const rows = simulate(sW, sH, PLa, PPi, offset, minJ, sysNum, false, startOff, isMirror);
   const stats = makeStats(rows);
-  const gaps = nGap(rows);
+  const gaps = countSegs(rows, "gap");
+  const offcuts = countSegs(rows, "offcut");
   const totalGapWidth = gapWidth(rows);
   const valid = gaps === 0;
   const L = SUMMARY_LABELS.s1s2s3;
@@ -263,15 +260,15 @@ function computeStandard(sh, sysNum, offset, palKey) {
 	valid, rows, stats,
 	summaryRows: [
 	  { label: L.total,     value: stats.total,                            unit: "pcs", hi: true },
-	  { label: L.placed,    value: stats.full + stats.cut + nOffcut(rows), unit: "pcs", hi: true },
+	  { label: L.placed,    value: stats.full + stats.cut + offcuts, unit: "pcs", hi: true },
 	  { label: L.full,      value: stats.full,                             unit: "pcs", hoverType: "full" },
 	  { label: L.cut,       value: stats.cut,                              unit: "pcs", hoverType: "cut" },
-	  { label: L.remainder, value: nOffcut(rows),                          unit: "pcs", hoverType: "offcut" },
+	  { label: L.remainder, value: offcuts,                          unit: "pcs", hoverType: "offcut" },
 	  ...(gaps > 0 ? [
 	    { label: L.gaps,      value: gaps,                                   unit: "pcs", hoverType: "gap" },
 	    { label: L.gapWidth,  value: fmt.decimal(totalGapWidth),             unit: "mm",  hoverType: "gap" },
 	  ] : []),
-	  { label: valid ? L.status : "Uncovered gaps \u2014 increase min remainder or adjust panel size.", value: valid ? "Valid" : "Invalid", unit: "", hi: !valid, danger: !valid }
+	  { label: valid ? L.status : L.statusInvalid, value: valid ? "Valid" : "Invalid", unit: "", hi: !valid, danger: !valid }
 	],
 	meta: { width: sW, visualization: "rows", palClasses: PAL_CLASSES[palKey], surfaceW: sh.W, surfaceH: sh.H, simW: sW, simH: sH, PPi: sh.PPi, PLa: sh.PLa, direction: sh.direction }
   };

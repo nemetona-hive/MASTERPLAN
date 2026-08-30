@@ -30,9 +30,28 @@ describe("Stack and Row", () => {
     expect(screen.getByText("inside a stack")).toBeInTheDocument();
   });
 
-  it("pass a className through", () => {
-    const { container } = render(<Row className="data-row"><span>x</span></Row>);
+  // Row takes no children and no className — it is a fixed label/value/unit
+  // triple, so these assertions cover its whole surface.
+  it("renders a Row's label, value and unit", () => {
+    const { container } = render(<Row label="Full panels" value={12} unit="pcs" />);
     expect(container.firstChild.className).toContain("data-row");
+    expect(screen.getByText("Full panels")).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("pcs")).toBeInTheDocument();
+  });
+
+  it("omits the unit span when no unit is given", () => {
+    const { container } = render(<Row label="Status" value="Valid" />);
+    expect(container.querySelector(".data-row-unit")).toBeNull();
+  });
+
+  it("marks a highlighted row and a danger row on the value span", () => {
+    const { container: hi } = render(<Row label="Total" value={3} hi />);
+    expect(hi.querySelector(".data-row-val").className).toContain("hi");
+
+    const { container: bad } = render(<Row label="Gaps" value={1} danger />);
+    expect(bad.querySelector(".data-row-lbl").className).toContain("data-row-danger");
+    expect(bad.querySelector(".data-row-val").className).toContain("data-row-danger");
   });
 });
 
