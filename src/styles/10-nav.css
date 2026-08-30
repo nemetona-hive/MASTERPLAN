@@ -6,18 +6,12 @@
 
 /* ── Nav visual system ───────────────────────────────────────────────────────
  *
- *  HEADER    .nav-toggle          HIVE label + collapse icon
- *  PARENT    .nav-btn.nav-parent  Layout — toggle or navigate
- *  SUB       .nav-sub-btn         Pattern Layouts, Symmetric Layout
- *  LEAF      .nav-btn (neither)   Future standalone pages
+ *  HEADER    .nav-toggle   HIVE label + collapse icon
+ *  ITEM      .nav-btn      one per page — the list is flat
  *
  *  States:
- *    :hover          parent → bg + white   sub → white only
- *    .active         primary color + bold
- *    .active parent  primary color + bold (no bg, no bar)
- *    .active sub     primary color + bold + short left bar
- *    .active leaf    primary color + bold + full glow bar + bg tint
- *    .child-active   parent dimmed with subtle primary tint
+ *    :hover    bg + white
+ *    .active   primary color + bold + bg tint
  * ─────────────────────────────────────────────────────────────────────────── */
 
 /* ── Base button ── */
@@ -39,24 +33,10 @@
 	transition: background 0.15s ease, color 0.15s ease, gap 0.2s ease, padding 0.2s ease;
 }
 
-/* ── Parent button — slightly larger, more prominent ── */
-.nav-btn.nav-parent {
-	font-size: var(--nav-fs-parent);
-	font-weight: var(--fw-med);
-	color: color-mix(in srgb, var(--color-gray) 90%, var(--color-white));
-	cursor: pointer;
-}
-
 /* ── Hover states ── */
 @media (hover: hover) {
-	.nav-btn:not(.nav-sub-btn):hover {
+	.nav-btn:hover {
 		background: color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-		color: var(--color-white);
-	}
-}
-
-@media (hover: hover) {
-	.nav-sub-btn:hover {
 		color: var(--color-white);
 	}
 }
@@ -67,12 +47,6 @@
 	color: var(--color-primary);
 	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent), 0 0 8px color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
-
-/* ── Parent with active child ── */
-.nav-btn.nav-parent.child-active {
-	color: var(--color-white);
-	font-weight: var(--fw-med);
 }
 
 /* ── Focus ring ── */
@@ -105,30 +79,6 @@
 	transition: max-width 0.2s ease, opacity 0.1s ease 0.15s;
 }
 
-/* ── Sub-item indent + size ── */
-.nav-sub-btn {
-	padding-left: 28px;
-	font-size: var(--nav-fs-sub);
-	color: color-mix(in srgb, var(--color-gray) 80%, transparent);
-	overflow: hidden;
-	max-height: 60px;
-	transition: max-height 0.2s ease, opacity 0.2s ease;
-	opacity: 1;
-}
-
-/* ── Chevron ── */
-.nav-parent-chevron {
-	margin-left: auto;
-	font-size: var(--nav-fs-chevron);
-	opacity: 0.4;
-	flex-shrink: 0;
-	transition: opacity 0.1s ease 0.15s, transform 0.2s ease;
-}
-
-.nav-parent-chevron.closed {
-	transform: rotate(-90deg);
-}
-
 /* ── Collapsed state ────────────────────────────────────────────────────────
  * Goal: every button shows a perfectly centered icon, same size, same position
  * Strategy: zero out ALL layout properties that could cause drift
@@ -144,12 +94,7 @@
 	height: 40px;
 }
 
-/* Sub-item in collapsed — same height as parent, no indent */
-.nav-btn-icon-only.nav-sub-btn {
-	padding-left: 0;
-}
-
-/* Collapsed: hide label, toggle-label, chevron */
+/* Collapsed: hide label and toggle-label */
 /* Collapsed toggle -- strip container, center icon same as nav buttons */
 .nav-collapsed .nav-toggle {
 	padding: 0 !important;
@@ -166,28 +111,6 @@
 	opacity: 0;
 	overflow: hidden;
 	transition: max-width 0.2s ease, opacity 0.05s ease;
-}
-
-.nav-collapsed .nav-parent-chevron {
-	display: none;
-}
-
-/* Collapsed sub-item — kill padding and transitions */
-/* Collapsed sub-item -- same axis, slightly dimmed to hint hierarchy */
-.nav-collapsed .nav-sub-btn {
-	padding-left: 0;
-	opacity: 0.7;
-	transition: none;
-}
-
-.nav-collapsed .nav-sub-btn.active {
-	opacity: 1;
-}
-
-@media (hover: hover) {
-	.nav-collapsed .nav-sub-btn:hover {
-		opacity: 1;
-	}
 }
 
 /* Collapsed active icon rules removed as background tint handles highlight gracefully */

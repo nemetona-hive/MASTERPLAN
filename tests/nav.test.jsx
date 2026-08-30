@@ -1,14 +1,12 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
 import { AppNav } from "../src/Nav.jsx";
 
 // Nav.jsx reads PAGES, THEMES and getNextTheme as free variables — they are
-// globals from config.js/themes.js, published by tests/setup.js. That is also
-// what makes the group tests below possible: swapping globalThis.PAGES for a
-// fixture changes what the component sees on its next render.
+// globals from config.js/themes.js, published by tests/setup.js.
 
 const props = (over = {}) => ({
   page: "home",
@@ -44,6 +42,13 @@ describe("AppNav", () => {
     expect(p.setPage).toHaveBeenCalledWith("concrete");
   });
 
+  it("never marks a nav button expandable", () => {
+    // The nav is a flat list of links to pages. aria-expanded here would
+    // promise a disclosure that does not exist.
+    render(<AppNav {...props()} />);
+    for (const btn of navButtons()) expect(btn).not.toHaveAttribute("aria-expanded");
+  });
+
   it("marks only the current page with aria-current", () => {
     render(<AppNav {...props({ page: "timesheet" })} />);
     const current = navButtons().filter(b => b.getAttribute("aria-current") === "page");
@@ -65,6 +70,22 @@ describe("AppNav", () => {
 
       fireEvent.keyDown(btns[2], { key: "ArrowUp" });
       expect(document.activeElement).toBe(btns[1]);
+    });
+
+    it("roves on the horizontal axis too", () => {
+      // The list is flat, so Left and Right have nothing to expand or collapse
+      // and step the list instead. Right already moved to the next item before
+      // groups were removed; Left used to hunt for a parent header and, with no
+      // groups in the config, did nothing at all.
+      render(<AppNav {...props()} />);
+      const btns = navButtons();
+      btns[0].focus();
+
+      fireEvent.keyDown(btns[0], { key: "ArrowRight" });
+      expect(document.activeElement).toBe(btns[1]);
+
+      fireEvent.keyDown(btns[1], { key: "ArrowLeft" });
+      expect(document.activeElement).toBe(btns[0]);
     });
 
     it("stops at both ends rather than wrapping", () => {
@@ -216,92 +237,5 @@ describe("AppNav", () => {
       await userEvent.click(btn);
       expect(p.setTheme).toHaveBeenCalledWith(getNextTheme("graphite"));
     });
-  });
-});
-
-// PAGES ships flat today — nothing sets isParent or parentId — so every group
-// branch in Nav.jsx is unreachable against the real config. These run against a
-// fixture so the behaviour is pinned before a grouped page is ever added.
-describe("AppNav groups", () => {
-  const FIXTURE = [
-    { id: "home", label: "Home", icon: "home", noNav: true },
-    { id: "layouts", label: "Layouts", icon: "s1", isParent: true },
-    { id: "straight", label: "Straight", icon: "s1", parentId: "layouts" },
-    { id: "shifted", label: "Shifted", icon: "s2", parentId: "layouts" },
-    { id: "timesheet", label: "Timesheet", icon: "timesheet" }
-  ];
-  let originalPages;
-
-  beforeEach(() => { originalPages = globalThis.PAGES; globalThis.PAGES = FIXTURE; });
-  afterEach(() => { globalThis.PAGES = originalPages; });
-
-  const group = () => screen.getByRole("button", { name: /Layouts/ });
-
-  it("starts open on desktop and shut on mobile", () => {
-    // A phone has no room to show every child of every group at once.
-    const { unmount } = render(<AppNav {...props()} />);
-    expect(group()).toHaveAttribute("aria-expanded", "true");
-    expect(screen.queryByRole("button", { name: /Straight/ })).not.toBeNull();
-    unmount();
-
-    render(<AppNav {...props({ isMobile: true, mobileMenuOpen: true })} />);
-    expect(group()).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("button", { name: /Straight/ })).toBeNull();
-  });
-
-  it("toggles the group on click instead of navigating to it", async () => {
-    const p = props();
-    render(<AppNav {...p} />);
-    await userEvent.click(group());
-    expect(p.setPage).not.toHaveBeenCalled();
-    expect(group()).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("button", { name: /Straight/ })).toBeNull();
-  });
-
-  it("opens with ArrowRight and closes with ArrowLeft and Escape", async () => {
-    render(<AppNav {...props()} />);
-    await userEvent.click(group());              // shut it first
-    expect(group()).toHaveAttribute("aria-expanded", "false");
-
-    fireEvent.keyDown(group(), { key: "ArrowRight" });
-    expect(group()).toHaveAttribute("aria-expanded", "true");
-
-    fireEvent.keyDown(group(), { key: "ArrowLeft" });
-    expect(group()).toHaveAttribute("aria-expanded", "false");
-
-    fireEvent.keyDown(group(), { key: "ArrowRight" });
-    fireEvent.keyDown(group(), { key: "Escape" });
-    expect(group()).toHaveAttribute("aria-expanded", "false");
-  });
-
-  it("ArrowRight on an already-open group moves on rather than re-opening", () => {
-    render(<AppNav {...props()} />);
-    expect(group()).toHaveAttribute("aria-expanded", "true");
-    group().focus();
-    fireEvent.keyDown(group(), { key: "ArrowRight" });
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: /Straight/ }));
-  });
-
-  it("ArrowLeft on a child jumps back to its group header", () => {
-    render(<AppNav {...props()} />);
-    const child = screen.getByRole("button", { name: /Shifted/ });
-    child.focus();
-    fireEvent.keyDown(child, { key: "ArrowLeft" });
-    expect(document.activeElement).toBe(group());
-  });
-
-  it("opens the group that owns the current page", () => {
-    // Landing on a child by any route other than the nav — a deep link, a
-    // button on another page — must not leave it hidden inside a shut group.
-    render(<AppNav {...props({ isMobile: true, mobileMenuOpen: true, page: "shifted" })} />);
-    expect(group()).toHaveAttribute("aria-expanded", "true");
-    expect(screen.queryByRole("button", { name: /Shifted/ })).not.toBeNull();
-  });
-
-  it("marks the group as holding the active child, not as the page itself", () => {
-    render(<AppNav {...props({ page: "shifted" })} />);
-    expect(group().className).toContain("child-active");
-    expect(group()).not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("button", { name: /Shifted/ })).toHaveAttribute("aria-current", "page");
   });
 });

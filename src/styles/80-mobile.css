@@ -162,13 +162,6 @@
 		border-radius: 8px;
 	}
 
-	/* Keep hierarchy readable */
-	.nav-sub-btn {
-		padding-left: 22px;
-		max-height: none;
-		opacity: 1;
-	}
-
 	/* Hide tooltip on mobile — no hover */
 	.nav-tooltip {
 		display: none;
@@ -330,8 +323,7 @@
 
 	/* Snappier animations on mobile */
 	button,
-	.nav-btn,
-	.nav-parent-chevron {
+	.nav-btn {
 		transition-duration: 0.08s;
 	}
 }

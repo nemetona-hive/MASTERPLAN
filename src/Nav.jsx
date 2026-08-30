@@ -3,11 +3,6 @@ import { Icon, canHover, isKeyboardFocus } from "./shared.jsx";
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 
-function isNavPageActive(page, pg) {
-  const childActive = PAGES.some(p => p.parentId === pg.id && p.id === page);
-  return page === pg.id && !childActive;
-}
-
 /* Shared by every collapsed-nav tooltip (NavButton and the theme toggle
    below). Mounted on hover rather than kept in the DOM at opacity 0 — see
    the comment on the portal in NavTooltipPortal for why that matters. */
@@ -79,31 +74,18 @@ function NavTooltipPortal({ tip, label }) {
   );
 }
 
-function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, onKeyNav, onToggleNav }) {
-  const isGroup     = item.isParent === true;
-  const hasChildren = PAGES.some(pg => pg.parentId === item.id);
-  const isOpen      = isGroup && hasChildren && !!openGroups[item.id];
-  const childActive = isGroup && PAGES.some(pg => pg.parentId === item.id && pg.id === page);
-  const isActive    = isNavPageActive(page, item);
-  const isGroupActive = isGroup && hasChildren && isOpen && childActive;
+function NavButton({ page, item, navOpen, setPage, onKeyNav, onToggleNav }) {
+  const isActive = page === item.id;
   const { wrapRef, tip, showTip, hideTip } = useNavTooltip(!navOpen);
 
   const classes = ["nav-btn"];
-  if (isActive || isGroupActive) classes.push("active");
-  if (isGroup)       classes.push("nav-parent");
-  if (childActive)   classes.push("child-active");
-  if (item.parentId) classes.push("nav-sub-btn");
-  if (!navOpen)      classes.push("nav-btn-icon-only");
+  if (isActive) classes.push("active");
+  if (!navOpen) classes.push("nav-btn-icon-only");
 
-  const toggleGroup = () => {
-    setOpenGroups(prev => ({ ...prev, [item.id]: !prev[item.id] }));
-  };
+  const handleClick = () => setPage(item.id);
 
-  const handleClick = () => {
-    if (isGroup && hasChildren) toggleGroup();
-    else setPage(item.id);
-  };
-
+  /* The nav is one flat list, so both axes rove it: Down/Right step forward,
+     Up/Left step back. Left and Right used to open and close a group. */
   const handleKeyDown = e => {
     switch (e.key) {
       case "Enter":
@@ -112,26 +94,14 @@ function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, on
         handleClick();
         break;
       case "ArrowDown":
+      case "ArrowRight":
         e.preventDefault();
         onKeyNav("next");
         break;
       case "ArrowUp":
-        e.preventDefault();
-        onKeyNav("prev");
-        break;
-      case "ArrowRight":
-        e.preventDefault();
-        if (isGroup && hasChildren && !isOpen) setOpenGroups(prev => ({ ...prev, [item.id]: true }));
-        else onKeyNav("next");
-        break;
       case "ArrowLeft":
         e.preventDefault();
-        if (isGroup && hasChildren && isOpen) setOpenGroups(prev => ({ ...prev, [item.id]: false }));
-        else onKeyNav("parent");
-        break;
-      case "Escape":
-        e.preventDefault();
-        if (isGroup && hasChildren) setOpenGroups(prev => ({ ...prev, [item.id]: false }));
+        onKeyNav("prev");
         break;
     }
   };
@@ -152,67 +122,23 @@ function NavButton({ page, item, navOpen, setPage, openGroups, setOpenGroups, on
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         aria-current={isActive ? "page" : undefined}
-        aria-expanded={isGroup && hasChildren ? isOpen : undefined}
         tabIndex={0}>
         <span className="nav-btn-icon"><Icon name={item.icon} /></span>
         <span className="nav-btn-label">{item.label}</span>
-        {isGroup && hasChildren && (
-          <span className={"nav-parent-chevron " + (isOpen ? "open" : "closed")}>
-            <Icon name={isOpen ? "chevron-down" : "chevron-right"} />
-          </span>
-        )}
       </button>
       <NavTooltipPortal tip={tip} label={item.label} />
     </div>
   );
 }
 
-function initOpenGroups(isMob) {
-  return PAGES.reduce((acc, pg) => {
-    if (pg.isParent && PAGES.some(p => p.parentId === pg.id)) {
-      acc[pg.id] = !isMob;
-    }
-    return acc;
-  }, {});
-}
-
 export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile, theme, setTheme }) {
   const mobile = isMobile;
-  const showSubs = mobile ? mobileMenuOpen : navOpen;
   const navRef = React.useRef(null);
   const isNavCollapsed = !mobile && !navOpen;
 
-  const [openGroups, setOpenGroups] = React.useState(() => initOpenGroups(mobile));
-
-  // Reinitialize open groups when switching between mobile and desktop
-  React.useEffect(() => {
-    setOpenGroups(initOpenGroups(mobile));
-  }, [mobile]);
-
-  // Auto-open parent when navigating to a child
-  React.useEffect(() => {
-    const currentPage = PAGES.find(pg => pg.id === page);
-    if (currentPage && currentPage.parentId) {
-      setOpenGroups(prev => ({ ...prev, [currentPage.parentId]: true }));
-    }
-  }, [page]);
-
-  const navItems = PAGES.filter(pg => {
-    if (pg.noNav && pg.id !== "home") return false;
-    if (mobile) {
-      // Mobile closed state: show parent-level items only.
-      if (!mobileMenuOpen) return !pg.parentId;
-      // Mobile open state: show children only when their parent group is open.
-      if (pg.parentId && !openGroups[pg.parentId]) return false;
-      return true;
-    }
-
-    // Desktop collapsed mode: show sub-items only if their parent group is open.
-    if (!showSubs && pg.parentId) return !!openGroups[pg.parentId];
-    // Desktop expanded mode: hide sub-items when parent is closed.
-    if (pg.parentId && !openGroups[pg.parentId]) return false;
-    return true;
-  });
+  /* home is the one page that opts out of the ordinary list and still appears:
+     collapsed, the HIVE label is disabled, so its own item is the way back. */
+  const navItems = PAGES.filter(pg => !pg.noNav || pg.id === "home");
 
   const handleToggle = () => {
     if (mobile) {
@@ -227,12 +153,10 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
     const btns = Array.from(navRef.current.querySelectorAll(".nav-btn"));
     const current = document.activeElement;
     const idx = btns.indexOf(current);
+    // Deliberately does not wrap: running off either end with no signal that
+    // the list ended is worse than stopping.
     if (direction === "next" && idx < btns.length - 1) btns[idx + 1].focus();
     if (direction === "prev" && idx > 0) btns[idx - 1].focus();
-    if (direction === "parent") {
-      const parentBtn = btns.slice(0, idx).reverse().find(b => b.classList.contains("nav-parent"));
-      if (parentBtn) parentBtn.focus();
-    }
   };
 
   return (
@@ -289,7 +213,6 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
             <NavButton key={item.id} page={page} item={item}
               navOpen={mobile ? mobileMenuOpen : navOpen}
               setPage={id => { setPage(id); if (mobile) setMobileMenuOpen(false); }}
-              openGroups={openGroups} setOpenGroups={setOpenGroups}
               onKeyNav={handleKeyNav} onToggleNav={handleToggle} />
           ))}
         </div>

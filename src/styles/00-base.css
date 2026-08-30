@@ -174,9 +174,7 @@ html, body, #root {
 	/* Nav font sizes -- edit to tune sidebar independently */
 	--nav-fs-header:  var(--fs-lg);
 	--nav-fs-parent:  var(--fs-md);
-	--nav-fs-sub:     var(--fs-sm);
 	--nav-fs-icon:    var(--fs-lg);
-	--nav-fs-chevron: var(--fs-sm);
 	--nav-fs-tooltip: var(--fs-sm);
 
 	/* Nav collapsed width */
