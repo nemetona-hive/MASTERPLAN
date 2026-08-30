@@ -177,6 +177,19 @@
 	text-transform: uppercase;
 }
 
+/* Build stamp — mobile only. The desktop rail carries its own copy, pinned to
+   the bottom of the nav; below the breakpoint that rail becomes a drawer that
+   is shut by default, so the stamp moves here where it needs no interaction to
+   read. Exactly one of the two is ever displayed. */
+.home-build {
+	display: none;
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	color: color-mix(in srgb, var(--color-gray) 65%, transparent);
+	letter-spacing: 0.08em;
+	user-select: text;
+}
+
 @media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 	.home-scroll {
 		align-items: flex-start;
@@ -209,6 +222,11 @@
 
 	.home-footer {
 		order: 11;
+	}
+
+	.home-build {
+		display: block;
+		order: 12;
 	}
 
 	/* Dividers replaced by gap */

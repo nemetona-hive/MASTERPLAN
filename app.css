@@ -1980,6 +1980,15 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	text-transform: uppercase;
 }
 
+.home-build {
+	display: none;
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	color: color-mix(in srgb, var(--color-gray) 65%, transparent);
+	letter-spacing: 0.08em;
+	user-select: text;
+}
+
 @media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
 	.home-scroll {
 		align-items: flex-start;
@@ -2011,6 +2020,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 	.home-footer {
 		order: 11;
+	}
+
+	.home-build {
+		display: block;
+		order: 12;
 	}
 
 	.home-divider {
@@ -2139,10 +2153,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 	.nav-bottom:empty {
 		display: none;
-	}
-
-	.nav-build {
-		padding-bottom: var(--sp-2);
 	}
 
 	.nav-section.nav-toggle {

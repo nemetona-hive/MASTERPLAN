@@ -1,4 +1,4 @@
-import { Icon, Stack } from "../shared.jsx";
+import { Icon, Stack, getBuildId } from "../shared.jsx";
 
 export function SheetHome({ page, setPage }) {
   const items = PAGES.filter(pg => !pg.noNav);
@@ -16,7 +16,6 @@ export function SheetHome({ page, setPage }) {
 
         <div className="home-cards">
           {items.map(pg => {
-            if (pg.isParent) return null;
             const isActive = page === pg.id;
             return (
               <Stack
@@ -42,6 +41,12 @@ export function SheetHome({ page, setPage }) {
         <div className="home-divider" />
 
         <div className="home-footer">NEMETONA HIVE</div>
+
+        {/* Mobile's copy of the nav rail's build stamp. Shown by a media query
+            rather than a prop: the rail's copy is hidden below the same
+            breakpoint, so exactly one is ever on screen, and CSS re-evaluates
+            on resize without this component tracking the viewport. */}
+        {getBuildId() && <div className="home-build">build {getBuildId()}</div>}
 
       </Stack>
     </div>

@@ -237,18 +237,15 @@ describe("AppNav", () => {
       expect(stamp.textContent).toContain(BUILD.id);
     });
 
-    it("shows in the mobile drawer, and only while it is open", () => {
-      // The flag has to come from mobileMenuOpen on mobile. navOpen is the
-      // desktop rail's state and initialises to false below 1280px, so reading
-      // it here hid the stamp on every phone.
-      const { container, unmount } = render(
-        <AppNav {...props({ isMobile: true, mobileMenuOpen: true, navOpen: false })} />);
-      expect(container.querySelector(".nav-build")).not.toBeNull();
-      unmount();
-
-      const { container: shut } = render(
-        <AppNav {...props({ isMobile: true, mobileMenuOpen: false, navOpen: true })} />);
-      expect(shut.querySelector(".nav-build")).toBeNull();
+    it("stays out of the nav entirely on mobile", () => {
+      // The drawer is shut by default, which would put the stamp two taps away.
+      // Mobile reads it off the Home page footer instead — see home.test.jsx.
+      for (const menu of [true, false]) {
+        const { container, unmount } = render(
+          <AppNav {...props({ isMobile: true, mobileMenuOpen: menu, navOpen: true })} />);
+        expect(container.querySelector(".nav-build"), `menu open: ${menu}`).toBeNull();
+        unmount();
+      }
     });
 
     it("sits last in the nav's bottom section", () => {

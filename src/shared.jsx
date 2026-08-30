@@ -85,6 +85,14 @@ export function isKeyboardFocus(target) {
   }
 }
 
+/* The deployed build id, from the generated version.js. Read through `typeof`
+   because a browser holding a cached pre-versioning index.html never loaded
+   that script, and a bare reference would throw. Returns null when absent, so
+   a caller renders nothing rather than "build undefined". */
+export function getBuildId() {
+  return typeof BUILD !== "undefined" ? BUILD.id : null;
+}
+
 export function safeSaveStaticDefaults(key, value) {
   if (typeof saveStaticDefaults === "undefined") {
     return Promise.reject(new Error("saveStaticDefaults is not available"));

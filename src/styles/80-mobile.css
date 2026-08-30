@@ -145,12 +145,6 @@
 		display: none;
 	}
 
-	/* The stamp is the last thing in a drawer that already scrolls, so it needs
-	   room under it — flush against the drawer edge it reads as clipped. */
-	.nav-build {
-		padding-bottom: var(--sp-2);
-	}
-
 	/* Toggle goes to the left */
 	.nav-section.nav-toggle {
 		order: 0;

@@ -1,5 +1,5 @@
 import { React, ReactDOM } from "./react-globals.js";
-import { Icon, canHover, isKeyboardFocus } from "./shared.jsx";
+import { Icon, canHover, getBuildId, isKeyboardFocus } from "./shared.jsx";
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 
@@ -220,7 +220,7 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
         {/* Bottom pinned section — add utility items here */}
         <div className="nav-bottom">
           <NavThemeButton navOpen={navOpen} theme={theme} setTheme={setTheme} onToggleNav={handleToggle} />
-          <NavBuildStamp navOpen={mobile ? mobileMenuOpen : navOpen} />
+          <NavBuildStamp navOpen={navOpen} mobile={mobile} />
         </div>
 
       </nav>
@@ -229,17 +229,16 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
 }
 
 /* The deployed build id, so what is on screen can be checked against what was
-   pushed. BUILD comes from version.js, a generated classic script — read
-   through `typeof` because a browser holding a cached index.html from before
-   versioning would not have loaded it, and a bare reference would throw.
+   pushed.
 
-   Hidden while collapsed: the strip is 60px and this is the one thing in the
-   nav that has no icon to shrink to. On mobile the same flag has to come from
-   `mobileMenuOpen` — `navOpen` is the desktop rail's state and initialises to
-   false below 1280px, so reading it there hides the stamp on every phone. */
-function NavBuildStamp({ navOpen }) {
-  const id = typeof BUILD !== "undefined" ? BUILD.id : null;
-  if (!id || !navOpen) return null;
+   Desktop rail only, and only while expanded: the collapsed strip is 60px and
+   this is the one thing in the nav with no icon to shrink to. On mobile the
+   nav is a drawer that is shut by default, which would put the stamp two taps
+   away — it lives in the Home page footer there instead (Home.jsx), visible
+   without opening anything. */
+function NavBuildStamp({ navOpen, mobile }) {
+  const id = getBuildId();
+  if (!id || mobile || !navOpen) return null;
   return (
     <div className="nav-build" title={`Build ${id} — compare with 'npm run deploy:check'`}>
       build {id}
