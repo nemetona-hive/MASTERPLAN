@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
 import { SheetSymmetricLayout } from "../src/components/SymmetricLayout.jsx";
+import { SheetSurfaceLayout } from "../src/components/SurfaceLayout.jsx";
 
 /*
  * The presets list, opened from a page rather than from the primitive.
@@ -17,6 +18,16 @@ import { SheetSymmetricLayout } from "../src/components/SymmetricLayout.jsx";
  * DEFAULT_MATERIAL_PRESETS and computeS0 arrive as globals from config.js and
  * simulation.js, published by tests/setup.js.
  */
+
+function SurfaceHarness() {
+  const [sh, setSh] = React.useState({ ...DEFAULT_SH });
+  const [panelOpen, setPanelOpen] = React.useState(true);
+  return <SheetSurfaceLayout
+    sh={sh}
+    setSh={update => setSh(current => (typeof update === "function" ? update(current) : update))}
+    panelOpen={panelOpen}
+    setPanelOpen={setPanelOpen} />;
+}
 
 function Harness() {
   const [sym, setSym] = React.useState({ ...DEFAULT_SYM });
@@ -87,5 +98,53 @@ describe("material presets on the symmetric layout page", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByText("Material Presets")).toBeNull();
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue(String(DEFAULT_SYM.panelWidth));
+  });
+});
+
+/*
+ * Surface Layout carries two of these fields — width and length — over one
+ * piece of "which list is open" state, and that is the page where the order of
+ * focus and toggle inside the button shows.
+ */
+describe("material presets on the surface layout page", () => {
+  it("opens another field's list from one click while a field is active", async () => {
+    /* The bug: the toggle set the state and then moved focus, so the field
+       being left committed on blur, its page closed the list from there, and
+       the close landed on the list that had just been opened. It took two
+       clicks to open a list that had looked one click away. */
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+    const [widthToggle, lengthToggle] = screen.getAllByTitle("Presets");
+
+    await user.click(document.getElementById("input-PLa"));   // the width cell is active
+    await user.click(lengthToggle);
+    expect(screen.getByText("Material Presets")).toBeInTheDocument();
+    expect(lengthToggle).toHaveAttribute("aria-expanded", "true");
+    expect(widthToggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("moves an open list to the other field in one click", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+    const [widthToggle, lengthToggle] = screen.getAllByTitle("Presets");
+
+    await user.click(widthToggle);
+    expect(widthToggle).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(lengthToggle);
+    expect(lengthToggle).toHaveAttribute("aria-expanded", "true");
+    expect(widthToggle).toHaveAttribute("aria-expanded", "false");
+    // One list, not two — the state they share says which.
+    expect(screen.getAllByText("Material Presets")).toHaveLength(1);
+  });
+
+  it("still shuts from its own toggle", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+    const [widthToggle] = screen.getAllByTitle("Presets");
+
+    await user.click(widthToggle);
+    await user.click(widthToggle);
+    expect(screen.queryByText("Material Presets")).toBeNull();
   });
 });

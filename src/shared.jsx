@@ -466,10 +466,18 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
           * you ask for, so now there is something to ask with.
           *
           * mousedown is swallowed so the click cannot pull focus out of the
-          * field and fire its commit-on-blur mid-edit. Focus is then put back
-          * on the input deliberately, because the arrow/Enter/Escape handling
-          * for the open list lives on the field's own keydown — the button
-          * holding focus would leave the list open and unwalkable.
+          * field and fire its commit-on-blur mid-edit. Focus is then moved to
+          * this field's own input deliberately, because the arrow/Enter/Escape
+          * handling for the open list lives on the field's own keydown — the
+          * button holding focus would leave the list open and unwalkable.
+          *
+          * FOCUS FIRST, THEN TOGGLE, and the order is the whole of a bug worth
+          * keeping in mind. Moving focus here blurs whichever field had it,
+          * which fires that field's commit — and a page whose fields share one
+          * "which list is open" between them closes the list from there. Toggle
+          * first and that close lands second and undoes it: the list opened and
+          * shut inside one click, and a second click was needed to reach a list
+          * that had looked one click away all along.
           */}
         {onTogglePresets && (
           <button
@@ -480,7 +488,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             aria-label={presetsOpen ? "Hide presets" : "Show presets"}
             title="Presets"
             onMouseDown={e => e.preventDefault()}
-            onClick={() => { onTogglePresets(); if (inputRef.current) inputRef.current.focus(); }}>
+            onClick={() => { if (inputRef.current) inputRef.current.focus(); onTogglePresets(); }}>
             <Icon name="chevron-down" />
           </button>
         )}
