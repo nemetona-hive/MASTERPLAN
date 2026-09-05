@@ -18,7 +18,12 @@
 set -e
 
 # Nothing relevant staged? Nothing to check.
-if git diff --cached --quiet -- src; then
+#
+# config.js counts as well as src/. It is hashed into the build id, so a
+# config-only commit leaves version.js stale — and it is where PAGES, ICONS and
+# the defaults the tests read come from, so it can break a test without a line
+# of src/ moving. Both failures would otherwise wait until the push.
+if git diff --cached --quiet -- src config.js; then
   exit 0
 fi
 

@@ -22,12 +22,20 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const OUT_FILE = "version.js";
 
-// The same set githooks/pre-push guards, plus index.html — between them these
-// are every byte of the app a visitor loads that this repo generates or owns.
+// Everything a visitor loads that this repo owns — which is not the same set as
+// "everything the build generates". config.js is hand-written and served as a
+// classic script, and it carries the default sheet, the page registry and the
+// icon map: change a default and every visitor gets a different app while a
+// hash of the generated files alone would swear nothing had moved, so
+// deploy:check would report a config-only deploy as already live.
+//
 // version.js itself is deliberately absent: hashing the file being written is
-// circular, and nothing downstream of it needs to be covered.
+// circular, and nothing downstream of it needs to be covered. simulation.js and
+// themes.js are the two remaining hand-written scripts index.html loads and
+// belong here on the same argument whenever that matters.
 const HASHED_FILES = [
   "index.html",
+  "config.js",
   "components.js",
   "app.css",
   "vendor/fontawesome.subset.css",

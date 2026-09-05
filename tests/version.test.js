@@ -39,10 +39,13 @@ describe("build-version", () => {
     expect(buildId()).toBe(before);
   });
 
-  it("covers every generated file the deploy serves", () => {
+  it("covers every file the deploy serves, generated or hand-written", () => {
     // If a build output is added without being hashed here, two different
     // deploys can carry the same id and deploy:check goes quietly wrong.
-    for (const rel of ["index.html", "components.js", "app.css"]) {
+    // config.js is in the list for the same reason from the other direction: it
+    // is edited by hand rather than generated, and a changed default is a
+    // changed app for every visitor.
+    for (const rel of ["index.html", "config.js", "components.js", "app.css"]) {
       expect(HASHED_FILES).toContain(rel);
     }
     for (const rel of HASHED_FILES) {
