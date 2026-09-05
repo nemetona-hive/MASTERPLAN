@@ -478,7 +478,13 @@ is what makes the identity key sound — keep it that way.
 ## UI components (from shared.jsx)
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange step min unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
+- `<NumInput id label value onChange min max unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
+  It is `type="text"` with `inputMode="decimal"`, not `type="number"`: a number
+  input steps its value on ArrowUp/ArrowDown and on a wheel scroll while focused,
+  so reaching for the caret rewrote a dimension the layout is drawn from. Non-numeric
+  characters are filtered as they are typed, and `min`/`max` clamp on commit rather
+  than reaching the DOM. There is no `step`: it belonged to the spinner, which the
+  stylesheet always hid. Ported from MONEYFLOW's `MoneyInput`.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
 - `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
   (`Section`, `ControlPanel` and `DetailSection` are one internal `Collapsible`

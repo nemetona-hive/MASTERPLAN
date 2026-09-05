@@ -372,7 +372,35 @@ export function RangeSlider({ id, value, onChange, min, max, step, className = "
   );
 }
 
-export function NumInput({ id, label, value, onChange, step = 1, min = 0, max = Infinity, unit, req = false, onFocus, onMouseDown, labelIcon, onKeyDown, onCommit }) {
+/* A text field accepts letters, and Number("12a") is NaN — which commitValue
+   below reads as "put the old value back", so one mistyped character silently
+   throws away everything typed with it. Filtering on the way in keeps the field
+   numeric with no validation state to explain. A comma becomes a point because
+   it is the decimal separator on the keyboards this is typed on, and a number
+   holding one otherwise stops dead at the comma. */
+function cleanNumericInput(raw) {
+  return String(raw).replace(/,/g, ".").replace(/[^0-9.-]/g, "");
+}
+
+/*
+ * A number field the arrow keys cannot edit.
+ *
+ * WHY IT IS type="text". A number input steps its value on ArrowUp/ArrowDown —
+ * and on a wheel scroll while it holds focus — so a key pressed to move the
+ * caret rewrites a dimension the whole layout is drawn from, with nothing on
+ * screen to say it happened and no undo to reach for. The spinner those keys
+ * drive has been hidden in CSS since the start, so stepping was never a control
+ * anybody could see: it was only ever reachable by accident.
+ *
+ * Ported from MONEYFLOW's MoneyInput, which is text plus inputMode for exactly
+ * this reason. inputMode="decimal" keeps the numeric keypad on phones, which is
+ * the one thing type="number" was still earning here.
+ *
+ * min and max stay props and no longer reach the DOM: they were never browser
+ * validation — commitValue clamps with them — and a text input ignores them.
+ * step went with the spinner it belonged to.
+ */
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, onFocus, onMouseDown, labelIcon, onKeyDown, onCommit }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
@@ -402,12 +430,19 @@ export function NumInput({ id, label, value, onChange, step = 1, min = 0, max = 
           id={id}
           name={id}
           className={"num-input" + (req ? " num-input--req" : "")}
-          type="number"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
           value={local}
-          min={min}
-          max={max === Infinity ? undefined : max}
-          step={step}
-          onChange={e => setLocal(e.target.value)}
+          onChange={e => {
+            const cleaned = cleanNumericInput(e.target.value);
+            // A rejected character leaves `local` unchanged, and React then
+            // rewrites the field with the caret at the end. Bailing keeps the
+            // caret where it was, so a stray letter mid-number does nothing at
+            // all rather than jumping the cursor to the end of the value.
+            if (cleaned === local && e.target.value !== "") return;
+            setLocal(cleaned);
+          }}
           onKeyDown={e => {
             // Parent handler runs first — can e.preventDefault() to intercept Enter
             if (onKeyDown) onKeyDown(e);

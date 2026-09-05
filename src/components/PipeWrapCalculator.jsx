@@ -113,7 +113,6 @@ export function PipeWrapCalculator() {
                     value={overlap}
                     min={0}
                     max={200}
-                    step={1}
                     onChange={setOverlap}
                   />
                 </Stack>
@@ -132,7 +131,6 @@ export function PipeWrapCalculator() {
                     value={gap}
                     min={0}
                     max={200}
-                    step={1}
                     onChange={setGap}
                   />
                 </Stack>

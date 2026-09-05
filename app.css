@@ -279,16 +279,6 @@ input[type=range]:active::-webkit-slider-thumb {
 	background: var(--color-white);
 }
 
-input[type=number] {
-	-moz-appearance: textfield;
-	appearance: textfield;
-}
-
-input[type=number]::-webkit-inner-spin-button {
-	display: none;
-}
-
-input[type=number]:focus,
 .num-input:focus {
 	border-color: var(--color-primary);
 	box-shadow: 0 0 0 2px var(--color-gray);
@@ -2207,7 +2197,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		pointer-events: auto;
 	}
 
-	input[type="number"],
 	input[type="text"],
 	.num-input,
 	.num-btn {
@@ -2310,7 +2299,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		max-width: 100%;
 	}
 
-	input[type="number"],
 	input[type="range"],
 	.num-input,
 	.num-btn {
@@ -2319,7 +2307,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		font-size: 16px;
 	}
 
-	input[type="number"] {
+	.num-wrap .num-input {
 		padding: 7px 10px;
 		border-radius: 6px;
 	}

@@ -203,7 +203,6 @@
 
 	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
 	/* Modern mobile touch targets: 44px min height for controls */
-	input[type="number"],
 	input[type="text"],
 	.num-input,
 	.num-btn {
@@ -306,7 +305,6 @@
 		max-width: 100%;
 	}
 
-	input[type="number"],
 	input[type="range"],
 	.num-input,
 	.num-btn {
@@ -315,7 +313,7 @@
 		font-size: 16px;
 	}
 
-	input[type="number"] {
+	.num-wrap .num-input {
 		padding: 7px 10px;
 		border-radius: 6px;
 	}

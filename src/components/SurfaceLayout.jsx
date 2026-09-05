@@ -187,7 +187,9 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                           <input
                             id={`mat-preset-wid-${idx}`}
                             name={`mat-preset-wid-${idx}`}
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
+                            autoComplete="off"
                             className="num-input"
                             value={p.width}
                             onChange={e => updatePreset(idx, "width", e.target.value)}
@@ -198,7 +200,9 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                           <input
                             id={`mat-preset-len-${idx}`}
                             name={`mat-preset-len-${idx}`}
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
+                            autoComplete="off"
                             className="num-input"
                             value={p.length}
                             onChange={e => updatePreset(idx, "length", e.target.value)}
@@ -399,9 +403,9 @@ function LayoutSettings({ sh, setField, setSh }) {
           </div>
         </Stack>
       </div>
-      <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")}    step={10} />
+      <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")} />
       <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
-        onChange={v => setField("startOff", v => Math.min(v, Math.max(1, PPi) - 1))(v)} step={10} min={0} />
+        onChange={v => setField("startOff", v => Math.min(v, Math.max(1, PPi) - 1))(v)} min={0} />
     </Stack>
   );
 }
@@ -461,7 +465,6 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             labelIcon="arrow-h"
             value={PLa}
             onChange={setMat("PLa")}
-            step={10}
             min={100}
             onMouseDown={() => setActivePresetDropdown("wid")}
             onCommit={() => setActivePresetDropdown(null)}
@@ -476,7 +479,6 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             labelIcon="arrow-v"
             value={PPi}
             onChange={setMat("PPi")}
-            step={10}
             min={100}
             onMouseDown={() => setActivePresetDropdown("len")}
             onCommit={() => setActivePresetDropdown(null)}
@@ -499,8 +501,8 @@ function SurfaceInputs({ sh, setSh, setSurf }) {
   return (
     <ControlPanel id="control-surface" title="Inputs" noToggle>
       <Stack gap={3}>
-        <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} step={10} />
-        <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} step={10} />
+        <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} />
+        <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} />
       </Stack>
     </ControlPanel>
   );

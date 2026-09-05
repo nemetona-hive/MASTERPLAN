@@ -342,16 +342,9 @@ input[type=range]:active::-webkit-slider-thumb {
 	background: var(--color-white);
 }
 
-input[type=number] {
-	-moz-appearance: textfield;
-	appearance: textfield;
-}
-
-input[type=number]::-webkit-inner-spin-button {
-	display: none;
-}
-
-input[type=number]:focus,
+/* The two rules that used to live here hid the number spinner and its Firefox
+   equivalent. Every numeric field is type="text" now — see NumInput — so there
+   is no spinner to hide and no type=number left for a selector to match. */
 .num-input:focus {
 	border-color: var(--color-primary);
 	box-shadow: 0 0 0 2px var(--color-gray);

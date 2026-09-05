@@ -119,7 +119,7 @@ describe("NumInput", () => {
     const seen = [];
     render(<NumInput value={1200} onChange={v => seen.push(v)} min={0} max={5000} />);
 
-    const input = screen.getByRole("spinbutton");
+    const input = screen.getByRole("textbox");
     await user.clear(input);
     await user.type(input, "300");
     expect(seen).toEqual([]);
@@ -133,7 +133,7 @@ describe("NumInput", () => {
     const seen = [];
     render(<NumInput value={1200} onChange={v => seen.push(v)} min={100} max={2000} />);
 
-    const input = screen.getByRole("spinbutton");
+    const input = screen.getByRole("textbox");
     await user.clear(input);
     await user.type(input, "9999");
     await user.tab();
@@ -145,8 +145,41 @@ describe("NumInput", () => {
     const seen = [];
     render(<NumInput value={1200} onChange={v => seen.push(v)} min={100} max={2000} />);
 
-    await user.clear(screen.getByRole("spinbutton"));
+    await user.clear(screen.getByRole("textbox"));
     await user.tab();
     expect(seen).toEqual([""]);
+  });
+
+  it("leaves the value alone when the arrow keys are pressed", async () => {
+    // The reason the field is text rather than number: a number input steps its
+    // value on every ArrowUp and ArrowDown, so reaching for the caret rewrote a
+    // dimension the whole layout is drawn from, with nothing on screen saying so.
+    const user = userEvent.setup();
+    const seen = [];
+    render(<NumInput value={1200} onChange={v => seen.push(v)} min={0} max={5000} />);
+
+    const input = screen.getByRole("textbox");
+    await user.click(input);
+    await user.keyboard("{ArrowUp}{ArrowUp}{ArrowDown}");
+    expect(input).toHaveDisplayValue("1200");
+
+    await user.tab();
+    expect(seen).toEqual([1200]);
+  });
+
+  it("ignores characters a number cannot contain", async () => {
+    // A text field takes letters, and Number("12a") is NaN — which the commit
+    // reads as "restore the old value", losing everything typed with it.
+    const user = userEvent.setup();
+    const seen = [];
+    render(<NumInput value={1200} onChange={v => seen.push(v)} min={0} max={5000} />);
+
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "3e0a0");
+    expect(input).toHaveDisplayValue("300");
+
+    await user.tab();
+    expect(seen).toEqual([300]);
   });
 });

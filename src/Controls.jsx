@@ -5,7 +5,7 @@ import { NumInput, RangeSlider, Stack } from "./shared.jsx";
 function S4Controls({ state, setState }) {
   return (
     <Stack gap={3}>
-      <NumInput id="input-s4long" label="Long piece (mm)" value={state.s4Long} onChange={v => setState({ s4Long: v })} step={10} />
+      <NumInput id="input-s4long" label="Long piece (mm)" value={state.s4Long} onChange={v => setState({ s4Long: v })} />
     </Stack>
   );
 }

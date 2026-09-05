@@ -114,10 +114,10 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
                           id={`input-base-number-field-${item.id}`}
                           name={`input-base-number-field-${item.id}`}
                           className="num-input"
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
                           value={item.value}
-                          min={1}
-                          step={10}
                           onChange={e => setItemField(item.id, "value", e.target.value)}
                           onBlur={() => commitBaseValue(item.id, false)}
                           onKeyDown={e => e.key === "Enter" && commitBaseValue(item.id, true)}
