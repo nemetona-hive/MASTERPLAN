@@ -400,8 +400,9 @@ function cleanNumericInput(raw) {
  * validation — commitValue clamps with them — and a text input ignores them.
  * step went with the spinner it belonged to.
  */
-export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, onFocus, onMouseDown, labelIcon, onKeyDown, onCommit }) {
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
+  const inputRef = React.useRef(null);
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
 
@@ -454,8 +455,35 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             }
           }}
           onBlur={() => { commitValue(); if (onCommit) onCommit(); }}
-          onFocus={onFocus}
-          onMouseDown={onMouseDown} />
+          ref={inputRef} />
+        {/*
+          * The presets toggle, on the fields that have a list behind them.
+          *
+          * It exists because the list used to open on its own: clicking or
+          * tabbing into the field was enough, so a panel covered the controls
+          * below whenever somebody went to type a number, and the only way to
+          * be rid of it was to click somewhere else. Opening a menu is a thing
+          * you ask for, so now there is something to ask with.
+          *
+          * mousedown is swallowed so the click cannot pull focus out of the
+          * field and fire its commit-on-blur mid-edit. Focus is then put back
+          * on the input deliberately, because the arrow/Enter/Escape handling
+          * for the open list lives on the field's own keydown — the button
+          * holding focus would leave the list open and unwalkable.
+          */}
+        {onTogglePresets && (
+          <button
+            className="num-btn num-btn--presets"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={presetsOpen}
+            aria-label={presetsOpen ? "Hide presets" : "Show presets"}
+            title="Presets"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => { onTogglePresets(); if (inputRef.current) inputRef.current.focus(); }}>
+            <Icon name="chevron-down" />
+          </button>
+        )}
         <button
           className="num-btn"
           type="button"

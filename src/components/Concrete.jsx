@@ -264,7 +264,6 @@ export function SheetConcrete() {
                     <div 
                       className={"num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : "")}
                       ref={rateInputRef}
-                      onClick={() => setShowRatePresets(true)}
                     >
                       <NumInput 
                         id="input-slf-rate" 
@@ -273,7 +272,8 @@ export function SheetConcrete() {
                         min={0.1} 
                         onChange={handleRateChange} 
                         req={hasAnyInput && !rate}
-                        onFocus={() => setShowRatePresets(true)}
+                        presetsOpen={showRatePresets}
+                        onTogglePresets={() => setShowRatePresets(open => !open)}
                         onCommit={() => setShowRatePresets(false)}
                         onKeyDown={onKeyDown}
                       />

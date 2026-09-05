@@ -499,13 +499,17 @@ is what makes the identity key sound — keep it that way.
 ## UI components (from shared.jsx)
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange min max unit req onFocus labelIcon />` — controlled number input with commit-on-blur and optional icon.
+- `<NumInput id label value onChange min max unit req labelIcon presetsOpen onTogglePresets />` — controlled number input with commit-on-blur and optional icon.
   It is `type="text"` with `inputMode="decimal"`, not `type="number"`: a number
   input steps its value on ArrowUp/ArrowDown and on a wheel scroll while focused,
   so reaching for the caret rewrote a dimension the layout is drawn from. Non-numeric
   characters are filtered as they are typed, and `min`/`max` clamp on commit rather
   than reaching the DOM. There is no `step`: it belonged to the spinner, which the
   stylesheet always hid. Ported from MONEYFLOW's `MoneyInput`.
+  Pass `onTogglePresets` on a field that has a preset list and it grows a
+  chevron button next to the commit button; `presetsOpen` turns the chevron
+  over and sets `aria-expanded`. The page still owns whether the list is
+  open — see below.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
 - `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
   (`Section`, `ControlPanel` and `DetailSection` are one internal `Collapsible`
@@ -520,6 +524,16 @@ is what makes the identity key sound — keep it that way.
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
 - `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
+  **It opens from the field's chevron button and nothing else.** It used to
+  open on focus or on a click anywhere in the field, so the list covered the
+  controls below it whenever somebody went to type a number, and clicking
+  elsewhere was the only way to dismiss it. The three fields that carry a
+  list — Surface Layout's width and length, Symmetric Layout's product
+  width, Concrete's consumption — pass `onTogglePresets` to `NumInput` and
+  keep owning the open/closed state themselves. The toggle hands focus back
+  to the input on the way, because `useDropdownKeyboard` is wired to the
+  field's keydown: a button that kept focus would leave the list open and
+  unwalkable. `tests/preset-dropdown.test.jsx` pins both halves.
 - `<SaveDefaultsButton status onClick errorMessage labels />` — renders nothing
   unless `canSaveStaticDefaults()`. `status` is `""|"saving"|"saved"|"error"`;
   pass `errorMessage` so the failure reason reaches a tooltip instead of only

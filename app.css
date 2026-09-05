@@ -772,6 +772,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	width: 14px;
 }
 
+.num-btn--presets i {
+	transition: transform 0.15s ease;
+}
+
+.num-btn--presets[aria-expanded="true"] i {
+	transform: rotate(180deg);
+}
+
 .num-input-flash {
 	animation: input-highlight-flash 0.9s ease-out;
 	border-radius: 6px;

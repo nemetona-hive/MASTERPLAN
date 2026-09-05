@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
@@ -165,6 +165,45 @@ describe("NumInput", () => {
 
     await user.tab();
     expect(seen).toEqual([1200]);
+  });
+
+  it("has no presets toggle unless the field has a list behind it", () => {
+    render(<NumInput value={1200} onChange={() => {}} />);
+    expect(screen.queryByTitle("Presets")).toBeNull();
+  });
+
+  it("opens the list only when the toggle is pressed", async () => {
+    // The behaviour this replaced: the list opened on focus, so it appeared
+    // unbidden whenever somebody clicked into the field to type.
+    const user = userEvent.setup();
+    const onTogglePresets = vi.fn();
+    render(<NumInput value={1200} onChange={() => {}} onTogglePresets={onTogglePresets} />);
+
+    await user.click(screen.getByRole("textbox"));
+    await user.type(screen.getByRole("textbox"), "13");
+    expect(onTogglePresets).not.toHaveBeenCalled();
+
+    await user.click(screen.getByTitle("Presets"));
+    expect(onTogglePresets).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves focus in the field so an open list can be walked", async () => {
+    // Arrow, Enter and Escape for the open list are handled on the field's own
+    // keydown, so a button that kept focus would leave the list unreachable.
+    const user = userEvent.setup();
+    render(<NumInput value={1200} onChange={() => {}} onTogglePresets={() => {}} />);
+
+    await user.click(screen.getByTitle("Presets"));
+    expect(document.activeElement).toBe(screen.getByRole("textbox"));
+  });
+
+  it("says which way the toggle will go", () => {
+    const { rerender } = render(
+      <NumInput value={1200} onChange={() => {}} onTogglePresets={() => {}} />);
+    expect(screen.getByTitle("Presets")).toHaveAttribute("aria-expanded", "false");
+
+    rerender(<NumInput value={1200} onChange={() => {}} onTogglePresets={() => {}} presetsOpen />);
+    expect(screen.getByTitle("Presets")).toHaveAttribute("aria-expanded", "true");
   });
 
   it("ignores characters a number cannot contain", async () => {

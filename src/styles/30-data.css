@@ -90,6 +90,20 @@
 	width: 14px;
 }
 
+/* The presets toggle, left of the commit button in the same row. It carries the
+   whole .num-btn look and adds only the state the list has: the chevron turns
+   over while the list is open, so the button says which way it will go next.
+   Driven off aria-expanded rather than a class, because that attribute has to
+   be right for a screen reader anyway and a second source of truth for one
+   boolean is a way for the two to disagree. */
+.num-btn--presets i {
+	transition: transform 0.15s ease;
+}
+
+.num-btn--presets[aria-expanded="true"] i {
+	transform: rotate(180deg);
+}
+
 .num-input-flash {
 	animation: input-highlight-flash 0.9s ease-out;
 	border-radius: 6px;

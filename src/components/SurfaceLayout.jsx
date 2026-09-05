@@ -466,7 +466,8 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             value={PLa}
             onChange={setMat("PLa")}
             min={100}
-            onMouseDown={() => setActivePresetDropdown("wid")}
+            presetsOpen={activePresetDropdown === "wid"}
+            onTogglePresets={() => setActivePresetDropdown(open => (open === "wid" ? null : "wid"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onWidKeyDown}
           />
@@ -480,7 +481,8 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             value={PPi}
             onChange={setMat("PPi")}
             min={100}
-            onMouseDown={() => setActivePresetDropdown("len")}
+            presetsOpen={activePresetDropdown === "len"}
+            onTogglePresets={() => setActivePresetDropdown(open => (open === "len" ? null : "len"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onLenKeyDown}
           />

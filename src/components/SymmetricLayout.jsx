@@ -48,7 +48,8 @@ export function SheetSymmetricLayout({ sym, setSym }) {
                 value={sym.panelWidth}
                 onChange={v => { setSym(s => ({ ...s, panelWidth: clampNumber(v, 100, 8000, 100) })); setActivePreset(null); }}
                 min={100}
-                onFocus={() => setShowWidDropdown(true)}
+                presetsOpen={showWidDropdown}
+                onTogglePresets={() => setShowWidDropdown(open => !open)}
                 onCommit={() => setShowWidDropdown(false)}
                 onKeyDown={onKeyDown}
               />
