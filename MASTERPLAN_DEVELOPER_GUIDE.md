@@ -100,7 +100,9 @@ it, and the click paths that used to need two clicks.
 `tests/field-undo.test.jsx` drives a real `NumInput` through keydown/input
 pairs rather than `fireEvent.change`, because the module hangs on the order a
 real edit arrives in — a test written with `change` would pass against a module
-that could not work.
+that could not work. `tests/doc-undo.test.jsx` drives `SheetTimesheet` through
+its own buttons for the same reason: it asserts what a person gets back, not
+what the store recorded.
 
 The rest of the calculator pages have no equivalent: Concrete, Golden Ratio and
 Pipe Wrap are untouched by any render test, and so are direction switching with
@@ -383,12 +385,48 @@ Two design points worth knowing before changing it:
 Histories hang off the DOM nodes in a `WeakMap`, so a field's history dies
 exactly when its node does and there is no cleanup to forget.
 
-Ported from MONEYFLOW as a documented subset — the file header lists what was
-left behind and where it goes back. The short version: MONEYFLOW's copy is half
-of a pair with `doc-undo.js`, undo for what a **button** did, which this repo
-has no equivalent of yet. Anything in that file about a "generation", the
-document history, or the header undo buttons is the missing half, not a
-simplification to copy back in blind.
+It is half of a pair with `doc-undo.js` below, and the two meet in exactly two
+places: the generation stamp on a history, and a Ctrl+Z pressed with the focus
+outside a field.
+
+### Undo for what a button did (`utils/doc-undo.js`)
+
+The other half. Snapshot-based, twenty steps, **one history at a time**, keyed
+by the document on screen. A page registers through `useDocHistory`
+(`shared.jsx`) and gets back `markStep(label)`, which it calls at the top of a
+structural handler — before the `setState`, because the snapshot is read
+synchronously off the current render's closure.
+
+Four documents are wired: `timesheet`, `golden-ratio`, `surface-layout` and
+`symmetric-layout`. What earns a step is **what a button did**, not what kind of
+state changed — the timesheet's lunch presets write a text field and still take
+one, because nobody typed them and field-undo never saw them. Typing never takes
+one; that would be two systems answering for the same edit.
+
+Snapshots, not inverses. The direction switch on a surface layout writes five
+keys of `sh` at once and reads four more, and a hand-written inverse that missed
+one would restore a layout that looked right and was not. The pages replace
+their state wholesale and never mutate it, so a snapshot is a few pointers.
+
+Two things to know before extending it:
+
+- **The key is the document, not the route.** Every pattern-layout page edits
+  the one `sh` document, so they share `surface-layout` and the history survives
+  moving between them. A key that changed with the URL would throw away steps
+  whose data is still on screen.
+- **Snapshot the data, not the view**, and include anything the data's identity
+  depends on. `SheetTimesheet` snapshots `nextCalcId` alongside its rows because
+  "Clear all" resets it: an undo that restored seven rows without it would hand
+  the next "Add row" an id two rows already answer to.
+
+Concrete and Pipe Wrap are deliberately not wired. Their state is a dozen
+separate `useState`s of text that field-undo already covers, and Concrete's one
+destructive action is already behind an armed two-press confirm.
+
+Both files are ported from MONEYFLOW, and both headers list what was left
+behind. The short version for this pair: there is no `markDirty`, because
+nothing here persists, and no subscribe/announce, because there is nowhere to
+put an undo button pair until the header grows a tool row.
 
 ## Key globals (defined outside src/, treat as read-only)
 
@@ -918,10 +956,11 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 - Advanced user persistence. `saveStaticDefaults` writes to `config.js` from the
   dev server only, and localStorage holds nothing but the theme choice. There is
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
-- Undo for what a BUTTON did — MONEYFLOW's `doc-undo.js`. `field-undo.js` covers
-  text you typed and nothing else, so removing a timesheet row, applying a
-  preset over your numbers or clearing a Golden Ratio item still has no step
-  back. The seam it plugs into is described in `field-undo.js`'s header
+- An undo/redo button pair. Both undo layers exist and `docUndoState` already
+  returns the labels a tooltip would read ("Undo Clear all"), but Ctrl+Z is the
+  only way to reach either — `app-head` is a logo and nothing else, so a pair
+  needs a header tool row designed first. The subscribe/announce halves of both
+  modules were left out for the same reason
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
 - UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have

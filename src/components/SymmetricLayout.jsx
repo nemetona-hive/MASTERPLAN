@@ -1,5 +1,5 @@
 import { React } from "../react-globals.js";
-import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDropdownKeyboard } from "../shared.jsx";
+import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
 import { LayoutPanel } from "../Visualization.jsx";
 
 export function SheetSymmetricLayout({ sym, setSym }) {
@@ -15,7 +15,16 @@ export function SheetSymmetricLayout({ sym, setSym }) {
 
   useClickOutside([widWrapRef], () => setShowWidDropdown(false));
 
+  /* `sym` is this page's whole document and lives in App's state. The active
+     preset and the open dropdown are view state and stay out. */
+  const markStep = useDocHistory({
+    key: "symmetric-layout",
+    snapshot: () => sym,
+    apply: setSym
+  });
+
   const applyPreset = (p, idx) => {
+    markStep("Apply preset");
     setSym(s => ({ ...s, panelWidth: p.width }));
     setActivePreset(idx);
     setShowWidDropdown(false);
@@ -65,9 +74,9 @@ export function SheetSymmetricLayout({ sym, setSym }) {
               <span className="ctrl-sublbl">Layout style</span>
               <div className="seg-group">
                 <button className={"ctrl-dir " + (sym.oneFullEdge ? "on" : "")}
-                  onClick={() => setSym(s => ({ ...s, oneFullEdge: true }))}>Asymmetric</button>
+                  onClick={() => { markStep("Asymmetric"); setSym(s => ({ ...s, oneFullEdge: true })); }}>Asymmetric</button>
                 <button className={"ctrl-dir " + (!sym.oneFullEdge ? "on" : "")}
-                  onClick={() => setSym(s => ({ ...s, oneFullEdge: false }))}>Symmetric</button>
+                  onClick={() => { markStep("Symmetric"); setSym(s => ({ ...s, oneFullEdge: false })); }}>Symmetric</button>
               </div>
             </Stack>
             {sym.oneFullEdge && (

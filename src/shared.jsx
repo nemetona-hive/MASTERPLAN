@@ -1,4 +1,5 @@
 import { React, ReactDOM } from "./react-globals.js";
+import { recordDocStep, registerDocHistory } from "./utils/doc-undo.js";
 
 // ── Shared UI primitives ──────────────────────────────────────────────────────
 
@@ -658,6 +659,45 @@ export function useLinkedCardHighlight(groupId) {
  * @param {1|2|3|4|5|6|7|0.5} gap - Spacing level from scale
  * @param {"column"|"row"} direction - Flex direction
  */
+/**
+ * Undo for a page's structural actions — the ones a button performs.
+ *
+ * Returns `markStep(label)`. Call it at the TOP of a mutating handler, before
+ * the `setState` that changes anything: it snapshots the state as it stands,
+ * and a call made after the write would record the state the action produced
+ * rather than the one it replaced.
+ *
+ * Only structural handlers take one. Typing does not: text has its own undo
+ * (`src/utils/field-undo.js`), and a page-level step per keystroke would be two
+ * systems answering for the same edit. The line runs between what a BUTTON did
+ * and what a KEYSTROKE did, not between kinds of state — the timesheet's lunch
+ * presets write a text field and are still a button, so they take a step.
+ *
+ * `key` is the document on screen — `timesheet`, `surface-layout`. Changing it
+ * drops the history, because an undo across a page change would rewrite
+ * figures you are no longer looking at. It does NOT change when the route does:
+ * every pattern-layout page edits the one `sh` document, so they share a key
+ * and the history survives moving between them.
+ *
+ * `snapshot` returns the page's DATA state only. View state stays out
+ * deliberately: which panel is expanded, which preset is highlighted, which row
+ * is active. An undo restores what the document held and never moves you
+ * somewhere else to show you.
+ */
+export function useDocHistory({ key, snapshot, apply }) {
+  /* Registered from an effect, not during render, and with no dependency list:
+     `snapshot` and `apply` close over this render's state, so the store has to
+     be handed the current pair after every commit. Effects flush before the
+     next event is dispatched, so a handler can never read a stale closure. */
+  React.useEffect(() => {
+    registerDocHistory({ key, snapshot, apply });
+  });
+
+  React.useEffect(() => () => registerDocHistory(null), []);
+
+  return recordDocStep;
+}
+
 export function Stack({ children, gap = 2, direction = "column", className = "", style = {}, as: Tag = "div", ...props }) {
   const gClass = `u-gap-${String(gap).replace('.', '')}`;
   const dClass = `u-flex-${direction === "row" ? "row" : "col"}`;

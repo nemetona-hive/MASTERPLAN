@@ -1,5 +1,5 @@
 import { React } from "../react-globals.js";
-import { ControlPanel, Icon, SaveDefaultsButton, Stack, getLinkedCardMarker, getLinkedCardTone, safeSaveStaticDefaults, useLinkedCardHighlight, useTimedSet, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, SaveDefaultsButton, Stack, getLinkedCardMarker, getLinkedCardTone, safeSaveStaticDefaults, useDocHistory, useLinkedCardHighlight, useTimedSet, useTimedState } from "../shared.jsx";
 
 export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
   const [baseOpen, setBaseOpen] = React.useState(true);
@@ -18,17 +18,29 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
 
   React.useEffect(() => () => clearCommittedIds(), []);
 
+  /* Undo for the two buttons on each card. The items live in App's state and
+     are handed down, so the snapshot reads the prop and `apply` calls the
+     setter that came with it. Typing in a card is field-undo's, and
+     `commitBaseValue` is the blur that finishes it — neither takes a step. */
+  const markStep = useDocHistory({
+    key: "golden-ratio",
+    snapshot: () => baseItems,
+    apply: setBaseItems
+  });
+
   const setItemField = (id, key, value) => {
     setBaseItems(items => items.map(item => (item.id === id ? { ...item, [key]: value } : item)));
   };
 
   const saveItem = id => {
+    markStep("Save entry");
     setBaseItems(items => items.map(item => (
       item.id === id ? { ...item, saved: { value: item.value, suffix: item.suffix }, savedCommitted: true } : item
     )));
   };
 
   const resetItem = id => {
+    markStep("Reset entry");
     setBaseItems(items => items.map(item => (
       item.id === id
         ? { ...item, value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }

@@ -29,31 +29,25 @@
  * survives blur and refocus, so clicking away and back does not wipe what you
  * just typed.
  *
+ * The other half of undo — what a BUTTON did — is `doc-undo.js`. The two meet
+ * in exactly two places, both below: the generation stamp on a history, and the
+ * Ctrl+Z pressed with the focus outside a field.
+ *
  * ── Ported from MONEYFLOW as a documented subset ───────────────────────────
  *
- * MONEYFLOW's copy is half of a pair. The other half, `doc-undo.js`, is undo
- * for what a BUTTON did — snapshot-based, twenty steps, one history per
- * document on screen. MASTERPLAN has no equivalent yet, so three things that
- * exist there are deliberately absent here, and this is where they go back:
- *
- *   - `historyFor` stamps each history with `docUndoGeneration()` and empties
- *     it when that moves, because a document undo rewrites a field's value
- *     from outside while React reuses the same node. Without a document layer
- *     nothing can rewrite a field behind its own back, so there is no
- *     generation to carry.
- *   - `stepOutsideAField` tries the document's history first and the last
- *     field's second. Here there is only the second half.
- *   - The subscribe/announce pair that drives MONEYFLOW's header undo buttons
- *     is not here either, and neither is the MutationObserver that exists to
- *     tell those buttons their field has left the screen. `targetField` already
- *     checks `isConnected`, so nothing is lost in correctness — only the
- *     ability to render a control that greys out. That comes back with the
- *     buttons, not before: a document-wide subtree observer is not free in an
- *     app that redraws an SVG layout on every keystroke.
+ * One thing in its copy is still absent here: the subscribe/announce pair that
+ * drives MONEYFLOW's header undo buttons, and the MutationObserver that exists
+ * to tell those buttons their field has left the screen. This app's header is a
+ * logo and nothing else, so there is nowhere to put a pair without designing a
+ * tool row first. `targetField` already checks `isConnected`, so nothing is
+ * lost in correctness — only the ability to render a control that greys out.
+ * That comes back with the buttons, not before: a document-wide subtree
+ * observer is not free in an app that redraws an SVG layout on every keystroke.
  *
  * Ctrl+Z is the whole interface for now, which is what it is in every other
  * text field a person has used.
  */
+import { docUndoGeneration, redoDocStep, undoDocStep } from "./doc-undo.js";
 
 // Five steps back. Deep enough to cover a run of real mistakes in one cell;
 // anything past that is the document's problem, not the field's.
@@ -116,11 +110,31 @@ function snapshot(el) {
   };
 }
 
+/*
+ * The field's history, started fresh if a document step has happened since it
+ * was last touched.
+ *
+ * A document undo rewrites this field's value from outside, and the node
+ * survives it — React keys a timesheet row by its id, so the same input is
+ * reused with different text in it. Its steps then describe a value the field
+ * never held, which is the one thing this module exists to prevent. The
+ * histories live in a `WeakMap` that cannot be walked to clear, so they carry
+ * the generation they were written in instead and a stale one starts again from
+ * here. Same rule the file already applies to a reformat: a value the page
+ * wrote is a new starting point, not a step.
+ */
 function historyFor(el) {
   let history = histories.get(el);
   if (!history) {
-    history = { past: [], future: [], pre: null, runKind: null, runAt: 0, runCaret: null };
+    history = { past: [], future: [], pre: null, runKind: null, runAt: 0, runCaret: null, generation: docUndoGeneration() };
     histories.set(el, history);
+  } else if (history.generation !== docUndoGeneration()) {
+    history.past.length = 0;
+    history.future.length = 0;
+    history.pre = null;
+    history.runKind = null;
+    history.runCaret = null;
+    history.generation = docUndoGeneration();
   }
   return history;
 }
@@ -230,6 +244,9 @@ function step(el, from, to) {
   apply(el, from.pop());
 }
 
+/* historyFor rather than a plain lookup, so a history left stale by a document
+   step is emptied here too. The keystroke then does nothing, which is the point:
+   its steps describe text the page has since replaced. */
 function undo(el) {
   const history = historyFor(el);
   step(el, history.past, history.future);
@@ -256,29 +273,45 @@ function targetField() {
 export function fieldUndoState() {
   const el = targetField();
   const history = el && histories.get(el);
+  // A history left behind by a document step is spent, whether or not anything
+  // has touched the field since — nothing must offer its steps.
+  const live = history && history.generation === docUndoGeneration();
   return {
-    canUndo: !!(history && history.past.length),
-    canRedo: !!(history && history.future.length)
+    canUndo: !!(live && history.past.length),
+    canRedo: !!(live && history.future.length)
   };
+}
+
+/*
+ * What a Ctrl+Z pressed outside a field acts on.
+ *
+ * The focus is put back before the step, so an undo made after clicking away
+ * shows you which cell it changed and leaves you in it — the caret restore is
+ * pointless in a field nobody is looking at.
+ */
+function stepLastField(run) {
+  const el = targetField();
+  if (!el) return false;
+  if (el.ownerDocument.activeElement !== el) el.focus();
+  run(el);
+  return true;
 }
 
 /*
  * Ctrl+Z with the focus anywhere but a field.
  *
- * The focus is put back before the step, so an undo made after clicking away
- * shows you which cell it changed and leaves you in it — the caret restore is
- * pointless in a field nobody is looking at.
+ * The page's own history first, the last field's typing second. That order is
+ * the answer to "undo the last thing I did here": the actions are the coarser
+ * record and the only one a person can point at, and a page you have only
+ * clicked in has no field to fall back to at all.
  *
- * In MONEYFLOW this tries the page's own action history first and falls back to
- * the last field. Here there is no action history, so the fallback is the whole
- * behaviour; see the header for where the other half goes when it arrives.
+ * Ctrl+Z INSIDE a field is untouched by this and stays per-field. Typing is
+ * where a person expects character-level undo, and a keystroke that cleared the
+ * whole timesheet instead would be the surprise this ordering exists to avoid.
  */
-function stepOutsideAField(isRedo) {
-  const el = targetField();
-  if (!el) return false;
-  if (el.ownerDocument.activeElement !== el) el.focus();
-  (isRedo ? redo : undo)(el);
-  return true;
+export function stepOutsideAField(isRedo) {
+  if (isRedo) return redoDocStep() || stepLastField(redo);
+  return undoDocStep() || stepLastField(undo);
 }
 
 /**

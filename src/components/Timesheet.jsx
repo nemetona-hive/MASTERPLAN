@@ -1,5 +1,5 @@
 import { React, useState } from "../react-globals.js";
-import { Icon, Stack, useTimedState } from "../shared.jsx";
+import { Icon, Stack, useDocHistory, useTimedState } from "../shared.jsx";
 import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
 import { useGridNav } from "../utils/grid-nav.js";
 
@@ -58,6 +58,21 @@ export function SheetTimesheet() {
   const nextCalcId = React.useRef(4);
   const startRefs  = React.useRef({});
 
+  /* Undo for the buttons on this page. `nextCalcId` rides along in the
+     snapshot and is NOT an implementation detail leaking in: "Clear all"
+     resets it to 4, so an undo that restored seven rows without it would hand
+     the next "Add row" an id that two rows already answer to, and React would
+     key them the same. The active row is view state and stays out — an undo
+     restores what the sheet held, it does not move your cursor. */
+  const markStep = useDocHistory({
+    key: "timesheet",
+    snapshot: () => ({ rows: calcRows, nextId: nextCalcId.current }),
+    apply: ({ rows, nextId }) => {
+      nextCalcId.current = nextId;
+      setCalcRows(rows);
+    }
+  });
+
   // ── Derived ────────────────────────────────────────────────────────────────
 
   const calcResults   = calcRows.map(r => calcRowResult(r));
@@ -67,12 +82,14 @@ export function SheetTimesheet() {
   // ── Calc actions ───────────────────────────────────────────────────────────
 
   const addCalcRow = () => {
+    markStep("Add row");
     const id = nextCalcId.current++;
     setCalcRows(prev => [...prev, { id, start: '', end: '', lunch: '' }]);
     return id;
   };
 
   const removeCalcRow = id => {
+    markStep("Remove row");
     setCalcRows(prev => prev.filter(r => r.id !== id));
     if (activeRowId === id) setActiveRowId(null);
   };
@@ -80,13 +97,19 @@ export function SheetTimesheet() {
     setCalcRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
 
   const clearCalc = () => {
+    markStep("Clear all");
     nextCalcId.current = 4;
     setCalcRows(makeCalcRows());
     setActiveRowId(null);
   };
 
+  /* A step, even though it writes a text field. The line runs between what a
+     button did and what a keystroke did: nobody typed this, so field-undo
+     never saw it and there would be nothing to take it back with. */
   const applyLunchPreset = val => {
-    if (activeRowId != null) updateCalcRow(activeRowId, 'lunch', val);
+    if (activeRowId == null) return;
+    markStep("Set lunch");
+    updateCalcRow(activeRowId, 'lunch', val);
   };
 
   // Format time input to HH:MM on blur

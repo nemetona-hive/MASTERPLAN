@@ -1,6 +1,6 @@
 import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
-import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 
 export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
@@ -31,7 +31,19 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
 
+  /* `sh` is the document every pattern-layout page edits, so the key is the
+     document rather than the route: moving between layout systems keeps the
+     history, because the thing you could undo is still on screen. The preset
+     highlight, the flash and the open preview are view state and stay out. */
+  const markStep = useDocHistory({
+    key: "surface-layout",
+    snapshot: () => sh,
+    apply: setSh
+  });
+
   const applyPreset = (p, idx) => {
+    // The one that eats work: it overwrites two dimensions you may have typed.
+    markStep("Apply preset");
     setSh(s => ({ ...s, PPi: p.length, PLa: p.width }));
     setActivePreset(idx);
     setFlashIdx(idx);
@@ -124,7 +136,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         />
         <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
         <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
-          <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
+          <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
         </ControlPanel>
       </Stack>
       <div id="data-preview" className="data-preview">
@@ -283,7 +295,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                     {/* Column 2: Layout Engine (25%) */}
                     <ControlPanel id="control-settings-large" title="Layout Engine" open={true} noToggle className="u-hide-mobile">
                       <div className="panel-data">
-                        <LayoutSettings sh={sh} setField={setShField} setSh={setSh} />
+                        <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
                       </div>
                     </ControlPanel>
 
@@ -333,7 +345,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   );
 }
 
-function LayoutSettings({ sh, setField, setSh }) {
+function LayoutSettings({ sh, setField, setSh, markStep }) {
   const { PPi, direction, minJ, startOff } = sh;
   const rowStart = sh.rowStart || "top";
   const psRaw = sh.patternStart;
@@ -351,7 +363,7 @@ function LayoutSettings({ sh, setField, setSh }) {
         <div id="ctrl-direction" className="seg-group" style={{ marginTop: "var(--sp-2)" }}>
           {["V", "H"].map(s => (
             <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
-              onClick={() => setSh(st => {
+              onClick={() => { markStep("Switch direction"); setSh(st => {
                 const curDir = st.direction;
                 const rsKey  = curDir === "V" ? "rowStartV"     : "rowStartH";
                 const psKey  = curDir === "V" ? "patternStartV" : "patternStartH";
@@ -365,7 +377,7 @@ function LayoutSettings({ sh, setField, setSh }) {
                   rowStart:     st[trsKey] || (s === "V" ? "top"    : "bottom"),
                   patternStart: st[tpsKey] || (s === "V" ? "bottom" : "left")
                 };
-              })}>{s}</button>
+              }); }}>{s}</button>
           ))}
         </div>
       </div>
