@@ -627,16 +627,16 @@ npm run deploy:check     # fetches <site>/version.js and compares to local
 `MASTERPLAN_SITE` if the Pages address ever changes.
 
 **The id is a content hash, not a timestamp, and that is load-bearing.**
-`scripts/build-version.js` hashes `index.html`, `config.js`, `components.js`,
-`app.css` and the two font subsets: everything a visitor loads that this repo
-owns, which is wider than what the build generates. `config.js` is hand-written
-and served as a classic script, and it holds the defaults, the page registry and
-the icon map — hashing only generated files would let a config-only deploy pass
-`deploy:check` as already live. `simulation.js` and `themes.js` are the two
-remaining hand-written scripts `index.html` loads, and belong there on the same
-argument whenever it matters. `githooks/pre-commit` therefore triggers on
-`config.js` as well as `src/`, so a config-only commit still rebuilds the stamp
-rather than leaving it for `pre-push` to reject. That hook rebuilds and refuses
+`scripts/build-version.js` hashes `index.html`, the three classic scripts it
+loads by hand — `config.js`, `simulation.js`, `themes.js` — and the generated
+`components.js`, `app.css` and two font subsets: everything a visitor loads that
+this repo owns, which is wider than what the build generates. The three are the
+app as much as the bundle is (defaults and the page registry, the layout maths,
+the theme tokens), so hashing only generated files would let a deploy that
+changed any of them pass `deploy:check` as already live. `githooks/pre-commit`
+therefore triggers on all four as well as `src/`, so a commit touching only one
+still rebuilds the stamp rather than leaving it for `pre-push` to reject — and
+still runs the tests, which read all three as globals. That hook rebuilds and refuses
 the push if a generated file moved, so a stamp that read the clock would change
 on every build and wedge the gate shut permanently.
 `git rev-parse HEAD` fails the same way and is wrong besides: at `pre-commit`

@@ -23,19 +23,22 @@ const ROOT = path.resolve(__dirname, "..");
 const OUT_FILE = "version.js";
 
 // Everything a visitor loads that this repo owns — which is not the same set as
-// "everything the build generates". config.js is hand-written and served as a
-// classic script, and it carries the default sheet, the page registry and the
-// icon map: change a default and every visitor gets a different app while a
-// hash of the generated files alone would swear nothing had moved, so
-// deploy:check would report a config-only deploy as already live.
+// "everything the build generates". index.html loads four hand-written classic
+// scripts before the bundle, and they are the app as much as it is: config.js
+// carries the default sheet, the page registry and the icon map; simulation.js
+// is the layout maths every page draws from; themes.js decides what the app
+// looks like before React renders. Change any of them and every visitor gets a
+// different app, while a hash of the generated files alone would swear nothing
+// had moved and deploy:check would report the deploy as already live — the one
+// answer it exists to give, given wrong.
 //
 // version.js itself is deliberately absent: hashing the file being written is
-// circular, and nothing downstream of it needs to be covered. simulation.js and
-// themes.js are the two remaining hand-written scripts index.html loads and
-// belong here on the same argument whenever that matters.
+// circular, and nothing downstream of it needs to be covered.
 const HASHED_FILES = [
   "index.html",
   "config.js",
+  "simulation.js",
+  "themes.js",
   "components.js",
   "app.css",
   "vendor/fontawesome.subset.css",

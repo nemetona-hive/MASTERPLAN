@@ -42,10 +42,11 @@ describe("build-version", () => {
   it("covers every file the deploy serves, generated or hand-written", () => {
     // If a build output is added without being hashed here, two different
     // deploys can carry the same id and deploy:check goes quietly wrong.
-    // config.js is in the list for the same reason from the other direction: it
-    // is edited by hand rather than generated, and a changed default is a
-    // changed app for every visitor.
-    for (const rel of ["index.html", "config.js", "components.js", "app.css"]) {
+    // The classic scripts are in the list for the same reason from the other
+    // direction: they are edited by hand rather than generated, and a changed
+    // default, a changed formula or a changed token is a changed app for every
+    // visitor.
+    for (const rel of ["index.html", "config.js", "simulation.js", "themes.js", "components.js", "app.css"]) {
       expect(HASHED_FILES).toContain(rel);
     }
     for (const rel of HASHED_FILES) {
