@@ -137,3 +137,12 @@ dist
 
 # Scratch: screenshots and throwaway files. Never part of the published tree.
 _temp_masterplan/
+
+# The bundle's sourcemap. components.js, app.css and version.js ARE committed —
+# GitHub Pages serves this tree directly, so the committed build output is the
+# deployed app — but the map is the one exception: 300 KiB of generated JSON,
+# three times the size of the bundle it describes, rewritten in full on every
+# build and read only by devtools on the machine that built it. Pages
+# will 404 the `//# sourceMappingURL` comment in components.js, which costs
+# visitors nothing because nothing fetches a map until devtools is open.
+components.js.map

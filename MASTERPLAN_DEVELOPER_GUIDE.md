@@ -12,6 +12,16 @@ save. `components.js` is generated output — never hand-edit it, the next build
 overwrites it silently. It is committed anyway, because GitHub Pages serves the
 repo directly and there is no build step on that side.
 
+The bundle is **minified**, so grep it only for a component name or a string
+literal — every other identifier is a letter or two. `components.js.map` is
+written beside it and devtools reads the original `src/` files through it, so a
+stack trace lands on the line in the `.jsx` that raised it. The build also sets
+`keepNames`, which is the half a map cannot do: React reads a component's name
+at runtime, so without it every warning in the console names `e`. The map is
+the one build output that is **not** committed — 300 KiB of generated JSON
+rewritten on every build — so the live site 404s the `sourceMappingURL`
+comment, which costs visitors nothing and leaves the map in place locally.
+
 React and ReactDOM are plain `<script>` tags in `index.html`, loaded from
 `vendor/`, not bundled. Both carry `defer`, and must keep it — unmarked they
 block first paint, which Lighthouse costed at 400ms on desktop and 4.4s on
@@ -72,6 +82,7 @@ audit.
 |---|---|
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
 | `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them), JS/CSS breakpoint drift |
+| `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
 | `npm run build` | rebuilds `components.js`, `app.css` and the icon subset |
@@ -95,6 +106,22 @@ every page still works. Check a UI change in the browser as well — jsdom has n
 layout engine, so anything that depends on a real box (the collapsed strip's
 width, where a tooltip lands) is asserted structurally here and verified only by
 eye.
+
+`npm run lint` is ESLint, ported from MONEYFLOW and kept deliberately narrow:
+the rules that catch a defect, none that have an opinion about style.
+`eslint.config.mjs` explains each block, including why the four root classic
+scripts are linted here and are not there. It is in `verify`, **not** in
+`pre-commit` — that hook is about a second and stays that way.
+
+Two rules are the reason it exists, and both are invisible in a diff.
+`react-hooks/rules-of-hooks` found a real crash on its first run:
+`LayoutVisualization` called three hooks before its early returns and six
+after, so any layout the simulation could not use — an empty field, a surface
+over the step cap — took the component from six hooks to three and back, and
+React threw over the page. `react-hooks/exhaustive-deps` is a **warning**, not
+an error: some stale deps here are deliberate, and a gate that fails on a
+considered decision gets switched off rather than read. Read the three standing
+warnings before acting on them.
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI
@@ -787,6 +814,9 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 - All five are generated output. Never hand-edit them; the next build overwrites
   it. They are committed anyway, because GitHub Pages serves the tree directly,
   and `githooks/pre-push` refuses a push where any of them has gone stale.
+- The build writes a sixth file, `components.js.map`, and it is the one that is
+  **not** committed — it is gitignored, so `pre-push` never looks at it and it
+  cannot go stale in a way anyone would see. It is for devtools on this machine.
 
 - Colour comes from a theme token, never a literal. `npm run audit:ui` blocks on
   a hex or a tinted `rgba()` in `src/`.

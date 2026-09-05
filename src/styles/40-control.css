@@ -34,16 +34,6 @@
 	padding: 10px 14px;
 }
 
-.data-control .slabel {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-blue);
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	border-bottom: 1px solid var(--color-blue);
-	padding-bottom: 7px;
-	margin-top: 2px;
-}
 
 .ctrl-lbl {
 	display: flex;

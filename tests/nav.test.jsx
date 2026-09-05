@@ -267,7 +267,6 @@ describe("AppNav", () => {
       // BUILD global at all; a bare reference would throw and take the whole
       // sidebar down with it.
       const original = globalThis.BUILD;
-      // eslint-disable-next-line no-undef
       delete globalThis.BUILD;
       try {
         const { container } = render(<AppNav {...props()} />);

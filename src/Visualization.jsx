@@ -22,7 +22,6 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const canvasW = simW || surfaceW;
   const canvasH = simH || surfaceH;
 
-  let physicalCursor = 0;
   let visualCursor = 0;
   const rects = [];
   const rowRects = [];
@@ -114,6 +113,65 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   }
   const gapHatchId = `${svgIdRef.current}-gap-hatch`;
 
+  /* Every hook this component has runs before the two early returns below,
+     and has to stay that way.
+
+     They used to sit after them. A render that took the `strip` branch or the
+     invalid-result guard therefore called three hooks, and a render that took
+     neither called six — and React identifies a hook by the position it was
+     called in, not by name. An empty or capped layout carries `meta: {}`
+     (emptyLayoutResult, simulation.js), so the guard fires on any dimension
+     the simulation cannot use: clearing a field and typing a valid number back
+     took the same mounted component from three hooks to six and threw
+     "rendered more hooks than during the previous render" over the page.
+
+     Both memos are safe on the paths that return early. An empty result has
+     `rows: []`, so buildLayoutSvgRects iterates nothing and every figure it
+     derives from an absent `meta` is unread; the strip branch renders from
+     `result.rows[0]` directly and never looks at them.
+
+     eslint's react-hooks/rules-of-hooks is what found this. No test covers
+     this file, and the crash needs two renders of one instance to show up, so
+     nothing else in `verify` could have. */
+  const { surfaceW, surfaceH, PPi, PLa, s4Long, s4: isS4, direction } = result.meta;
+  const isV = direction === "V";
+
+  // Define orderedRows once as the single source of truth for this render
+  const orderedRows = React.useMemo(() =>
+    rowStart === "bottom"
+      ? (result.rows || []).map((row, idx) => ({ row, idx })).reverse()
+      : (result.rows || []).map((row, idx) => ({ row, idx })),
+  [result.rows, rowStart]);
+
+  // Build rects in SVG coordinate space
+  const { rects, rowRects, vW, vH } = React.useMemo(
+    () => buildLayoutSvgRects(result, orderedRows, rowStart),
+    [result, orderedRows, rowStart]
+  );
+
+  // Build carry connector lines between adjacent rows at cut→offcut boundaries
+  const carryLines = React.useMemo(() => {
+    if (isV) return []; // connectors only in H mode for now
+    const lines = [];
+    for (let i = 0; i < orderedRows.length - 1; i++) {
+      const { row: rowA } = orderedRows[i];
+      const { row: rowB } = orderedRows[i + 1];
+      const cutSeg    = rowA.segs[rowA.segs.length - 1];
+      const offcutSeg = rowB.segs[0];
+      if (cutSeg?.sourceId && offcutSeg?.sourceId === cutSeg.sourceId) {
+        // find the visual y positions from rowRects
+        const rrA = rowRects[i];
+        const rrB = rowRects[i + 1];
+        if (!rrA || !rrB) continue;
+        const boundary = rrA.y + rrA.h; // SVG y of row boundary
+        const x1 = cutSeg.x + cutSeg.w;        // right edge of cut (= surfaceW)
+        const x2 = offcutSeg.x + offcutSeg.w;  // right edge of offcut
+        lines.push({ x1, x2, y: boundary, sourceId: cutSeg.sourceId });
+      }
+    }
+    return lines;
+  }, [orderedRows, rowRects, isV]);
+
   // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {
     return (
@@ -146,26 +204,12 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   }
 
   // ── Main SVG layout ──
-  const { surfaceW, surfaceH, PPi, PLa, s4Long, s4: isS4, direction } = result.meta;
   if (!surfaceW || !surfaceH || !PPi || !PLa) return null;
-  const isV = direction === "V";
   const horzPanel = isV ? PLa : PPi;
   const horzLabel = isS4 ? `${surfaceW} mm \u2014 long ${s4Long} mm` : `${surfaceW} mm \u2014 panel ${horzPanel} mm`;
   const vertPanel = isV ? PPi : PLa;
   const vertLabel = `${surfaceH} mm \u2014 row ${vertPanel} mm`;
 
-  // Define orderedRows once as the single source of truth for this render
-  const orderedRows = React.useMemo(() =>
-    rowStart === "bottom"
-      ? result.rows.map((row, idx) => ({ row, idx })).reverse()
-      : result.rows.map((row, idx) => ({ row, idx })),
-  [result.rows, rowStart]);
-
-  // Build rects in SVG coordinate space
-  const { rects, rowRects, vW, vH, yOffset } = React.useMemo(
-    () => buildLayoutSvgRects(result, orderedRows, rowStart),
-    [result, orderedRows, rowStart]
-  );
   // role="img" without a name announces as an unlabelled graphic. The
   // per-segment <title>s do not supply one for the diagram as a whole.
   const svgLabel = [
@@ -178,28 +222,6 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
   const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
 
-  // Build carry connector lines between adjacent rows at cut→offcut boundaries
-  const carryLines = React.useMemo(() => {
-    if (isV) return []; // connectors only in H mode for now
-    const lines = [];
-    for (let i = 0; i < orderedRows.length - 1; i++) {
-      const { row: rowA } = orderedRows[i];
-      const { row: rowB } = orderedRows[i + 1];
-      const cutSeg    = rowA.segs[rowA.segs.length - 1];
-      const offcutSeg = rowB.segs[0];
-      if (cutSeg?.sourceId && offcutSeg?.sourceId === cutSeg.sourceId) {
-        // find the visual y positions from rowRects
-        const rrA = rowRects[i];
-        const rrB = rowRects[i + 1];
-        if (!rrA || !rrB) continue;
-        const boundary = rrA.y + rrA.h; // SVG y of row boundary
-        const x1 = cutSeg.x + cutSeg.w;        // right edge of cut (= surfaceW)
-        const x2 = offcutSeg.x + offcutSeg.w;  // right edge of offcut
-        lines.push({ x1, x2, y: boundary, sourceId: cutSeg.sourceId });
-      }
-    }
-    return lines;
-  }, [orderedRows, rowRects, isV]);
 
   const groupBands = showRowLabels ? rowRects.map(rr => {
     const originalIdx = parseInt(rr.key.replace("row-bg-", ""), 10);
@@ -334,7 +356,6 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
-  const canLargePreview = onLargePreview && result.rows.length > 0;
   return (
     <div id={"panel-" + layout.id} className="sys-block">
       <div className="sys-head" onClick={noToggle ? undefined : () => setOpen(!isOpen)} style={noToggle ? { cursor: "default" } : {}}>

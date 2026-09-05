@@ -6,7 +6,11 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
   const link = useLinkedCardHighlight("golden-ratio");
   const PHI = 1.6180339887499;
 
-  const [committedIds, addCommittedId, removeCommittedId, clearCommittedIds] = useTimedSet(600);
+  /* Only two of useTimedSet's four slots are read here. The set itself is
+     never rendered, so `flashCommit` currently records a commit nothing
+     draws — left as is rather than removed, because the flash is a missing
+     feature and not a stale name. */
+  const [, addCommittedId, , clearCommittedIds] = useTimedSet(600);
 
   const flashCommit = id => {
     addCommittedId(id);

@@ -4,9 +4,11 @@ import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaults
 import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 
 export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
-  const { W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, patternStart: psRaw } = sh;
+  /* `direction`, `minJ`, `startOff` and `patternStart` used to be read here
+     too. They are LayoutSettings' business now and were left behind when it
+     was split out; the markup below reaches for `sh.direction` directly. */
+  const { W, H, PPi, PLa, offset, s4Long } = sh;
   const rowStart = sh.rowStart || "top";
-  const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
   const [hoveredType, setHoveredType] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
@@ -61,7 +63,6 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
     if (resetActive) setActivePreset(null);
   };
 
-  const set = k => setShField(k, v => v, true);
   const setMat = k => setShField(k, v => clampNumber(v, 100, 8000, 100), true);
   const setSurf = k => setShField(k, v => clampNumber(v, 100, 50000, 100));
   const setS2PanelState = patch => setSh(s => ({ ...s, offset: patch.offset !== undefined ? patch.offset : s.offset }));

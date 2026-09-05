@@ -324,7 +324,6 @@ function useProtectedRangeSlider(onChange) {
  * A lockable range slider component to prevent accidental movement on mobile.
  */
 export function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
-  const isMobileMode = isMobileViewport();
   // Default to locked on both mobile and desktop
   const [isLocked, setIsLocked] = React.useState(true);
 
@@ -504,10 +503,6 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
       </div>
     </div>
   );
-}
-
-function SLabel({ children }) {
-  return <div className="slabel">{children}</div>;
 }
 
 // Single collapsible replaces both Section and ControlPanel
