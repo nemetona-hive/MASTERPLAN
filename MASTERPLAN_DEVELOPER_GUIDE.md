@@ -79,16 +79,22 @@ audit.
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 | `npm run deploy:check` | whether the live site is serving the build you have (network; not part of `verify`) |
 
-UI interaction is covered in two places. `tests/nav.test.jsx` drives `AppNav`
-through jsdom — roving focus, the collapsed strip, the portalled tooltip, the
-mobile/desktop split — and `tests/home.test.jsx` covers `SheetHome`'s cards and
-build stamp. None of the calculator pages have an equivalent. Preset application, direction switching with per-direction state
-save, panel collapse and the `LayoutPanel` controlled / uncontrolled toggle
-still have no test behind them, so `verify` going green says the build is
-sound, not that the page still works. Check a UI change in the browser as well
-— jsdom has no layout engine, so anything that depends on a real box (the
-collapsed strip's width, where a tooltip lands) is asserted structurally here
-and verified only by eye.
+UI interaction is covered in four places, all jsdom. `tests/nav.test.jsx`
+drives `AppNav` — roving focus, the collapsed strip, the portalled tooltip, the
+mobile/desktop split. `tests/home.test.jsx` covers `SheetHome`'s cards and build
+stamp. `tests/timesheet-grid.test.jsx` drives `SheetTimesheet` for the arrow-key
+grid, and `tests/preset-dropdown.test.jsx` drives `SheetSymmetricLayout` and
+`SheetSurfaceLayout` for the preset list — opening it, walking it, applying from
+it, and the click paths that used to need two clicks.
+
+The rest of the calculator pages have no equivalent: Concrete, Golden Ratio and
+Pipe Wrap are untouched by any render test, and so are direction switching with
+its per-direction state save, panel collapse and the `LayoutPanel` controlled /
+uncontrolled toggle. `verify` going green says the build is sound, not that
+every page still works. Check a UI change in the browser as well — jsdom has no
+layout engine, so anything that depends on a real box (the collapsed strip's
+width, where a tooltip lands) is asserted structurally here and verified only by
+eye.
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI
@@ -533,7 +539,12 @@ is what makes the identity key sound — keep it that way.
   keep owning the open/closed state themselves. The toggle hands focus back
   to the input on the way, because `useDropdownKeyboard` is wired to the
   field's keydown: a button that kept focus would leave the list open and
-  unwalkable. `tests/preset-dropdown.test.jsx` pins both halves.
+  unwalkable. **It focuses before it toggles, and the order is load-bearing:**
+  moving focus blurs whichever field had it, which commits that field, and a
+  page whose fields share one open-list value closes the list from there —
+  toggle first and that close lands second and undoes it, which is how opening
+  another field's list came to need two clicks. `tests/preset-dropdown.test.jsx`
+  pins every part of this.
 - `<SaveDefaultsButton status onClick errorMessage labels />` — renders nothing
   unless `canSaveStaticDefaults()`. `status` is `""|"saving"|"saved"|"error"`;
   pass `errorMessage` so the failure reason reaches a tooltip instead of only
