@@ -1,6 +1,7 @@
 import { React, useState } from "../react-globals.js";
 import { Icon, Stack, useTimedState } from "../shared.jsx";
 import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
+import { useGridNav } from "../utils/grid-nav.js";
 
 // ── SheetTimesheet ────────────────────────────────────────────────────────────
 
@@ -12,6 +13,14 @@ const LUNCH_PRESETS = [
   ['1 h',    '1:00'],
 ];
 
+
+/* The typed columns, in the order they are rendered. The index into this is the
+   grid column an arrow key moves through, and the name is half the DOM id every
+   cell already has — `ts-start-4` and the rest — so arrow-nav needs no refs and
+   no new bookkeeping on the page. Duration and Decimal are not columns here:
+   they are read-only results, and an arrow that landed on one would be a move
+   into a dead end. */
+const TS_COLUMNS = ['start', 'end', 'lunch'];
 
 function makeCalcRows() {
   return [1, 2, 3].map(id => ({ id, start: '', end: '', lunch: '' }));
@@ -87,6 +96,33 @@ export function SheetTimesheet() {
     if (parsed !== null && value.trim()) {
       updateCalcRow(id, field, fmtHHMM(parsed));
     }
+  };
+
+  /* Arrow-key movement across the three typed columns: Up and Down step between
+     rows in the same column, Left and Right cross to the neighbouring column
+     once the caret has run out of field. Tab is untouched — see the note in
+     grid-nav.js about why the roving tabindex stayed in MONEYFLOW. */
+  const gridNav = useGridNav({
+    rowCount: calcRows.length,
+    colCount: TS_COLUMNS.length,
+    cellId: (rowIndex, colIndex) => {
+      const row = calcRows[rowIndex];
+      return row ? `ts-${TS_COLUMNS[colIndex]}-${row.id}` : "";
+    }
+  });
+
+  /* One props bag per cell. Lunch brings a keydown of its own — Tab there walks
+     to the next row and adds one at the end — so the two are merged here rather
+     than spread one after the other at the call site, where the second would
+     silently replace the first. The page handler runs first and the arrows only
+     answer keys it did not take. */
+  const cellProps = (rowIndex, colIndex, onKeyDown) => {
+    const nav = gridNav.cellProps(rowIndex, colIndex);
+    if (!onKeyDown) return nav;
+    return {
+      ...nav,
+      onKeyDown: event => { onKeyDown(event); nav.onKeyDown(event); }
+    };
   };
 
   // Tab from Lunch → next row Start; auto-adds row if on last
@@ -187,6 +223,7 @@ export function SheetTimesheet() {
                                 className="num-input ts-input" type="text" placeholder="9, 9:30, 0930"
                                 value={row.start}
                                 ref={el => { startRefs.current[row.id] = el; }}
+                                {...cellProps(idx, 0)}
                                 onFocus={() => setActiveRowId(row.id)}
                                 onChange={e => updateCalcRow(row.id, 'start', e.target.value)}
                                 onBlur={e => formatTimeInput(row.id, 'start', e.target.value)} />
@@ -198,6 +235,7 @@ export function SheetTimesheet() {
                                 name={`ts-end-${row.id}`}
                                 className="num-input ts-input" type="text" placeholder="17, 17:30"
                                 value={row.end}
+                                {...cellProps(idx, 1)}
                                 onFocus={() => setActiveRowId(row.id)}
                                 onChange={e => updateCalcRow(row.id, 'end', e.target.value)}
                                 onBlur={e => formatTimeInput(row.id, 'end', e.target.value)} />
@@ -209,8 +247,8 @@ export function SheetTimesheet() {
                                 name={`ts-lunch-${row.id}`}
                                 className="num-input ts-input" type="text" placeholder=".30"
                                 value={row.lunch}
+                                {...cellProps(idx, 2, e => handleLunchTab(e, idx))}
                                 onFocus={() => setActiveRowId(row.id)}
-                                onKeyDown={e => handleLunchTab(e, idx)}
                                 onChange={e => updateCalcRow(row.id, 'lunch', e.target.value)} />
                             </div>
                             <div>

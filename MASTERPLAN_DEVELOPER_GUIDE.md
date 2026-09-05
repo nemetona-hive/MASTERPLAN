@@ -290,6 +290,7 @@ shared.jsx        → Icon, RangeSlider, NumInput, Collapsible, Section, Control
 Visualization.jsx → PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
 Controls.jsx      → LAYOUT_REGISTRY
 utils/timesheet.js→ parseTime, parseLunch, fmtHHMM, fmtDecimal
+utils/grid-nav.js → useGridNav, arrowExitsField, nextGridPosition, GRID_NAV_KEYS
 components/*.jsx  → one Sheet* per page (plus PipeWrapCalculator)
 Nav.jsx           → AppNav
 App.jsx           → entry point; mounts via ReactDOM.createRoot
@@ -297,6 +298,26 @@ App.jsx           → entry point; mounts via ReactDOM.createRoot
 
 `themes.js` is loaded directly in `index.html` so themes apply before React
 renders.
+
+### Arrow keys in the timesheet grid (`utils/grid-nav.js`)
+
+Up and Down step between rows in the same column; Left and Right cross to the
+neighbouring column, but only once the caret has run out of field — so fixing a
+digit in the middle of `08:30` still works, which a plain "arrows always move
+cells" rule would take away. An empty cell is crossed on the first press, which
+is the move the feature exists for. Nothing wraps: the last column does not roll
+into the next row's first, because Lunch and the following Start are unrelated
+cells.
+
+The hook finds cells with `document.getElementById(cellId(row, col))` over the
+ids the page already gives its inputs (`ts-start-4`), so a renamed input breaks
+the arrows silently — `tests/timesheet-grid.test.jsx` exists to catch that.
+
+Ported from MONEYFLOW's `utils/grid-nav.js` as a subset. That version also roves
+the tabindex so a thirteen-column grid is one Tab stop; not ported here, because
+Tab already walks start → end → lunch → next row and adds a row off the end, and
+three columns were never the walk that made roving worth it. The half that was
+left behind is the half to bring over with the first grid wide enough to need it.
 
 ## Key globals (defined outside src/, treat as read-only)
 
