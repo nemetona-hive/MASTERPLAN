@@ -8,6 +8,7 @@ import { SheetSurfaceLayout } from "./components/SurfaceLayout.jsx";
 import { SheetSymmetricLayout } from "./components/SymmetricLayout.jsx";
 import { SheetTimesheet } from "./components/Timesheet.jsx";
 import { AppNav } from "./Nav.jsx";
+import { installFieldUndo } from "./utils/field-undo.js";
 import { COMPACT_NAV_MEDIA_QUERY, MOBILE_MEDIA_QUERY, isCompactNavViewport, isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
 
 // ── App root ──────────────────────────────────────────────────────────────────
@@ -148,6 +149,11 @@ function App() {
     window.addEventListener("keydown", onEnterCommit, true);
     return () => window.removeEventListener("keydown", onEnterCommit, true);
   }, []);
+
+  /* Undo inside a text field, replacing the native stack the app keeps
+     truncating. One delegated listener covers every input in the app; see
+     src/utils/field-undo.js for why it is not a hook. */
+  React.useEffect(() => installFieldUndo(), []);
 
   // Ctrl/Cmd+B toggles the sidebar — mobile gets its overlay menu instead
   React.useEffect(() => {

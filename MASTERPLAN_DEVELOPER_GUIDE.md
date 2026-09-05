@@ -97,6 +97,10 @@ stamp. `tests/timesheet-grid.test.jsx` drives `SheetTimesheet` for the arrow-key
 grid, and `tests/preset-dropdown.test.jsx` drives `SheetSymmetricLayout` and
 `SheetSurfaceLayout` for the preset list — opening it, walking it, applying from
 it, and the click paths that used to need two clicks.
+`tests/field-undo.test.jsx` drives a real `NumInput` through keydown/input
+pairs rather than `fireEvent.change`, because the module hangs on the order a
+real edit arrives in — a test written with `change` would pass against a module
+that could not work.
 
 The rest of the calculator pages have no equivalent: Concrete, Golden Ratio and
 Pipe Wrap are untouched by any render test, and so are direction switching with
@@ -351,6 +355,40 @@ the tabindex so a thirteen-column grid is one Tab stop; not ported here, because
 Tab already walks start → end → lunch → next row and adds a row off the end, and
 three columns were never the walk that made roving worth it. The half that was
 left behind is the half to bring over with the first grid wide enough to need it.
+
+### Undo inside a text field (`utils/field-undo.js`)
+
+Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y in any text field in the app, five steps deep.
+Installed once from `App.jsx` and delegated: **one** listener set on the
+document covers all 25 `NumInput` call sites and the 8 raw inputs, so a new
+field gets undo without knowing this exists. Do not add a per-field hook.
+
+It replaces the browser's own, which half-worked here. Writing `value`
+programmatically truncates the native undo stack, and this app does it
+constantly: `commitValue` clamps and reformats on blur and on Enter,
+`NumInput`'s effect on `[value]` rewrites the field whenever page state moves
+under it, `cleanNumericInput` restores a rejected character, and the timesheet
+turns `9` into `09:00` on the way out of the cell. Undo therefore worked right
+up until you blurred, pressed Enter, mistyped, or applied a preset.
+
+Two design points worth knowing before changing it:
+
+- **A step is an edit run, not a keystroke.** Five character-steps would be
+  less than one dimension. A run breaks when the kind of edit changes, the
+  caret jumps, a selection is replaced, or the field goes quiet for 800ms.
+- **The "before" value is read live off the node at keydown**, never tracked
+  across events. A tracked baseline goes stale the moment React writes `value`
+  itself, and a stale baseline hands back a value the field never held.
+
+Histories hang off the DOM nodes in a `WeakMap`, so a field's history dies
+exactly when its node does and there is no cleanup to forget.
+
+Ported from MONEYFLOW as a documented subset — the file header lists what was
+left behind and where it goes back. The short version: MONEYFLOW's copy is half
+of a pair with `doc-undo.js`, undo for what a **button** did, which this repo
+has no equivalent of yet. Anything in that file about a "generation", the
+document history, or the header undo buttons is the missing half, not a
+simplification to copy back in blind.
 
 ## Key globals (defined outside src/, treat as read-only)
 
@@ -880,6 +918,10 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 - Advanced user persistence. `saveStaticDefaults` writes to `config.js` from the
   dev server only, and localStorage holds nothing but the theme choice. There is
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
+- Undo for what a BUTTON did — MONEYFLOW's `doc-undo.js`. `field-undo.js` covers
+  text you typed and nothing else, so removing a timesheet row, applying a
+  preset over your numbers or clearing a Golden Ratio item still has no step
+  back. The seam it plugs into is described in `field-undo.js`'s header
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
 - UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have
