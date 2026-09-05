@@ -176,10 +176,10 @@ var PAGES = [{
 
 // Default application state — edit initial values here
 const DEFAULT_SH = {
-  W: 1400,
+  W: 1390,
   H: 2200,
-  PPi: 600,
-  PLa: 300,
+  PPi: 2500,
+  PLa: 1250,
   offset: 0.5,
   direction: "H",
   rowStart: "top",
