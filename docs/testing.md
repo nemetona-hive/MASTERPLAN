@@ -49,6 +49,12 @@ layout engine, so anything that depends on a real box (the collapsed strip's
 width, where a tooltip lands) is asserted structurally here and verified only by
 eye.
 
+There is a skill for the UI half of this —
+`.claude/skills/masterplan-ui-audit/` — which is the one to read when a check
+fires and you are deciding whether it is right. It carries the exemptions and
+their reasons, and the one failure mode that removes working styling: a dead
+class is not the same as a dead rule.
+
 `npm run lint` is ESLint, ported from MONEYFLOW and kept deliberately narrow:
 the rules that catch a defect, none that have an opinion about style.
 `eslint.config.mjs` explains each block, including why the four root classic
