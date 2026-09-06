@@ -23,7 +23,7 @@ html, body, #root {
 
 	--text: #e1e3e6;
 	--text-muted: #a0a7af;
-	--text-subtle: #758086;
+	--text-subtle: #889399;
 
 	--brand: #d4c07a;
 	--accent: #7e9fa8;
@@ -1060,7 +1060,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .data-row-unit {
-	color: var(--color-blue);
+
+	color: var(--text-muted);
 	margin-left: 8px;
 	width: 30px;
 }
@@ -1539,7 +1540,11 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 .data-preview .strip-seg-lbl {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	color: var(--color-white);
+
+	color: var(--text);
+	background: var(--surface-1);
+	padding: 1px var(--sp-1);
+	border-radius: 4px;
 }
 
 .data-preview .strip-legend {

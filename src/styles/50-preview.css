@@ -118,7 +118,17 @@
 .data-preview .strip-seg-lbl {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
-	color: var(--color-white);
+	/* A chip, not bare text on the segment.
+	   --color-white is --text, which flips with the theme while the segment
+	   fill stays mid-tone — so the label always landed near its ground's
+	   lightness: 2.20:1 on graphite, 3.32:1 on verdant, over --accent. No
+	   single ink can serve both, because the fill is not a theme colour. Giving
+	   the number its own opaque ground puts it back on a gated pair (--text on
+	   --surface-1) whatever the segment underneath it is. */
+	color: var(--text);
+	background: var(--surface-1);
+	padding: 1px var(--sp-1);
+	border-radius: 4px;
 }
 
 .data-preview .strip-legend {

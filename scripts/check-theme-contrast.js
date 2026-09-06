@@ -55,6 +55,15 @@ const pairsToTest = [
   { fg: "--text", bg: "--bg", target: 7 },
   { fg: "--text", bg: "--surface-1", target: 4.5 },
   { fg: "--text-muted", bg: "--surface-1", target: 4.5 },
+  /* --text-subtle is the quiet end of the text scale and was ungated, which is
+     how it shipped under 4.5 on every ground in both themes — 4.43 on
+     graphite's --bg, 4.05 on verdant's — painting the inactive labels of the
+     primary navigation. `npm run layout` found it by reading the screen; these
+     three keep it from drifting back. Its worst ground is --surface-2, so all
+     three are listed rather than the one that happened to fail first. */
+  { fg: "--text-subtle", bg: "--bg", target: 4.5 },
+  { fg: "--text-subtle", bg: "--surface-1", target: 4.5 },
+  { fg: "--text-subtle", bg: "--surface-2", target: 4.5 },
   { fg: "--brand", bg: "--bg", target: 3 },
   { fg: "--accent", bg: "--bg", target: 3 },
   // These three are drawn as text: --danger on .ts-duration--error and

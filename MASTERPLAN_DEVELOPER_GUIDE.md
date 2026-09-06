@@ -83,6 +83,7 @@ audit.
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
 | `npm run audit:ui` | hardcoded colour, a word painted in an edge token, text dimmed with opacity, control edges/heights/hover recipes, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
 | `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
+| `npm run layout` | where a box actually landed, what a word was actually painted in, whether a dialog keeps the keyboard — in a real browser |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
 | `npm run build` | rebuilds `components.js`, `app.css` and the icon subset |
@@ -131,6 +132,34 @@ React threw over the page. `react-hooks/exhaustive-deps` is a **warning**, not
 an error: some stale deps here are deliberate, and a gate that fails on a
 considered decision gets switched off rather than read. Read the three standing
 warnings before acting on them.
+
+`npm run layout` (`scripts/layout.mjs`) is the browser gate, and it exists
+because **jsdom has no layout engine**: `getBoundingClientRect` returns zeroes,
+a cascade conflict is invisible because nothing is painted, and `@media print`
+never applies. It asserts what only a browser knows — where a box landed, what
+colour a word was actually painted, whether a Tab press stayed inside a dialog —
+across every page and both themes.
+
+It is in `verify` and deliberately **not** in `pre-commit`: that hook is about a
+second, and a browser launch does not belong between finishing a thought and
+saving it. Run it directly after any change to layout, positioning, the control
+scale, a theme, or the print sheet.
+
+**It serves the app itself, statically, on an OS-assigned port** — it does *not*
+use `scripts/local-dev-server.js`. That server exposes `/api/save-defaults`,
+which writes `DEFAULT_SH` straight into `config.js`; a gate that drove the app
+through it would rewrite tracked source on every run. The static server answers
+that endpoint with a no-op so the app logs no error, and writes nothing. It also
+matches production, since Pages has no API either.
+
+The contrast half is the part `theme:check` structurally cannot do. That one
+compares token pairs out of `themes.js` — fast, portable, and blind to a colour
+painted over a ground that is not a token, or to what `opacity` did on the way
+to the screen. This walks real text nodes, composites the authored colour and
+every inherited opacity over the nearest opaque ancestor background, and
+measures *that*. On its first run it found `--text-subtle` painting the
+navigation's inactive labels at 4.43:1 on graphite and 4.05:1 on verdant, and
+`--accent` — gated as a 3:1 mark — drawing unit labels as words.
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI

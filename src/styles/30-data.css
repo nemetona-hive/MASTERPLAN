@@ -269,7 +269,10 @@
 }
 
 .data-row-unit {
-	color: var(--color-blue);
+	/* --accent is gated as a MARK at 3:1, and this draws words: it measured
+	   4.13:1 on verdant's --bg. A unit is secondary text, so it takes a text
+	   token — which also stops it competing with the figure beside it. */
+	color: var(--text-muted);
 	margin-left: 8px;
 	width: 30px;
 }
