@@ -485,9 +485,10 @@ destructive action is already behind an armed two-press confirm.
 
 Both files are ported from MONEYFLOW, and both headers list what was left
 behind. The short version for this pair: there is no `markDirty`, because
-nothing here persists. When localStorage autosave lands it goes into the history
-entry beside `apply`, because an undo has to be saved like any other change or
-what is on disk keeps the action you just took back.
+nothing here persists — and nothing is going to. See
+[What this app deliberately does not keep](#what-this-app-deliberately-does-not-keep).
+That makes undo the **only** way back from a destructive action: there is no
+file to restore from behind it.
 
 Each module publishes its own read model — `fieldUndoState`, `docUndoState` —
 and a `subscribe*` to go with it. The header pair is the only reader today. A
@@ -731,6 +732,35 @@ is what makes the identity key sound — keep it that way.
 - `useDropdownKeyboard(count, onSelect, onClose)` — Specialized hook for keyboard navigation (Arrow keys, Enter, Esc) within custom dropdowns.
 - `.seg-group` — a recessed track for exclusive mode switches. Its segments carry no ring of their own; the track supplies the edge.
 - `.pill-btn`, `.ctrl-dir`, `.ts-btn`, `.num-btn` — see [Controls And Buttons](#controls-and-buttons). Pick a tier by what the control does; do not write a new hover or active recipe.
+
+## What this app deliberately does not keep
+
+**MASTERPLAN persists nothing but the theme, and that is a decision.** It is
+worth stating, because MONEYFLOW's whole shape argues the other way and porting
+from it makes the absence look like an oversight.
+
+This is a calculator, not a ledger. Its state is a handful of numbers somebody
+has in front of them — a tape measure reading, a panel spec off a label — and
+re-entering them costs less than the machinery to keep them would: a serialiser
+per page, a schema version, a migration path for the day a shape changes, and a
+whole class of bug where what is on screen and what was restored disagree. The
+two things actually worth keeping already have homes:
+
+| Worth keeping | Where it goes |
+|---|---|
+| The values you reuse across jobs | `saveStaticDefaults` → `config.js`, dev only |
+| The output of a calculation | The printed cut list |
+
+So there is no `useAutoSave`, no `_personal/`, no restore points, and no
+`markDirty` in the undo history. MONEYFLOW has all four because it owns files
+nobody can re-derive; nothing here is in that category.
+
+**Two consequences worth carrying.** Undo is the only way back from a
+destructive action — there is nothing behind it, which is why `doc-undo` covers
+every button that can lose work. And the dev server's `saveStaticDefaults` is
+the one thing that writes to a tracked file: driving the app in a browser
+rewrites `DEFAULT_SH` in `config.js` with whatever you typed. Check
+`git status` after any browser session.
 
 ## Export — the cut list as a PDF
 
@@ -1182,9 +1212,6 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   Concrete's take-off is the obvious second, and `downloadFile` in `shared.jsx`
   is still uncalled — a CSV would consume the same report model rather than
   building one
-- Advanced user persistence. `saveStaticDefaults` writes to `config.js` from the
-  dev server only, and localStorage holds nothing but the theme choice. There is
-  no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
 - UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have

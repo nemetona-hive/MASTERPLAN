@@ -29,12 +29,21 @@
  *
  * ── Ported from MONEYFLOW as a documented subset ───────────────────────────
  *
- * One thing in its copy still has no counterpart here: `markDirty`. There, a
- * history entry carries the page's autosave hook and every step calls it,
- * because an undo has to be written to disk like any other change or the file
- * keeps the action you just took back. MASTERPLAN persists nothing but the
- * theme, so there is nothing to mark. When localStorage autosave lands, it goes
- * into the entry beside `apply` and is called from `recordDocStep` and `step`.
+ * One thing in its copy has no counterpart here and is not going to get one:
+ * `markDirty`. There, a history entry carries the page's autosave hook and
+ * every step calls it, because an undo has to be written to disk like any other
+ * change or the file keeps the action you just took back.
+ *
+ * MASTERPLAN persists nothing but the theme, and that is a decision rather than
+ * a gap. This is a calculator, not a ledger: its state is a handful of numbers
+ * somebody has in front of them — a tape measure reading, a panel spec — and
+ * re-entering them costs less than the machinery to keep them would. The two
+ * things actually worth keeping already have homes: `saveStaticDefaults` for
+ * the values you reuse, and the printed cut list for the output.
+ *
+ * That raises what this module is for rather than lowering it. With no file to
+ * restore from, undo is the ONLY way back from a destructive action — there is
+ * nothing behind it.
  *
  * The subscribe/announce pair below was absent for a while too, because the
  * header was a logo and there was nowhere to put a control that reads it. There
