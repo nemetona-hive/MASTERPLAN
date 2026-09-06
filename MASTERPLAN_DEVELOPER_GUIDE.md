@@ -863,6 +863,42 @@ Defined in `themes.js` (loaded as global, not inside `src/`).
   between light and dark, so it cannot be derived. The gate is 4.5:1 for any
   colour a word is drawn in, 3:1 for one that only draws a mark
 
+### The header wordmark (the molten lift)
+
+The NEMETONA mark in `app-head` is a token system, not a drawing. Set the
+`--logo-*` tokens on `.header-logo` (`src/styles/20-shell.css`); never restate
+the layer opacities, the keyframes or the stagger.
+
+Emission is coupled to elevation: as a glyph lights it also rises, and its
+shadow drops further away and fades. That inverse pairing is the effect — a
+shadow that merely darkened as the glyph brightened reads as a glow being
+switched on, not as a letter leaving the header plane.
+
+The geometry is declared once in `LOGO_GEOMETRY` (`App.jsx`) as inert shapes
+carrying no fill or stroke, and three `<g>` layers clone it with `<use>`:
+`.logo-drop` the cast shadow, `.logo-glow` the bloom, `.logo-core` the glyph.
+`LOGO_SHAPE_IDS` is **reading order**, which is neither the declaration order
+nor the order the original export used — `--i` is a shape's place in the word,
+and the stagger runs along it.
+
+Two things that are easy to get wrong:
+
+- **`--logo-rise` is in viewBox units, not pixels.** The 410×63.9 viewBox drawn
+  32px tall scales by about 0.078, so the default `3.2` is a quarter of a screen
+  pixel. Anything that looks like a sane px value here is enormous.
+- **`.header-logo` needs `overflow: visible`.** The bloom and the shadow are
+  both larger than the viewBox, and without it the SVG viewport clips them to a
+  visible rectangle.
+
+Ported whole from MONEYFLOW, tokens and keyframes unchanged — the two repos
+draw the same mark from byte-identical geometry. It replaced a flat fill piped
+through a linear gradient, declared twice: in an inline `<style>` inside the SVG
+and again as `.cls-1` in `10-nav.css`, a stylesheet about the nav.
+
+Colour comes from `--brand`, `--text` and `--shadow-rgb`, so a new theme gets
+the mark for free. `--shadow-rgb` is why: a hardcoded black cast shadow goes
+muddy on Verdant's light page.
+
 ## Golden Ratio tool
 
 PHI = 1.6180339887499. Builds 7 descending steps: `base / PHI^n`.
@@ -971,6 +1007,8 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   top-level `aria-label`, but the individual lines and connection paths convey
   nothing — a real gap in a technical reference drawing
 - A Content Security Policy. `index.html` has none. Weighed and deferred rather
-  than missed: the app leans on inline `style` attributes throughout, an inline
-  `<style>` in the logo SVG and a data-URI favicon, so any workable policy would
-  need `unsafe-inline` and would buy close to nothing
+  than missed: the app leans on inline `style` attributes throughout and a
+  data-URI favicon, so any workable policy would still need `unsafe-inline` and
+  would buy close to nothing. One of the three blockers is gone — the logo SVG
+  no longer carries an inline `<style>` — but attributes are the bulk of it,
+  and the wordmark itself now writes one per cloned shape (`--i`)

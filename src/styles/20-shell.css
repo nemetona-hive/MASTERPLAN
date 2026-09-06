@@ -6,9 +6,107 @@
  * ELEMENT
  */
 
+/* -------------------------------------------------------------------------
+ * THE MOLTEN LIFT — the header wordmark
+ * -------------------------------------------------------------------------
+ * Emission coupled to elevation: as a glyph lights it also RISES, and its
+ * shadow drops further away and fades. That inverse pairing is the whole
+ * effect — a shadow that merely darkened as the glyph brightened would read
+ * as a glow being switched on, not as a letter leaving the header plane.
+ *
+ * Three layers clone one set of inert shapes (see LOGO_GEOMETRY in App.jsx):
+ *
+ *   .logo-drop   the cast shadow. Furthest back, travels DOWN as the glyph
+ *                travels up, and fades as it goes.
+ *   .logo-glow   the bloom, rising in lockstep with the glyph it belongs to.
+ *   .logo-core   the glyph itself, solid, carrying the lift.
+ *
+ * This is a token system. Set the --logo-* tokens; never restate the layer
+ * opacities, the keyframes or the stagger. The emission peaks toward --text
+ * rather than toward white — that is what keeps it readable on Verdant, where
+ * "brighter" means more ink, not less.
+ *
+ *   --logo-emit    the emitted colour. Defaults to --brand.
+ *   --logo-peak    hottest point. Mix toward --text, never to a second hue.
+ *   --logo-rise    lift at the peak, in viewBox units — NOT in real pixels.
+ *                  The 410x63.9 viewBox drawn 32px tall scales by about
+ *                  0.078, so the default 3.2 is a quarter of a screen pixel.
+ *                  Anything that looks like a sane px value here is enormous.
+ *   --logo-glow-hi peak opacity of the bloom.
+ *   --logo-drop-lo resting opacity of the shadow, when the glyph is DOWN and
+ *                  the shadow is therefore tightest and strongest.
+ *   --logo-speed   one full pass of the wave across the mark.
+ *   --logo-step    delay between neighbouring shapes. Multiplied by --i,
+ *                  which is the shape's index in reading order.
+ *
+ * Ported whole from MONEYFLOW, tokens and keyframes unchanged. It replaced a
+ * flat fill piped through a linear gradient and a .25px stroke, declared in an
+ * inline <style> inside the SVG and again in 10-nav.css — two copies of one
+ * rule, in a stylesheet about the nav, for a mark in the header.
+ * ------------------------------------------------------------------------- */
 .header-logo {
+	--logo-emit:    var(--brand);
+	--logo-peak:    color-mix(in srgb, var(--brand) 70%, var(--text));
+	--logo-rise:    3.2px;
+	--logo-glow-hi: .85;
+	--logo-drop-lo: .34;
+	--logo-speed:   6.6s;
+	--logo-step:    .3s;
+
 	display: block;
 	height: 32px;
+	/* The bloom and the cast shadow are both larger than the viewBox. Without
+	   this the SVG viewport clips them to a visible rectangle. */
+	overflow: visible;
+}
+
+.logo-core > * { fill: color-mix(in srgb, var(--logo-emit) 95%, transparent); animation-name: logo-lift; }
+.logo-glow > * { fill: var(--logo-peak);                                     animation-name: logo-lift-glow; }
+/* --shadow-rgb is the per-theme shadow colour: black on graphite, a deep green
+   on Verdant. Using it is what lets one rule serve every theme — a hardcoded
+   black shadow goes muddy on Verdant's light page. */
+.logo-drop > * { fill: rgb(var(--shadow-rgb));                               animation-name: logo-lift-drop; }
+.logo-glow > *,
+.logo-drop > * { stroke: none; }
+
+/* One stagger declaration for all three layers. The delay is NEGATIVE so the
+   wave is already mid-flight on first paint — a positive delay would make the
+   mark visibly ignite on every page load, which is a load-time event, not the
+   ambient one this is meant to be. */
+.logo-core > *,
+.logo-glow > *,
+.logo-drop > * {
+	animation-duration: var(--logo-speed);
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: infinite;
+	/* --i comes from the markup, one per cloned shape (LogoLayer, App.jsx).
+	   The fallback matters: an undefined custom property makes the whole
+	   calc() invalid and the declaration is dropped, which would land every
+	   shape on the same delay and turn the wave into a single pulse. */
+	animation-delay: calc(var(--i, 0) * var(--logo-step) * -1);
+}
+
+@keyframes logo-lift {
+	0%, 100% { transform: translateY(0); }
+	44%      { transform: translateY(calc(var(--logo-rise) * -1)); }
+}
+@keyframes logo-lift-glow {
+	0%, 100% { opacity: .08; }
+	44%      { opacity: var(--logo-glow-hi); }
+}
+@keyframes logo-lift-drop {
+	0%, 100% { opacity: var(--logo-drop-lo);          transform: translateY(1.4px); }
+	44%      { opacity: calc(var(--logo-drop-lo) * .47); transform: translateY(4.6px); }
+}
+
+/* Settles into a flat mid-lift built from the same tokens, rather than
+   freezing on whatever frame it happened to reach. */
+@media (prefers-reduced-motion: reduce) {
+	.logo-core > *,
+	.logo-glow > *,
+	.logo-drop > * { animation: none; }
+	.logo-glow > * { opacity: calc(var(--logo-glow-hi) * .4); }
+	.logo-drop > * { opacity: calc(var(--logo-drop-lo) * .76); transform: translateY(2.4px); }
 }
 
 /*

@@ -56,8 +56,6 @@
 	border-radius: 6px;
 }
 
-.cls-1 { fill: url(#logo-grad); stroke: var(--color-primary); stroke-miterlimit: 10; stroke-width: .25px; }
-
 /* ── Icon ── */
 .nav-btn-icon {
 	font-size: var(--nav-fs-icon);

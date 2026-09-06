@@ -55,12 +55,12 @@ describe("doc undo, through the timesheet", () => {
 
   it("restores what a row held, not just the row", () => {
     render(<SheetTimesheet />);
-    fireEvent.change(startCell(0), { target: { value: "09:00" } });
+    fireEvent.change(startCell(0), { target: { value: "9:00" } });
     fireEvent.click(screen.getByText("Clear all"));
     expect(startCell(0).value).toBe("");
 
     undoStep();
-    expect(startCell(0).value).toBe("09:00");
+    expect(startCell(0).value).toBe("9:00");
   });
 
   it("hands the next added row an id nothing else answers to", () => {
@@ -149,7 +149,7 @@ describe("doc undo, through the timesheet", () => {
 
   it("does not record what typing did", () => {
     render(<SheetTimesheet />);
-    fireEvent.change(startCell(0), { target: { value: "09:00" } });
+    fireEvent.change(startCell(0), { target: { value: "9:00" } });
     // Text has its own undo; a page-level step here would be two systems
     // answering for one edit.
     expect(docUndoState().canUndo).toBe(false);

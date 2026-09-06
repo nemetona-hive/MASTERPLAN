@@ -63,6 +63,14 @@ describe("stylesheet integrity", () => {
     // Set at runtime by applyTheme rather than declared in the sheet.
     const themeSource = fs.readFileSync(path.join(ROOT, "themes.js"), "utf8");
     for (const m of themeSource.matchAll(/'(--[a-z0-9-]+)'\s*:/g)) defined.add(m[1]);
+    /* Set per element by the markup, so no stylesheet can declare it and the
+       check would report it forever. Each needs a reason, because an exemption
+       that is wrong just hides the typo this test exists to catch.
+
+       --i  the cloned shape's index in the wordmark, written by LogoLayer
+            (App.jsx) so the molten-lift stagger has something to multiply. */
+    const FROM_MARKUP = new Set(["--i"]);
+    for (const name of FROM_MARKUP) defined.add(name);
     expect([...used].filter(v => !defined.has(v))).toEqual([]);
   });
 });
