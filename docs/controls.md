@@ -38,7 +38,15 @@ variable.
 | `.ts-btn`, `.num-btn`, `.ts-copy`, `.viz-expand-btn` | raised | md |
 | `.ctl-ghost` (composable), `.ctrl-dir`, `.pill-btn`, `.mp-modal-close` | ghost | lg / md |
 | `.ctrl-dir.on`, `.pill-btn.on`, `.ctl-ghost.on` | solid active | — |
-| `.nav-*` | the rail, `--nav-ctl-h` | 40px, off the data scale |
+| `.nav-*` | the rail | its own system, off the data scale — see below |
+
+**`--nav-ctl-h` is declared and read by nothing.** It says 40px in
+`00-base.css`; the nav buttons are sized by padding plus line-height and come out
+at 33px, which `npm run layout` confirms. The token, the rendering and this table
+were three different answers until the table was corrected. Either wire the rail
+to its token or drop the token — but do not read 40px as a fact about the nav
+until one of those has happened. The control checks exempt the rail, so nothing
+flags it.
 
 Compose `.ctl-ghost`, `.ctl-danger` (destructive hover), `.ctl-sm` and
 `.ctl-icon` in the markup rather than writing a bespoke recipe — Timesheet's
