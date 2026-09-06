@@ -33,6 +33,46 @@ describe("audit-ui", () => {
     expect(run()).not.toContain("#128161");
   });
 
+  /* ── undefined-class ────────────────────────────────────────────────────
+   * The half that finds bugs rather than untidiness: markup naming a rule
+   * nothing defines. These pin the two ways it could do damage — inventing a
+   * finding out of a string that is not a class, and reporting a name the
+   * suite itself depends on. */
+
+  it("does not read a comparison operand inside className as a class", () => {
+    // `areaMode === "dims"` and friends live inside className={...}
+    // expressions all over this codebase.
+    const out = run();
+    for (const operand of ["dims", "direct", "corners", "avg", "home", "bottom"]) {
+      expect(out, operand).not.toContain(`.${operand} is in the markup`);
+    }
+  });
+
+  it("does not report a class the suite selects on", () => {
+    // ts-grid-row carries styling, but the exemption exists for hooks that do
+    // not — the rule is that something depending on a name is enough.
+    const out = run();
+    expect(out).not.toContain("ts-grid-row is in the markup");
+  });
+
+  it("keeps every baselined name reviewable, with its reason", () => {
+    const baseline = JSON.parse(fs.readFileSync(
+      path.join(ROOT, "scripts", "undefined-class-baseline.json"), "utf8"));
+    // An exemption with no reason is one nobody can re-read, which is how a
+    // baseline turns into a place findings go to be forgotten.
+    for (const [name, reason] of Object.entries(baseline)) {
+      expect(typeof reason, name).toBe("string");
+      expect(reason.length, name).toBeGreaterThan(30);
+    }
+    // And --undefined has to actually surface them again.
+    const listed = execFileSync("node",
+      [path.join(ROOT, "scripts", "audit-ui.js"), "--undefined"],
+      { cwd: ROOT, encoding: "utf8" });
+    for (const name of Object.keys(baseline)) {
+      expect(listed, name).toContain(`.${name} is styleless on purpose`);
+    }
+  });
+
   it("treats a class assembled from a template hole as reachable", () => {
     const gr = fs.readFileSync(path.join(ROOT, "src", "components", "GoldenRatio.jsx"), "utf8");
     expect(gr).toContain("gr-control-card-${tone}");

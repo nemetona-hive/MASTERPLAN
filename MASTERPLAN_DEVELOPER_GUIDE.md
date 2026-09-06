@@ -81,7 +81,7 @@ audit.
 | Command | What it guards |
 |---|---|
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
-| `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them), JS/CSS breakpoint drift |
+| `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
 | `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
@@ -138,6 +138,19 @@ GitHub Pages serves this tree directly, so a push **is** the deploy — the hook
 refuses if the committed `components.js` or `app.css` no longer matches `src/`,
 which is a staleness only visitors would ever see. Bypass either with
 `--no-verify`.
+
+`undefined-class` is the mirror of the dead-CSS check and the half that finds
+bugs rather than untidiness: an element whose class no stylesheet defines gets
+none of the styling its name implies, and nothing else in `verify` looks that
+way — tests assert structure, `theme:check` reads tokens, and neither reads
+markup against CSS. It is a WARN, and two exemptions are automatic: a name the
+suite selects on (a deliberate hook, and reading `tests/` for it keeps the
+exemption honest) and a BEM anchor. Anything else goes in
+`scripts/undefined-class-baseline.json`, which is an object of name → reason —
+an exemption whose reason lives somewhere else is one nobody re-reads, and one
+nobody re-reads just hides the check. A baselined name that later gets styled
+or deleted is reported as `stale-baseline`, so the list cannot outlive what it
+excused.
 
 Colour comes from theme tokens, never a literal — `--danger`, `--success`,
 `--warning`, `--brand`, `--accent`, or the `--color-*` aliases onto them. The

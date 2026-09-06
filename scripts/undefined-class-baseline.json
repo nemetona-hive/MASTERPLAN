@@ -1,0 +1,6 @@
+{
+  "concrete-split-content": "A grid child placed by .concrete-split-wrap's 1fr/auto/1fr tracks. The parent decides where it sits, so a rule of its own would be a second opinion; the name says which cell it is, which a bare <div> would not.",
+  "result-card-val-sub": "The unit after the total. Styled positionally by '.result-card span:not(.result-card-title):not(.result-card-value)' in the mobile block, and plain inherited text on desktop, which is the intent.",
+  "result-card-footer-lbl": "Half of a label/value pair, styled through its parent '.result-card .result-card-footer-item'. The name is what keeps it out of the :not() chain above, so it is load-bearing without carrying a rule.",
+  "result-card-footer-val": "The other half of that pair, and exempt for the same reason. Removing either name would leave two anonymous spans and make the :not() chain unreadable."
+}

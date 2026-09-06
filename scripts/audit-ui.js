@@ -7,10 +7,14 @@
  * references it.
  *
  * Ported from MONEYFLOW's audit, deliberately as a subset. That version also
- * checks money-grid --mg-* tokens and the --ctl-* control tiers; neither token
- * system exists here (grep src/styles for either and you get nothing), so those
- * checks would only ever emit noise about rules that are correct. They belong
- * back if MASTERPLAN ever adopts the systems.
+ * checks the money-grid --mg-* token system, which does not exist here — grep
+ * src/styles for --mg- and you get nothing — so those checks would only ever
+ * emit noise about rules that are correct.
+ *
+ * Its four --ctl-* control-tier checks are a different case and ARE owed: this
+ * repo grew that system after the first port and now has 80-odd --ctl-* uses
+ * and a documented tier table, with nothing mechanically holding a control to
+ * it. They are the next thing to bring over.
  *
  * Findings are split by confidence:
  *   ERROR - deterministic. A theme token exists for this and a literal is used,
@@ -18,8 +22,9 @@
  *   WARN  - heuristic. Usually real, but read it before acting; a class only
  *           ever assembled at runtime looks dead when it is not.
  *
- * Usage: npm run audit:ui              (exit 1 if any ERROR)
- *        npm run audit:ui -- --unused  (also list the dead-class tail)
+ * Usage: npm run audit:ui                 (exit 1 if any ERROR)
+ *        npm run audit:ui -- --unused     (also list the dead-class tail)
+ *        npm run audit:ui -- --undefined  (also list baselined styleless names)
  */
 
 const fs = require("fs");
@@ -384,6 +389,166 @@ for (const file of markupFiles) {
   }
 }
 
+/* --------------------------------------------- 4. markup with no CSS
+ * The mirror of check 2, and the reason it exists: check 2 finds CSS nothing
+ * uses, which is tidiness. This finds markup naming a rule nothing defines,
+ * which is a bug — the element renders with none of the styling its name
+ * implies, and nothing else in `verify` looks in this direction. Tests assert
+ * structure, theme:check reads tokens, and neither reads markup against CSS.
+ *
+ * WARN rather than ERROR, matching check 2's confidence. A class can be
+ * legitimately styleless, so two exemptions are automatic and neither is a
+ * list somebody maintains:
+ *
+ *   - a name the SUITE selects on is a deliberate hook, and reading tests/ for
+ *     it keeps the exemption honest — the class is spared because something
+ *     actually depends on it.
+ *   - a BEM anchor: a base whose modifier carries the styling, or a modifier
+ *     on a styled base. Deleting either half leaves the other naming a thing
+ *     that no longer exists.
+ *
+ * Vendor CSS is read too, so Font Awesome's classes resolve.
+ *
+ * Only LITERAL class names are checked. Anything assembled at runtime is
+ * invisible here, which is the safe direction to be wrong in: this can miss a
+ * broken class and must never invent one.
+ */
+
+const vendorDir = path.join(ROOT, "vendor");
+const vendorCss = fs.existsSync(vendorDir) ? walk(vendorDir, ".css") : [];
+
+// Any appearance in a selector counts as defining a class, guard position
+// included: `.ctl-ghost:not(.on)` means something styles that name.
+const definedClasses = new Set();
+for (const file of [...cssFiles, ...vendorCss]) {
+  const text = fs.readFileSync(file, "utf8");
+  for (const m of text.matchAll(/\.([a-zA-Z][\w-]*)/g)) definedClasses.add(m[1]);
+}
+
+/* Pulls the literal class names out of one file.
+ *
+ * Two forms: a plain attribute, and the string literals inside a
+ * `className={...}` expression — the array-and-filter shape this repo uses for
+ * conditional classes (see `Icon` in shared.jsx) puts real class names in
+ * quotes there. Strings from anywhere else in the file are ignored, so a
+ * `direction === "V"` comparison cannot be mistaken for a class. */
+function literalClassNames(text) {
+  const found = [];
+  const push = (value, index) => {
+    for (const name of value.split(/\s+/)) {
+      if (name) found.push({ name, index });
+    }
+  };
+
+  for (const m of text.matchAll(/(?:className|class)\s*=\s*"([^"]*)"/g)) {
+    push(m[1], m.index);
+  }
+
+  // className={ ... }, brace-matched so a nested object or ternary cannot end
+  // the region early.
+  const re = /className\s*=\s*\{/g;
+  let m;
+  while ((m = re.exec(text))) {
+    let depth = 1;
+    let i = m.index + m[0].length;
+    const start = i;
+    while (i < text.length && depth > 0) {
+      if (text[i] === "{") depth++;
+      else if (text[i] === "}") depth--;
+      i++;
+    }
+    const expr = text.slice(start, i - 1);
+    for (const lit of expr.matchAll(/"([^"]*)"/g)) {
+      // A fragment being concatenated onto is not a class name yet.
+      if (lit[1].endsWith("-")) continue;
+      /* `page === "home"` and `direction === "V"` sit inside className
+         expressions and are operands, not class names. Reading them as classes
+         is how this check invents work that does not exist. */
+      const before = expr.slice(0, lit.index).trimEnd();
+      const after = expr.slice(lit.index + lit[0].length).trimStart();
+      if (/[=!]==?$/.test(before) || /^[=!]==?/.test(after)) continue;
+      push(lit[1], m.index + lit.index);
+    }
+  }
+  return found;
+}
+
+const TEST_DIR = path.join(ROOT, "tests");
+const testText = fs.existsSync(TEST_DIR)
+  ? walk(TEST_DIR, ".jsx").concat(walk(TEST_DIR, ".js"))
+      .map(f => fs.readFileSync(f, "utf8")).join("\n")
+  : "";
+
+/* Two BEM shapes are styleless on purpose and are not findings.
+ *
+ * A BASE whose modifier is styled: the base carries nothing and
+ * `.base--variant` carries the colour. Dropping the base would leave the
+ * modifier naming a thing that no longer exists.
+ *
+ * A MODIFIER on a styled base: one half removes a border the base draws, so
+ * its opposite has nothing to say and exists to mark the pair. Deleting one
+ * half of a symmetry is how the other half stops making sense. */
+function isBemAnchor(name) {
+  const mod = name.indexOf("--");
+  if (mod > 0 && definedClasses.has(name.slice(0, mod))) return true;
+  for (const defined of definedClasses) {
+    if (defined.startsWith(`${name}--`)) return true;
+  }
+  return false;
+}
+
+/* Names reviewed and deliberately left styleless.
+ *
+ * The baseline is what makes this a tripwire: anything reported is new. Add a
+ * name only after deciding it is styleless on purpose — a test hook and a BEM
+ * anchor are both exempt already, so the bar for landing here is high.
+ * `--undefined` lists every finding, baselined or not, with its reason.
+ *
+ * MONEYFLOW keeps this as a flat array of names, with the reasoning in prose in
+ * the script. That works while the list is empty, which theirs is. Ours is not,
+ * so it is an OBJECT of name -> reason instead: an exemption whose reason lives
+ * somewhere else is one nobody re-reads, and an exemption nobody re-reads just
+ * hides the check. */
+const BASELINE_FILE = path.join(__dirname, "undefined-class-baseline.json");
+const baselineReasons = fs.existsSync(BASELINE_FILE)
+  ? JSON.parse(fs.readFileSync(BASELINE_FILE, "utf8"))
+  : {};
+const baseline = new Set(Object.keys(baselineReasons));
+
+const stillUndefined = new Set();
+
+for (const file of markupFiles) {
+  const text = fs.readFileSync(file, "utf8");
+  const seen = new Set();
+  for (const { name, index } of literalClassNames(text)) {
+    if (definedClasses.has(name) || seen.has(name)) continue;
+    if (testText.includes(name)) continue;
+    if (isBemAnchor(name)) continue;
+    seen.add(name);
+    stillUndefined.add(name);
+    // `--undefined` shows the reviewed ones too, so the list can be re-read.
+    if (baseline.has(name)) {
+      if (!process.argv.includes("--undefined")) continue;
+      add("WARN", "undefined-class", file, lineAt(text, index),
+        `.${name} is styleless on purpose — ${baselineReasons[name]}`);
+      continue;
+    }
+    add("WARN", "undefined-class", file, lineAt(text, index),
+      `.${name} is in the markup and no stylesheet defines it — ` +
+      `the element gets none of the styling the name implies.`);
+  }
+}
+
+// A baseline that outlives what it excused starts hiding real findings. If a
+// name has been styled or deleted since it was reviewed, say so.
+for (const name of baseline) {
+  if (!stillUndefined.has(name)) {
+    add("WARN", "stale-baseline", BASELINE_FILE, 1,
+      `.${name} is in the baseline but is no longer an undefined class — ` +
+      `it has been styled or removed. Drop it from the list.`);
+  }
+}
+
 /* -------------------------------------------------------------- report out */
 
 const order = { ERROR: 0, WARN: 1 };
@@ -404,6 +569,9 @@ if (!findings.length) {
 // findings, so it collapses to a count unless asked for.
 const showUnused = process.argv.includes("--unused");
 const unused = findings.filter(f => f.check === "unused-css");
+/* undefined-class is NOT collapsed with the dead-CSS tail. A collapsed count
+   moving from 3 to 4 is not something anyone reads, and this is the half that
+   finds bugs rather than untidiness. */
 const shown = showUnused ? findings : findings.filter(f => f.check !== "unused-css");
 
 let lastCheck = "";

@@ -454,7 +454,7 @@ export function SheetGuider() {
         </ControlPanel>
       </div>
       <div id="data-preview" className="data-preview">
-        <Stack gap={3} className="guider-preview-list">
+        <Stack gap={3}>
 
           {selected ? (
             selected.id === "lihtluliti"  ? <GuiderLihtluliti /> :
