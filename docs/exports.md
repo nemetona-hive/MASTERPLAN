@@ -11,8 +11,13 @@ timesheet failed — an export has to beat what is already there, and for these
 two documents paper or a phone screen already wins. Do not add a second format
 without a workflow that a printed sheet cannot serve.
 
-`downloadFile` in `shared.jsx` is the leftover of that plan: exported, never
-called, and kept alive only by its own test.
+`downloadFile` went with it. It was exported, never called, and kept alive only
+by its own test — a shape worth recognising, because `analyze:code` reports no
+unreferenced exports for exactly that reason: a test that exists because the
+function does will hold dead code up indefinitely. If a download is ever wanted,
+it is eight lines, and the one non-obvious part is written down here: revoke the
+object URL a tick after `click()`, never in the same turn, or Firefox and Safari
+cancel the save before it starts.
 
 **There is no PDF library, and there should not be one.** The browser's own
 "Save as PDF" *is* the print dialog, so a PDF export is a print stylesheet plus

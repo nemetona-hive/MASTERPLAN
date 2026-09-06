@@ -57,7 +57,6 @@
   forever. If you pass a delay, make sure the hook is this one.
 - `useClickOutside(refs, handler, active)` — closes on a click away, listening to both `mousedown` and `touchstart` so a tap counts.
 - `useModeExit(inside, onExit, active)` — the other half: `useClickOutside` plus Escape. An armed mode should take both ways out. `inside` is an array of refs, or a CSS selector for a subtree that cannot forward one.
-- `downloadFile(name, data, mimeType)` — hands the browser a generated file. Revokes the object URL a tick late, because doing it in the same turn cancels the save in Firefox and Safari.
 - `useDropdownKeyboard(count, onSelect, onClose)` — Specialized hook for keyboard navigation (Arrow keys, Enter, Esc) within custom dropdowns.
 - `.seg-group` — a recessed track for exclusive mode switches. Its segments carry no ring of their own; the track supplies the edge.
 - `.pill-btn`, `.ctrl-dir`, `.ts-btn`, `.num-btn` — see [Controls and buttons](controls.md). Pick a tier by what the control does; do not write a new hover or active recipe.

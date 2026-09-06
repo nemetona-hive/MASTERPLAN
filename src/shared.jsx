@@ -198,24 +198,6 @@ export function useClickOutside(refs, handler, active = true) {
   }, [handler, active]);
 }
 
-/**
- * Hands the browser a generated file to save.
- *
- * The object URL is revoked on a later tick rather than straight after
- * `click()` — the download reads from that URL asynchronously, and revoking it
- * in the same turn cancels the save in Firefox and Safari before it starts.
- */
-export function downloadFile(fileName, data, mimeType) {
-  const url = URL.createObjectURL(new Blob([data], { type: mimeType }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
 // Every armed mode — an open dropdown, a preset being renamed — takes the same
 // two ways out: click away, or Escape. useClickOutside already gives the first
 // half; leaving the second to each caller is how the same control ends up

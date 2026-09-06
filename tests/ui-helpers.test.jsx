@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
-import { downloadFile, Text, useModeExit } from "../src/shared.jsx";
+import { Text, useModeExit } from "../src/shared.jsx";
 
 describe("Text", () => {
   it("maps its props onto the u-* utility classes", () => {
@@ -29,37 +29,6 @@ describe("Text", () => {
   it("passes an explicit colour through as an inline style", () => {
     const { container } = render(<Text color="red">x</Text>);
     expect(container.firstChild.style.color).toBe("red");
-  });
-});
-
-describe("downloadFile", () => {
-  it("names the file, revokes the URL late, and cleans up the link", () => {
-    // Revoking in the same turn as click() cancels the save in Firefox and
-    // Safari before it starts, so the deferral is the behaviour under test.
-    vi.useFakeTimers();
-    const createObjectURL = vi.fn(() => "blob:fake");
-    const revokeObjectURL = vi.fn();
-    vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL });
-
-    const clicked = [];
-    const realClick = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function click() { clicked.push(this.download); };
-
-    try {
-      downloadFile("layout.csv", "a,b\n1,2", "text/csv");
-      expect(createObjectURL).toHaveBeenCalledOnce();
-      expect(clicked).toEqual(["layout.csv"]);
-      // Still alive immediately after the click…
-      expect(revokeObjectURL).not.toHaveBeenCalled();
-      vi.runAllTimers();
-      // …and released on the next tick.
-      expect(revokeObjectURL).toHaveBeenCalledWith("blob:fake");
-      // The temporary anchor does not linger in the document.
-      expect(document.querySelector("a[download]")).toBeNull();
-    } finally {
-      HTMLAnchorElement.prototype.click = realClick;
-      vi.useRealTimers();
-    }
   });
 });
 
