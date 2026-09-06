@@ -824,7 +824,7 @@ dismissing a dialog cannot drift apart. That replaced a hand-written
 `onMouseDown` comparing `e.target === e.currentTarget` at each call site — the
 same rule stated twice.
 
-## Export — the cut list as a PDF
+## Export — the printed documents
 
 **There is no PDF library, and there should not be one.** The browser's own
 "Save as PDF" *is* the print dialog, so a PDF export is a print stylesheet plus
@@ -833,9 +833,20 @@ alone is over the 250 KiB budget `components.js` is held to — to reproduce wha
 every platform already does, with worse font handling. MONEYFLOW ships no PDF
 dependency either.
 
-**One model, many renderers.** `utils/cut-list.js` builds a neutral description
-of what a layout contains; `components/CutListSheet.jsx` prints it. A second
-format consumes the same object and adds nothing to the model. Put a new
+Two documents ship: the **cut list** (`utils/cut-list.js` →
+`components/CutListSheet.jsx`, from the pattern-layout page) and the **concrete
+take-off** (`utils/take-off.js` → `components/TakeOffSheet.jsx`). A "take-off"
+is the trade term — you take quantities off a drawing and turn them into a list
+of what to buy.
+
+They share one stylesheet. `.doc-sheet*` is the chrome every document uses; a
+prefix of its own (`.cut-*`) is for what only one has, because the cut list's
+piece chips mean nothing on a take-off. A second print stylesheet would drift
+from the first within a change or two.
+
+**One model, many renderers.** The model builds a neutral description; the sheet
+prints it. A second format consumes the same object and adds nothing to the
+model. Put a new
 derivation **in the model, never in a renderer** — written per format it becomes
 two lines that agree today and disagree after the next change, and what you get
 is a printout and a spreadsheet of one job with different totals. Everything
@@ -847,6 +858,19 @@ segment and the following row's leading `offcut` share a `sourceId` — so one
 stock panel yields two placed pieces in two rows. A list that only said "row 3
 needs a 340" would have you cut a fresh panel and bin the 910 already in your
 hand.
+
+The take-off takes this further than the cut list did, and deliberately: it
+takes the **raw fields** and does the arithmetic, and `Concrete.jsx` reads its
+own on-screen figures back out of it. The page used to compute for the screen,
+which would have left a printed sheet redoing the same maths — two places that
+can round, over the one number where that matters most:
+
+> `bagsExact` is 413.33 and `bagsToBuy` is 414.
+
+Both are real answers to different questions, and a screen showing one while a
+printout showed the other is how somebody buys the wrong amount of concrete. The
+sheet prints both, and prices the one you buy. **A page whose figures a document
+also states should read them from the model, not beside it.**
 
 Three things that are easy to get wrong here:
 
@@ -1270,10 +1294,10 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 ## What does NOT exist yet (possible future work)
 
-- Export beyond the layout cut list. That one prints (see [Export](#export--the-cut-list-as-a-pdf));
-  Concrete's take-off is the obvious second, and `downloadFile` in `shared.jsx`
-  is still uncalled — a CSV would consume the same report model rather than
-  building one
+- A machine-readable export. Both documents print (see
+  [Export](#export--the-printed-documents)), but `downloadFile` in `shared.jsx`
+  is still uncalled — a CSV would consume the same report models rather than
+  building one, which is what they were shaped for
 - UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have
   them; none of the other `Sheet*` components do. See [Checks](#checks) for what is uncovered — this is
   the largest remaining gap and the reason `verify` cannot catch an interaction

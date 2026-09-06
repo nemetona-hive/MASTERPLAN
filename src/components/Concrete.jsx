@@ -1,5 +1,7 @@
 import { React } from "../react-globals.js";
-import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, toNumber, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { TakeOffSheet } from "./TakeOffSheet.jsx";
+import { buildTakeOff } from "../utils/take-off.js";
 
 // ── Concrete Calculator ────────────────────────────────────────────────────────
 
@@ -121,35 +123,42 @@ export function SheetConcrete() {
     () => setShowRatePresets(false)
   );
 
-  // ── Derived values ─────────────────────────────────────────────────────────
-  const parseNum = toNumber;
+  /* ── Derived values ────────────────────────────────────────────────────────
+   *
+   * All of it from `buildTakeOff`, including the figures this page shows on
+   * screen. The page used to do the arithmetic itself and a printed sheet would
+   * have had to redo it — which is two places that can round, over the one
+   * number where that matters most: `bagsExact` is 12.4 and `bags` is 13, both
+   * are real answers to different questions, and a screen showing one while a
+   * printout showed the other is how somebody buys the wrong amount of
+   * concrete. One model, and the sheet reads the same object. */
+  const takeOff = buildTakeOff({
+    areaMode, areaManual, lenMm, widMm,
+    thickMode, avgH, ca, cb, cc, cd,
+    rate, bagKg, bagPrice,
+    product: activePreset !== null && presets[activePreset] ? presets[activePreset].name : ""
+  });
 
-  const area = areaMode === "dims"
-    ? (parseNum(lenMm) * parseNum(widMm)) / 1_000_000
-    : parseNum(areaManual);
+  /* Staged for printing, and printed from an EFFECT rather than the click:
+     window.print() blocks on the dialog, so calling it in the handler opens a
+     dialog over a sheet React has not committed yet. Same reasoning as the cut
+     list; see SurfaceLayout.jsx. */
+  const [printTakeOff, setPrintTakeOff] = React.useState(null);
+  React.useEffect(() => {
+    if (!printTakeOff) return;
+    const frame = requestAnimationFrame(() => window.print());
+    return () => cancelAnimationFrame(frame);
+  }, [printTakeOff]);
 
-  const computedDimsArea = (parseNum(lenMm) * parseNum(widMm)) / 1_000_000;
-
-  let computedAvgH, diff;
-  if (thickMode === "avg") {
-    computedAvgH = parseNum(avgH);
-    diff = null;
-  } else {
-    const va = parseNum(ca);
-    const vb = parseNum(cb);
-    const vc = parseNum(cc);
-    const vd = parseNum(cd);
-    computedAvgH = (va + vb + vc + vd) / 4;
-    diff = Math.max(va, vb, vc, vd) - Math.min(va, vb, vc, vd);
-  }
-
-  const volume = area * (computedAvgH / 1000);
-  const mass = area * computedAvgH * parseNum(rate);
-  const bagsExact = parseNum(bagKg) > 0 ? (mass / parseNum(bagKg)) : 0;
-  const bags = Math.ceil(bagsExact);
-  
-  const bPrice = parseNum(bagPrice);
-  const totalPrice = (bags > 0 && bPrice > 0) ? (bags * bPrice) : null;
+  const area = takeOff.area.value;
+  const computedDimsArea = takeOff.area.fromDims;
+  const computedAvgH = takeOff.thickness.average;
+  const diff = takeOff.thickness.difference;
+  const volume = takeOff.volume;
+  const mass = takeOff.mass;
+  const bagsExact = takeOff.bags.exact;
+  const bags = takeOff.bags.toBuy;
+  const totalPrice = takeOff.bags.total;
 
   const fmtEur = n => n.toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -506,6 +515,20 @@ export function SheetConcrete() {
                   ) : "—"}
                 </span>
               </div>
+
+              {/* Disabled until there is a pour to describe — a sheet with a
+                  header and no figures is something somebody prints, carries to
+                  a merchant, and then finds is blank. */}
+              <button
+                type="button"
+                className="ts-btn ctl-ghost result-card-print"
+                onClick={() => setPrintTakeOff(takeOff)}
+                disabled={!takeOff.ready}
+                title={takeOff.ready
+                  ? "Take-off sheet — opens the print dialog, where Save as PDF is"
+                  : "Enter an area and a thickness first"}>
+                <Icon name="print" /> Take-off
+              </button>
             </div>
 
           </div>
@@ -513,6 +536,7 @@ export function SheetConcrete() {
         </div>
 
       </Stack>
+      <TakeOffSheet takeOff={printTakeOff} />
     </div>
   );
 }

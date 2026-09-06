@@ -1,11 +1,17 @@
 /*
  * ----------------------------------------------------------
- * PRINT — the cut list as a document
+ * PRINT — the app's documents
  * ----------------------------------------------------------
  *
  * The app's only print stylesheet, and the whole of its "PDF export": the
  * browser's Save as PDF is the print dialog, so a document that prints well IS
  * the export. No PDF library ships here — see the note in CutListSheet.jsx.
+ *
+ * `.doc-sheet*` is the shared chrome — the page, the head, the section blocks,
+ * the fact row and the tables — and every document uses it. A prefix of its own
+ * (`.cut-*`) is for what only one document has: the cut list's piece chips mean
+ * nothing on a take-off. Two documents sharing one sheet is the point; a second
+ * print stylesheet would drift from this one within a change or two.
  *
  * Everything on paper is ink on white and states its own colour. The screen
  * palette is not reused: --bg on paper is a solid black rectangle the size of
@@ -19,7 +25,7 @@
 /* Never on screen, in any theme. The sheet is portalled to <body> and mounted
    whenever a layout is printable; the page behind the dialog is left exactly
    as it was. */
-.cut-sheet {
+.doc-sheet {
 	display: none;
 }
 
@@ -45,7 +51,7 @@
 	/* Hidden by POSITION rather than by name, so this keeps working when the
 	   shell gains another wrapper. #root and any portal that is not the sheet
 	   both go. */
-	body > *:not(.cut-sheet) {
+	body > *:not(.doc-sheet) {
 		display: none !important;
 	}
 
@@ -54,7 +60,7 @@
 		margin: 0;
 	}
 
-	.cut-sheet {
+	.doc-sheet {
 		display: block;
 		/* Padding, not margin: a margin on the printed root collapses into the
 		   page box and would move the first page only. */
@@ -68,7 +74,7 @@
 
 	/* ── Head ── */
 
-	.cut-sheet-head {
+	.doc-sheet-head {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
@@ -78,20 +84,20 @@
 		margin-bottom: 5mm;
 	}
 
-	.cut-sheet-title {
+	.doc-sheet-title {
 		margin: 0;
 		font-size: 15pt;
 		font-weight: 700;
 		letter-spacing: 0.02em;
 	}
 
-	.cut-sheet-sub {
+	.doc-sheet-sub {
 		margin: 1mm 0 0;
 		font-size: 9.5pt;
 		color: #444;
 	}
 
-	.cut-sheet-stamp {
+	.doc-sheet-stamp {
 		text-align: right;
 		font-size: 7.5pt;
 		color: #555;
@@ -100,7 +106,7 @@
 
 	/* ── Blocks ── */
 
-	.cut-sheet-block {
+	.doc-sheet-block {
 		margin-bottom: 6mm;
 		/* A section that splits across a page break loses its heading, which is
 		   how a table of cuts ends up on paper with nothing saying what it is. */
@@ -110,11 +116,11 @@
 	/* The rows table is the one section allowed to break: a long layout has more
 	   rows than a page holds, and forcing it whole would push the whole table to
 	   page two and leave page one half empty. */
-	.cut-sheet-block:last-of-type {
+	.doc-sheet-block:last-of-type {
 		break-inside: auto;
 	}
 
-	.cut-sheet-h2 {
+	.doc-sheet-h2 {
 		margin: 0 0 2mm;
 		font-size: 8pt;
 		font-weight: 700;
@@ -123,14 +129,14 @@
 		color: #555;
 	}
 
-	.cut-sheet-note {
+	.doc-sheet-note {
 		margin: 0 0 2.5mm;
 		max-width: 150mm;
 		font-size: 8.5pt;
 		color: #444;
 	}
 
-	.cut-sheet-warn {
+	.doc-sheet-warn {
 		margin: 3mm 0 0;
 		padding: 2mm 3mm;
 		border-left: 2pt solid #111;
@@ -140,42 +146,49 @@
 
 	/* ── Facts ── */
 
-	.cut-sheet-facts {
+	.doc-sheet-facts {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 3mm 10mm;
 		margin: 0;
 	}
 
-	.cut-sheet-facts div { margin: 0; }
+	.doc-sheet-facts div { margin: 0; }
 
-	.cut-sheet-facts dt {
+	/* A fact row is usually the last thing in its block, and in the take-off it
+	   is followed by the order table — which ran straight into it. Scoped to the
+	   case that needs it rather than given to every fact row. */
+	.doc-sheet-facts:not(:last-child) {
+		margin-bottom: 5mm;
+	}
+
+	.doc-sheet-facts dt {
 		font-size: 7.5pt;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: #666;
 	}
 
-	.cut-sheet-facts dd {
+	.doc-sheet-facts dd {
 		margin: 0.5mm 0 0;
 		font-size: 11pt;
 		font-variant-numeric: tabular-nums;
 	}
 
-	.cut-sheet-fact--lead dd {
+	.doc-sheet-fact--lead dd {
 		font-weight: 700;
 		font-size: 13pt;
 	}
 
 	/* ── Tables ── */
 
-	.cut-sheet-table {
+	.doc-sheet-table {
 		width: 100%;
 		border-collapse: collapse;
 		font-variant-numeric: tabular-nums;
 	}
 
-	.cut-sheet-table th {
+	.doc-sheet-table th {
 		text-align: left;
 		font-size: 7.5pt;
 		text-transform: uppercase;
@@ -185,7 +198,7 @@
 		padding: 0 3mm 1mm 0;
 	}
 
-	.cut-sheet-table td {
+	.doc-sheet-table td {
 		padding: 1.2mm 3mm 1.2mm 0;
 		border-bottom: 0.25pt solid #ddd;
 		vertical-align: top;
@@ -193,19 +206,19 @@
 
 	/* Repeats the header on every page a long table runs onto — a column of
 	   bare numbers on page two is unreadable. */
-	.cut-sheet-table thead { display: table-header-group; }
-	.cut-sheet-table tr { break-inside: avoid; }
+	.doc-sheet-table thead { display: table-header-group; }
+	.doc-sheet-table tr { break-inside: avoid; }
 
-	.cut-sheet-ref-cell {
+	.cut-ref-cell {
 		font-weight: 700;
 		width: 14mm;
 	}
 
-	.cut-sheet-table--rows td:last-child { width: 100%; }
+	.cut-table--rows td:last-child { width: 100%; }
 
 	/* ── Pieces ── */
 
-	.cut-sheet-run {
+	.cut-run {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 1mm 1.5mm;
@@ -214,7 +227,7 @@
 	/* Kind is carried by the border, not by a fill: a laser printer renders a
 	   grey fill as a dot pattern that swallows small type, and this has to be
 	   legible photocopied. */
-	.cut-sheet-piece {
+	.cut-piece {
 		display: inline-flex;
 		align-items: baseline;
 		gap: 0.8mm;
@@ -224,20 +237,40 @@
 		white-space: nowrap;
 	}
 
-	.cut-sheet-piece--full { border-color: #bbb; }
-	.cut-sheet-piece--cut { border-color: #111; border-width: 1pt; font-weight: 700; }
-	.cut-sheet-piece--offcut { border-color: #111; border-style: dashed; }
-	.cut-sheet-piece--edge { border-color: #111; }
+	.cut-piece--full { border-color: #bbb; }
+	.cut-piece--cut { border-color: #111; border-width: 1pt; font-weight: 700; }
+	.cut-piece--offcut { border-color: #111; border-style: dashed; }
+	.cut-piece--edge { border-color: #111; }
 	/* The one thing on the sheet that is a problem rather than a piece. */
-	.cut-sheet-piece--gap { border-color: #111; background: #eee; font-style: italic; }
+	.cut-piece--gap { border-color: #111; background: #eee; font-style: italic; }
 
-	.cut-sheet-ref {
+	.cut-ref {
 		font-size: 7pt;
 		font-weight: 700;
 		color: #555;
 	}
 
-	.cut-sheet-legend {
+	/* A figure carried at a size the eye finds first — the bag count and the
+	   money, which are the two things somebody reads this sheet for. */
+	.doc-sheet-strong {
+		font-weight: 700;
+		font-size: 11pt;
+	}
+
+	/* Where a figure came from, set beside it rather than under it: "20 m²" is
+	   the answer and "from 5000 × 4000 mm" is the working. */
+	.doc-sheet-from {
+		font-size: 8pt;
+		color: #555;
+		white-space: nowrap;
+	}
+
+	.doc-sheet-table--order th,
+	.doc-sheet-table--order td {
+		padding-right: 12mm;
+	}
+
+	.doc-sheet-legend {
 		display: flex;
 		gap: 2mm;
 		margin: 3mm 0 0;

@@ -13,7 +13,7 @@ import { getBuildId } from "../shared.jsx";
  *
  * PORTALLED TO <body>, and that is what makes the print rule simple: the sheet
  * becomes a sibling of the app shell rather than a descendant, so print can
- * hide everything else with `body > *:not(.cut-sheet)` — by position rather
+ * hide everything else with `body > *:not(.doc-sheet)` — by position rather
  * than by name, which keeps working when the shell gains another wrapper.
  *
  * Hidden on screen at all times. The page behind the dialog stays exactly as it
@@ -42,12 +42,12 @@ const mm = value => String(value);
 
 function PieceRun({ pieces }) {
   return (
-    <span className="cut-sheet-run">
+    <span className="cut-run">
       {pieces.map((piece, i) => (
-        <span key={i} className={`cut-sheet-piece cut-sheet-piece--${piece.kind}`}>
+        <span key={i} className={`cut-piece cut-piece--${piece.kind}`}>
           {mm(piece.width)}
-          {piece.panel && <span className="cut-sheet-ref">{piece.panel}</span>}
-          {piece.kind === "gap" && <span className="cut-sheet-ref">gap</span>}
+          {piece.panel && <span className="cut-ref">{piece.panel}</span>}
+          {piece.kind === "gap" && <span className="cut-ref">gap</span>}
         </span>
       ))}
     </span>
@@ -63,11 +63,11 @@ export function CutListSheet({ list }) {
   const build = getBuildId();
 
   return ReactDOM.createPortal(
-    <div className="cut-sheet">
-      <header className="cut-sheet-head">
+    <div className="doc-sheet">
+      <header className="doc-sheet-head">
         <div>
-          <h1 className="cut-sheet-title">Cut list</h1>
-          <p className="cut-sheet-sub">
+          <h1 className="doc-sheet-title">Cut list</h1>
+          <p className="doc-sheet-sub">
             {/* SYSTEMS titles already end in "layout" (config.js), so this
                 takes them as they are rather than appending the word twice. */}
             {system.title || "Layout"} ·{" "}
@@ -75,26 +75,26 @@ export function CutListSheet({ list }) {
             {surface.direction === "V" ? "vertical" : "horizontal"}
           </p>
         </div>
-        <div className="cut-sheet-stamp">
+        <div className="doc-sheet-stamp">
           <div>{printed}</div>
           {build && <div>build {build}</div>}
         </div>
       </header>
 
-      <section className="cut-sheet-block">
-        <h2 className="cut-sheet-h2">Material</h2>
-        <dl className="cut-sheet-facts">
+      <section className="doc-sheet-block">
+        <h2 className="doc-sheet-h2">Material</h2>
+        <dl className="doc-sheet-facts">
           <div><dt>Piece</dt><dd>{mm(material.length)} × {mm(material.width)} mm</dd></div>
           <div><dt>Whole panels</dt><dd>{totals.full}</dd></div>
           <div><dt>Panels to cut</dt><dd>{panels.length}</dd></div>
           {/* The figure somebody orders against. An offcut is deliberately not
               in it: it is the other half of a panel already counted. */}
-          <div className="cut-sheet-fact--lead">
+          <div className="doc-sheet-fact--lead">
             <dt>Panels to buy</dt><dd>{totals.panelsToBuy}</dd>
           </div>
         </dl>
         {gaps.count > 0 && (
-          <p className="cut-sheet-warn">
+          <p className="doc-sheet-warn">
             This layout leaves {gaps.count} {gaps.count === 1 ? "gap" : "gaps"} totalling{" "}
             {mm(gaps.width)} mm. It does not fill the surface — check the minimum joint
             before cutting to it.
@@ -103,14 +103,14 @@ export function CutListSheet({ list }) {
       </section>
 
       {panels.length > 0 && (
-        <section className="cut-sheet-block">
-          <h2 className="cut-sheet-h2">Cuts</h2>
-          <p className="cut-sheet-note">
+        <section className="doc-sheet-block">
+          <h2 className="doc-sheet-h2">Cuts</h2>
+          <p className="doc-sheet-note">
             One row per panel that has to be cut. Where a panel shows two pieces, both come
             out of the same {mm(material.length)} mm panel — cut it once and keep the
             remainder for the row named beside it.
           </p>
-          <table className="cut-sheet-table">
+          <table className="doc-sheet-table">
             <thead>
               <tr>
                 <th>Panel</th><th>Cut to</th><th>Goes in</th>
@@ -120,7 +120,7 @@ export function CutListSheet({ list }) {
             <tbody>
               {panels.map(panel => (
                 <tr key={panel.id}>
-                  <td className="cut-sheet-ref-cell">{panel.id}</td>
+                  <td className="cut-ref-cell">{panel.id}</td>
                   <td>{mm(panel.cut.width)}</td>
                   <td>Row {panel.cut.row}</td>
                   <td>{panel.offcut ? mm(panel.offcut.width) : "—"}</td>
@@ -133,28 +133,28 @@ export function CutListSheet({ list }) {
         </section>
       )}
 
-      <section className="cut-sheet-block">
-        <h2 className="cut-sheet-h2">Rows</h2>
-        <p className="cut-sheet-note">
+      <section className="doc-sheet-block">
+        <h2 className="doc-sheet-h2">Rows</h2>
+        <p className="doc-sheet-note">
           Pieces in the order they are laid, left to right. A letter marks a piece that
           comes from a cut panel in the table above.
         </p>
-        <table className="cut-sheet-table cut-sheet-table--rows">
+        <table className="doc-sheet-table cut-table--rows">
           <thead>
             <tr><th>Row</th><th>Pieces</th></tr>
           </thead>
           <tbody>
             {rows.map(row => (
               <tr key={row.number}>
-                <td className="cut-sheet-ref-cell">{row.number}</td>
+                <td className="cut-ref-cell">{row.number}</td>
                 <td><PieceRun pieces={row.pieces} /></td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="cut-sheet-legend">
+        <p className="doc-sheet-legend">
           {Object.entries(KIND_LABEL).map(([kind, label]) => (
-            <span key={kind} className={`cut-sheet-piece cut-sheet-piece--${kind}`}>{label}</span>
+            <span key={kind} className={`cut-piece cut-piece--${kind}`}>{label}</span>
           ))}
         </p>
       </section>

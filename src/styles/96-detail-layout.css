@@ -128,7 +128,15 @@
 
 	/* The exact figure is a second decimal reading of the number already shown
 	   beside it. It is the first thing to go when there is no room. */
-	.result-card-note {
+	/* Full width of the card: it is the card's one action, and a button that only
+   spans part of a column reads as sitting beside something that is not there. */
+.result-card-print {
+	width: 100%;
+	margin-top: var(--sp-3);
+	justify-content: center;
+}
+
+.result-card-note {
 		display: none;
 	}
 

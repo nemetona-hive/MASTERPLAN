@@ -211,7 +211,7 @@ async function run() {
             const text = n.textContent.trim();
             if (text.length < 2) continue;
             const el = n.parentElement;
-            if (!el || el.closest(".cut-sheet")) continue;
+            if (!el || el.closest(".doc-sheet")) continue;
             const cs = getComputedStyle(el);
             if (cs.visibility === "hidden" || cs.display === "none") continue;
             const box = el.getBoundingClientRect();
@@ -287,29 +287,29 @@ async function run() {
     await page.locator('[aria-label^="Print the cut list"]').first().click();
     await page.waitForTimeout(300);
     const screen = await page.evaluate(() => ({
-      sheet: getComputedStyle(document.querySelector(".cut-sheet")).display,
+      sheet: getComputedStyle(document.querySelector(".doc-sheet")).display,
       root: getComputedStyle(document.getElementById("root")).display
     }));
     if (screen.sheet === "none" && screen.root !== "none") pass();
-    else fail("print-sheet-on-screen", "cut-sheet",
+    else fail("print-sheet-on-screen", "doc-sheet",
       `on screen: sheet ${screen.sheet}, #root ${screen.root}`);
 
     await page.emulateMedia({ media: "print" });
     await page.waitForTimeout(120);
     const printed = await page.evaluate(() => ({
-      sheet: getComputedStyle(document.querySelector(".cut-sheet")).display,
+      sheet: getComputedStyle(document.querySelector(".doc-sheet")).display,
       root: getComputedStyle(document.getElementById("root")).display,
-      ink: getComputedStyle(document.querySelector(".cut-sheet")).color,
-      paper: getComputedStyle(document.querySelector(".cut-sheet")).backgroundColor
+      ink: getComputedStyle(document.querySelector(".doc-sheet")).color,
+      paper: getComputedStyle(document.querySelector(".doc-sheet")).backgroundColor
     }));
     if (printed.sheet === "block" && printed.root === "none") pass();
-    else fail("print-sheet-not-printing", "cut-sheet",
+    else fail("print-sheet-not-printing", "doc-sheet",
       `in print: sheet ${printed.sheet}, #root ${printed.root}`);
 
     // Ink on paper, whatever the screen theme was — a document must not depend
     // on which theme happened to be on when somebody pressed print.
     if (/rgb\(17, 17, 17\)/.test(printed.ink) && /rgb\(255, 255, 255\)/.test(printed.paper)) pass();
-    else fail("print-not-ink-on-paper", "cut-sheet",
+    else fail("print-not-ink-on-paper", "doc-sheet",
       `ink ${printed.ink} on ${printed.paper}`);
     await page.emulateMedia({ media: "screen" });
 

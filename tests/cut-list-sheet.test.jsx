@@ -16,21 +16,21 @@ const list = () => buildCutList(computeS1(sh), sh, layout);
 describe("the printed cut list", () => {
   it("renders nothing at all without a list", () => {
     const { container } = render(<CutListSheet list={null} />);
-    expect(container.querySelector(".cut-sheet")).toBeNull();
-    expect(document.querySelector(".cut-sheet")).toBeNull();
+    expect(container.querySelector(".doc-sheet")).toBeNull();
+    expect(document.querySelector(".doc-sheet")).toBeNull();
   });
 
   it("portals to body, so print can hide the app by position", () => {
-    /* `body > *:not(.cut-sheet)` is what hides the shell, and it only works
+    /* `body > *:not(.doc-sheet)` is what hides the shell, and it only works
        because the sheet is a sibling of it rather than a descendant. */
     render(<CutListSheet list={list()} />);
-    const sheet = document.querySelector(".cut-sheet");
+    const sheet = document.querySelector(".doc-sheet");
     expect(sheet.parentElement).toBe(document.body);
   });
 
   it("states the job and the figure somebody orders against", () => {
     render(<CutListSheet list={list()} />);
-    const sheet = document.querySelector(".cut-sheet");
+    const sheet = document.querySelector(".doc-sheet");
     expect(sheet.textContent).toContain("Straight layout");
     expect(sheet.textContent).toContain("3000 × 2400 mm");
     // 12 whole + 3 cut. Not 18: an offcut is the other half of a panel already
@@ -41,7 +41,7 @@ describe("the printed cut list", () => {
 
   it("pairs each cut with the row its remainder goes to", () => {
     render(<CutListSheet list={list()} />);
-    const cuts = document.querySelectorAll(".cut-sheet-table tbody")[0];
+    const cuts = document.querySelectorAll(".doc-sheet-table tbody")[0];
     const first = cuts.querySelectorAll("tr")[0];
     // Panel A: cut to 600 for row 1, the 200 left goes to row 2.
     expect([...first.querySelectorAll("td")].map(td => td.textContent))
@@ -50,11 +50,11 @@ describe("the printed cut list", () => {
 
   it("marks a piece with the panel it was cut from", () => {
     render(<CutListSheet list={list()} />);
-    const rows = document.querySelectorAll(".cut-sheet-table--rows tbody tr");
+    const rows = document.querySelectorAll(".cut-table--rows tbody tr");
     // Row 1 ends in the cut piece; row 2 opens with its remainder, same letter.
     expect(rows[0].textContent).toContain("600A");
     expect(rows[1].textContent).toContain("200A");
-    expect(rows[1].querySelector(".cut-sheet-piece--offcut").textContent).toContain("200");
+    expect(rows[1].querySelector(".cut-piece--offcut").textContent).toContain("200");
   });
 
   it("says so when the layout does not fill the surface", () => {
@@ -62,13 +62,13 @@ describe("the printed cut list", () => {
     // somebody with no way to know it does not fit.
     const gappy = { ...sh, minJ: 700 };
     render(<CutListSheet list={buildCutList(computeS1(gappy), gappy, layout)} />);
-    expect(document.querySelector(".cut-sheet-warn").textContent)
+    expect(document.querySelector(".doc-sheet-warn").textContent)
       .toMatch(/does not fill the surface/);
   });
 
   it("carries no warning when the layout is sound", () => {
     render(<CutListSheet list={list()} />);
-    expect(document.querySelector(".cut-sheet-warn")).toBeNull();
+    expect(document.querySelector(".doc-sheet-warn")).toBeNull();
   });
 
   it("derives nothing the model did not already state", () => {
@@ -77,7 +77,7 @@ describe("the printed cut list", () => {
        the model, it was computed twice. */
     const model = list();
     render(<CutListSheet list={model} />);
-    const printed = document.querySelector(".cut-sheet").textContent;
+    const printed = document.querySelector(".doc-sheet").textContent;
     for (const panel of model.panels) {
       expect(printed).toContain(String(panel.cut.width));
       if (panel.offcut) expect(printed).toContain(String(panel.offcut.width));

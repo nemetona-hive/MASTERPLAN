@@ -2974,7 +2974,13 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		min-width: 0;
 	}
 
-	.result-card-note {
+.result-card-print {
+	width: 100%;
+	margin-top: var(--sp-3);
+	justify-content: center;
+}
+
+.result-card-note {
 		display: none;
 	}
 
@@ -3494,7 +3500,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
   align-items: start;
 }
 
-.cut-sheet {
+.doc-sheet {
 	display: none;
 }
 
@@ -3505,7 +3511,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		margin: 8mm;
 	}
 
-	body > *:not(.cut-sheet) {
+	body > *:not(.doc-sheet) {
 		display: none !important;
 	}
 
@@ -3514,7 +3520,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		margin: 0;
 	}
 
-	.cut-sheet {
+	.doc-sheet {
 		display: block;
 
 		padding: 6mm;
@@ -3525,7 +3531,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		line-height: 1.45;
 	}
 
-	.cut-sheet-head {
+	.doc-sheet-head {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
@@ -3535,37 +3541,37 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		margin-bottom: 5mm;
 	}
 
-	.cut-sheet-title {
+	.doc-sheet-title {
 		margin: 0;
 		font-size: 15pt;
 		font-weight: 700;
 		letter-spacing: 0.02em;
 	}
 
-	.cut-sheet-sub {
+	.doc-sheet-sub {
 		margin: 1mm 0 0;
 		font-size: 9.5pt;
 		color: #444;
 	}
 
-	.cut-sheet-stamp {
+	.doc-sheet-stamp {
 		text-align: right;
 		font-size: 7.5pt;
 		color: #555;
 		white-space: nowrap;
 	}
 
-	.cut-sheet-block {
+	.doc-sheet-block {
 		margin-bottom: 6mm;
 
 		break-inside: avoid;
 	}
 
-	.cut-sheet-block:last-of-type {
+	.doc-sheet-block:last-of-type {
 		break-inside: auto;
 	}
 
-	.cut-sheet-h2 {
+	.doc-sheet-h2 {
 		margin: 0 0 2mm;
 		font-size: 8pt;
 		font-weight: 700;
@@ -3574,14 +3580,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		color: #555;
 	}
 
-	.cut-sheet-note {
+	.doc-sheet-note {
 		margin: 0 0 2.5mm;
 		max-width: 150mm;
 		font-size: 8.5pt;
 		color: #444;
 	}
 
-	.cut-sheet-warn {
+	.doc-sheet-warn {
 		margin: 3mm 0 0;
 		padding: 2mm 3mm;
 		border-left: 2pt solid #111;
@@ -3589,40 +3595,44 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		font-size: 8.5pt;
 	}
 
-	.cut-sheet-facts {
+	.doc-sheet-facts {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 3mm 10mm;
 		margin: 0;
 	}
 
-	.cut-sheet-facts div { margin: 0; }
+	.doc-sheet-facts div { margin: 0; }
 
-	.cut-sheet-facts dt {
+	.doc-sheet-facts:not(:last-child) {
+		margin-bottom: 5mm;
+	}
+
+	.doc-sheet-facts dt {
 		font-size: 7.5pt;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: #666;
 	}
 
-	.cut-sheet-facts dd {
+	.doc-sheet-facts dd {
 		margin: 0.5mm 0 0;
 		font-size: 11pt;
 		font-variant-numeric: tabular-nums;
 	}
 
-	.cut-sheet-fact--lead dd {
+	.doc-sheet-fact--lead dd {
 		font-weight: 700;
 		font-size: 13pt;
 	}
 
-	.cut-sheet-table {
+	.doc-sheet-table {
 		width: 100%;
 		border-collapse: collapse;
 		font-variant-numeric: tabular-nums;
 	}
 
-	.cut-sheet-table th {
+	.doc-sheet-table th {
 		text-align: left;
 		font-size: 7.5pt;
 		text-transform: uppercase;
@@ -3632,29 +3642,29 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		padding: 0 3mm 1mm 0;
 	}
 
-	.cut-sheet-table td {
+	.doc-sheet-table td {
 		padding: 1.2mm 3mm 1.2mm 0;
 		border-bottom: 0.25pt solid #ddd;
 		vertical-align: top;
 	}
 
-	.cut-sheet-table thead { display: table-header-group; }
-	.cut-sheet-table tr { break-inside: avoid; }
+	.doc-sheet-table thead { display: table-header-group; }
+	.doc-sheet-table tr { break-inside: avoid; }
 
-	.cut-sheet-ref-cell {
+	.cut-ref-cell {
 		font-weight: 700;
 		width: 14mm;
 	}
 
-	.cut-sheet-table--rows td:last-child { width: 100%; }
+	.cut-table--rows td:last-child { width: 100%; }
 
-	.cut-sheet-run {
+	.cut-run {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 1mm 1.5mm;
 	}
 
-	.cut-sheet-piece {
+	.cut-piece {
 		display: inline-flex;
 		align-items: baseline;
 		gap: 0.8mm;
@@ -3664,20 +3674,36 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		white-space: nowrap;
 	}
 
-	.cut-sheet-piece--full { border-color: #bbb; }
-	.cut-sheet-piece--cut { border-color: #111; border-width: 1pt; font-weight: 700; }
-	.cut-sheet-piece--offcut { border-color: #111; border-style: dashed; }
-	.cut-sheet-piece--edge { border-color: #111; }
+	.cut-piece--full { border-color: #bbb; }
+	.cut-piece--cut { border-color: #111; border-width: 1pt; font-weight: 700; }
+	.cut-piece--offcut { border-color: #111; border-style: dashed; }
+	.cut-piece--edge { border-color: #111; }
 
-	.cut-sheet-piece--gap { border-color: #111; background: #eee; font-style: italic; }
+	.cut-piece--gap { border-color: #111; background: #eee; font-style: italic; }
 
-	.cut-sheet-ref {
+	.cut-ref {
 		font-size: 7pt;
 		font-weight: 700;
 		color: #555;
 	}
 
-	.cut-sheet-legend {
+	.doc-sheet-strong {
+		font-weight: 700;
+		font-size: 11pt;
+	}
+
+	.doc-sheet-from {
+		font-size: 8pt;
+		color: #555;
+		white-space: nowrap;
+	}
+
+	.doc-sheet-table--order th,
+	.doc-sheet-table--order td {
+		padding-right: 12mm;
+	}
+
+	.doc-sheet-legend {
 		display: flex;
 		gap: 2mm;
 		margin: 3mm 0 0;
