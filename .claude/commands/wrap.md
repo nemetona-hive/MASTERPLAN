@@ -17,10 +17,17 @@ Let's wrap up this session.
 Read the commits above against what we actually did — the log covers more than
 this session, so use it to place our work, not to define it.
 
-Then decide whether `MASTERPLAN_DEVELOPER_GUIDE.md` is now out of date or
-missing something a future session would need: a rule, a system, a decision, a
-file-map entry, a primitive's props. Update it only if there is something real
-to record. Do not add a changelog of what we did.
+Then decide whether the guide is now out of date or missing something a future
+session would need: a rule, a system, a decision, a file-map entry, a
+primitive's props. Update it only if there is something real to record. Do not
+add a changelog of what we did.
+
+The guide is a hub plus topic files — `MASTERPLAN_DEVELOPER_GUIDE.md` holds
+what is true of the whole app, and `docs/*.md` holds one system each. **Put a
+change in the file that owns the system**, not in the hub; the hub grows only
+when something applies everywhere. `CLAUDE.md` is shorter still and holds only
+what bites — the build step, the config.js write hazard, and the token systems.
+It should almost never need editing.
 
 If something came up that a future session would get wrong without knowing it —
 and that the repo does not already say — save it to memory.
