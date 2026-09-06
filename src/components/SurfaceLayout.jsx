@@ -1,6 +1,6 @@
 import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
-import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
 import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 import { CutListSheet } from "./CutListSheet.jsx";
 import { buildCutList } from "../utils/cut-list.js";
@@ -190,15 +190,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
       {/* ── Material Presets Modal (admin/dev only) ── */}
       {showModal && (
-        <div className="mp-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div className="mp-modal">
-            <div className="mp-modal-head">
-              <span>Manage Material Presets</span>
-              <button className="mp-modal-close ctl-icon" onClick={() => setShowModal(false)} aria-label="Close">
-                <Icon name="close" />
-              </button>
-            </div>
-            <div className="mp-modal-body">
+        <Modal title="Manage Material Presets" onClose={() => setShowModal(false)}>
               <Stack gap={4}>
                 <Stack gap={3}>
                   <div className="pw-preset-header" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
@@ -277,22 +269,15 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.
                 </div>
               </Stack>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
       {largePreview && (() => {
         const currentResult = panelResultsById[largePreview.layout.id]?.result || largePreview.result;
         return (
-          <div className="mp-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) closeLargePreview(); }}>
-            <div className="mp-modal mp-modal-large">
-              <div className="mp-modal-head">
-                <span>Large layout preview — {largePreview.layout.title}</span>
-                <button className="mp-modal-close ctl-icon" onClick={closeLargePreview} aria-label="Close">
-                  <Icon name="close" />
-                </button>
-              </div>
-              <div className="mp-modal-body">
+          <Modal
+            title={`Large layout preview — ${largePreview.layout.title}`}
+            onClose={closeLargePreview}
+            className="mp-modal-large">
                 <Stack gap={4}>
                   {/* ── 1. TOP: Summary Bar ── */}
                   {currentResult.summaryRows.length > 0 &&
@@ -363,9 +348,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
                   </div>
                 </Stack>
-              </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
     </>

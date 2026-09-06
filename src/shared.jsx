@@ -240,6 +240,129 @@ export function useModeExit(inside, onExit, active = true) {
   }, [active, onExit]);
 }
 
+const FOCUSABLE = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex=\"-1\"])"
+].join(",");
+
+/*
+ * Keeps focus inside an open dialog, and gives it back when the dialog goes.
+ *
+ * `aria-modal="true"` is a promise about behaviour, and the markup alone does
+ * not keep it: Tab walks straight out of the panel and into the page behind,
+ * which is still there, still focusable, and now unreachable by mouse behind
+ * the scrim.
+ *
+ * That is not hypothetical here. The large layout preview renders its own copy
+ * of the material fields over a page that still holds the originals, so tabbing
+ * out of it lands you on the same three inputs you thought you were editing —
+ * the ones underneath, changing the layout behind the dialog you are looking
+ * at. The dropdowns already needed `isBackground` to stop the two copies
+ * fighting; this is the same collision on the keyboard.
+ *
+ * Returning focus matters as much. Without it, close puts focus on <body> and
+ * the next Tab starts again from the top of the app rather than from the
+ * control that opened the dialog — which for the large preview is a button
+ * inside a panel some way down the page.
+ *
+ * Guarded on `document.contains`: the thing that opened the dialog may not have
+ * survived it, and focusing a detached node silently moves focus to <body> —
+ * exactly the state this exists to avoid, reached by a different road.
+ *
+ * Ported from MONEYFLOW. Its `Dialog` component is NOT ported: that recipe
+ * reads several tokens this theme has no answer for, and this app already has
+ * its own modal chrome in `.mp-modal-*`. The behaviour was the missing half.
+ */
+export function useDialogFocus(panelRef) {
+  React.useEffect(() => {
+    const opener = document.activeElement;
+    if (panelRef.current) panelRef.current.focus();
+
+    const onKeyDown = event => {
+      if (event.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      const stops = Array.from(panel.querySelectorAll(FOCUSABLE));
+      if (stops.length === 0) {
+        // Nothing to land on: hold focus on the panel rather than let Tab out.
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      const active = document.activeElement;
+
+      // Starting from the panel itself, Shift+Tab wraps to the end — otherwise
+      // the first backwards Tab of a freshly opened dialog leaves it.
+      if (event.shiftKey && (active === first || active === panel || !panel.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    };
+  }, [panelRef]);
+}
+
+/**
+ * A modal built on the chrome this app already had.
+ *
+ * `.mp-modal-overlay` / `.mp-modal` were being written inline at each call
+ * site, which is how both of them ended up with a close button and a scrim and
+ * neither of them with a role, a focus trap, an Escape, or focus restored on
+ * close. The markup was never the missing part; having it in one place is what
+ * makes the behaviour arrive everywhere at once.
+ *
+ * The scrim click and Escape both come from `useModeExit`, so the two ways of
+ * dismissing a dialog cannot drift apart. It replaces a hand-written
+ * `onMouseDown` comparing `e.target === e.currentTarget`, which was the same
+ * rule stated a second time.
+ */
+export function Modal({ title, onClose, className = "", children }) {
+  const panelRef = React.useRef(null);
+  const titleId = React.useId();
+
+  useDialogFocus(panelRef);
+  useModeExit([panelRef], onClose);
+
+  return (
+    <div className="mp-modal-overlay">
+      {/* tabIndex -1 so the panel itself can hold focus on open, before the
+          user has reached a control — and so the trap has somewhere to park
+          focus in a dialog with nothing focusable in it. */}
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className={"mp-modal" + (className ? " " + className : "")}>
+        <div className="mp-modal-head">
+          <span id={titleId}>{title}</span>
+          <button className="mp-modal-close ctl-icon" onClick={onClose} aria-label="Close">
+            <Icon name="close" />
+          </button>
+        </div>
+        <div className="mp-modal-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export function useDropdownKeyboard(itemsLength, onSelect, onClose) {
   const [hoveredIndex, setHoveredIndex] = React.useState(-1);
 

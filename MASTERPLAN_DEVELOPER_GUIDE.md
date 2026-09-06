@@ -762,6 +762,39 @@ the one thing that writes to a tracked file: driving the app in a browser
 rewrites `DEFAULT_SH` in `config.js` with whatever you typed. Check
 `git status` after any browser session.
 
+## Modals
+
+Both overlays on the pattern-layout page — the material presets editor and the
+large preview — go through `Modal` in `shared.jsx`. It wraps the `.mp-modal-*`
+chrome the app already had; the markup was never the missing part, but having it
+in one place is what made the behaviour arrive in both at once. Before that each
+call site wrote its own overlay, and consequently **neither had a role, a focus
+trap, an Escape, or focus restored on close**.
+
+`useDialogFocus(panelRef)` is the behavioural half, ported from MONEYFLOW.
+MONEYFLOW's `Dialog` component is deliberately **not** ported: that recipe reads
+several tokens this theme has no answer for, and this app has its own chrome.
+
+Three things it does, each for a reason worth keeping:
+
+- **Traps Tab.** `aria-modal="true"` is a promise about behaviour that the
+  markup alone does not keep. Here it was concrete rather than theoretical: the
+  large preview renders its own copy of the material fields over a page that
+  still holds the originals, so tabbing out landed you on the same three inputs
+  you thought you were editing — the ones underneath, changing the layout behind
+  the dialog. The dropdowns already needed `isBackground` to stop the two copies
+  fighting; this was the same collision on the keyboard.
+- **Gives focus back on close**, guarded on `document.contains` — focusing a
+  detached node silently moves focus to `<body>`, which is the state it exists
+  to avoid, reached another way.
+- **Parks focus on the panel**, which is why the panel carries `tabIndex={-1}`.
+  It is also where the trap holds focus in a dialog with nothing focusable.
+
+Escape and the scrim click both come from `useModeExit`, so the two ways of
+dismissing a dialog cannot drift apart. That replaced a hand-written
+`onMouseDown` comparing `e.target === e.currentTarget` at each call site — the
+same rule stated twice.
+
 ## Export — the cut list as a PDF
 
 **There is no PDF library, and there should not be one.** The browser's own
@@ -1212,8 +1245,6 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
   Concrete's take-off is the obvious second, and `downloadFile` in `shared.jsx`
   is still uncalled — a CSV would consume the same report model rather than
   building one
-- A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
-  this theme has no answer for, so it is a design decision rather than a port
 - UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have
   them; none of the other `Sheet*` components do. See [Checks](#checks) for what is uncovered — this is
   the largest remaining gap and the reason `verify` cannot catch an interaction
