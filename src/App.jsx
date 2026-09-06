@@ -8,6 +8,7 @@ import { SheetSurfaceLayout } from "./components/SurfaceLayout.jsx";
 import { SheetSymmetricLayout } from "./components/SymmetricLayout.jsx";
 import { SheetTimesheet } from "./components/Timesheet.jsx";
 import { AppNav } from "./Nav.jsx";
+import { ThemeButton } from "./components/ThemeButton.jsx";
 import { UndoButtons } from "./components/UndoButtons.jsx";
 import { installFieldUndo } from "./utils/field-undo.js";
 import { COMPACT_NAV_MEDIA_QUERY, MOBILE_MEDIA_QUERY, isCompactNavViewport, isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
@@ -268,22 +269,26 @@ function App() {
           <LogoLayer className="logo-glow" filter="url(#logo-glow)" />
           <LogoLayer className="logo-core" />
         </svg>
-        {/* One cluster, pinned right. Grouped by REACH, the way MONEYFLOW's is
-            — undo acts on the page or the field you were in; anything app-wide
-            would be a second group with a separator between. There is only one
-            group today, so there is no separator to draw yet. The theme toggle
-            stays in the nav, where it is wired to the collapsed-rail tooltip
-            system and its own label. */}
+        {/* One cluster, pinned right, grouped by REACH: undo acts on the page
+            or the field you were in, the theme on the whole app. Ordering them
+            that way puts the narrowest action furthest from the app-wide one.
+
+            The theme toggle came out of the nav's bottom section, which was the
+            only place in the rail holding something that did not act on where
+            you are — everything else there moves you between pages. */}
         <div className="header-actions">
           <div className="hdr-group">
             <UndoButtons />
+          </div>
+          <span className="hdr-sep" aria-hidden="true" />
+          <div className="hdr-group">
+            <ThemeButton theme={theme} setTheme={setTheme} />
           </div>
         </div>
       </div>
       <div id="app-page" className={"app-page" + (mobileMenuOpen ? " nav-open" : "")}>
         <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpen}
-          mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile}
-          theme={theme} setTheme={setTheme} />
+          mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile} />
         {/* <main>, not a div: every page needs exactly one main landmark for a
             screen reader to skip the nav with. Styling is unchanged — .page-main
             is a class and nothing selects on the tag. */}

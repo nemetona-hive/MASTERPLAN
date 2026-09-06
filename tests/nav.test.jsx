@@ -5,8 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
 import { AppNav } from "../src/Nav.jsx";
 
-// Nav.jsx reads PAGES, THEMES and getNextTheme as free variables — they are
-// globals from config.js/themes.js, published by tests/setup.js.
+// Nav.jsx reads PAGES as a free variable — a global from config.js, published
+// by tests/setup.js.
 
 const props = (over = {}) => ({
   page: "home",
@@ -16,8 +16,6 @@ const props = (over = {}) => ({
   mobileMenuOpen: false,
   setMobileMenuOpen: vi.fn(),
   isMobile: false,
-  theme: "graphite",
-  setTheme: vi.fn(),
   ...over
 });
 
@@ -98,9 +96,9 @@ describe("AppNav", () => {
       fireEvent.keyDown(btns[0], { key: "ArrowUp" });
       expect(document.activeElement).toBe(btns[0]);
 
-      // handleKeyNav walks every .nav-btn under the nav, which includes the
-      // pinned theme button below the list — so the last item to hold focus is
-      // that one, not the last page.
+      // handleKeyNav walks every .nav-btn under the nav. The bottom section
+      // holds only the build stamp now, which is not a button, so the last
+      // item to hold focus is the last page.
       const all = Array.from(document.querySelectorAll("#side-navi .nav-btn"));
       const last = all[all.length - 1];
       last.focus();
@@ -278,15 +276,4 @@ describe("AppNav", () => {
     });
   });
 
-  describe("theme button", () => {
-    it("shows the current theme and advances to the next one", async () => {
-      const p = props({ theme: "graphite" });
-      const { container } = render(<AppNav {...p} />);
-      const btn = container.querySelector(".nav-bottom .nav-btn");
-      expect(btn.textContent).toContain(THEMES.graphite.label);
-
-      await userEvent.click(btn);
-      expect(p.setTheme).toHaveBeenCalledWith(getNextTheme("graphite"));
-    });
-  });
 });

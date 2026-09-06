@@ -300,7 +300,7 @@ because GitHub Pages serves the tree directly.
 
 ```
 00-base.css            root variables, legend colours, form elements
-10-nav.css             nav buttons, collapse, theme toggle and menu
+10-nav.css             nav buttons, collapse and menu
 20-shell.css           header, wrapper, page, layout
 30-data.css            main data area, num input, data row
 40-control.css         control panel, segmented controls, golden-ratio cards
@@ -505,7 +505,7 @@ Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`,
 Sidebar interaction (Nav.jsx): Ctrl/Cmd+B toggles collapse globally (App.jsx);
 double-clicking any nav button does the same. Arrow keys rove the list on both
 axes — Down/Right step forward, Up/Left step back — over `.nav-btn` elements
-found in the DOM, which includes the pinned theme button at the bottom. Roving
+found in the DOM. Roving
 deliberately stops at both ends rather than wrapping.
 
 Collapsed-nav tooltips mount
@@ -744,7 +744,7 @@ never both at once:
 
 | | Where | Gated by |
 |---|---|---|
-| Desktop | bottom of the nav rail, under the theme button | JS — `NavBuildStamp` bails when `mobile`, and when the rail is collapsed (the strip is 60px and this is the one nav item with no icon to shrink to) |
+| Desktop | bottom of the nav rail | JS — `NavBuildStamp` bails when `mobile`, and when the rail is collapsed (the strip is 60px and this is the one nav item with no icon to shrink to) |
 | Mobile | Home page footer, under `NEMETONA HIVE` | CSS — `.home-build` is `display: none` until the mobile media query, so it re-evaluates on resize without the component tracking the viewport |
 
 Mobile does not use the nav for this: the drawer is shut by default, which puts
@@ -883,10 +883,11 @@ Defined in `themes.js` (loaded as global, not inside `src/`).
 the wordmark off centre by its own width.
 
 Groups are divided by **reach** — undo acts on the page or the field you were
-in; anything app-wide belongs in a second group with an `.hdr-sep` between.
-There is one group today, so neither the separator class nor its rule exists
-yet: a class nobody applies is dead CSS and `audit:ui` says so. Add both
-together when the second group arrives.
+in, the theme on the whole app — with an `.hdr-sep` between. Ordering them that
+way puts the narrowest action furthest from the app-wide one, so the two least
+alike are never adjacent. A third group goes on the end and takes another
+separator, which is the same 1px `--edge` the ghost ring is drawn with: a second
+tone would be a new kind of line in a header that has exactly one.
 
 `.hdr-btn` is the header's base control and contributes **only the step** —
 md, per the size scale's own note that md is "the default, and any standalone".
@@ -901,9 +902,23 @@ The disabled state is the one place dimming with `opacity` is right: the pair is
 disabled most of the time, a disabled control is *meant* to fall below the
 contrast a live one owes, and WCAG exempts it for that reason.
 
-The theme toggle stays in the nav. It is wired to the collapsed-rail tooltip
-system and carries its own label there; moving it would be a nav change wearing
-a header change's clothes.
+`.hdr-btn.is-wide` is the variant for a control carrying a word — it drops
+`.ctl-icon`'s squaring and takes the md horizontal padding. The theme toggle is
+the only one: an icon-only toggle says what it does and never what it is set to,
+and with Graphite and Verdant close in weight, "which am I on" is a fair
+question to answer without clicking.
+
+**In landscape (`max-height: 500px and max-width: 950px`) the logo is hidden and
+the bar is kept.** It used to be the whole header that went — right while the
+header held only a wordmark, and wrong the moment it held controls, because it
+took undo, redo and the theme off the screen with no other way to reach the
+theme at all. The cluster leaves its absolute pin there (there is no centred
+logo left to avoid) and the buttons pick the `sm` step, so the bar costs about
+33px instead of 48.
+
+Both header controls are components under `src/components/`, not markup inside
+`App.jsx`. That file mounts itself on import and exports nothing, so anything
+written inline in it cannot be rendered by a test.
 
 ### The header wordmark (the molten lift)
 

@@ -3,9 +3,9 @@ import { Icon, canHover, getBuildId, isKeyboardFocus } from "./shared.jsx";
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 
-/* Shared by every collapsed-nav tooltip (NavButton and the theme toggle
-   below). Mounted on hover rather than kept in the DOM at opacity 0 — see
-   the comment on the portal in NavTooltipPortal for why that matters. */
+/* Shared by every collapsed-nav tooltip. Mounted on hover rather than kept in
+   the DOM at opacity 0 — see the comment on the portal in NavTooltipPortal for
+   why that matters. */
 function useNavTooltip(isCollapsed) {
   const wrapRef = React.useRef(null);
   const [tip, setTip] = React.useState(null);
@@ -131,7 +131,7 @@ function NavButton({ page, item, navOpen, setPage, onKeyNav, onToggleNav }) {
   );
 }
 
-export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile, theme, setTheme }) {
+export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, setMobileMenuOpen, isMobile }) {
   const mobile = isMobile;
   const navRef = React.useRef(null);
   const isNavCollapsed = !mobile && !navOpen;
@@ -217,9 +217,13 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
           ))}
         </div>
 
-        {/* Bottom pinned section — add utility items here */}
+        {/* Bottom pinned section — add utility items here.
+
+            The theme toggle used to sit here and now lives in the header's
+            actions cluster (App.jsx), where the rest of the app-wide controls
+            are. It left because it was the only thing in the nav that acted on
+            the whole app rather than on where you are in it. */}
         <div className="nav-bottom">
-          <NavThemeButton navOpen={navOpen} theme={theme} setTheme={setTheme} onToggleNav={handleToggle} />
           <NavBuildStamp navOpen={navOpen} mobile={mobile} />
         </div>
 
@@ -246,31 +250,3 @@ function NavBuildStamp({ navOpen, mobile }) {
   );
 }
 
-function NavThemeButton({ navOpen, theme, setTheme, onToggleNav }) {
-  const { wrapRef, tip, showTip, hideTip } = useNavTooltip(!navOpen);
-  const label = `Theme: ${THEMES[theme]?.label}`;
-
-  return (
-    <div
-      className="nav-btn-wrap"
-      ref={wrapRef}
-      onDoubleClick={onToggleNav}
-      onMouseEnter={showTip}
-      onMouseLeave={hideTip}
-      onFocus={showTip}
-      onBlur={hideTip}>
-      <button
-        className={"nav-btn" + (!navOpen ? " nav-btn-icon-only" : "")}
-        onClick={() => setTheme(getNextTheme(theme))}
-      >
-        <span className="nav-btn-icon">
-          {THEMES[theme]?.icon ?? '◇'}
-        </span>
-        <span className="nav-btn-label">
-          {THEMES[theme]?.label}
-        </span>
-      </button>
-      <NavTooltipPortal tip={tip} label={label} />
-    </div>
-  );
-}

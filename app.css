@@ -641,6 +641,13 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	gap: var(--sp-1);
 }
 
+.hdr-sep {
+	width: 1px;
+	height: 18px;
+	background: var(--edge);
+	flex: 0 0 auto;
+}
+
 .hdr-btn {
 	display: flex;
 	align-items: center;
@@ -652,6 +659,24 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	padding: 0;
 	border: 0;
 	cursor: pointer;
+}
+
+.hdr-btn.is-wide {
+	width: auto;
+	min-width: 0;
+	padding: 0 var(--ctl-pad-x-md);
+	gap: var(--sp-1);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-med);
+}
+
+.header-theme-icon {
+	font-size: var(--fs-md);
+	line-height: 1;
+}
+
+.header-theme-label {
+	white-space: nowrap;
 }
 
 .hdr-btn:disabled {
@@ -2416,8 +2441,27 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 @media (max-height: 500px) and (max-width: 950px) {
 
-	.app-head {
+	.header-logo {
 		display: none;
+	}
+
+	.app-head {
+		justify-content: flex-end;
+		padding: var(--sp-1) var(--sp-2);
+	}
+
+	.header-actions {
+		position: static;
+		translate: none;
+	}
+
+	.hdr-btn {
+		--ctl-h: var(--ctl-h-sm);
+		font-size: var(--fs-sm);
+	}
+
+	.header-theme-icon {
+		font-size: var(--fs-sm);
 	}
 
 	.nav {

@@ -341,9 +341,40 @@
  */
 
 @media (max-height: 500px) and (max-width: 950px) {
-	/* Logo bar wastes vertical space in landscape — nav HIVE label is enough */
-	.app-head {
+	/*
+	 * The logo bar wastes vertical space in landscape — the nav's HIVE label is
+	 * enough to say where you are. It used to be the whole header that went,
+	 * which was right while the header held only the wordmark. It now carries
+	 * undo, redo and the theme toggle, and hiding the bar took all three off the
+	 * screen: the theme had nowhere else to be reached from at all.
+	 *
+	 * So the decoration goes and the controls stay. The bar keeps the cluster,
+	 * pulled out of its absolute pin into a normal right-aligned row, because
+	 * there is no longer a centred logo for it to avoid pushing off centre.
+	 */
+	.header-logo {
 		display: none;
+	}
+
+	.app-head {
+		justify-content: flex-end;
+		padding: var(--sp-1) var(--sp-2);
+	}
+
+	.header-actions {
+		position: static;
+		translate: none;
+	}
+
+	/* Picks the sm step rather than restating a height: 24px of chrome instead
+	   of 32 buys back most of what the wordmark was costing. */
+	.hdr-btn {
+		--ctl-h: var(--ctl-h-sm);
+		font-size: var(--fs-sm);
+	}
+
+	.header-theme-icon {
+		font-size: var(--fs-sm);
 	}
 
 	/* Tighter nav to leave more room for content */

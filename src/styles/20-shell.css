@@ -117,10 +117,9 @@
  * own width. Pinned, the middle belongs to the logo and the cluster costs it
  * nothing.
  *
- * Grouped by REACH: undo acts on the page or the field you were in, and
- * anything app-wide would be a second .hdr-group with a separator between.
- * There is one group today, so no separator rule exists yet — a class nobody
- * applies is dead CSS, and audit:ui would say so.
+ * Grouped by REACH: undo acts on the page or the field you were in, the theme
+ * on the whole app. Ordering the groups that way puts the narrowest action
+ * furthest from the app-wide one, so the two least alike are never adjacent.
  *
  * Ported from MONEYFLOW. The alternative it tried and rejected was a second
  * header row: it read well and cost about 44px of every page, permanently, to
@@ -140,6 +139,15 @@
 	display: flex;
 	align-items: center;
 	gap: var(--sp-1);
+}
+
+/* The same 1px --edge the ghost tier draws its ring with. A second tone here
+   would be a new kind of line in a header that has exactly one. */
+.hdr-sep {
+	width: 1px;
+	height: 18px;
+	background: var(--edge);
+	flex: 0 0 auto;
 }
 
 /*
@@ -173,6 +181,29 @@
    deliberate rather than as a control that failed to load. Dimming with opacity
    is the one place it is right: a disabled control is meant to fall below the
    contrast a live one owes, and WCAG exempts it for that reason. */
+/* The one control here that carries a word. Square is right for a glyph and
+   wrong for a label, so this drops .ctl-icon's squaring and takes the md
+   horizontal padding the rest of the scale uses. The theme's name is worth the
+   width: an icon-only toggle that cycles through themes says what it does but
+   never what it is on. */
+.hdr-btn.is-wide {
+	width: auto;
+	min-width: 0;
+	padding: 0 var(--ctl-pad-x-md);
+	gap: var(--sp-1);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-med);
+}
+
+.header-theme-icon {
+	font-size: var(--fs-md);
+	line-height: 1;
+}
+
+.header-theme-label {
+	white-space: nowrap;
+}
+
 .hdr-btn:disabled {
 	opacity: 0.5;
 	cursor: default;
