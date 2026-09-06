@@ -246,7 +246,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   <SaveDefaultsButton status={presetSaveStatus} errorMessage={saveError} onClick={saveMaterialDefaults} />
                 </Stack>
 
-                <div className="pw-formula-text" style={{ opacity: 0.7 }}>
+                <div className="pw-formula-text">
                   Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.
                 </div>
               </Stack>
@@ -329,7 +329,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                           })()}
                         </div>
                       </ControlPanel>
-                      <div className="pw-formula-text" style={{ opacity: 0.6 }}>
+                      <div className="pw-formula-text">
                         Advanced material analysis and optimized cut-list integration will appear here in the next update.
                       </div>
                     </Stack>
@@ -358,7 +358,7 @@ function LayoutSettings({ sh, setField, setSh, markStep }) {
       <div style={{ padding: "var(--sp-3)", borderRadius: "14px", border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)", background: "color-mix(in srgb, var(--color-primary) 6%, transparent)" }}>
         <Stack gap={1} className="ctrl-lbl">
           <span className="ctrl-sublbl" style={{ fontSize: "var(--fs-lg)", fontWeight: "var(--fw-bold)" }}>Direction</span>
-          <span className="ctrl-sublbl" style={{ opacity: 0.75 }}>Primary layout axis for the pattern preview.</span>
+          <span className="ctrl-sublbl">Primary layout axis for the pattern preview.</span>
         </Stack>
         <div id="ctrl-direction" className="seg-group" style={{ marginTop: "var(--sp-2)" }}>
           {["V", "H"].map(s => (

@@ -210,7 +210,6 @@
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--color-primary);
-	opacity: 0.8;
 	cursor: pointer;
 	white-space: nowrap;
 	overflow: hidden;
@@ -219,8 +218,11 @@
 }
 
 @media (hover: hover) {
+	/* Was 0.8 -> 1 opacity, which put the resting label at 6.75:1 / 3.40:1.
+	   The cue is now a colour change, and both ends are gated: --brand at
+	   9.93:1 / 4.97:1 and --text at 13.96:1 / 13.74:1. */
 	.nav-toggle-label:hover:not(:disabled) {
-		opacity: 1;
+		color: var(--text);
 	}
 }
 
@@ -305,7 +307,10 @@
 .nav-build {
 	font-family: var(--mono);
 	font-size: var(--fs-xs);
-	color: color-mix(in srgb, var(--color-gray) 65%, transparent);
+	/* Full strength — thinned it was 2.60:1 / 2.30:1. It is a reference number
+	   somebody reads against `npm run deploy:check`, so it has to be legible;
+	   --text-muted keeps it the quietest thing in the rail at ~7:1. */
+	color: var(--text-muted);
 	padding: 2px var(--sp-2) 0;
 	white-space: nowrap;
 	overflow: hidden;

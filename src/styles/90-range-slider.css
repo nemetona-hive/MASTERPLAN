@@ -42,6 +42,10 @@
 }
 
 .range-slider-wrap.is-locked .range-input {
+	/* A locked slider track and thumb. It paints no words, and an inactive
+	   control is what WCAG 1.4.3 exempts anyway; the selector cannot say
+	   :disabled because the input is not disabled, only guarded.
+	   audit-ui: decorative */
 	opacity: 0.35;
 	cursor: not-allowed;
 }

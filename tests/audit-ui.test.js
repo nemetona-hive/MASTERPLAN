@@ -73,6 +73,56 @@ describe("audit-ui", () => {
     }
   });
 
+  /* ── the two contrast checks a pair test structurally cannot make ────── */
+
+  it("catches a word painted in an edge token, through an alias", () => {
+    // --color-gray-light IS --border. Matching on the token name alone only
+    // ever catches the honest spellings, and both real findings here were
+    // wearing the alias.
+    const base = fs.readFileSync(path.join(ROOT, "src", "styles", "00-base.css"), "utf8");
+    expect(base).toMatch(/--color-gray-light:\s*var\(--border\)/);
+
+    const probe = path.join(ROOT, "src", "styles", "99-audit-probe.css");
+    fs.writeFileSync(probe, ".probe-edge { color: var(--color-gray-light); }\n");
+    try {
+      const out = run();
+      expect(out).toContain("text-in-edge-token");
+      expect(out).toContain("which is --border");
+    } finally {
+      fs.unlinkSync(probe);
+    }
+  });
+
+  it("catches text dimmed with opacity, in a stylesheet and inline", () => {
+    const probe = path.join(ROOT, "src", "styles", "99-audit-probe.css");
+    fs.writeFileSync(probe, ".probe-dim { opacity: 0.6; }\n");
+    try {
+      expect(run()).toContain("text-dimmed-with-opacity");
+    } finally {
+      fs.unlinkSync(probe);
+    }
+  });
+
+  it("exempts a keyframe, a disabled control, and a marked decoration", () => {
+    const probe = path.join(ROOT, "src", "styles", "99-audit-probe.css");
+    fs.writeFileSync(probe, [
+      "@keyframes probe-fade { from { opacity: 0.2; } to { opacity: 1; } }",
+      ".probe-off:disabled { opacity: 0.4; }",
+      ".probe-mark {",
+      "\t/* a drawn line, no words. audit-ui: decorative */",
+      "\topacity: 0.5;",
+      "}",
+      ""
+    ].join("\n"));
+    try {
+      // An animation's start state is not a resting state, WCAG exempts an
+      // inactive control, and a marked decoration has given its reason.
+      expect(run()).not.toContain("text-dimmed-with-opacity");
+    } finally {
+      fs.unlinkSync(probe);
+    }
+  });
+
   it("treats a class assembled from a template hole as reachable", () => {
     const gr = fs.readFileSync(path.join(ROOT, "src", "components", "GoldenRatio.jsx"), "utf8");
     expect(gr).toContain("gr-control-card-${tone}");

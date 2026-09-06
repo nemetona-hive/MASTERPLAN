@@ -418,7 +418,7 @@ export function SheetConcrete() {
                   <SaveDefaultsButton status={presetSaveStatus} errorMessage={saveError} onClick={saveConcreteDefaults} />
                 </Stack>
 
-                <div className="pw-formula-text" style={{ opacity: 0.7 }}>
+                <div className="pw-formula-text">
                   Fill product data above and click "Apply" to update the calculator values.
                 </div>
               </Stack>
@@ -487,7 +487,7 @@ export function SheetConcrete() {
               <span className="result-card-title">Bags Needed</span>
               <span className="result-card-value">
                 {bags > 0 ? bags : "0"} 
-                <span style={{fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-reg)', opacity: 0.8, marginLeft: '4px'}}>pcs</span>
+                <span style={{fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-reg)', marginLeft: '4px'}}>pcs</span>
               </span>
               <span className="result-card-note">
                 exact: {bagsExact > 0 ? bagsExact.toFixed(2) : "0.00"} pcs
@@ -500,7 +500,7 @@ export function SheetConcrete() {
                 <span className="result-card-value">
                   {totalPrice !== null ? (
                     <>
-                      <span style={{ fontSize: 'var(--fs-lg)', opacity: 0.8 }}>€</span>
+                      <span style={{ fontSize: 'var(--fs-lg)' }}>€</span>
                       <span>{fmtEur(totalPrice)}</span>
                     </>
                   ) : "—"}

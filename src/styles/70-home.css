@@ -152,7 +152,10 @@
 	bottom: 16px;
 	right: 16px;
 	font-size: var(--fs-sm);
-	color: var(--color-gray-light);
+	/* A mark rather than a word, so 3:1 — but --color-gray-light is --border
+	   and put it at 1.66:1 / 1.50:1, under even that. --text-subtle is
+	   4.03:1 / 4.62:1. */
+	color: var(--text-subtle);
 	opacity: 0;
 	transform: translateX(-4px);
 	transition: opacity 0.15s ease, transform 0.15s ease;
@@ -185,7 +188,11 @@
 	display: none;
 	font-family: var(--mono);
 	font-size: var(--fs-xs);
-	color: color-mix(in srgb, var(--color-gray) 65%, transparent);
+	/* Full strength, not thinned. At 65% toward transparent this was 2.49:1 /
+	   2.46:1 — a value no gate ever measured, because a token mixed toward
+	   transparent is not a pair theme:check can be given. --text-muted is
+	   ~7:1 on both and still the quiet end of the scale. */
+	color: var(--text-muted);
 	letter-spacing: 0.08em;
 	user-select: text;
 }
@@ -207,7 +214,11 @@
 		flex-direction: row;
 		align-items: baseline;
 		gap: var(--sp-2);
-		opacity: 0.75; /* 0.6 dims below WCAG AA contrast (4.5:1) on this background */
+		/* No opacity. The note this replaces said 0.6 dropped below 4.5:1 and
+		   settled on 0.75 — which was still 3.10:1 for the name and 3.84:1 for
+		   the sub on verdant, because the figure was picked against one theme.
+		   At full strength both children sit on gated tokens: --brand at
+		   9.93:1 / 4.97:1 and --text-muted at 7.39:1 / 6.92:1. */
 	}
 
 	.home-brand-name {

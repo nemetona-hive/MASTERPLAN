@@ -156,6 +156,150 @@ for (const file of markupFiles) {
   });
 }
 
+/* ------------------------------------------- 1c. a word drawn in an edge token
+ * A border token is picked to be *just* visible against its surface — that is
+ * the job. Painting a word in one inherits a value chosen for a hairline, and
+ * lands a long way under the 4.5:1 a word owes.
+ *
+ * This is a USAGE check and not a contrast pair, on purpose. --border is fine
+ * as a border and a pair test would either fail it there or pass it as text —
+ * it cannot tell the two apart, because what is wrong is which property the
+ * token is in. theme:check has the same blind spot from the other side: it
+ * compares the pairs somebody thought to list, and a token used for the wrong
+ * job is not a pair anyone would think to list.
+ *
+ * Same reason the alpha case is here: a token thinned toward transparent is a
+ * value the palette never approved and no gate ever measured.
+ */
+{
+  /* Resolve one level of aliasing first. This repo has --color-gray-light: 
+     var(--border) sitting in the legacy block, and matching on the token NAME
+     alone only ever catches the honest spellings — a word painted in a token
+     that says "grey" is the same bug wearing a better name. */
+  const EDGE_RE = /^--(?:border|edge|divider|rule|outline|hairline)[\w-]*$/;
+  const aliasOf = new Map();
+  for (const file of cssFiles) {
+    for (const m of stripComments(fs.readFileSync(file, "utf8"))
+        .matchAll(/(--[\w-]+)\s*:\s*var\(\s*(--[\w-]+)\s*\)/g)) aliasOf.set(m[1], m[2]);
+  }
+  const resolve = t => {
+    const seen = new Set();
+    while (aliasOf.has(t) && !seen.has(t)) { seen.add(t); t = aliasOf.get(t); }
+    return t;
+  };
+  const isEdge = t => EDGE_RE.test(t) || EDGE_RE.test(resolve(t));
+  const EDGE = /var\(\s*(--[\w-]+)/;
+
+  for (const file of cssFiles) {
+    const raw = fs.readFileSync(file, "utf8");
+    const text = stripComments(raw);
+    /* A glyph that is a watermark rather than a word has no contrast floor, and
+       there is no way to tell one from the other by reading the declaration —
+       so the exception is written at the site and read from the RAW source,
+       stripComments having blanked it out of `text`. It has to give a reason. */
+    const exempt = new Set();
+    raw.split("\n").forEach((l, i) => {
+      if (/audit-ui:\s*(decorative|contrast-ok)/.test(l)) { exempt.add(i); exempt.add(i + 1); exempt.add(i + 2); }
+    });
+    text.split("\n").forEach((code, i) => {
+      if (/^\s*--[\w-]+\s*:/.test(code)) return;   // declaring a token, not using one
+      if (exempt.has(i)) return;
+      const decl = /(^|[;{]|^\s*)\s*color\s*:\s*([^;]*)/.exec(code);
+      if (!decl) return;
+      const value = decl[2];
+
+      const edge = EDGE.exec(value);
+      if (edge && isEdge(edge[1])) {
+        const via = resolve(edge[1]) !== edge[1] ? ` (which is ${resolve(edge[1])})` : "";
+        add("ERROR", "text-in-edge-token", file, i + 1,
+          `color: ${edge[1]}${via} — an edge token is tuned to be just visible as a ` +
+          `line, not read as a word. Use --text / --text-muted / --text-subtle.`);
+      }
+
+      const thinned = /color-mix\([^;]*var\(\s*(--[\w-]+)[^;]*transparent/.exec(value);
+      if (thinned) {
+        add("ERROR", "text-in-edge-token", file, i + 1,
+          `color: ${thinned[1]} mixed toward transparent — the thinned value is not ` +
+          `the one the palette cleared. Use the token at full strength.`);
+      }
+    });
+  }
+}
+
+/* --------------------------------------------- 1d. text dimmed with opacity
+ * `opacity` is not a dimming budget for text. Against --bg on graphite,
+ * --text-muted drops under 4.5:1 below about 0.82 and --text-subtle below
+ * about 0.96 — there is no useful alpha between "no dim" and "unreadable", so
+ * a rule reaching for opacity to make text quieter has almost certainly
+ * already gone through the floor. None of it is a colour any stylesheet search
+ * would turn up, because none of it is written as a colour.
+ *
+ * Three things are exempt, and only these three:
+ *   :disabled   WCAG 1.4.3 exempts inactive controls.
+ *   opacity: 0  hiding something is not dimming it.
+ *   @keyframes  an animation's start state is not a resting state.
+ * Anything else genuinely a graphic says so with an `audit-ui: decorative`
+ * comment, which has to give a reason.
+ *
+ * Dim text by choosing a lighter token, not by thinning the one you have.
+ */
+{
+  /* Any opacity at all, not a threshold. A threshold picked from one token
+     cannot cover the others, and "don't dim text with opacity" needs none. */
+  const FLOOR = 1;
+  for (const file of cssFiles) {
+    const raw = fs.readFileSync(file, "utf8");
+    const text = stripComments(raw);
+    const exempt = new Set();
+    raw.split("\n").forEach((l, i) => {
+      if (/audit-ui:\s*(decorative|contrast-ok)/.test(l)) { exempt.add(i); exempt.add(i + 1); exempt.add(i + 2); }
+    });
+    const lines = text.split("\n");
+    let inKeyframes = 0, depth = 0;
+    lines.forEach((code, i) => {
+      if (/@keyframes/.test(code)) inKeyframes = depth + 1;
+      const opens = (code.match(/\{/g) || []).length;
+      const closes = (code.match(/\}/g) || []).length;
+
+      const m = /(?<![\w-])opacity\s*:\s*(0?\.\d+|0|1(?:\.0+)?)\s*[;}]/.exec(code);
+      if (m && !inKeyframes && !exempt.has(i)) {
+        const value = parseFloat(m[1]);
+        if (value > 0 && value < FLOOR) {
+          // The selector this declaration belongs to, for the message.
+          let sel = "";
+          for (let j = i; j >= 0 && j > i - 40; j--) {
+            if (lines[j].includes("{")) { sel = lines[j].replace("{", "").trim().slice(0, 60); break; }
+          }
+          if (!/:disabled/.test(sel)) {
+            add("ERROR", "text-dimmed-with-opacity", file, i + 1,
+              `opacity: ${m[1]} on ${sel || "this rule"} — opacity thins text too, and the ` +
+              `resulting colour is not one the palette cleared. Dim with a lighter token, ` +
+              `or mark it /* audit-ui: decorative */ (paints no words) or ` +
+              `/* audit-ui: contrast-ok */ with the measured ratio.`);
+          }
+        }
+      }
+      depth += opens - closes;
+      if (inKeyframes && depth < inKeyframes) inKeyframes = 0;
+    });
+  }
+
+  // Inline styles never reach a stylesheet, so the pass above cannot see them —
+  // and neither can anything else in verify.
+  for (const file of markupFiles) {
+    if (!/\.jsx$/.test(file)) continue;
+    const src = fs.readFileSync(file, "utf8");
+    src.split("\n").forEach((code, i) => {
+      const m = /opacity\s*:\s*["']?(0?\.\d+)/.exec(code);
+      if (m && parseFloat(m[1]) > 0 && parseFloat(m[1]) < FLOOR) {
+        add("ERROR", "text-dimmed-with-opacity", file, i + 1,
+          `inline opacity: ${m[1]} — a dim written in JSX that no stylesheet check can ` +
+          `see. Move it to a class and dim with a token.`);
+      }
+    });
+  }
+}
+
 /* ----------------------------------------------------------- 2. unused CSS
  * Substring search against all markup, matching how these classes are actually
  * built (template strings, concatenation). Heuristic by nature: a name that is

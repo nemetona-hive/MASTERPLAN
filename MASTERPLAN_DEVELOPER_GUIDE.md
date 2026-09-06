@@ -81,7 +81,7 @@ audit.
 | Command | What it guards |
 |---|---|
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
-| `npm run audit:ui` | hardcoded colour, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
+| `npm run audit:ui` | hardcoded colour, a word painted in an edge token, text dimmed with opacity, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
 | `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
@@ -151,6 +151,33 @@ an exemption whose reason lives somewhere else is one nobody re-reads, and one
 nobody re-reads just hides the check. A baselined name that later gets styled
 or deleted is reported as `stale-baseline`, so the list cannot outlive what it
 excused.
+
+Two of the audit's checks exist because **`theme:check` structurally cannot
+make them**. It compares the token pairs somebody thought to list, and neither
+of these is a pair anyone would think to list:
+
+- **`text-in-edge-token`** — a word painted in `--border`, `--edge`, `--divider`
+  or an alias onto one. A border token is tuned to be *just* visible as a line,
+  so it is fine as a border and far under 4.5:1 as text; a pair test cannot tell
+  the two apart, because what is wrong is which property the token is in. It
+  resolves one level of aliasing first, which is what catches
+  `--color-gray-light` — a name that says "grey" and *is* `--border`. A token
+  mixed toward `transparent` is reported for the same reason: the thinned value
+  is one the palette never cleared.
+- **`text-dimmed-with-opacity`** — `opacity` thins text as well as its
+  background, and the result is a colour no gate measured. There is no useful
+  alpha between "no dim" and "unreadable", so the check has no threshold. Three
+  things are exempt automatically — `:disabled` (WCAG exempts inactive
+  controls), `opacity: 0` (hiding is not dimming), and `@keyframes` (a start
+  state is not a resting state). Anything else says so at the site with
+  `audit-ui: decorative` (paints no words) or `audit-ui: contrast-ok` **with the
+  measured ratio**, and the marker has to sit on the declaration or the two
+  lines above it — the window is tight so a marker cannot reach past its own
+  rule. Inline `style={{ opacity }}` in JSX is checked too, since nothing else
+  in `verify` can see it.
+
+Both are ERROR. Dim text by choosing a lighter token, not by thinning the one
+you have.
 
 Colour comes from theme tokens, never a literal — `--danger`, `--success`,
 `--warning`, `--brand`, `--accent`, or the `--color-*` aliases onto them. The

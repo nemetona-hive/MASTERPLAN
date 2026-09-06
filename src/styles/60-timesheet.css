@@ -109,7 +109,11 @@
 }
 
 .ts-input::placeholder {
-	color: var(--color-gray-light);
+	/* --color-gray-light is an alias onto --border, so this was a hint drawn
+	   in a hairline colour: 1.66:1 on graphite, 1.50:1 on verdant. The format
+	   guidance in a placeholder is words, so it owes 4.5:1. --text-muted is
+	   6.72:1 / 7.89:1 here and still reads as quieter than the gold value. */
+	color: var(--text-muted);
 	opacity: 1;
 }
 

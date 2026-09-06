@@ -140,6 +140,8 @@
 .layout-svg-carry-line {
   stroke: var(--viz-carry);
   stroke-width: 2;
+  /* An SVG connector stroke between a cut and its offcut. A line, not a word.
+     audit-ui: decorative */
   opacity: 0.65;
   pointer-events: none;
   vector-effect: non-scaling-stroke;

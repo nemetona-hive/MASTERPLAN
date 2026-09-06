@@ -168,7 +168,9 @@
 .pw-updated-note {
   font-family: var(--mono);
   font-size: var(--fs-xs);
-  color: color-mix(in srgb, var(--success) 90%, transparent);
+  /* Full strength. Thinned to 90% it measured 4.04:1 on verdant, under the
+     4.5:1 a word owes; --success itself is 6.60:1 / 4.86:1. */
+  color: var(--success);
   margin-left: var(--sp-2);
   opacity: 0;
   transition: opacity 0.3s ease;
