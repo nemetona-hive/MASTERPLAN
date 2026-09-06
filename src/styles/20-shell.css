@@ -242,6 +242,13 @@
 }
 
 .app-head {
+	/* The containing block for .header-actions, which pins itself to this bar's
+	   right edge. Without it that cluster resolves against the viewport, and
+	   `top: 50%` drops it halfway down the page — which is what shipped.
+	   80-mobile.css sets position: relative here too, so the bug was invisible
+	   below 768px and live everywhere above it.
+	   tests/css-integrity.test.js guards it now. */
+	position: relative;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;

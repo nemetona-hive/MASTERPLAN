@@ -709,6 +709,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .app-head {
+
+	position: relative;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;

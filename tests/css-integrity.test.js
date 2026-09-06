@@ -54,6 +54,25 @@ describe("stylesheet integrity", () => {
     expect(min).toBe(0);
   });
 
+  /*
+   * An absolutely positioned element needs its containing block to say so, and
+   * nothing in a jsdom suite can see where a box actually landed.
+   *
+   * This shipped broken once: .header-actions is pinned to .app-head's right
+   * edge, .app-head carried no `position`, and the cluster resolved against the
+   * viewport — `top: 50%` put it halfway down the page. 80-mobile.css sets
+   * position: relative on .app-head, so it was correct below 768px and wrong
+   * everywhere above. It reached a user because the browser checks measured the
+   * buttons' own boxes and the logo's centring, and never asked the one
+   * question that mattered: is the cluster inside the header.
+   */
+  it("a pinned cluster has a containing block to pin to", () => {
+    const css = fs.readFileSync(path.join(ROOT, "app.css"), "utf8");
+    const rule = css.match(/(?:^|\})\s*\.app-head\s*\{([^}]*)\}/);
+    expect(rule, ".app-head rule not found").toBeTruthy();
+    expect(rule[1]).toMatch(/position:\s*relative/);
+  });
+
   it("every var() the bundle reads is defined in it", () => {
     // A typo'd token is silent in the same way: the declaration is simply
     // dropped and the control renders with no fill or no height.
