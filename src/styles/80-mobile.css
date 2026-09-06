@@ -390,6 +390,11 @@
 		padding: 4px var(--sp-2);
 	}
 
+	/* Deliberately BELOW the rail step, and the only place that is true.
+	   Landscape on a phone has about 40vh of nav to give and eight items to put
+	   in it; the step loses to the constraint here. Written as a literal rather
+	   than borrowed from --ctl-h-lg, because the data-view scale has no
+	   authority over the rail and reading one here would imply it does. */
 	.nav-btn {
 		min-height: 36px;
 		padding: 6px 10px;
@@ -427,9 +432,12 @@
 		--fs-md: 14px;
 	}
 
+	/* Back down to the rail's own step from the touch floor above. On a 360px
+	   phone the list is what has to fit, and 4px per item over eight items is
+	   a whole item's worth of scroll. */
 	.nav-btn {
 		padding: 8px 10px;
-		min-height: 40px;
+		min-height: var(--nav-ctl-h);
 	}
 
 	.page-scroll {

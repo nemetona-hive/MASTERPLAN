@@ -22,6 +22,13 @@
 	display: flex;
 	align-items: center;
 	gap: var(--sp-2);
+	/* The rail's own step. It is deliberately off the data-view scale — a nav
+	   item is not an action on a row — but it is a step, and it has to be
+	   stated: without it the box came out as padding plus line-height at 33px,
+	   which is near a step without being on one. The token said 40 and was read
+	   by nothing, so the token, the rendering and the guide were three
+	   different answers. */
+	min-height: var(--nav-ctl-h);
 	padding: 8px 12px;
 	border-radius: 6px;
 	border: none;

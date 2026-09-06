@@ -38,15 +38,23 @@ variable.
 | `.ts-btn`, `.num-btn`, `.ts-copy`, `.viz-expand-btn` | raised | md |
 | `.ctl-ghost` (composable), `.ctrl-dir`, `.pill-btn`, `.mp-modal-close` | ghost | lg / md |
 | `.ctrl-dir.on`, `.pill-btn.on`, `.ctl-ghost.on` | solid active | — |
-| `.nav-*` | the rail | its own system, off the data scale — see below |
+| `.nav-*` | the rail, `--nav-ctl-h` | 40px, off the data-view scale — see below |
 
-**`--nav-ctl-h` is declared and read by nothing.** It says 40px in
-`00-base.css`; the nav buttons are sized by padding plus line-height and come out
-at 33px, which `npm run layout` confirms. The token, the rendering and this table
-were three different answers until the table was corrected. Either wire the rail
-to its token or drop the token — but do not read 40px as a fact about the nav
-until one of those has happened. The control checks exempt the rail, so nothing
-flags it.
+**The rail is off the data-view scale, not off every scale.** `--nav-ctl-h` is
+its own step and `.nav-btn` reads it. That is worth stating because the token
+existed for a long time read by nothing, so the rail rendered at 33px — padding
+plus line-height — while the token and this table both said 40, and no check
+could see the disagreement. `npm run layout` now asserts every `.nav-btn`
+against `--nav-ctl-h`, which is the only place the token, the rendering and the
+guide meet.
+
+Two deliberate departures from that step, both in `80-mobile.css`:
+
+| Where | Height | Why |
+|---|---|---|
+| below 768px | `--ctl-h-touch` (44px) | the finger floor wins over the rail's own step |
+| below 360px | `--nav-ctl-h` (40px) | back down to the step — the list is what has to fit |
+| landscape phone | `36px` | below the step, and the only place that is true: about 40vh of nav for eight items. Written as a literal rather than borrowed from `--ctl-h-lg`, because the data-view scale has no authority over the rail and reading one here would imply it does |
 
 Compose `.ctl-ghost`, `.ctl-danger` (destructive hover), `.ctl-sm` and
 `.ctl-icon` in the markup rather than writing a bespoke recipe — Timesheet's

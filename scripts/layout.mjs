@@ -157,7 +157,9 @@ async function run() {
        * that states no height at all comes out as padding plus line-height,
        * which lands near a step without being on it.
        *
-       * The nav rail and the Home cards are excluded; see the note below. */
+       * The Home cards are excluded; see the note below. The nav rail is
+       * excluded from THIS check and gets its own below, because it is on its
+       * own step rather than on no step. */
       const offScale = await page.evaluate(() => {
         const root = getComputedStyle(document.documentElement);
         const steps = ["--ctl-h-xs", "--ctl-h-sm", "--ctl-h-md", "--ctl-h-lg", "--ctl-h-touch"]
@@ -181,6 +183,30 @@ async function run() {
       });
       if (!offScale.length) pass();
       else for (const one of new Set(offScale)) fail("control-off-scale", one, `#${id}: ${one}`);
+
+      /* ── 3b. the nav rail is on its own step ──────────────────────────────
+       * The rail is deliberately off the data-view scale — a nav item is not an
+       * action on a row — which is why the check above skips it. That is not
+       * the same as being off every scale. `--nav-ctl-h` was declared and read
+       * by nothing for as long as it existed, so the rail rendered at 33px,
+       * padding plus line-height, while the token and the guide both said 40.
+       * Nothing could see the disagreement, because the only place all three
+       * meet is on screen.
+       *
+       * Scoped to `.nav-btn`: the rail also holds a collapse toggle and a menu
+       * icon, which are chrome rather than items in the list. */
+      const railOff = await page.evaluate(() => {
+        const step = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue("--nav-ctl-h"));
+        const out = [];
+        for (const el of document.querySelectorAll("#side-navi .nav-btn")) {
+          const h = el.getBoundingClientRect().height;
+          if (h && Math.abs(h - step) > 1.5) out.push(`${Math.round(h)}px against a ${step}px step`);
+        }
+        return [...new Set(out)];
+      });
+      if (!railOff.length) pass();
+      else for (const one of railOff) fail("nav-off-its-step", one, `#${id}: .nav-btn ${one}`);
 
       /* ── 4. what a word was actually painted in ───────────────────────────
        * Walks real text nodes, composites the authored colour and every
