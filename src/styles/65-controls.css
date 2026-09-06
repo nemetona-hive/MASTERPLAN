@@ -103,7 +103,8 @@
 .ts-btn,
 .num-btn,
 .ctrl-dir,
-.ts-copy {
+.ts-copy,
+.hdr-btn {
 	border-radius: var(--btn-radius);
 }
 

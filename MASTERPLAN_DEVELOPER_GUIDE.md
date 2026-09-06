@@ -102,7 +102,9 @@ pairs rather than `fireEvent.change`, because the module hangs on the order a
 real edit arrives in — a test written with `change` would pass against a module
 that could not work. `tests/doc-undo.test.jsx` drives `SheetTimesheet` through
 its own buttons for the same reason: it asserts what a person gets back, not
-what the store recorded.
+what the store recorded. `tests/undo-buttons.test.jsx` renders the header pair
+over a real page and covers the states it spends most of its life in — dead,
+and dead again once the page is gone.
 
 The rest of the calculator pages have no equivalent: Concrete, Golden Ratio and
 Pipe Wrap are untouched by any render test, and so are direction switching with
@@ -387,7 +389,10 @@ exactly when its node does and there is no cleanup to forget.
 
 It is half of a pair with `doc-undo.js` below, and the two meet in exactly two
 places: the generation stamp on a history, and a Ctrl+Z pressed with the focus
-outside a field.
+outside a field. Both are reachable from the keyboard and from the header pair
+(`components/UndoButtons.jsx`), and both routes call the same
+`stepOutsideAField`, so the button and the shortcut cannot disagree about what
+"undo" means.
 
 ### Undo for what a button did (`utils/doc-undo.js`)
 
@@ -425,8 +430,15 @@ destructive action is already behind an armed two-press confirm.
 
 Both files are ported from MONEYFLOW, and both headers list what was left
 behind. The short version for this pair: there is no `markDirty`, because
-nothing here persists, and no subscribe/announce, because there is nowhere to
-put an undo button pair until the header grows a tool row.
+nothing here persists. When localStorage autosave lands it goes into the history
+entry beside `apply`, because an undo has to be saved like any other change or
+what is on disk keeps the action you just took back.
+
+Each module publishes its own read model — `fieldUndoState`, `docUndoState` —
+and a `subscribe*` to go with it. The header pair is the only reader today. A
+step is announced **only on a real change**, because a page re-registers its
+history on every render and a store that woke the header each time to say the
+same thing would be a cost with no reader.
 
 ## Key globals (defined outside src/, treat as read-only)
 
@@ -863,6 +875,36 @@ Defined in `themes.js` (loaded as global, not inside `src/`).
   between light and dark, so it cannot be derived. The gate is 4.5:1 for any
   colour a word is drawn in, 3:1 for one that only draws a mark
 
+### The header actions cluster
+
+`.header-actions` is one cluster pinned to the right of `app-head`, holding
+`.hdr-group`s. It is **absolute, not in the flow**, and that is load-bearing:
+`.app-head` centres the logo, so a cluster taking part in the layout would push
+the wordmark off centre by its own width.
+
+Groups are divided by **reach** — undo acts on the page or the field you were
+in; anything app-wide belongs in a second group with an `.hdr-sep` between.
+There is one group today, so neither the separator class nor its rule exists
+yet: a class nobody applies is dead CSS and `audit:ui` says so. Add both
+together when the second group arrives.
+
+`.hdr-btn` is the header's base control and contributes **only the step** —
+md, per the size scale's own note that md is "the default, and any standalone".
+Everything else is composed in the markup: `hdr-btn ctl-ghost ctl-icon`, so the
+tier, the hover, the active plate and the press all come from `65-controls.css`.
+This is deliberately *not* a port of MONEYFLOW's `.hdr-btn`, which carries its
+own fill, ring, hover and colour — that would be the second recipe the control
+system exists to prevent. Its radius comes from the shared rectangular-controls
+rule, which `.hdr-btn` joins rather than restating.
+
+The disabled state is the one place dimming with `opacity` is right: the pair is
+disabled most of the time, a disabled control is *meant* to fall below the
+contrast a live one owes, and WCAG exempts it for that reason.
+
+The theme toggle stays in the nav. It is wired to the collapsed-rail tooltip
+system and carries its own label there; moving it would be a nav change wearing
+a header change's clothes.
+
 ### The header wordmark (the molten lift)
 
 The NEMETONA mark in `app-head` is a token system, not a drawing. Set the
@@ -992,11 +1034,6 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 - Advanced user persistence. `saveStaticDefaults` writes to `config.js` from the
   dev server only, and localStorage holds nothing but the theme choice. There is
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
-- An undo/redo button pair. Both undo layers exist and `docUndoState` already
-  returns the labels a tooltip would read ("Undo Clear all"), but Ctrl+Z is the
-  only way to reach either — `app-head` is a logo and nothing else, so a pair
-  needs a header tool row designed first. The subscribe/announce halves of both
-  modules were left out for the same reason
 - A `Dialog` primitive. MONEYFLOW has one, but its recipe reads seven tokens
   this theme has no answer for, so it is a design decision rather than a port
 - UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have

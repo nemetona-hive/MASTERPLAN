@@ -29,22 +29,16 @@
  *
  * ── Ported from MONEYFLOW as a documented subset ───────────────────────────
  *
- * Two things in its copy have no counterpart here yet:
+ * One thing in its copy still has no counterpart here: `markDirty`. There, a
+ * history entry carries the page's autosave hook and every step calls it,
+ * because an undo has to be written to disk like any other change or the file
+ * keeps the action you just took back. MASTERPLAN persists nothing but the
+ * theme, so there is nothing to mark. When localStorage autosave lands, it goes
+ * into the entry beside `apply` and is called from `recordDocStep` and `step`.
  *
- *   - `markDirty`. There, a history entry carries the page's autosave hook and
- *     every step calls it, because an undo has to be written to disk like any
- *     other change or the file keeps the action you just took back. MASTERPLAN
- *     persists nothing but the theme, so there is nothing to mark. When
- *     localStorage autosave lands, it goes into the entry beside `apply` and is
- *     called from `recordDocStep` and `step`.
- *   - The subscribe/announce pair that drives MONEYFLOW's header undo buttons.
- *     This app's header is a logo and nothing else, so there is nowhere to put
- *     a pair without designing a tool row first. `docUndoState` is here and
- *     already returns everything such a pair would read, labels included — it
- *     is the subscription that is missing, not the model.
- *
- * Until then Ctrl+Z is the whole interface, which is what it is in every other
- * app a person has undone something in.
+ * The subscribe/announce pair below was absent for a while too, because the
+ * header was a logo and there was nowhere to put a control that reads it. There
+ * is now — see `src/components/UndoButtons.jsx`.
  */
 
 /*
@@ -79,6 +73,28 @@ let active = null;
 let generation = 0;
 export const docUndoGeneration = () => generation;
 
+const listeners = new Set();
+let announced = { canUndo: false, canRedo: false, label: null, redoLabel: null };
+
+/* Only on a real change. The page re-registers on every render, so a store that
+   woke the header on each one to say the same thing would be a cost with no
+   reader. */
+function announce() {
+  const next = docUndoState();
+  if (next.canUndo === announced.canUndo
+    && next.canRedo === announced.canRedo
+    && next.label === announced.label
+    && next.redoLabel === announced.redoLabel) return;
+  announced = next;
+  for (const listener of listeners) listener(next);
+}
+
+export function subscribeDocUndo(listener) {
+  listeners.add(listener);
+  listener(docUndoState());
+  return () => listeners.delete(listener);
+}
+
 /**
  * Points the module at a page's history, replacing whatever was there.
  *
@@ -90,6 +106,7 @@ export const docUndoGeneration = () => generation;
 export function registerDocHistory(entry) {
   if (!entry) {
     active = null;
+    announce();
     return;
   }
   if (active && active.key === entry.key) {
@@ -97,6 +114,7 @@ export function registerDocHistory(entry) {
   } else {
     active = { ...entry, past: [], future: [] };
   }
+  announce();
 }
 
 /**
@@ -107,9 +125,9 @@ export function registerDocHistory(entry) {
  * render's closure, so a call made after the write would record the state the
  * action produced rather than the one it replaced.
  *
- * `label` says what the step was ("Clear all", "Remove row"). Nothing displays
- * it yet; it is what an undo button's tooltip will read, and it is worth
- * writing now because the call site is the only place that knows.
+ * `label` says what the step was ("Clear all", "Remove row") and is what the
+ * header pair puts in its tooltip. The call site is the only place that knows,
+ * so every `markStep` should pass one.
  */
 export function recordDocStep(label) {
   if (!active) return;
@@ -117,6 +135,7 @@ export function recordDocStep(label) {
   if (active.past.length > LIMIT) active.past.shift();
   // Acting after an undo abandons what was undone, as everywhere else.
   active.future.length = 0;
+  announce();
 }
 
 /*
@@ -134,6 +153,7 @@ function step(from, to) {
   if (to.length > LIMIT) to.shift();
   generation += 1;
   active.apply(entry.snapshot);
+  announce();
   return true;
 }
 

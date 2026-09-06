@@ -43,6 +43,10 @@ const ICONS = {
   "ring": "fa-solid fa-circle-notch",                       // Pipe Wrap page
   "palette": "fa-solid fa-palette",                         // Theme toggle
 
+  // Header undo pair
+  "undo": "fa-solid fa-rotate-left",
+  "redo": "fa-solid fa-rotate-right",
+
   "plus": "fa-solid fa-plus",
   "minus": "fa-solid fa-minus",
   "close": "fa-solid fa-xmark",

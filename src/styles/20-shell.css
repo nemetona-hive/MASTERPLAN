@@ -110,6 +110,88 @@
 }
 
 /*
+ * The header's controls: one cluster, pinned to the right.
+ *
+ * Absolute rather than in the flow, because .app-head centres the logo — a
+ * cluster taking part in the layout would push the wordmark off centre by its
+ * own width. Pinned, the middle belongs to the logo and the cluster costs it
+ * nothing.
+ *
+ * Grouped by REACH: undo acts on the page or the field you were in, and
+ * anything app-wide would be a second .hdr-group with a separator between.
+ * There is one group today, so no separator rule exists yet — a class nobody
+ * applies is dead CSS, and audit:ui would say so.
+ *
+ * Ported from MONEYFLOW. The alternative it tried and rejected was a second
+ * header row: it read well and cost about 44px of every page, permanently, to
+ * hold controls that fit on one line with the logo between them.
+ */
+.header-actions {
+	position: absolute;
+	right: 24px;
+	top: 50%;
+	translate: 0 -50%;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2);
+}
+
+.hdr-group {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-1);
+}
+
+/*
+ * The header's own base control, and deliberately NOT a port of MONEYFLOW's
+ * .hdr-btn, which carries its own fill, ring, hover and colour. This repo has a
+ * tier system for that: the markup composes `hdr-btn ctl-ghost ctl-icon`, so
+ * the tier, the hover, the active plate and the press all come from
+ * 65-controls.css and there is no second recipe to drift.
+ *
+ * What is left is the step. md, per the scale's own note that md is "the
+ * default, and any standalone" — these are standalone chrome, not actions on a
+ * data row. --ctl-h is set as well as the height so .ctl-icon squares off this
+ * step rather than its fallback; they agree today, and would not if the header
+ * ever moved to lg.
+ */
+.hdr-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	--ctl-h: var(--ctl-h-md);
+	height: var(--ctl-h);
+	min-height: var(--ctl-h);
+	padding: 0;
+	border: 0;
+	cursor: pointer;
+}
+
+/* Most of this pair is disabled most of the time — undo on a page you have not
+   touched, redo until something has been undone. The muted state has to read as
+   deliberate rather than as a control that failed to load. Dimming with opacity
+   is the one place it is right: a disabled control is meant to fall below the
+   contrast a live one owes, and WCAG exempts it for that reason. */
+.hdr-btn:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+@media (hover: hover) {
+	.hdr-btn:disabled:hover {
+		background: transparent;
+		box-shadow: inset 0 0 0 1px var(--edge);
+		color: var(--text-muted);
+	}
+}
+
+.hdr-btn:disabled:active {
+	transform: none;
+	box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+/*
  * ----------------------------------------------------------
  * WRAPPER
  * ----------------------------------------------------------

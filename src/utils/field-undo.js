@@ -33,19 +33,11 @@
  * in exactly two places, both below: the generation stamp on a history, and the
  * Ctrl+Z pressed with the focus outside a field.
  *
- * ── Ported from MONEYFLOW as a documented subset ───────────────────────────
- *
- * One thing in its copy is still absent here: the subscribe/announce pair that
- * drives MONEYFLOW's header undo buttons, and the MutationObserver that exists
- * to tell those buttons their field has left the screen. This app's header is a
- * logo and nothing else, so there is nowhere to put a pair without designing a
- * tool row first. `targetField` already checks `isConnected`, so nothing is
- * lost in correctness — only the ability to render a control that greys out.
- * That comes back with the buttons, not before: a document-wide subtree
- * observer is not free in an app that redraws an SVG layout on every keystroke.
- *
- * Ctrl+Z is the whole interface for now, which is what it is in every other
- * text field a person has used.
+ * The subscribe/announce pair and the MutationObserver below were both absent
+ * for a while, because the header was a logo and there was nowhere to put a
+ * control that reads them. They are the buttons' half of the module: correctness
+ * never needed them — `targetField` checks `isConnected` on the spot — and what
+ * they buy is a pair that greys out at the moment its field leaves the screen.
  */
 import { docUndoGeneration, redoDocStep, undoDocStep } from "./doc-undo.js";
 
@@ -83,6 +75,9 @@ const histories = new WeakMap();
  * nothing on screen to undo.
  */
 let lastField = null;
+
+const listeners = new Set();
+let announced = { canUndo: false, canRedo: false };
 
 /* Set while an undo drives the field, so the `input` event it dispatches is not
    read back as a fresh edit and pushed onto the history it came from. The
@@ -229,6 +224,7 @@ function record(el) {
   history.runKind = kind;
   history.runAt = now;
   history.runCaret = el.selectionEnd;
+  announce();
 }
 
 function step(el, from, to) {
@@ -242,6 +238,7 @@ function step(el, from, to) {
   history.runCaret = null;
   history.pre = null;
   apply(el, from.pop());
+  announce();
 }
 
 /* historyFor rather than a plain lookup, so a history left stale by a document
@@ -280,6 +277,22 @@ export function fieldUndoState() {
     canUndo: !!(live && history.past.length),
     canRedo: !!(live && history.future.length)
   };
+}
+
+/* Only on a real change. Typing inside one run pushes nothing and moves
+   nothing, and a control that re-renders on every keystroke to say the same
+   thing is a cost with no reader. */
+function announce() {
+  const next = fieldUndoState();
+  if (next.canUndo === announced.canUndo && next.canRedo === announced.canRedo) return;
+  announced = next;
+  for (const listener of listeners) listener(next);
+}
+
+export function subscribeFieldUndo(listener) {
+  listeners.add(listener);
+  listener(fieldUndoState());
+  return () => listeners.delete(listener);
 }
 
 /*
@@ -384,7 +397,26 @@ export function installFieldUndo(target = document) {
     // before the blur carry on across it.
     history.runKind = null;
     history.runCaret = null;
+    announce();
   };
+
+  /*
+   * The pair goes dead when its field leaves the screen, and nothing else can
+   * say when that happened — a page change unmounts the row from inside React
+   * with no event to listen for.
+   *
+   * The records are ignored; only whether the target survived matters. It is
+   * quieter than it looks: React writes a controlled input's value as a
+   * property, which is not a mutation, so typing produces nothing here at all.
+   */
+  const root = target.documentElement || target;
+  const observer = new MutationObserver(() => {
+    if (lastField && !lastField.isConnected) {
+      lastField = null;
+      announce();
+    }
+  });
+  observer.observe(root, { childList: true, subtree: true });
 
   target.addEventListener("keydown", onKeyDown, true);
   target.addEventListener("input", onInput);
@@ -400,6 +432,7 @@ export function installFieldUndo(target = document) {
     // is dropped with them. Nothing can step a field once the handlers that
     // would do it are gone.
     lastField = null;
+    observer.disconnect();
     target.removeEventListener("keydown", onKeyDown, true);
     target.removeEventListener("input", onInput);
     target.removeEventListener("focus", onFocus, true);
