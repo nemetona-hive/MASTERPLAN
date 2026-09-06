@@ -160,7 +160,7 @@
 		white-space: normal;
 		flex-shrink: 0;
 		width: 100%;
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		border: 1px solid color-mix(in srgb, var(--color-gray-light) 48%, transparent);
 		background: color-mix(in srgb, var(--color-darkblue) 85%, transparent);
 		border-radius: 8px;
@@ -201,13 +201,14 @@
 		pointer-events: auto;
 	}
 
-	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness */
-	/* Modern mobile touch targets: 44px min height for controls */
+	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness.
+	   --ctl-h-touch is the finger floor, applied as a min-height so a control
+	   grows to meet it without leaving the step it is on. */
 	input[type="text"],
 	.num-input,
 	.num-btn {
 		font-size: 16px !important;
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		height: auto;
 	}
 
@@ -308,7 +309,7 @@
 	input[type="range"],
 	.num-input,
 	.num-btn {
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		height: auto;
 		font-size: 16px;
 	}

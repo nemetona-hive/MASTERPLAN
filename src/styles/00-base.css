@@ -116,12 +116,19 @@ html, body, #root {
 	   padding plus line-height, near a step without being on it.
 	   xs  a state marker inside a cell        sm  an action on a row
 	   md  the default, and any standalone     lg  page-level and segmented
-	   rail is the sidebar's own, deliberately off the data-view scale. */
+	   rail is the sidebar's own, deliberately off the data-view scale.
+
+	   touch is not a visual step and does not belong in that sequence: it is
+	   the floor a finger needs (WCAG 2.5.5), applied as a min-height inside
+	   the mobile queries so a control grows to meet it without changing what
+	   step it is on. It was written as a bare 44px in five places before it
+	   had a name, which is how a floor drifts to 40 in one of them. */
 	--ctl-h-xs: 20px;
 	--ctl-h-sm: 24px;
 	--ctl-h-md: 32px;
 	--ctl-h-lg: 36px;
 	--nav-ctl-h: 40px;
+	--ctl-h-touch: 44px;
 	--ctl-pad-x-sm: var(--sp-1);
 	--ctl-pad-x-md: var(--sp-2);
 	--ctl-pad-x-lg: 14px;

@@ -55,8 +55,9 @@
 /* ── Size scale ────────────────────────────────────────────────────────────
  * md is what the base controls already are, so there is no .ctl-md — a class
  * nobody applies is dead CSS. Same for lg, which .ctrl-dir reads directly, and
- * for xs: --ctl-h-xs is defined for the day a marker sits inside a grid cell,
- * but nothing here is at that step yet and the class would be dead. */
+ * for xs, which .sys-head-toggle reads the same way. A step earns a class when
+ * something needs to COMPOSE it onto a base; a rule that owns its own height
+ * reads the token directly. */
 
 .ctl-sm {
 	--ctl-h: var(--ctl-h-sm);

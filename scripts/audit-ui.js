@@ -533,6 +533,246 @@ for (const file of markupFiles) {
   }
 }
 
+/* --------------------------------------------------------- 3b. control edges
+ * "Edges are inset rings, not borders": a control has to be able to swap its
+ * ring for an elevation shadow without shifting layout. Panels and cards are
+ * exempt — this only looks at things that are controls.
+ *
+ * Naming is not a reliable way to find a control, so this asks the MARKUP
+ * instead: anything rendered as a <button> is a control whatever it is called.
+ * Names are used as well, not instead — a class can be styled here and only
+ * ever rendered through a variable.
+ */
+
+// Boundaries matter: a bare /tab/ matches "-table". Controls are named with
+// these as whole hyphen-separated words or suffixes.
+const CONTROL_RE = /(^|[-.])(btn|button|toggle|chip|pill|tab|ctrl|ctl)([-.]|$)/i;
+
+const BUTTON_CLASS_RE = /<button\b[^>]*?className=(?:\{([\s\S]*?)\}|"([^"]*)")/g;
+const jsxFiles = markupFiles.filter(f => /\.jsx$/.test(f));
+
+const buttonClasses = new Set();
+for (const file of jsxFiles) {
+  const text = fs.readFileSync(file, "utf8");
+  let m;
+  BUTTON_CLASS_RE.lastIndex = 0;
+  while ((m = BUTTON_CLASS_RE.exec(text))) {
+    // Ternaries and ${} are stripped by taking only word/hyphen tokens, which
+    // is what a class name is.
+    for (const cls of (m[1] || m[2] || "").match(/[a-zA-Z][\w-]*/g) || []) {
+      if (/^(is|has)-/.test(cls)) continue;
+      buttonClasses.add(cls);
+    }
+  }
+}
+
+const isControlSelector = sel => {
+  if (CONTROL_RE.test(sel)) return true;
+  for (const cls of sel.match(/\.[a-zA-Z][\w-]+/g) || []) {
+    if (buttonClasses.has(cls.slice(1))) return true;
+  }
+  return false;
+};
+
+/* Named exemptions, each for a stated reason. Prefer naming one of these over
+   widening the rule — "a transparent border is fine" sounds reasonable and is
+   how a control that later animates border-color slips through. */
+const NOT_A_CONTROL = new RegExp([
+  // The nav rail is deliberately its own system, sized and painted off the
+  // data-view scale (--nav-ctl-h, 40px). The guide says so by name.
+  "\\.nav[\\w-]*",
+  // A recessed track, not a tier: its segments carry no ring because the track
+  // supplies the edge. The guide states this.
+  "seg-group",
+  // Matches on "tab" inside "table"; a table is not a control.
+  "-table\\b",
+  // A pseudo-element is a decoration drawn inside a control, not the control's
+  // own edge, and may have a border of its own.
+  "::before|::after"
+].join("|"));
+
+/* Sizes a control may state itself: a token off the scale, a derived calc, or
+   filling its container. A literal px is the finding. */
+const SIZE_OK = /var\(|calc\(|100%|auto|inherit|^0(px)?$/;
+
+/* Height only, deliberately. Width is not on the scale: a labelled control is
+   as wide as its label, and a min-width that aligns it to a column is a layout
+   decision. Square icon buttons take their width from .ctl-icon, which derives
+   it from the height — so height is the one dimension where a literal means the
+   scale was bypassed.
+
+   The boundary is a lookbehind rather than "start of a line", so `height:` does
+   not match inside `line-height:` and a declaration is found wherever on its
+   line it sits. */
+const PROP_START = "(?<![\\w-])";
+const SIZE_PROPS = new RegExp(`${PROP_START}(min-height|height)\\s*:\\s*([^;]*);`, "g");
+
+const SIZE_EXEMPT = new RegExp([
+  // A glyph inside a control, not the control's own box.
+  "\\ssvg|\\si$|\\si,|::before|::after|-icon",
+  // The layout box of a control's container or track, not the control.
+  "(-wrap|-group|-presets|-menu|-dropdown|-row)(?![\\w-])"
+].join("|"));
+
+for (const file of cssFiles) {
+  const text = fs.readFileSync(file, "utf8");
+  for (const rule of rules(text)) {
+    if (!isControlSelector(rule.selector)) continue;
+    if (NOT_A_CONTROL.test(rule.selector)) continue;
+    if (/(-wrap|-group|-bar|-row|-list)(?![\w-])/.test(rule.selector)) continue;
+
+    // `border: 0` and `border: none` are the reset, not an edge.
+    const border = new RegExp(`${PROP_START}border\\s*:\\s*([^;]*);`).exec(rule.body);
+    if (border && !/^(none|0(px)?)$/.test(border[1].trim())) {
+      add("WARN", "control-border", file, rule.line,
+        `${rule.selector} draws its edge with border: ${border[1].trim()}. ` +
+        `Controls use inset box-shadow rings, so a tier swap cannot shift layout.`);
+    }
+
+    if (SIZE_EXEMPT.test(rule.selector)) continue;
+    SIZE_PROPS.lastIndex = 0;
+    let hit;
+    while ((hit = SIZE_PROPS.exec(rule.body))) {
+      const value = hit[2].trim();
+      if (SIZE_OK.test(value)) continue;
+      add("WARN", "control-size", file, rule.line,
+        `${rule.selector} hand-writes ${hit[1]}: ${value}. Take a step off the scale ` +
+        `(--ctl-h-sm/md/lg, .ctl-sm, .ctl-icon) rather than inventing a height.`);
+    }
+  }
+}
+
+/* ------------------------------------ 3c. an icon button needs a height source
+ * .ctl-icon sets width and min-width only — deliberately, because it derives
+ * the square from whatever height the control already has. Compose it with
+ * neither a base that carries a height nor a step class and the control takes
+ * its width off the scale and its height off its glyph: a squat pill rather
+ * than a square. The guide spells out this exact failure.
+ *
+ * The size check above cannot see it. That one fires on a height written by
+ * hand; this fires on a height never stated at all, which is the opposite shape
+ * and reads as clean to every other check here.
+ *
+ * Height sources are derived from the CSS rather than listed, so a new base
+ * class that sets a height counts automatically. */
+const heightClasses = new Set();
+for (const file of cssFiles) {
+  for (const rule of rules(stripComments(fs.readFileSync(file, "utf8")))) {
+    const h = new RegExp(`${PROP_START}(min-height|height)\\s*:\\s*([^;]*);`).exec(rule.body);
+    if (!h || /^(auto|inherit|0(px)?)$/.test(h[2].trim())) continue;
+    for (const part of rule.selector.split(",")) {
+      /* The subject is the last COMPOUND, not the last class anywhere in the
+         selector. `.btn i { height: 14px }` sizes the glyph inside the button;
+         reading .btn off it would credit the button with a height it never had. */
+      const last = part.trim().split(/\s*[>+~]\s*|\s+/).pop() || "";
+      const classes = last.match(/\.[a-zA-Z][\w-]+/g);
+      if (classes) heightClasses.add(classes[classes.length - 1].slice(1));
+    }
+  }
+}
+
+for (const file of jsxFiles) {
+  const text = fs.readFileSync(file, "utf8");
+  let m;
+  BUTTON_CLASS_RE.lastIndex = 0;
+  while ((m = BUTTON_CLASS_RE.exec(text))) {
+    const classes = ((m[1] || m[2] || "").match(/[a-zA-Z][\w-]*/g) || [])
+      .filter(c => !/^(is|has)-/.test(c));
+    if (!classes.includes("ctl-icon")) continue;
+    if (classes.some(c => c !== "ctl-icon" && heightClasses.has(c))) continue;
+    add("WARN", "control-icon-height", file, lineAt(text, m.index),
+      `<button class="${classes.join(" ")}"> composes .ctl-icon with no height source, ` +
+      `so it is 32px wide and only as tall as its glyph. Compose a base that carries ` +
+      `a height (.num-btn, .ts-btn, .hdr-btn) or a step class (.ctl-sm).`);
+  }
+}
+
+/* --------------------------------------- 3d. a tiered control needs a height
+ * The size check fires on a height written off the scale. This fires on a
+ * control that never states one — the opposite shape, and invisible to every
+ * other check here: with no height the box is padding plus line-height, which
+ * lands near a step without being on it. The guide says as much: "not stating
+ * one is the same mistake".
+ *
+ * Scoped to the RAISED and SOLID tiers rather than every button, because those
+ * are the ones the scale governs. A chip and a menu item are deliberately
+ * content-sized, and flagging them buries the finding that matters.
+ *
+ * Judged per BUTTON, not per class: a class can be sized at one call site by
+ * what it is composed with and unsized at another. Asking "does this class ever
+ * get a height" answers yes and misses the second one. */
+const TIER_RECIPE = /var\(--ctl-raised(-bg)?\)|var\(--btn-active-bg\)/;
+
+const tierClasses = new Set();
+for (const file of cssFiles) {
+  for (const rule of rules(stripComments(fs.readFileSync(file, "utf8")))) {
+    if (!TIER_RECIPE.test(rule.body)) continue;
+    for (const part of rule.selector.split(",")) {
+      const last = part.trim().split(/\s*[>+~]\s*|\s+/).pop() || "";
+      if (last.includes("::")) continue;
+      const classes = last.match(/\.[a-zA-Z][\w-]+/g);
+      if (!classes) continue;
+      const subject = classes[classes.length - 1].slice(1);
+      // A state or modifier rule restates colour, never geometry — the base
+      // class it sits on is what owes a height.
+      if (/^(is|has)-/.test(subject) || subject.includes("--") || subject === "on") continue;
+      tierClasses.add(subject);
+    }
+  }
+}
+
+for (const file of jsxFiles) {
+  const text = fs.readFileSync(file, "utf8");
+  let m;
+  BUTTON_CLASS_RE.lastIndex = 0;
+  while ((m = BUTTON_CLASS_RE.exec(text))) {
+    const classes = ((m[1] || m[2] || "").match(/[a-zA-Z][\w-]*/g) || [])
+      .filter(c => !/^(is|has)-/.test(c));
+    if (!classes.some(c => tierClasses.has(c))) continue;
+    if (classes.some(c => heightClasses.has(c))) continue;
+    add("ERROR", "control-no-height", file, lineAt(text, m.index),
+      `<button class="${classes.join(" ")}"> is on a control tier but no class gives it ` +
+      `a height, so its box is padding plus line-height rather than a step. Add a step ` +
+      `to its own rule, or compose .ctl-sm / a base that carries one.`);
+  }
+}
+
+/* ------------------------------------- 3e. hover recipes come from the tokens
+ * "Do not write a new hover or active recipe" is the one control rule nothing
+ * mechanical could see: a hand-copied recipe is valid CSS built from valid
+ * tokens, and it looks right up to the day the real recipe is retuned and the
+ * copy silently stays behind.
+ *
+ * The signature is narrow on purpose: a :hover or :focus-visible rule, on a
+ * control, whose wash or ring is a color-mix of a semantic colour while naming
+ * no --ctl-hover* token. A color-mix is the shape of the tokens themselves, so
+ * that is a recipe rebuilt rather than referenced. A flat surface token is a
+ * simpler treatment, not a copy, and does not count.
+ *
+ * WARN, not ERROR. The nav rail is deliberately its own system and a genuine
+ * semantic exception can exist. Read it before acting. */
+const HOVER_TOKEN = /var\(--ctl-hover[\w-]*\)/;
+const REBUILT_PAINT = new RegExp(
+  `${PROP_START}(background|box-shadow)\\s*:[^;]*color-mix\\([^;]*var\\(--(brand|color-primary|danger|warning|success|accent)\\)`);
+
+for (const file of cssFiles) {
+  const text = fs.readFileSync(file, "utf8");
+  for (const rule of rules(stripComments(text))) {
+    if (!/:hover|:focus-visible/.test(rule.selector)) continue;
+    if (/:disabled/.test(rule.selector)) continue;
+    if (HOVER_TOKEN.test(rule.body)) continue;
+    if (!REBUILT_PAINT.test(rule.body)) continue;
+    const classes = rule.selector.match(/\.[a-zA-Z][\w-]+/g) || [];
+    if (!classes.some(c => buttonClasses.has(c.slice(1)) || tierClasses.has(c.slice(1)))) continue;
+    // The nav rail is its own system, sized and painted off the data-view scale.
+    if (/\.nav[\w-]*/.test(rule.selector)) continue;
+    add("WARN", "hover-recipe", file, rule.line,
+      `${rule.selector.replace(/\s+/g, " ").slice(0, 60)} builds its own hover out of a ` +
+      `semantic colour instead of --ctl-hover-bg/--ctl-hover (or the -danger pair). ` +
+      `Compose the recipe rather than restating it.`);
+  }
+}
+
 /* --------------------------------------------- 4. markup with no CSS
  * The mirror of check 2, and the reason it exists: check 2 finds CSS nothing
  * uses, which is tidiness. This finds markup naming a rule nothing defines,

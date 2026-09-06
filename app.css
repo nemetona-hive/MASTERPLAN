@@ -82,6 +82,7 @@ html, body, #root {
 	--ctl-h-md: 32px;
 	--ctl-h-lg: 36px;
 	--nav-ctl-h: 40px;
+	--ctl-h-touch: 44px;
 	--ctl-pad-x-sm: var(--sp-1);
 	--ctl-pad-x-md: var(--sp-2);
 	--ctl-pad-x-lg: 14px;
@@ -1234,7 +1235,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
   .pill-btn {
     padding: 6px 16px;
-    min-height: 44px;
+    min-height: var(--ctl-h-touch);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1819,7 +1820,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 @media (max-width: 768px) {
 	.ts-copy {
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		padding: 8px 16px;
 	}
 }
@@ -2284,7 +2285,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 		white-space: normal;
 		flex-shrink: 0;
 		width: 100%;
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		border: 1px solid color-mix(in srgb, var(--color-gray-light) 48%, transparent);
 		background: color-mix(in srgb, var(--color-darkblue) 85%, transparent);
 		border-radius: 8px;
@@ -2327,7 +2328,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	.num-input,
 	.num-btn {
 		font-size: 16px !important;
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		height: auto;
 	}
 
@@ -2428,7 +2429,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	input[type="range"],
 	.num-input,
 	.num-btn {
-		min-height: 44px;
+		min-height: var(--ctl-h-touch);
 		height: auto;
 		font-size: 16px;
 	}
@@ -2587,10 +2588,12 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 36px;
-	height: 36px;
+	width: var(--ctl-h-lg);
+	height: var(--ctl-h-lg);
 	border-radius: 8px;
-	border: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
+
+	border: 0;
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gray-light) 40%, transparent);
 	background: color-mix(in srgb, var(--color-darkblue) 80%, transparent);
 	color: var(--color-gray-opa80);
 	cursor: pointer;
@@ -2600,8 +2603,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 @media (max-width: 768px) {
 	.range-lock-btn {
-		width: 44px;
-		height: 44px;
+		width: var(--ctl-h-touch);
+		height: var(--ctl-h-touch);
 	}
 }
 
@@ -2729,7 +2732,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 
 .pw-preset-apply {
 	padding: 8px 16px !important;
-	height: 32px !important;
+	height: var(--ctl-h-md) !important;
 	font-weight: var(--fw-bold) !important;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -3155,7 +3158,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	align-items: center;
 	justify-content: center;
 	width: 20px;
-	height: 20px;
+	height: var(--ctl-h-xs);
 	border-radius: 4px;
 	background: color-mix(in srgb, var(--color-gray-light) 50%, transparent);
 	color: var(--color-gray-opa80);

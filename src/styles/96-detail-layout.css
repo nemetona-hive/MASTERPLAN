@@ -350,7 +350,7 @@
 	align-items: center;
 	justify-content: center;
 	width: 20px;
-	height: 20px;
+	height: var(--ctl-h-xs);
 	border-radius: 4px;
 	background: color-mix(in srgb, var(--color-gray-light) 50%, transparent);
 	color: var(--color-gray-opa80);

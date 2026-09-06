@@ -123,6 +123,49 @@ describe("audit-ui", () => {
     }
   });
 
+  /* ── the control tier checks ────────────────────────────────────────────
+   * The interesting property is that they find a control by asking the markup,
+   * not by matching its name — MONEYFLOW's version had real holes for as long
+   * as it relied on naming alone. */
+
+  it("finds a control by its markup, not only by its name", () => {
+    const probe = path.join(ROOT, "src", "styles", "99-audit-probe.css");
+    // .ts-copy is a <button> in Timesheet.jsx and matches none of btn/toggle/
+    // chip/pill/tab in its name.
+    const ts = fs.readFileSync(path.join(ROOT, "src", "components", "Timesheet.jsx"), "utf8");
+    expect(ts).toMatch(/<button[^>]*className=[^>]*ts-copy/);
+
+    fs.writeFileSync(probe, ".ts-copy { border: 1px solid red; height: 27px; }\n");
+    try {
+      const out = run();
+      expect(out).toContain("control-border");
+      expect(out).toContain("control-size");
+    } finally {
+      fs.unlinkSync(probe);
+    }
+  });
+
+  it("does not size a control off a glyph inside it", () => {
+    // `.btn i { height: 14px }` sizes the glyph, not the button. Crediting the
+    // button with it is how a heightless control reads as sized.
+    const probe = path.join(ROOT, "src", "styles", "99-audit-probe.css");
+    fs.writeFileSync(probe, ".probe-tier { background: var(--ctl-raised-bg); }\n.probe-tier i { height: 14px; }\n");
+    try {
+      // Nothing renders .probe-tier, so this asserts the parse rather than a
+      // finding: the glyph rule must not register .probe-tier as sized.
+      expect(run()).not.toContain("probe-tier i");
+    } finally {
+      fs.unlinkSync(probe);
+    }
+  });
+
+  it("leaves the nav rail alone — it is deliberately its own system", () => {
+    // --nav-ctl-h is 40px and off the data-view scale, which the guide states.
+    const out = run();
+    expect(out).not.toContain(".nav-btn draws its edge");
+    expect(out).not.toContain(".nav-btn hand-writes");
+  });
+
   it("treats a class assembled from a template hole as reachable", () => {
     const gr = fs.readFileSync(path.join(ROOT, "src", "components", "GoldenRatio.jsx"), "utf8");
     expect(gr).toContain("gr-control-card-${tone}");

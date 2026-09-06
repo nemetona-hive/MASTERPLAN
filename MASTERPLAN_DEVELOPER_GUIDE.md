@@ -81,7 +81,7 @@ audit.
 | Command | What it guards |
 |---|---|
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
-| `npm run audit:ui` | hardcoded colour, a word painted in an edge token, text dimmed with opacity, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
+| `npm run audit:ui` | hardcoded colour, a word painted in an edge token, text dimmed with opacity, control edges/heights/hover recipes, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
 | `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
@@ -204,6 +204,19 @@ Getting the tier wrong is the failure worth guarding against: the same action
 looking like two different kinds of control on two pages. **Match the tier to
 the role, then check the same role elsewhere renders identically.**
 
+`npm run audit:ui` enforces four of these mechanically, and they find what a
+review cannot: `control-border` (an edge drawn as a `border` rather than an
+inset ring, so a tier swap shifts layout), `control-size` (a height written by
+hand instead of taken off the scale), `control-icon-height` (`.ctl-icon`
+composed with no height source, which gives a 32px-wide box as tall as its
+glyph) and `control-no-height` (a tiered control that states no height at all —
+the opposite shape, and the one thing every other check reads as clean).
+
+They find a control by asking the **markup**, not the name: anything rendered as
+a `<button>` counts, whatever it is called. Names are used as well, never
+instead, because a class can be styled here and only ever rendered through a
+variable.
+
 | Control | Tier | Step |
 |---|---|---|
 | `.ts-btn`, `.num-btn`, `.ts-copy`, `.viz-expand-btn` | raised | md |
@@ -226,6 +239,7 @@ plus line-height, near a step without being on it.
 | sm | `--ctl-h-sm` (24px) | an action **on** a data row |
 | md | `--ctl-h-md` (32px) | the default; `.ts-btn`/`.num-btn` already are |
 | lg | `--ctl-h-lg` (36px) | page-level and segmented controls |
+| touch | `--ctl-h-touch` (44px) | **not a visual step** — the floor a finger needs (WCAG 2.5.5), applied as a `min-height` inside the mobile queries so a control grows to meet it without leaving the step it is on |
 
 `.ctl-icon` squares a control off its own height, so there has to be one:
 compose it with a base that carries a height or with `.ctl-sm`. With only a
