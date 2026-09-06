@@ -185,10 +185,6 @@ statically for exactly this reason.
   [Export](docs/exports.md)), but `downloadFile` in `shared.jsx`
   is still uncalled — a CSV would consume the same report models rather than
   building one, which is what they were shaped for
-- UI interaction tests for the calculator pages. `AppNav` and `SheetHome` have
-  them; none of the other `Sheet*` components do. See [Checks](docs/testing.md) for what is uncovered — this is
-  the largest remaining gap and the reason `verify` cannot catch an interaction
-  regression on a page
 - Element-level descriptions inside the Guider wiring diagrams. Both carry a
   top-level `aria-label`, but the individual lines and connection paths convey
   nothing — a real gap in a technical reference drawing

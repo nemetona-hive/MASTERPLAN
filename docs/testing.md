@@ -40,14 +40,24 @@ what the store recorded. `tests/undo-buttons.test.jsx` renders the header pair
 over a real page and covers the states it spends most of its life in — dead,
 and dead again once the page is gone.
 
-The rest of the calculator pages have no equivalent: Concrete, Golden Ratio and
-Pipe Wrap are untouched by any render test, and so are direction switching with
-its per-direction state save, panel collapse and the `LayoutPanel` controlled /
-uncontrolled toggle. `verify` going green says the build is sound, not that
-every page still works. Check a UI change in the browser as well — jsdom has no
-layout engine, so anything that depends on a real box (the collapsed strip's
-width, where a tooltip lands) is asserted structurally here and verified only by
-eye.
+Every calculator page now has one. `tests/concrete.test.jsx` drives the two
+area modes, the four-corner average, the armed reset and the take-off button;
+`tests/golden-ratio.test.jsx` drives the phi series and the per-card save and
+reset; `tests/pipe-wrap.test.jsx` drives the wrap length, the adjustments and
+the slider lock; `tests/surface-layout.test.jsx` covers the three behaviours
+that were named as uncovered — direction switching with its per-direction state
+save, panel collapse, and `LayoutPanel`'s controlled / uncontrolled toggle.
+
+They assert what somebody using the page would notice, not how it is built. The
+arithmetic each page depends on is tested separately and pure; these check that
+the page asks the right question and shows what comes back. Where a figure is
+worked by hand in the test — the pipe wrap's circumference, the concrete bag
+count — that is deliberate: a change to the formula fails here rather than
+shipping a wrong cut.
+
+`verify` going green still does not mean every page looks right. jsdom has no
+layout engine, so anything that depends on a real box is asserted structurally
+here and checked for real by `npm run layout`.
 
 There is a skill for the UI half of this —
 `.claude/skills/masterplan-ui-audit/` — which is the one to read when a check
