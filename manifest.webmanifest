@@ -1,0 +1,16 @@
+{
+  "name": "Nemetona MASTERPLAN",
+  "short_name": "MASTERPLAN",
+  "description": "Construction layout and estimating tools: tiling and panel pattern layouts, symmetric layouts, concrete volume, pipe wrap, golden ratio and timesheets.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#161718",
+  "theme_color": "#161718",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

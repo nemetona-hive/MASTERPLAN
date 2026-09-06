@@ -139,6 +139,13 @@ for (const file of markupFiles) {
   const text = stripComments(fs.readFileSync(file, "utf8"))
     .replace(/(?<!:)\/\/[^\n]*/g, m => " ".repeat(m.length));
   text.split("\n").forEach((code, i) => {
+    /* <meta name="theme-color"> is the browser's own chrome — the title bar of
+       an installed window, the address bar on a phone. It is read before any
+       stylesheet exists, so it CANNOT be a token: there is nothing to resolve
+       one against yet. It is a copy of graphite's --bg by necessity, and
+       tests/manifest.test.js is what keeps it in step with themes.js and the
+       manifest rather than this check. */
+    if (/name=["']theme-color["']/.test(code)) return;
     // Not preceded by `&`: an HTML numeric entity is a code point, not a
     // colour. `&#128161;` is the light-bulb emoji in Visualization.jsx and was
     // reported as the hex #128161 until this landed.

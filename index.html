@@ -9,6 +9,18 @@
   <title>Nemetona MASTERPLAN</title>
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 41 45'><polygon fill='%23c4b48a' points='20.37 13.36 6.72 44.52 0 44.35 20.37 0 40.03 44.31 33.6 44.53 20.37 13.36' /></svg>">
+  <!-- Installable as a real app: its own window, its own taskbar and
+       home-screen icon, its own identity rather than a tab grouped under the
+       browser. It matters more here than it would on a desktop-only tool —
+       this is the one that gets opened on a phone on a job.
+
+       Every path in the manifest is RELATIVE, and has to stay that way: Pages
+       serves this from /MASTERPLAN/, not a domain root, so a leading slash
+       would scope the app to the whole github.io origin and 404 every icon. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <!-- Matches the manifest's theme_color and graphite's --bg; a test keeps the
+       three in step. -->
+  <meta name="theme-color" content="#161718">
   <link href="vendor/fonts/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="app.css">
 

@@ -86,6 +86,7 @@ audit.
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
 | `npm run build` | rebuilds `components.js`, `app.css` and the icon subset |
+| `npm run icon` | regenerates `masterplan.ico` and the installable app's PNGs — by hand, not part of the build |
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 | `npm run deploy:check` | whether the live site is serving the build you have (network; not part of `verify`) |
@@ -730,6 +731,38 @@ is what makes the identity key sound — keep it that way.
 - `useDropdownKeyboard(count, onSelect, onClose)` — Specialized hook for keyboard navigation (Arrow keys, Enter, Esc) within custom dropdowns.
 - `.seg-group` — a recessed track for exclusive mode switches. Its segments carry no ring of their own; the track supplies the edge.
 - `.pill-btn`, `.ctrl-dir`, `.ts-btn`, `.num-btn` — see [Controls And Buttons](#controls-and-buttons). Pick a tier by what the control does; do not write a new hover or active recipe.
+
+## Installable app (the manifest)
+
+`manifest.webmanifest` makes this installable: its own window, its own taskbar
+and home-screen icon, its own identity rather than a tab grouped under the
+browser. It matters more here than on a desktop-only tool — this is the one that
+gets opened on a phone on a job.
+
+**Every path in it is relative, and has to stay that way.** Pages serves this
+from `/MASTERPLAN/`, not a domain root, so a leading slash would scope the app
+to the whole `github.io` origin — claiming every other project on it — and 404
+every icon. The trap is that it reads correctly either way on `npm run dev`,
+which serves from the root; `tests/manifest.test.js` is what actually holds the
+line.
+
+The icons come from `node scripts/make-icon.js`, alongside the `.ico`, from the
+same Font Awesome glyph — so the taskbar icon and the installed app cannot drift
+into two different marks. It is **not** part of `npm run build`: icons change
+about once a year and are run by hand.
+
+Two purposes, and they want opposite things, which is why there are three files:
+
+| Icon | Purpose | Shape |
+|---|---|---|
+| `icon-192`, `icon-512` | `any` | drawn unchanged, so it fills its canvas and stays transparent — the platform supplies the ground, light dock or dark |
+| `icon-maskable-512` | `maskable` | cropped to whatever shape the platform likes, with only a circle of 80% of the edge guaranteed. The mark sits at 52% of the canvas so its diagonal clears that circle, on an **opaque** ground — a transparent maskable icon crops to a hole |
+
+The manifest and its icons are hashed into the build id like everything else a
+visitor loads, so `npm run deploy:check` cannot report a changed manifest as
+already live. `background_color`, `theme_color` and the `theme-color` meta tag
+are three copies of graphite's `--bg`; a test keeps all three in step with
+`themes.js`.
 
 ## Icons
 

@@ -65,9 +65,17 @@ describe("audit-ui", () => {
       expect(reason.length, name).toBeGreaterThan(30);
     }
     // And --undefined has to actually surface them again.
-    const listed = execFileSync("node",
-      [path.join(ROOT, "scripts", "audit-ui.js"), "--undefined"],
-      { cwd: ROOT, encoding: "utf8" });
+    // Same try/catch as run(): the script exits 1 when anything is an ERROR,
+    // and execFileSync throws on that. Without this, one unrelated audit error
+    // fails this test with a stack trace instead of its own assertion.
+    let listed;
+    try {
+      listed = execFileSync("node",
+        [path.join(ROOT, "scripts", "audit-ui.js"), "--undefined"],
+        { cwd: ROOT, encoding: "utf8" });
+    } catch (err) {
+      listed = `${err.stdout || ""}${err.stderr || ""}`;
+    }
     for (const name of Object.keys(baseline)) {
       expect(listed, name).toContain(`.${name} is styleless on purpose`);
     }

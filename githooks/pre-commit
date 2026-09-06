@@ -24,9 +24,12 @@ set -e
 # only one of them leaves version.js stale, and each is read by the tests as a
 # global — PAGES and ICONS from config.js, simulate() from simulation.js, the
 # tokens from themes.js — so each can break a test without a line of src/
-# moving. Both failures would otherwise wait until the push. The generated files
+# moving. Both failures would otherwise wait until the push.
+#
+# The manifest and assets/ are hashed too: they are the installable app, and a
+# stale version.js would make deploy:check report a deploy that never happened. The generated files
 # are outputs and never triggers; they are what rebuilding produces.
-if git diff --cached --quiet -- src config.js simulation.js themes.js index.html; then
+if git diff --cached --quiet -- src config.js simulation.js themes.js index.html manifest.webmanifest assets; then
   exit 0
 fi
 
