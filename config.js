@@ -43,6 +43,9 @@ const ICONS = {
   "ring": "fa-solid fa-circle-notch",                       // Pipe Wrap page
   "palette": "fa-solid fa-palette",                         // Theme toggle
 
+  // Cut list export — the browser's print dialog is the PDF writer
+  "print": "fa-solid fa-file-pdf",
+
   // Header undo pair
   "undo": "fa-solid fa-rotate-left",
   "redo": "fa-solid fa-rotate-right",

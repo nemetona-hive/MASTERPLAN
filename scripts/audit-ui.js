@@ -89,7 +89,21 @@ function rules(text) {
  * rgba() is what leaves a colour frozen at whatever one theme says. Neutral
  * rgba (equal channels) is fine — those are shadows and edge lights. */
 
+/* The print stylesheet states its colours literally, and has to.
+ *
+ * There is no theme on paper. `--bg` printed is a solid black rectangle the
+ * size of the page, and any token at all would make the printout depend on
+ * which theme happened to be active when somebody pressed print — the one
+ * variable a document must not have. Ink is #111 on #fff there because that is
+ * what a sheet of paper is, not because a token was skipped.
+ *
+ * Named rather than inferred from `@media print`: the file also carries the
+ * on-screen `display: none` that keeps the sheet hidden, and a rule about where
+ * a declaration sits would exempt more than it means to. */
+const PALETTE_FREE = /(^|[\\/])99-print\.css$/;
+
 for (const file of cssFiles) {
+  if (PALETTE_FREE.test(file)) continue;
   const text = stripComments(fs.readFileSync(file, "utf8"));
   text.split("\n").forEach((code, i) => {
     // A custom-property definition is where literal colour is supposed to

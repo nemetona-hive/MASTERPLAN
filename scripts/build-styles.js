@@ -24,7 +24,9 @@ const STYLE_SOURCES = [
   "src/styles/92-pipe-wrap.css",
   "src/styles/94-utilities.css",
   "src/styles/96-detail-layout.css",
-  "src/styles/98-layout-svg.css"
+  "src/styles/98-layout-svg.css",
+  // Last on purpose: it overrides for print without raising specificity.
+  "src/styles/99-print.css"
 ];
 const OUT_FILE = "app.css";
 

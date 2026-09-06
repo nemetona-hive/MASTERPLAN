@@ -2,6 +2,8 @@ import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
 import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
+import { CutListSheet } from "./CutListSheet.jsx";
+import { buildCutList } from "../utils/cut-list.js";
 
 export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   /* `direction`, `minJ`, `startOff` and `patternStart` used to be read here
@@ -27,6 +29,29 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
   const [saveError, setSaveError] = React.useState("");
   const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
+
+  /*
+   * The cut list currently staged for printing.
+   *
+   * Held in state and printed from an EFFECT rather than from the click, and
+   * that ordering is the whole of it: `window.print()` is synchronous and
+   * blocks on the dialog, so calling it in the handler opens a dialog over a
+   * sheet React has not committed yet — a blank page. The effect runs after the
+   * commit, so the document exists before anything is asked to render it.
+   *
+   * The sheet stays mounted afterwards. It is display:none on screen, costs a
+   * hidden subtree, and unmounting it would only add a second thing that has to
+   * happen in the right order.
+   */
+  const [printList, setPrintList] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!printList) return;
+    // One frame, so the browser has painted the commit and not merely applied
+    // it. Printing off the commit alone produced an empty first page.
+    const frame = requestAnimationFrame(() => window.print());
+    return () => cancelAnimationFrame(frame);
+  }, [printList]);
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
@@ -139,6 +164,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
         </ControlPanel>
       </Stack>
+      <CutListSheet list={printList} />
       <div id="data-preview" className="data-preview">
         <PreviewSection 
           id="pattern-layouts" 
@@ -155,6 +181,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                 open={panelOpen[id]}
                 setOpen={v => setPanelOpen(s => ({ ...s, [id]: v }))}
                 onLargePreview={openLargePreview}
+                onPrint={() => setPrintList(buildCutList(panel.result, sh, panel.layout))}
                 isBest={panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best} />
             );
           })}

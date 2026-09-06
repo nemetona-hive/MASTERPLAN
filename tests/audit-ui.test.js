@@ -174,6 +174,26 @@ describe("audit-ui", () => {
     expect(out).not.toContain(".nav-btn hand-writes");
   });
 
+  it("lets the print stylesheet state its colours literally", () => {
+    /* There is no theme on paper: --bg printed is a black rectangle the size of
+       the page, and a token would make the document depend on whichever theme
+       was active when somebody pressed print. */
+    const print = fs.readFileSync(path.join(ROOT, "src", "styles", "99-print.css"), "utf8");
+    expect(print).toMatch(/#111/);
+    expect(run()).not.toContain("99-print.css");
+  });
+
+  it("still holds every other stylesheet to the palette", () => {
+    // The exemption is one named file, not a widened rule.
+    const probe = path.join(ROOT, "src", "styles", "99-audit-probe.css");
+    fs.writeFileSync(probe, ".probe-ink { color: #111; }\n");
+    try {
+      expect(run()).toContain("hardcoded-colour");
+    } finally {
+      fs.unlinkSync(probe);
+    }
+  });
+
   it("treats a class assembled from a template hole as reachable", () => {
     const gr = fs.readFileSync(path.join(ROOT, "src", "components", "GoldenRatio.jsx"), "utf8");
     expect(gr).toContain("gr-control-card-${tone}");

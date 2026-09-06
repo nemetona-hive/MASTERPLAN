@@ -351,7 +351,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   );
 }
 
-export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp, onLargePreview }) {
+export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredType, rowStart = "top", noToggle = false, open: openProp, setOpen: setOpenProp, onLargePreview, onPrint }) {
   const [openLocal, setOpenLocal] = React.useState(layout.defaultOpen !== false);
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
@@ -364,7 +364,19 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
           {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
         </h3>
         <span className="sys-head-sub">{layout.description}</span>
+        {/* The slot already stops propagation, which is what lets a control
+            live inside a header whose own click toggles the panel. */}
         <div className="sys-head-actions" onClick={e => e.stopPropagation()}>
+          {onPrint && (
+            <button
+              type="button"
+              className="num-btn ctl-ghost ctl-sm ctl-icon"
+              onClick={onPrint}
+              title={`Cut list for ${layout.title} — opens the print dialog, where Save as PDF is`}
+              aria-label={`Print the cut list for ${layout.title}`}>
+              <Icon name="print" />
+            </button>
+          )}
           <span className="sys-head-count">{result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
         </div>
       </div>

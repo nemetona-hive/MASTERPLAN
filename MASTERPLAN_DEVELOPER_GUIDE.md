@@ -732,6 +732,53 @@ is what makes the identity key sound — keep it that way.
 - `.seg-group` — a recessed track for exclusive mode switches. Its segments carry no ring of their own; the track supplies the edge.
 - `.pill-btn`, `.ctrl-dir`, `.ts-btn`, `.num-btn` — see [Controls And Buttons](#controls-and-buttons). Pick a tier by what the control does; do not write a new hover or active recipe.
 
+## Export — the cut list as a PDF
+
+**There is no PDF library, and there should not be one.** The browser's own
+"Save as PDF" *is* the print dialog, so a PDF export is a print stylesheet plus
+`window.print()`. A bundled writer would cost more than the whole app — jsPDF
+alone is over the 250 KiB budget `components.js` is held to — to reproduce what
+every platform already does, with worse font handling. MONEYFLOW ships no PDF
+dependency either.
+
+**One model, many renderers.** `utils/cut-list.js` builds a neutral description
+of what a layout contains; `components/CutListSheet.jsx` prints it. A second
+format consumes the same object and adds nothing to the model. Put a new
+derivation **in the model, never in a renderer** — written per format it becomes
+two lines that agree today and disagree after the next change, and what you get
+is a printout and a spreadsheet of one job with different totals. Everything
+numeric in the model is a **number**; the sheet formats on the way to the page.
+
+What the sheet is for is the `panels` table, not the row list. `simulate()` runs
+the remainder of a cut panel into the *start of the next row* — the `cut`
+segment and the following row's leading `offcut` share a `sourceId` — so one
+stock panel yields two placed pieces in two rows. A list that only said "row 3
+needs a 340" would have you cut a fresh panel and bin the 910 already in your
+hand.
+
+Three things that are easy to get wrong here:
+
+- **`PPi` is the material LENGTH and is what gets cut; `PLa` is the WIDTH and
+  sets the row height.** The simulation's own parameter names invite the
+  opposite reading — `simulate(W, H, PP, PL, …)` is called as
+  `simulate(sW, sH, PLa, PPi, …)`. Swap them and every waste figure is computed
+  against the wrong stock, and still looks plausible.
+- **Printing happens in an effect, not in the click.** `window.print()` is
+  synchronous and blocks on the dialog, so calling it from the handler opens a
+  dialog over a sheet React has not committed — a blank page. The effect waits
+  a frame after the commit.
+- **The sheet portals to `<body>`.** That is what lets print hide the app with
+  `body > *:not(.cut-sheet)` — by position rather than by name, so it keeps
+  working when the shell gains a wrapper.
+
+`src/styles/99-print.css` is the only stylesheet exempt from the hardcoded-colour
+audit, and the reason is that **there is no theme on paper**: `--bg` printed is a
+black rectangle the size of the page, and any token would make the document
+depend on which theme was active when somebody pressed print. It is registered
+last in `build-styles.js` — a new stylesheet must be added to `STYLE_SOURCES` or
+it is silently absent, which `npm run analyze:code` reports as an unregistered
+style.
+
 ## Installable app (the manifest)
 
 `manifest.webmanifest` makes this installable: its own window, its own taskbar
@@ -1131,8 +1178,10 @@ diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
 
 ## What does NOT exist yet (possible future work)
 
-- Export / print functionality — `downloadFile` in `shared.jsx` is the piece it
-  would build on
+- Export beyond the layout cut list. That one prints (see [Export](#export--the-cut-list-as-a-pdf));
+  Concrete's take-off is the obvious second, and `downloadFile` in `shared.jsx`
+  is still uncalled — a CSV would consume the same report model rather than
+  building one
 - Advanced user persistence. `saveStaticDefaults` writes to `config.js` from the
   dev server only, and localStorage holds nothing but the theme choice. There is
   no per-user data and no backup path for it, unlike MONEYFLOW's `_personal/`
