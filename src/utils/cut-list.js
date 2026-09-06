@@ -2,14 +2,20 @@
  * What a layout contains, described once, for anything that has to render it
  * as a document.
  *
- * ONE MODEL, MANY RENDERERS. This builds a neutral description; `CutListSheet`
- * prints it. A second format — a CSV, a supplier order — consumes the same
- * object and adds nothing here. The rule is MONEYFLOW's, and the reason is the
- * failure it prevents: a scoping decision written per format is two lines that
- * agree today and disagree after the next change, and what you get is a
- * printout and a spreadsheet of the same job with different totals and nothing
- * to say which is right. **Put a new derivation in the model, never in a
- * renderer.**
+ * ONE MODEL, ONE RENDERER — and the model still earns its keep.
+ *
+ * `CutListSheet` prints this and nothing else consumes it. Printing is the only
+ * export this app has, deliberately: a cut list is read at a saw and a take-off
+ * is read down the phone to a merchant, and neither is a place anybody opens a
+ * spreadsheet. So the rule is NOT "a second format will reuse this" — no second
+ * format is coming.
+ *
+ * What it buys is that a figure is derived once. `take-off.js` shows the shape
+ * at its clearest: the Concrete page reads its own on-screen numbers out of the
+ * model, so the screen and the printed sheet cannot disagree about how many
+ * bags somebody buys. Two places that can round is the failure, and a renderer
+ * is one of the places. **Put a new derivation in the model, never in a
+ * renderer** — including when the "other renderer" is the page itself.
  *
  * EVERYTHING NUMERIC IS A NUMBER, not a formatted string. The sheet formats on
  * the way to the page. Format here and the next renderer has to parse its own

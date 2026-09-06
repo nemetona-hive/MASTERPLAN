@@ -181,10 +181,6 @@ statically for exactly this reason.
 
 ## What does NOT exist yet (possible future work)
 
-- A machine-readable export. Both documents print (see
-  [Export](docs/exports.md)), but `downloadFile` in `shared.jsx`
-  is still uncalled — a CSV would consume the same report models rather than
-  building one, which is what they were shaped for
 - Element-level descriptions inside the Guider wiring diagrams. Both carry a
   top-level `aria-label`, but the individual lines and connection paths convey
   nothing — a real gap in a technical reference drawing

@@ -4,6 +4,16 @@
 
 ## Export — the printed documents
 
+**Printing is the only export, and that is a decision.** A CSV was proposed and
+declined: a cut list is read at a saw and a take-off is read down the phone to a
+merchant, and neither is a place anybody opens a spreadsheet. The same test the
+timesheet failed — an export has to beat what is already there, and for these
+two documents paper or a phone screen already wins. Do not add a second format
+without a workflow that a printed sheet cannot serve.
+
+`downloadFile` in `shared.jsx` is the leftover of that plan: exported, never
+called, and kept alive only by its own test.
+
 **There is no PDF library, and there should not be one.** The browser's own
 "Save as PDF" *is* the print dialog, so a PDF export is a print stylesheet plus
 `window.print()`. A bundled writer would cost more than the whole app — jsPDF
@@ -22,9 +32,10 @@ prefix of its own (`.cut-*`) is for what only one has, because the cut list's
 piece chips mean nothing on a take-off. A second print stylesheet would drift
 from the first within a change or two.
 
-**One model, many renderers.** The model builds a neutral description; the sheet
-prints it. A second format consumes the same object and adds nothing to the
-model. Put a new
+**One model, one renderer — and the model still earns its keep.** With no second
+format coming, the rule is not "something else will reuse this". What it buys is
+that a figure is derived once, and the second place that can round is *the page
+itself*. Put a new
 derivation **in the model, never in a renderer** — written per format it becomes
 two lines that agree today and disagree after the next change, and what you get
 is a printout and a spreadsheet of one job with different totals. Everything
