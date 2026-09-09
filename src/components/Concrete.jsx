@@ -1,3 +1,5 @@
+import { useSessionState } from "../utils/session-state.js";
+import { parseMeasurement } from "../utils/measurements.cjs";
 import { React } from "../react-globals.js";
 import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 import { TakeOffSheet } from "./TakeOffSheet.jsx";
@@ -6,27 +8,28 @@ import { buildTakeOff } from "../utils/take-off.js";
 // ── Concrete Calculator ────────────────────────────────────────────────────────
 
 export function SheetConcrete() {
-  const [areaMode,  setAreaMode]  = React.useState("direct"); // "direct" | "dims"
-  const [thickMode, setThickMode] = React.useState("avg");    // "avg" | "corners"
+  const [areaMode,  setAreaMode]  = useSessionState("Concrete.jsx:areaMode", "direct"); // "direct" | "dims"
+  const [thickMode, setThickMode] = useSessionState("Concrete.jsx:thickMode", "avg");    // "avg" | "corners"
 
   // Area inputs
-  const [areaManual, setAreaManual] = React.useState("");
-  const [lenMm,      setLenMm]      = React.useState("");
-  const [widMm,      setWidMm]      = React.useState("");
+  const [areaManual, setAreaManual] = useSessionState("Concrete.jsx:areaManual", "");
+  const [lenMm,      setLenMm]      = useSessionState("Concrete.jsx:lenMm", "");
+  const [widMm,      setWidMm]      = useSessionState("Concrete.jsx:widMm", "");
 
   // Thickness inputs
-  const [avgH, setAvgH] = React.useState("");
-  const [ca,   setCa]   = React.useState("");
-  const [cb,   setCb]   = React.useState("");
-  const [cc,   setCc]   = React.useState("");
-  const [cd,   setCd]   = React.useState("");
+  const [avgH, setAvgH] = useSessionState("Concrete.jsx:avgH", "");
+  const [ca,   setCa]   = useSessionState("Concrete.jsx:ca", "");
+  const [cb,   setCb]   = useSessionState("Concrete.jsx:cb", "");
+  const [cc,   setCc]   = useSessionState("Concrete.jsx:cc", "");
+  const [cd,   setCd]   = useSessionState("Concrete.jsx:cd", "");
 
   // Consumption & packaging
-  const [rate,     setRate]     = React.useState("");
-  const [bagKg,    setBagKg]    = React.useState("");
-  const [bagPrice, setBagPrice] = React.useState("");
+  const [rate,     setRate]     = useSessionState("Concrete.jsx:rate", "");
+  const [bagKg,    setBagKg]    = useSessionState("Concrete.jsx:bagKg", "");
+  const [bagPrice, setBagPrice] = useSessionState("Concrete.jsx:bagPrice", "");
 
-  const [activePreset, setActivePreset] = React.useState(null);
+  const [presetError, setPresetError] = React.useState("");
+  const [activePreset, setActivePreset] = useSessionState("Concrete.jsx:activePreset", null);
   const [flashIdx,     setFlashIdx]     = useTimedState(null, 1200);
   const [fieldFlash,   setFieldFlash]   = useTimedState(false, 900);
   const [showUpdated,  setShowUpdated]  = useTimedState(false, 2500);
@@ -39,7 +42,7 @@ export function SheetConcrete() {
   const [showRatePresets, setShowRatePresets] = React.useState(false);
 
   // Product presets (quick fill)
-  const [presets, setPresets] = React.useState(() =>
+  const [presets, setPresets] = useSessionState("Concrete.jsx:presets", () =>
     (typeof DEFAULT_CONCRETE_PRESETS !== "undefined"
       ? DEFAULT_CONCRETE_PRESETS
       : [
@@ -100,9 +103,16 @@ export function SheetConcrete() {
   };
 
   const applyPreset = (p, idx) => {
-    setRate(p.rate === "" ? "" : (parseFloat(p.rate) || 0));
-    setBagKg(p.bagKg === "" ? "" : (parseFloat(p.bagKg) || 0));
-    setBagPrice(p.bagPrice);
+    const values = [p.rate, p.bagKg, p.bagPrice].map(parseMeasurement);
+    if (!Number.isFinite(values[0]) || values[0] <= 0 || !Number.isFinite(values[1]) || values[1] <= 0 ||
+        (values[2] !== null && (!Number.isFinite(values[2]) || values[2] < 0))) {
+      setPresetError("Enter a positive consumption rate and bag weight, and a valid price, before applying this preset.");
+      return;
+    }
+    setPresetError("");
+    setRate(values[0]);
+    setBagKg(values[1]);
+    setBagPrice(values[2] ?? "");
 
     setActivePreset(idx);
     setFlashIdx(idx);
@@ -150,6 +160,9 @@ export function SheetConcrete() {
     return () => cancelAnimationFrame(frame);
   }, [printTakeOff]);
 
+  React.useEffect(() => { setPrintTakeOff(null); },
+    [areaMode, areaManual, lenMm, widMm, thickMode, avgH, ca, cb, cc, cd, rate, bagKg, bagPrice, activePreset, presets]);
+
   const area = takeOff.area.value;
   const computedDimsArea = takeOff.area.fromDims;
   const computedAvgH = takeOff.thickness.average;
@@ -188,10 +201,10 @@ export function SheetConcrete() {
                   <Stack gap={3}>
                     <div className="seg-group">
                       <button
-                        className={"ctrl-dir" + (areaMode === "direct" ? " on" : "")}
+                        className={"ctrl-dir" + (areaMode === "direct" ? " on" : "")} aria-pressed={areaMode === "direct"}
                         onClick={() => setAreaMode("direct")}>Enter area</button>
                       <button
-                        className={"ctrl-dir" + (areaMode === "dims" ? " on" : "")}
+                        className={"ctrl-dir" + (areaMode === "dims" ? " on" : "")} aria-pressed={areaMode === "dims"}
                         onClick={() => setAreaMode("dims")}>Dimensions</button>
                     </div>
 
@@ -225,10 +238,10 @@ export function SheetConcrete() {
                   <Stack gap={3}>
                     <div className="seg-group">
                       <button
-                        className={"ctrl-dir" + (thickMode === "avg" ? " on" : "")}
+                        className={"ctrl-dir" + (thickMode === "avg" ? " on" : "")} aria-pressed={thickMode === "avg"}
                         onClick={() => setThickMode("avg")}>Avg thickness</button>
                       <button
-                        className={"ctrl-dir" + (thickMode === "corners" ? " on" : "")}
+                        className={"ctrl-dir" + (thickMode === "corners" ? " on" : "")} aria-pressed={thickMode === "corners"}
                         onClick={() => setThickMode("corners")}>4 corners</button>
                     </div>
 
@@ -282,6 +295,7 @@ export function SheetConcrete() {
                         onChange={handleRateChange} 
                         req={hasAnyInput && !rate}
                         presetsOpen={showRatePresets}
+                        presetHoveredIndex={hoveredIndex}
                         onTogglePresets={() => setShowRatePresets(open => !open)}
                         onCommit={() => setShowRatePresets(false)}
                         onKeyDown={onKeyDown}
@@ -290,7 +304,7 @@ export function SheetConcrete() {
                       {showRatePresets && validPresets.length > 0 && (
                         <div className="rate-presets-dropdown">
                           <div className="rate-presets-header">Quick Presets</div>
-                          <div className="rate-presets-list" role="listbox">
+                          <div id="input-slf-rate-presets" className="rate-presets-list" role="listbox" aria-label="Quick presets">
                             {validPresets.map((p, idx) => {
                               const originalIdx = presets.indexOf(p);
                               const isActive = activePreset === originalIdx;
@@ -298,8 +312,9 @@ export function SheetConcrete() {
                               return (
                                 <div 
                                   key={idx} 
+                                  id={`input-slf-rate-preset-${idx}`}
                                   role="option"
-                                  aria-selected={isHovered}
+                                  aria-selected={isActive}
                                   className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
                                   onMouseDown={(e) => {
                                     e.preventDefault();
@@ -337,6 +352,7 @@ export function SheetConcrete() {
               </div>
             </div>
 
+            {presetError && <p role="alert" className="input-error">{presetError}</p>}
             {/* ── Product Presets ── */}
             <DetailSection title="Product Presets" open={false}>
               <Stack gap={4}>
@@ -355,6 +371,7 @@ export function SheetConcrete() {
                           <span className="pw-preset-lbl-hide">Product Name</span>
                           <input
                             id={`preset-name-${idx}`}
+                            aria-label={`Product name ${idx}`}
                             name={`preset-name-${idx}`}
                             type="text"
                             className="num-input"
@@ -367,6 +384,7 @@ export function SheetConcrete() {
                           <span className="pw-preset-lbl-hide">kg/m²·mm</span>
                           <input
                             id={`preset-rate-${idx}`}
+                            aria-label={`Consumption ${idx}`}
                             name={`preset-rate-${idx}`}
                             type="text"
                             inputMode="decimal"
@@ -380,6 +398,7 @@ export function SheetConcrete() {
                           <span className="pw-preset-lbl-hide">Bag kg</span>
                           <input
                             id={`preset-bagkg-${idx}`}
+                            aria-label={`Bag weight ${idx}`}
                             name={`preset-bagkg-${idx}`}
                             type="text"
                             inputMode="decimal"
@@ -393,6 +412,7 @@ export function SheetConcrete() {
                           <span className="pw-preset-lbl-hide">Price €</span>
                           <input
                             id={`preset-price-${idx}`}
+                            aria-label={`Bag price ${idx}`}
                             name={`preset-price-${idx}`}
                             type="text"
                             inputMode="decimal"
@@ -433,6 +453,7 @@ export function SheetConcrete() {
               </Stack>
             </DetailSection>
 
+            {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
             {/* ── Calculations & Details ── */}
             <div className="section unboxed" style={{ marginTop: 'var(--sp-4)' }}>
               <div className="section-head">
@@ -492,7 +513,8 @@ export function SheetConcrete() {
 
           {/* Sticky Result Column */}
           <div className="u-sticky u-sticky-top" style={{ marginTop: 'var(--sticky-offset)', top: '20px' }}>
-            <div className="result-card">
+            <div className="result-card result-card--concrete">
+              <div className="result-card-primary">
               <span className="result-card-title">Bags Needed</span>
               <span className="result-card-value">
                 {bags > 0 ? bags : "0"} 
@@ -502,6 +524,7 @@ export function SheetConcrete() {
                 exact: {bagsExact > 0 ? bagsExact.toFixed(2) : "0.00"} pcs
               </span>
 
+              </div>
               {/* Classes, not inline styles: the mobile bar has to override the
                   spacing and a rule cannot outrank a style attribute. */}
               <div className="result-card-split">

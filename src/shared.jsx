@@ -1,3 +1,4 @@
+import { parseMeasurement } from "./utils/measurements.cjs";
 import { React, ReactDOM } from "./react-globals.js";
 import { recordDocStep, registerDocHistory } from "./utils/doc-undo.js";
 
@@ -5,7 +6,7 @@ import { recordDocStep, registerDocHistory } from "./utils/doc-undo.js";
 
 export function Icon({ name, className = "" }) {
   const faClass = ICONS[name] || "fa-solid fa-circle-question";
-  return <i className={[faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")} />;
+  return <i aria-hidden="true" className={[faClass, className, "u-inline-flex-center"].filter(Boolean).join(" ")} />;
 }
 
 /* The mobile breakpoint, written down once. app.css asks the same question in
@@ -180,13 +181,22 @@ export function useTimedSet(defaultDelay = 600) {
 }
 
 export function useClickOutside(refs, handler, active = true) {
+  /* Call sites naturally build their ref arrays inline, and handlers often
+     close over current component state. Keep one listener per active period
+     while letting it read the current values instead of either resubscribing
+     every render or capturing stale ones. */
+  const refsRef = React.useRef(refs);
+  const handlerRef = React.useRef(handler);
+  refsRef.current = refs;
+  handlerRef.current = handler;
+
   React.useEffect(() => {
     if (!active) return;
 
     const onMouseDown = (e) => {
       const target = e.target;
-      const clickedInside = refs.some(ref => ref.current && ref.current.contains(target));
-      if (!clickedInside) handler(e);
+      const clickedInside = refsRef.current.some(ref => ref.current && ref.current.contains(target));
+      if (!clickedInside) handlerRef.current(e);
     };
 
     document.addEventListener("mousedown", onMouseDown);
@@ -195,7 +205,7 @@ export function useClickOutside(refs, handler, active = true) {
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("touchstart", onMouseDown);
     };
-  }, [handler, active]);
+  }, [active]);
 }
 
 // Every armed mode — an open dropdown, a preset being renamed — takes the same
@@ -204,8 +214,8 @@ export function useClickOutside(refs, handler, active = true) {
 // behaving differently on two pages.
 //
 // `inside` is an array of refs, or a CSS selector for a subtree that cannot
-// forward one. Pass a stable handler: it re-subscribes on identity change, the
-// same as useClickOutside.
+// forward one. useClickOutside keeps its listener stable and reads the latest
+// refs and callback.
 export function useModeExit(inside, onExit, active = true) {
   const isSelector = typeof inside === "string";
 
@@ -269,7 +279,16 @@ export function useDialogFocus(panelRef) {
       const panel = panelRef.current;
       if (!panel) return;
 
-      const stops = Array.from(panel.querySelectorAll(FOCUSABLE));
+      const candidates = Array.from(panel.querySelectorAll(FOCUSABLE));
+      /* Responsive modals can contain controls hidden only by a media query.
+         The browser skips them while tabbing, so treating one as the boundary
+         lets focus escape. jsdom gives every element zero client rects; fall
+         back to the candidates there so the behaviour remains testable. */
+      const rendered = candidates.filter(el => {
+        const style = getComputedStyle(el);
+        return el.getClientRects().length > 0 && style.display !== "none" && style.visibility !== "hidden";
+      });
+      const stops = rendered.length > 0 ? rendered : candidates;
       if (stops.length === 0) {
         // Nothing to land on: hold focus on the panel rather than let Tab out.
         event.preventDefault();
@@ -429,7 +448,7 @@ function useProtectedRangeSlider(onChange) {
 /**
  * A lockable range slider component to prevent accidental movement on mobile.
  */
-export function RangeSlider({ id, value, onChange, min, max, step, className = "" }) {
+export function RangeSlider({ id, label = "Adjustment", value, onChange, min, max, step, className = "" }) {
   // Default to locked on both mobile and desktop
   const [isLocked, setIsLocked] = React.useState(true);
 
@@ -452,6 +471,7 @@ export function RangeSlider({ id, value, onChange, min, max, step, className = "
         id={id}
         name={id}
         type="range"
+        aria-label={label}
         min={min}
         max={max}
         step={step}
@@ -505,24 +525,30 @@ function cleanNumericInput(raw) {
  * validation — commitValue clamps with them — and a text input ignores them.
  * step went with the spinner it belonged to.
  */
-export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets }) {
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1 }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const inputRef = React.useRef(null);
+  const [error, setError] = React.useState("");
+  const generatedId = React.useId();
+  const fieldId = id || generatedId;
 
   React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
 
   // Commits the numeric value — called on blur and as part of confirm
   const commitValue = () => {
+    setError("");
     if (local === "") {
       onChange("");
     } else {
-      const n = Number(local);
-      if (!isNaN(n)) {
-        const val = Math.max(min, Math.min(max, Math.round(n * 100) / 100));
+      const n = parseMeasurement(local);
+      if (Number.isFinite(n)) {
+        const bounded = Math.max(min, Math.min(max, n));
+        const val = Number(bounded.toFixed(2));
         onChange(val);
         setLocal(String(val));
       } else {
-        setLocal(value === "" ? "" : String(value));
+        setError("Enter a valid decimal number.");
+        onChange(local);
       }
     }
   };
@@ -530,11 +556,21 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
 
   return (
     <div className="num-wrap">
-      {label && <span className="num-lbl">{label}{labelIcon && <Icon name={labelIcon} className="num-lbl-icon" />}</span>}
+      {label && <label htmlFor={fieldId} className="num-lbl">{label}{labelIcon && <Icon name={labelIcon} className="num-lbl-icon" />}</label>}
       <div className="num-row">
         <input
-          id={id}
-          name={id}
+          id={fieldId}
+          name={fieldId}
+          role={onTogglePresets ? "combobox" : undefined}
+          aria-autocomplete={onTogglePresets ? "none" : undefined}
+          aria-haspopup={onTogglePresets ? "listbox" : undefined}
+          aria-expanded={onTogglePresets ? presetsOpen : undefined}
+          aria-controls={onTogglePresets ? `${fieldId}-presets` : undefined}
+          aria-activedescendant={onTogglePresets && presetsOpen && presetHoveredIndex >= 0
+            ? `${fieldId}-preset-${presetHoveredIndex}`
+            : undefined}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${fieldId}-error` : undefined}
           className={"num-input" + (req ? " num-input--req" : "")}
           type="text"
           inputMode="decimal"
@@ -555,8 +591,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             if (e.key === "Enter" && !e.defaultPrevented) {
               e.preventDefault();
               e.stopPropagation();
-              commitValue();
-              if (onCommit) onCommit();
+              e.currentTarget.blur();
             }
           }}
           onBlur={() => { commitValue(); if (onCommit) onCommit(); }}
@@ -590,6 +625,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             type="button"
             aria-haspopup="listbox"
             aria-expanded={presetsOpen}
+            aria-controls={`${fieldId}-presets`}
             aria-label={presetsOpen ? "Hide presets" : "Show presets"}
             title="Presets"
             onMouseDown={e => e.preventDefault()}
@@ -599,6 +635,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
         )}
         <button
           className="num-btn"
+          aria-label={`Apply ${label || "value"}`}
           type="button"
           onClick={() => {
             commitValue();
@@ -607,6 +644,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
           <Icon name="corner-down-left" />
         </button>
       </div>
+      {error && <span id={`${fieldId}-error`} role="alert" className="input-error">{error}</span>}
     </div>
   );
 }
@@ -625,52 +663,24 @@ function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, chil
   const open = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
 
-  const headStyle = {
-    ...(bg ? { background: bg } : {}),
-    cursor: noToggle ? "default" : "pointer"
-  };
-
-  if (variant === "panel") {
-    return (
-      <div id={id} className={["control-panel", className].filter(Boolean).join(" ")}>
-        <div className="panel-head" style={headStyle} onClick={noToggle ? undefined : () => setOpen(!open)}>
-          <span>{title}</span>
-          {!noToggle && (
-            <span className="sys-head-toggle">
-              <Icon name={open ? "minus" : "plus"} />
-            </span>
-          )}
-        </div>
-        {open && <div className="panel-data">{children}</div>}
-      </div>
-    );
-  }
-  if (variant === "detail") {
-    return (
-      <div id={id} className={["detail-section", className].filter(Boolean).join(" ")}>
-        <div className="detail-section-head" style={headStyle} onClick={noToggle ? undefined : () => setOpen(!open)}>
-          <span>{title}</span>
-          {!noToggle && (
-            <span className="sys-head-toggle">
-              <Icon name={open ? "minus" : "plus"} />
-            </span>
-          )}
-        </div>
-        {open && <div className="detail-section-body">{children}</div>}
-      </div>
-    );
-  }
+  const generatedId = React.useId();
+  const contentId = `${id || generatedId}-content`;
+  const classes = variant === "panel"
+    ? ["control-panel", "panel-head", "panel-data"]
+    : variant === "detail"
+      ? ["detail-section", "detail-section-head", "detail-section-body"]
+      : ["section", "section-head", "section-body"];
+  const titleContent = <><span>{title}</span>{!noToggle && <span className="sys-head-toggle">
+    <Icon name={open ? "minus" : "plus"} /></span>}</>;
   return (
-    <div className="section">
-      <div className="section-head" style={headStyle} onClick={noToggle ? undefined : () => setOpen(!open)}>
-        <span>{title}</span>
-        {!noToggle && (
-          <span className="sys-head-toggle">
-            <Icon name={open ? "minus" : "plus"} />
-          </span>
-        )}
-      </div>
-      {open && <div className="section-body">{children}</div>}
+    <div id={id} className={[classes[0], className].filter(Boolean).join(" ")}>
+      {noToggle
+        ? <div className={classes[1]} style={bg ? { background: bg } : undefined}>{titleContent}</div>
+        : <button type="button" className={`${classes[1]} disclosure ctl-ghost`}
+            aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>
+            {titleContent}
+          </button>}
+      <div id={contentId} hidden={!open} className={classes[2]}>{open && children}</div>
     </div>
   );
 }
@@ -862,7 +872,7 @@ export function SaveDefaultsButton({ status, onClick, disabled = false, errorMes
   );
 }
 
-export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, hoveredIndex = -1 }) {
+export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1 }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
   React.useLayoutEffect(() => {
@@ -875,7 +885,7 @@ export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApp
   return ReactDOM.createPortal(
     <div className="rate-presets-dropdown" style={{ position: "absolute", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}>
       <div className="rate-presets-header">Material Presets</div>
-      <div className="rate-presets-list" role="listbox">
+      <div id={`${inputId}-presets`} className="rate-presets-list" role="listbox" aria-label="Material presets">
         {presets.map((p, idx) => {
           if (!p.name) return null;
           const displayVal = field === "width" ? p.width : p.length;
@@ -885,8 +895,9 @@ export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApp
           return (
             <div
               key={idx}
+              id={`${inputId}-preset-${idx}`}
               role="option"
-              aria-selected={isHovered}
+              aria-selected={isActive}
               className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
             >

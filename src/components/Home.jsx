@@ -40,6 +40,8 @@ export function SheetHome({ page, setPage }) {
 
         <div className="home-divider" />
 
+        <p className="session-note">Inputs stay in this window when switching tools. Reloading clears them.
+          Open the app online before use; offline reopening is not supported.</p>
         <div className="home-footer">NEMETONA HIVE</div>
 
         {/* Mobile's copy of the nav rail's build stamp. Shown by a media query

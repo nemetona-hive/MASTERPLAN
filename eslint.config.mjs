@@ -194,7 +194,7 @@ export default [
 
   // ── Build and check scripts: CommonJS, node globals ──────────────────────
   {
-    files: ["scripts/**/*.js"],
+    files: ["scripts/**/*.js", "src/**/*.cjs"],
     languageOptions: { ecmaVersion: 2023, sourceType: "commonjs", globals: NODE_GLOBALS },
     rules: {
       ...js.configs.recommended.rules,

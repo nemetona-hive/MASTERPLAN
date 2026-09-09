@@ -179,8 +179,8 @@ describe("NumInput", () => {
     const onTogglePresets = vi.fn();
     render(<NumInput value={1200} onChange={() => {}} onTogglePresets={onTogglePresets} />);
 
-    await user.click(screen.getByRole("textbox"));
-    await user.type(screen.getByRole("textbox"), "13");
+    await user.click(screen.getByRole("combobox"));
+    await user.type(screen.getByRole("combobox"), "13");
     expect(onTogglePresets).not.toHaveBeenCalled();
 
     await user.click(screen.getByTitle("Presets"));
@@ -194,7 +194,7 @@ describe("NumInput", () => {
     render(<NumInput value={1200} onChange={() => {}} onTogglePresets={() => {}} />);
 
     await user.click(screen.getByTitle("Presets"));
-    expect(document.activeElement).toBe(screen.getByRole("textbox"));
+    expect(document.activeElement).toBe(screen.getByRole("combobox"));
   });
 
   it("says which way the toggle will go", () => {

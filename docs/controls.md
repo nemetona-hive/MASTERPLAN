@@ -101,3 +101,11 @@ live in `:root` in `00-base.css`; four are per-theme in `themes.js`
 (`--btn-active-bg`, `--btn-active-fg`, `--edge-hi`, `--shadow-rgb`) because the
 active fill flips in kind between light and dark. **A new theme must state all
 four**, and `theme:check` gates the label on the plate at 4.5:1.
+
+
+Numeric controls associate real labels with input IDs; icon-only actions need
+accessible names and decorative icons are hidden from assistive technology.
+Disclosure headers are native buttons with `aria-expanded` and `aria-controls`.
+Print actions sit beside disclosure buttons, never inside them. Input-level
+keyboard handling runs before App's bubbling Enter-to-commit listener so an open
+preset list can consume Enter without an early blur.

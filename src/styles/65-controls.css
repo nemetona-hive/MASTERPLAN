@@ -41,6 +41,15 @@
 	font-weight: var(--fw-semi);
 }
 
+/* Every keyboard-operated button gets the same visible focus treatment. Some
+   native buttons retain a browser outline today, but relying on that leaves
+   custom ranges with none and varies by engine and theme. */
+button:focus-visible,
+input[type="range"]:focus-visible {
+	outline: 2px solid var(--brand);
+	outline-offset: 2px;
+}
+
 /* Destructive hover, composed onto any tier. Marked explicitly rather than
    assumed from "secondary", because a secondary button is just as often a
    harmless one. */
@@ -112,3 +121,35 @@
 /* .viz-expand-btn and .mp-modal-close set their own radius alongside their
    positioning, so they are not listed above — but they take the same press,
    which is why they appear in the :active rule. */
+
+/* Native disclosure buttons keep the shared tier and size scale. */
+.disclosure {
+  width: 100%;
+  --ctl-h: var(--ctl-h-lg);
+  min-height: var(--ctl-h);
+  border: none;
+  border-radius: var(--btn-radius);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sys-disclosure {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+}
+.sys-disclosure:disabled { cursor: default; }
+.input-error {
+  color: var(--danger);
+  font-size: var(--fs-sm);
+}
+
+.data-control .control-panel .panel-head.disclosure,
+.section-head.disclosure,
+.detail-section-head.disclosure {
+  height: var(--ctl-h);
+  padding-block: 0;
+}

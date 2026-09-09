@@ -1,5 +1,6 @@
 const symEdge = (total, step) => {
-  if (step <= 0) return { edgeWidth: 0, finalFullCount: 0 };
+  if (!Number.isFinite(total) || !Number.isFinite(step) || step <= 0 || total <= 0) return { edgeWidth: 0, finalFullCount: 0 };
+  if (total < step) return { edgeWidth: total / 2, finalFullCount: 0 };
   let fullCount = Math.floor(total / step);
   let remainder = total - fullCount * step;
   // If edge pieces would be less than 20% of a plank,
@@ -37,11 +38,16 @@ function getSourceId(index) {
 // from "legitimately empty" instead of silently rendering a valid 0-panel
 // layout.
 const MAX_SIM_STEPS = 2000;
-const exceedsSimCap = (span, step) => !(step > 0) || span / step > MAX_SIM_STEPS;
+const MAX_LAYOUT_SEGMENTS = 5000;
+const exceedsSimCap = (span, step) => !Number.isFinite(span) || !Number.isFinite(step) || !(step > 0) || span / step > MAX_SIM_STEPS;
+// Include leading/trailing cuts in the budget before allocating any rows.
+const exceedsLayoutBudget = (width, height, length, pitch) =>
+  exceedsSimCap(width, length) || exceedsSimCap(height, pitch) ||
+  (Math.ceil(width / length) + 2) * (Math.ceil(height / pitch) + 2) > MAX_LAYOUT_SEGMENTS;
 
 const simulate = (W, H, PP, PL, offset, minJ, sys, useSymmetry = false, startOff = 0, mirror = false) => {
   if (W <= 0 || H <= 0 || PP <= 0 || PL <= 0) return [];
-  if (exceedsSimCap(W, PL) || exceedsSimCap(H, PP)) return [];
+  if (exceedsLayoutBudget(W, H, PL, PP)) return [];
   const heights = mkRowHeights(H, PP, useSymmetry);
   const startRemainder = startOff > 0 ? Math.max(0, Math.min(startOff, PL)) : 0;
   const rows = [];
@@ -92,7 +98,7 @@ const simulate = (W, H, PP, PL, offset, minJ, sys, useSymmetry = false, startOff
 
 function simulateS4(W, H, PP, PLong, minJ, useSymmetry, mirror = false) {
   if (W <= 0 || H <= 0 || PP <= 0 || PLong <= 0) return [];
-  if (exceedsSimCap(W, PLong) || exceedsSimCap(H, PP)) return [];
+  if (exceedsLayoutBudget(W, H, PLong, PP)) return [];
   const heights = mkRowHeights(H, PP, useSymmetry);
   const rows = [];
 
@@ -144,7 +150,7 @@ const sumSegWidth = (rows, type) =>
 const gapWidth = rows => sumSegWidth(rows, "gap");
 
 function emptyLayoutResult() {
-  return { valid: false, rows: [], stats: { full: 0, cut: 0, total: 0 }, summaryRows: [], meta: {} };
+  return { status: "empty", valid: false, rows: [], stats: { full: 0, cut: 0, total: 0, stockPanels: 0 }, summaryRows: [], meta: {} };
 }
 
 // Same shape as emptyLayoutResult, but carries a summary row so the user sees
@@ -152,12 +158,54 @@ function emptyLayoutResult() {
 function cappedLayoutResult() {
   return {
     ...emptyLayoutResult(),
+    status: "limited",
     capped: true,
     summaryRows: [
-      { label: `Surface needs more than ${MAX_SIM_STEPS} pieces per axis \u2014 increase the material size.`, value: "Too large", unit: "", hi: true, danger: true }
+      { label: `Layout exceeds ${MAX_SIM_STEPS} pieces per axis or ${MAX_LAYOUT_SEGMENTS} segments \u2014 increase the material size or reduce the surface.`, value: "Too large", unit: "", hi: true, danger: true }
     ]
   };
 }
+
+function invalidLayoutResult(reason) {
+  return { ...emptyLayoutResult(), status: "invalid", reason,
+    summaryRows: [{ label: reason, value: "Invalid", unit: "", danger: true, hi: true }] };
+}
+
+// One procurement model shared by the page and the cut list. Simulation row
+// indices are stable; a renderer may reorder them but must not recount stock.
+function buildStockPlan(rows, stockLength) {
+  const panels = new Map();
+  let whole = 0;
+  rows.forEach((row, rowIndex) => row.segs.forEach((seg, segmentIndex) => {
+    if (seg.type === "gap") return;
+    if (seg.type === "full" && !seg.sourceId) { whole++; return; }
+    const id = seg.sourceId || `R${rowIndex + 1}-${segmentIndex + 1}`;
+    seg.sourceId = id;
+    if (!panels.has(id)) panels.set(id, { id, stock: stockLength, pieces: [] });
+    panels.get(id).pieces.push({ row: rowIndex, segment: segmentIndex, width: seg.w, kind: seg.type });
+  }));
+  const cuts = [...panels.values()].map(panel => ({ ...panel,
+    waste: Math.max(0, stockLength - panel.pieces.reduce((n, piece) => n + piece.width, 0))
+  }));
+  return { whole, panels: cuts, panelsToBuy: whole + cuts.length };
+}
+
+// First-fit decreasing: reuse remaining stock for short pieces as well as
+// long ones. This is a feasible cutting plan, not a claim of global optimality.
+function allocateS4Stock(rows, stockLength) {
+  const pending = rows.flatMap(row => row.segs).filter(seg => seg.w < stockLength - 1e-7)
+    .sort((a, b) => b.w - a.w);
+  const bins = [];
+  for (const seg of pending) {
+    let bin = bins.find(candidate => candidate.remaining + 1e-7 >= seg.w);
+    if (!bin) { bin = { id: `S${bins.length + 1}`, remaining: stockLength }; bins.push(bin); }
+    seg.type = "cut";
+    seg.sourceId = bin.id;
+    bin.remaining -= seg.w;
+  }
+  return buildStockPlan(rows, stockLength);
+}
+
 function makeStats(rows) {
   let full = 0, cut = 0;
   if (Array.isArray(rows)) for (const r of rows)
@@ -169,14 +217,21 @@ function makeStats(rows) {
 }
 
 function computeS0(state) {
-  const { roomWidth, panelWidth, oneFullEdge } = state;
+  const roomWidth = Number(state.roomWidth), panelWidth = Number(state.panelWidth);
+  const { oneFullEdge } = state;
+  if (![roomWidth, panelWidth].every(Number.isFinite)) return invalidLayoutResult("Enter finite dimensions.");
   if (roomWidth <= 0 || panelWidth <= 0) return emptyLayoutResult();
   
+  if (exceedsSimCap(roomWidth, panelWidth)) return cappedLayoutResult();
   const L = SUMMARY_LABELS.s0;
   
   if (oneFullEdge) {
+    if (state.customFirstPieceWidth != null && !Number.isFinite(Number(state.customFirstPieceWidth))) return invalidLayoutResult("Enter a finite first-piece width.");
     const hasCustom = state.customFirstPieceWidth !== null && state.customFirstPieceWidth !== undefined && state.customFirstPieceWidth > 0;
-    let firstPieceWidth = hasCustom ? state.customFirstPieceWidth : 0;
+    let firstPieceWidth = hasCustom ? Number(state.customFirstPieceWidth) : 0;
+    if (!Number.isFinite(firstPieceWidth) || firstPieceWidth > Math.min(roomWidth, panelWidth) || Number(state.customFirstPieceWidth) < 0) {
+      return invalidLayoutResult("First piece must fit both the product and the area width.");
+    }
     let remainingWidth = roomWidth - firstPieceWidth;
     const finalFullCount = Math.floor(remainingWidth / panelWidth);
     const remainder = remainingWidth - (finalFullCount * panelWidth);
@@ -200,7 +255,7 @@ function computeS0(state) {
     const roomGap = Math.abs(roomWidth - layoutLength);
     
     return {
-      valid: true,
+      status: "ready", valid: true,
       rows: [{ segs }],
       stats: { full: Math.max(0, finalFullCount), cut: cutCount, total: totalToBuy },
       summaryRows: [
@@ -224,7 +279,7 @@ function computeS0(state) {
   const roomGap = Math.abs(roomWidth - layoutLength);
   
   return {
-	valid: true,
+	status: "ready", valid: true,
 	rows: [{ segs }],
 	stats: { full: Math.max(0, finalFullCount), cut: 2, total: totalToBuy },
 	summaryRows: [
@@ -242,24 +297,26 @@ function computeS0(state) {
 // Single helper replaces computeS1, computeS2, computeS3
 function computeStandard(sh, sysNum, offset, palKey) {
   const { W, H, PPi, PLa, direction, minJ, startOff, patternStart } = sh;
+  if (![W, H, PPi, PLa, minJ, startOff, offset].every(n => Number.isFinite(Number(n)))) return invalidLayoutResult("Enter finite dimensions and offsets.");
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
   const sH = vSym ? W : H;
-  if (exceedsSimCap(sW, PLa) || exceedsSimCap(sH, PPi)) return cappedLayoutResult();
+  if (exceedsLayoutBudget(sW, sH, PPi, PLa)) return cappedLayoutResult();
   const activePatternStart = patternStart || (vSym ? "bottom" : "left");
   const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
   const rows = simulate(sW, sH, PLa, PPi, offset, minJ, sysNum, false, startOff, isMirror);
-  const stats = makeStats(rows);
+  const stockPlan = buildStockPlan(rows, PPi);
+  const stats = { ...makeStats(rows), stockPanels: stockPlan.panelsToBuy };
   const gaps = countSegs(rows, "gap");
   const offcuts = countSegs(rows, "offcut");
   const totalGapWidth = gapWidth(rows);
   const valid = gaps === 0;
   const L = SUMMARY_LABELS.s1s2s3;
   return {
-	valid, rows, stats,
+	status: valid ? "ready" : "invalid", valid, rows, stats, stockPlan,
 	summaryRows: [
-	  { label: L.total,     value: stats.total,                            unit: "pcs", hi: true },
+	  { label: L.total,     value: stockPlan.panelsToBuy,                   unit: "pcs", hi: true },
 	  { label: L.placed,    value: stats.full + stats.cut + offcuts, unit: "pcs", hi: true },
 	  { label: L.full,      value: stats.full,                             unit: "pcs", hoverType: "full" },
 	  { label: L.cut,       value: stats.cut,                              unit: "pcs", hoverType: "cut" },
@@ -280,33 +337,31 @@ const computeS3 = sh => computeStandard(sh, 3, 0,          "s3");
 
 function computeS4(sh) {
   const { W, H, PPi, PLa, direction, minJ, s4Long, patternStart } = sh;
+  if (![W, H, PPi, PLa, minJ, s4Long].every(n => Number.isFinite(Number(n)))) return invalidLayoutResult("Enter finite dimensions.");
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0 || s4Long <= 0) return emptyLayoutResult();
   const vSym = direction === "V";
   const sW = vSym ? H : W;
   const sH = vSym ? W : H;
-  if (exceedsSimCap(sW, s4Long) || exceedsSimCap(sH, PLa)) return cappedLayoutResult();
+  if (s4Long > PPi) return invalidLayoutResult("Long piece cannot exceed the stock length.");
+  if (exceedsLayoutBudget(sW, sH, s4Long, PLa)) return cappedLayoutResult();
   const activePatternStart = patternStart || (vSym ? "bottom" : "left");
   const isMirror = vSym ? activePatternStart === "bottom" : activePatternStart === "right";
   const rows = simulateS4(sW, sH, PLa, s4Long, minJ, false, isMirror);
-  const stats = makeStats(rows);
+  const stockPlan = allocateS4Stock(rows, PPi);
+  const stats = { ...makeStats(rows), stockPanels: stockPlan.panelsToBuy };
   const shortPiece = sW - Math.floor(sW / s4Long) * s4Long;
-
-  // Stock pieces: each full long comes from one stock piece (PPi)
-  // Short pieces are cut from the same stock piece as the last long in each row
-  const nLong = rows.reduce((a, r) => a + r.segs.filter(s => s.type === "full").length, 0);
-  const nShort = rows.reduce((a, r) => a + r.segs.filter(s => s.type === "cut").length, 0);
-  const perStock = Math.max(1, Math.floor(PPi / s4Long));
-  const stockPcs = Math.ceil(nLong / perStock) + (shortPiece > 0 ? Math.ceil(nShort / Math.max(1, Math.floor(PPi / shortPiece))) : 0);
+  const nLong = rows.reduce((n, row) => n + row.segs.filter(seg => seg.long).length, 0);
+  const nShort = rows.reduce((n, row) => n + row.segs.filter(seg => !seg.long).length, 0);
 
   const L = SUMMARY_LABELS.s4;
   return {
-    valid: true, rows, stats,
+    status: "ready", valid: true, rows, stats, stockPlan,
     summaryRows: [
       { label: "Long piece",  value: fmt.decimal(s4Long),                                        unit: "mm",  hi: true },
       { label: "Short piece", value: shortPiece > 0 ? fmt.decimal(shortPiece) : "none",          unit: shortPiece > 0 ? "mm" : "", hi: true },
-      { label: L.stock,       value: stockPcs,                                                    unit: "pcs", hi: true },
-      { label: L.full,        value: stats.full,                                                  unit: "pcs", hoverType: "full" },
-      { label: L.cut,         value: stats.cut,                                                   unit: "pcs", hoverType: "cut" }
+      { label: L.stock,       value: stockPlan.panelsToBuy,                                                    unit: "pcs", hi: true },
+      { label: "Long pieces", value: nLong,                                                  unit: "pcs", hoverType: "full" },
+      { label: "Short pieces", value: nShort,                                                   unit: "pcs", hoverType: "cut" }
     ],
     meta: { width: sW, visualization: "rows", s4: true, useS4Colors: s4Long !== PPi, surfaceW: sh.W, surfaceH: sh.H, simW: sW, simH: sH, PPi: sh.PPi, PLa: sh.PLa, s4Long, direction: sh.direction }
   };

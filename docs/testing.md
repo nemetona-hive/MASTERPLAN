@@ -170,3 +170,19 @@ audit blocks on a hex or a tinted `rgba()` anywhere in `src/`, and
 `theme:check` gates the palette itself: **4.5:1** for a colour a word is drawn
 in, **3:1** for one that only draws a mark. It reads `themes.js` directly, so
 there is no second copy to drift.
+
+
+## Full-App browser journeys
+
+`npm run test:browser` runs `scripts/journeys.mjs` and is part of `verify`.
+It uses the same read-only fixture server as `layout`; default-save requests are
+no-ops. It checks keyboard presets, comma decimals, incomplete measurements,
+screen/print stock agreement, invalid times, draft navigation, offline feedback,
+and all eight pages at 320, 360, 390, 768, 844 landscape, 1024 and 1440 pixels.
+Phone result text is checked across every theme. Concrete and multipage cut-list
+PDFs and a phone screenshot are written to the reported temporary artifact folder.
+These are Chromium checks, not physical iOS/Android or screen-reader certification.
+
+Regression tests cover geometry bounds, stock capacity and allocation totals,
+measurement parsing, serialized default saves, and local-server validation,
+containment, and replacement failures using disposable roots.

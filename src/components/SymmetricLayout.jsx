@@ -58,12 +58,13 @@ export function SheetSymmetricLayout({ sym, setSym }) {
                 onChange={v => { setSym(s => ({ ...s, panelWidth: clampNumber(v, 100, 8000, 100) })); setActivePreset(null); }}
                 min={100}
                 presetsOpen={showWidDropdown}
+                presetHoveredIndex={hoveredIndex}
                 onTogglePresets={() => setShowWidDropdown(open => !open)}
                 onCommit={() => setShowWidDropdown(false)}
                 onKeyDown={onKeyDown}
               />
               {showWidDropdown && presets.length > 0 && (
-                <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" hoveredIndex={hoveredIndex} />
+                <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" inputId="input-sym-panel-width" hoveredIndex={hoveredIndex} />
               )}
             </div>
           </Stack>
@@ -73,9 +74,9 @@ export function SheetSymmetricLayout({ sym, setSym }) {
             <Stack gap={1} className="ctrl-lbl">
               <span className="ctrl-sublbl">Layout style</span>
               <div className="seg-group">
-                <button className={"ctrl-dir " + (sym.oneFullEdge ? "on" : "")}
+                <button aria-pressed={sym.oneFullEdge} className={"ctrl-dir " + (sym.oneFullEdge ? "on" : "")}
                   onClick={() => { markStep("Asymmetric"); setSym(s => ({ ...s, oneFullEdge: true })); }}>Asymmetric</button>
-                <button className={"ctrl-dir " + (!sym.oneFullEdge ? "on" : "")}
+                <button aria-pressed={!sym.oneFullEdge} className={"ctrl-dir " + (!sym.oneFullEdge ? "on" : "")}
                   onClick={() => { markStep("Symmetric"); setSym(s => ({ ...s, oneFullEdge: false })); }}>Symmetric</button>
               </div>
             </Stack>
@@ -91,4 +92,3 @@ export function SheetSymmetricLayout({ sym, setSym }) {
     </>
   );
 }
-

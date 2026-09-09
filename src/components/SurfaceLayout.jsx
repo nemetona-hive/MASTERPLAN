@@ -3,6 +3,7 @@ import { LAYOUT_REGISTRY } from "../Controls.jsx";
 import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
 import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 import { CutListSheet } from "./CutListSheet.jsx";
+import { parseMeasurement } from "../utils/measurements.cjs";
 import { buildCutList } from "../utils/cut-list.js";
 
 export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
@@ -27,6 +28,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const [largePreview,    setLargePreview]    = React.useState(null);
   const [fieldFlash,      setFieldFlash]      = useTimedState(false, 900);
   const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
+  const [presetError, setPresetError] = React.useState("");
   const [saveError, setSaveError] = React.useState("");
   const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
 
@@ -39,9 +41,8 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
    * sheet React has not committed yet — a blank page. The effect runs after the
    * commit, so the document exists before anything is asked to render it.
    *
-   * The sheet stays mounted afterwards. It is display:none on screen, costs a
-   * hidden subtree, and unmounting it would only add a second thing that has to
-   * happen in the right order.
+   * The sheet remains hidden on screen after printing, until the calculation
+   * inputs change and invalidate it.
    */
   const [printList, setPrintList] = React.useState(null);
 
@@ -52,6 +53,8 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
     const frame = requestAnimationFrame(() => window.print());
     return () => cancelAnimationFrame(frame);
   }, [printList]);
+
+  React.useEffect(() => { setPrintList(null); }, [sh]);
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
@@ -67,9 +70,15 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   });
 
   const applyPreset = (p, idx) => {
+    const length = parseMeasurement(p.length), width = parseMeasurement(p.width);
+    if (![length, width].every(n => Number.isFinite(n) && n >= 100 && n <= 8000)) {
+      setPresetError("Material dimensions must be between 100 and 8000 mm.");
+      return;
+    }
+    setPresetError("");
     // The one that eats work: it overwrites two dimensions you may have typed.
     markStep("Apply preset");
-    setSh(s => ({ ...s, PPi: p.length, PLa: p.width }));
+    setSh(s => ({ ...s, PPi: length, PLa: width }));
     setActivePreset(idx);
     setFlashIdx(idx);
     setFieldFlash(true);
@@ -128,7 +137,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const panelResults      = layoutRegistry.map((layout, i) => ({ layout, result: computedResults[i] }));
   const panelResultsById  = panelResults.reduce((acc, p) => { acc[p.layout.id] = p; return acc; }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
-  const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.total)) : Infinity;
+  const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.stockPanels)) : Infinity;
 
   if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
     return (
@@ -164,6 +173,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
         </ControlPanel>
       </Stack>
+      {presetError && <p role="alert" className="input-error">{presetError}</p>}
       <CutListSheet list={printList} />
       <div id="data-preview" className="data-preview">
         <PreviewSection 
@@ -182,7 +192,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                 setOpen={v => setPanelOpen(s => ({ ...s, [id]: v }))}
                 onLargePreview={openLargePreview}
                 onPrint={() => setPrintList(buildCutList(panel.result, sh, panel.layout))}
-                isBest={panel.layout.includeInBest && panel.result.valid && panel.result.stats.total === best} />
+                isBest={panel.layout.includeInBest && panel.result.valid && panel.result.stats.stockPanels === best} />
             );
           })}
         </PreviewSection>
@@ -206,6 +216,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                           <span className="pw-preset-lbl-hide">Product Name</span>
                           <input
                             id={`mat-preset-name-${idx}`}
+                            aria-label={`Product name ${idx}`}
                             name={`mat-preset-name-${idx}`}
                             type="text"
                             className="num-input"
@@ -218,6 +229,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                           <span className="pw-preset-lbl-hide">Width mm</span>
                           <input
                             id={`mat-preset-wid-${idx}`}
+                            aria-label={`Product width ${idx}`}
                             name={`mat-preset-wid-${idx}`}
                             type="text"
                             inputMode="decimal"
@@ -231,6 +243,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                           <span className="pw-preset-lbl-hide">Length mm</span>
                           <input
                             id={`mat-preset-len-${idx}`}
+                            aria-label={`Product length ${idx}`}
                             name={`mat-preset-len-${idx}`}
                             type="text"
                             inputMode="decimal"
@@ -301,13 +314,13 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                         presets={presets} activePreset={activePreset} applyPreset={applyPreset}
                         fieldFlash={fieldFlash} setShowModal={setShowModal}
                       />
-                      <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
+                      <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} idPrefix="large-" />
                     </Stack>
 
                     {/* Column 2: Layout Engine (25%) */}
                     <ControlPanel id="control-settings-large" title="Layout Engine" open={true} noToggle className="u-hide-mobile">
                       <div className="panel-data">
-                        <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
+                        <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} idPrefix="large-" />
                       </div>
                     </ControlPanel>
 
@@ -328,12 +341,12 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                                 />
                                 <Row 
                                   label={sh.direction === "V" ? "Left column width" : "Top row width"} 
-                                  value={firstRow.h} 
+                                  value={firstRow?.h ?? "—"}
                                   unit="mm" 
                                 />
                                 <Row 
                                   label={sh.direction === "V" ? "Right column width" : "Bottom row width"} 
-                                  value={lastRow.h} 
+                                  value={lastRow?.h ?? "—"}
                                   unit="mm" 
                                 />
                               </>
@@ -355,7 +368,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   );
 }
 
-function LayoutSettings({ sh, setField, setSh, markStep }) {
+function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
   const { PPi, direction, minJ, startOff } = sh;
   const rowStart = sh.rowStart || "top";
   const psRaw = sh.patternStart;
@@ -370,9 +383,9 @@ function LayoutSettings({ sh, setField, setSh, markStep }) {
           <span className="ctrl-sublbl" style={{ fontSize: "var(--fs-lg)", fontWeight: "var(--fw-bold)" }}>Direction</span>
           <span className="ctrl-sublbl">Primary layout axis for the pattern preview.</span>
         </Stack>
-        <div id="ctrl-direction" className="seg-group" style={{ marginTop: "var(--sp-2)" }}>
+        <div id={`${idPrefix}ctrl-direction`} className="seg-group" style={{ marginTop: "var(--sp-2)" }}>
           {["V", "H"].map(s => (
-            <button key={s} className={"ctrl-dir " + (direction === s ? "on" : "")}
+            <button key={s} aria-label={s === "V" ? "Vertical" : "Horizontal"} aria-pressed={direction === s} className={"ctrl-dir " + (direction === s ? "on" : "")}
               onClick={() => { markStep("Switch direction"); setSh(st => {
                 const curDir = st.direction;
                 const rsKey  = curDir === "V" ? "rowStartV"     : "rowStartH";
@@ -394,7 +407,7 @@ function LayoutSettings({ sh, setField, setSh, markStep }) {
       <div style={{ padding: "var(--sp-3)", borderRadius: "14px", border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)", background: "color-mix(in srgb, var(--color-primary) 6%, transparent)" }}>
         <Stack gap={1} className="ctrl-lbl">
           <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
-          <div id="ctrl-row-order" className="seg-group">
+          <div id={`${idPrefix}ctrl-row-order`} className="seg-group">
             <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
               onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
               {direction === "V" ? "R1 Left" : "R1 top"}
@@ -407,7 +420,7 @@ function LayoutSettings({ sh, setField, setSh, markStep }) {
         </Stack>
         <Stack gap={1} className="ctrl-lbl" style={{ marginTop: "var(--sp-3)" }}>
           <span className="ctrl-sublbl">Layout Start</span>
-          <div id="ctrl-pattern-start" className="seg-group">
+          <div id={`${idPrefix}ctrl-pattern-start`} className="seg-group">
             {direction === "V" ? (
               <>
                 <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
@@ -426,8 +439,8 @@ function LayoutSettings({ sh, setField, setSh, markStep }) {
           </div>
         </Stack>
       </div>
-      <NumInput id="input-minJ"     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")} />
-      <NumInput id="input-startOff" label="R1 start point (mm)" value={startOff}
+      <NumInput id={`${idPrefix}input-minJ`}     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")} />
+      <NumInput id={`${idPrefix}input-startOff`} label="R1 start point (mm)" value={startOff}
         onChange={v => setField("startOff", v => Math.min(v, Math.max(1, PPi) - 1))(v)} min={0} />
     </Stack>
   );
@@ -441,11 +454,12 @@ function LargePreviewMaterialSpec({ sh, setSh, setMat, presets, activePreset, ap
       fieldFlash={fieldFlash} setShowModal={setShowModal}
       activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
       isLargePreview={true}
+      idPrefix="large-"
     />
   );
 }
 
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false, largePreviewOpen = false }) {
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false, largePreviewOpen = false, idPrefix = "" }) {
   const { PLa, PPi } = sh;
   const validPresets = presets.filter(p => p.name);
   
@@ -479,37 +493,39 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
   );
 
   return (
-    <ControlPanel id="control-material" title="Material Specification" noToggle>
+    <ControlPanel id={`${idPrefix}control-material`} title="Material Specification" noToggle>
       <Stack gap={3} className="ctrl-list">
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
           <NumInput
-            id="input-PLa"
+            id={`${idPrefix}input-PLa`}
             label="Width (mm)"
             labelIcon="arrow-h"
             value={PLa}
             onChange={setMat("PLa")}
             min={100}
             presetsOpen={activePresetDropdown === "wid"}
+            presetHoveredIndex={widHovered}
             onTogglePresets={() => setActivePresetDropdown(open => (open === "wid" ? null : "wid"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onWidKeyDown}
           />
-          {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="width" hoveredIndex={widHovered} />}
+          {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="width" inputId={`${idPrefix}input-PLa`} hoveredIndex={widHovered} />}
         </div>
         <div className={fieldFlash ? "num-input-flash" : ""} ref={lenWrapRef} style={{ position: "relative" }}>
           <NumInput
-            id="input-PPi"
+            id={`${idPrefix}input-PPi`}
             label="Length (mm)"
             labelIcon="arrow-v"
             value={PPi}
             onChange={setMat("PPi")}
             min={100}
             presetsOpen={activePresetDropdown === "len"}
+            presetHoveredIndex={lenHovered}
             onTogglePresets={() => setActivePresetDropdown(open => (open === "len" ? null : "len"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onLenKeyDown}
           />
-          {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" hoveredIndex={lenHovered} />}
+          {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" inputId={`${idPrefix}input-PPi`} hoveredIndex={lenHovered} />}
         </div>
         {!isLargePreview && typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
           <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
@@ -521,13 +537,13 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
   );
 }
 
-function SurfaceInputs({ sh, setSh, setSurf }) {
+function SurfaceInputs({ sh, setSh, setSurf, idPrefix = "" }) {
   const { W, H } = sh;
   return (
-    <ControlPanel id="control-surface" title="Inputs" noToggle>
+    <ControlPanel id={`${idPrefix}control-surface`} title="Inputs" noToggle>
       <Stack gap={3}>
-        <NumInput id="input-W" label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} />
-        <NumInput id="input-H" label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} />
+        <NumInput id={`${idPrefix}input-W`} label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} />
+        <NumInput id={`${idPrefix}input-H`} label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} />
       </Stack>
     </ControlPanel>
   );

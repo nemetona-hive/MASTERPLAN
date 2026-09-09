@@ -15,7 +15,7 @@ function S2Controls({ state, setState }) {
     <Stack direction="row" gap={2} className="ctrl-lbl">
       <span className="ctrl-sublbl">Offset (&times;PL)</span>
       <RangeSlider 
-        id="input-offset" 
+        id="input-offset" label="Pattern offset"
         min={0.1} 
         max={0.9} 
         step={0.05} 

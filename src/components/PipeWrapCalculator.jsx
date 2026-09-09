@@ -1,13 +1,14 @@
+import { useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
 import { NumInput, RangeSlider, Row, Section, Stack } from "../shared.jsx";
 
 const PRESETS = [100, 125, 160, 200];
 
 export function PipeWrapCalculator() {
-  const [pipeDiam, setPipeDiam] = React.useState("");
-  const [matThick, setMatThick] = React.useState("");
-  const [overlap, setOverlap] = React.useState("");
-  const [gap, setGap] = React.useState("");
+  const [pipeDiam, setPipeDiam] = useSessionState("PipeWrapCalculator.jsx:pipeDiam", "");
+  const [matThick, setMatThick] = useSessionState("PipeWrapCalculator.jsx:matThick", "");
+  const [overlap, setOverlap] = useSessionState("PipeWrapCalculator.jsx:overlap", "");
+  const [gap, setGap] = useSessionState("PipeWrapCalculator.jsx:gap", "");
 
   const d = parseFloat(pipeDiam) || 0;
   const t = parseFloat(matThick) || 0;
@@ -103,7 +104,7 @@ export function PipeWrapCalculator() {
                 <Stack direction="row" gap={3} className="pw-adj-row">
                   <span className="ctrl-sublbl pw-adj-label">Overlap / extra (mm)</span>
                   <RangeSlider
-                    id="input-overlap"
+                    id="input-overlap" label="Overlap in millimetres"
                     min={0} max={200} step={5} value={overlap}
                     className="pw-adj-range"
                     onChange={e => setOverlap(e.target.value)}
@@ -121,7 +122,7 @@ export function PipeWrapCalculator() {
                 <Stack direction="row" gap={3} className="pw-adj-row">
                   <span className="ctrl-sublbl pw-adj-label">Gap / cutout (mm)</span>
                   <RangeSlider
-                    id="input-gap"
+                    id="input-gap" label="Gap in millimetres"
                     min={0} max={200} step={5} value={gap}
                     className="pw-adj-range"
                     onChange={e => setGap(e.target.value)}
@@ -232,8 +233,10 @@ export function PipeWrapCalculator() {
 
           <div className="u-sticky u-sticky-top" style={{ marginTop: 'var(--sticky-offset)', top: '20px' }}>
             <div className="result-card">
+              <div className="result-card-primary">
               <span className="result-card-title">Final length needed</span>
               <span className="result-card-value">{(total / 10).toFixed(1)} cm</span>
+              </div>
               <span style={{fontFamily: 'var(--mono)', fontSize: 'var(--fs-sm)', color: 'var(--color-gray-opa80)'}}>
                 {total.toFixed(1)} mm
               </span>

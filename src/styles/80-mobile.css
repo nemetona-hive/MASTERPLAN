@@ -341,6 +341,18 @@
  * short, but it is not a phone on its side.
  */
 
+@media (max-width: 768px), (max-height: 500px) and (max-width: 950px) {
+  .app-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .header-logo { width: 100%; max-width: 13rem; height: auto; min-width: 0; }
+  .header-actions { position: static; translate: none; }
+  .disclosure, .result-card-print { --ctl-h: var(--ctl-h-touch); min-height: var(--ctl-h-touch); }
+}
+
 @media (max-height: 500px) and (max-width: 950px) {
 	/*
 	 * The logo bar wastes vertical space in landscape — the nav's HIVE label is
@@ -358,6 +370,8 @@
 	}
 
 	.app-head {
+		grid-template-columns: 1fr;
+    justify-items: end;
 		justify-content: flex-end;
 		padding: var(--sp-1) var(--sp-2);
 	}

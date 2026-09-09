@@ -83,9 +83,15 @@ describe("material presets on the symmetric layout page", () => {
     render(<Harness />);
 
     await user.click(screen.getByTitle("Presets"));
-    expect(document.activeElement).toBe(document.getElementById("input-sym-panel-width"));
+    const field = document.getElementById("input-sym-panel-width");
+    expect(document.activeElement).toBe(field);
+    expect(field).toHaveAttribute("role", "combobox");
+    expect(field).toHaveAttribute("aria-controls", "input-sym-panel-width-presets");
 
-    await user.keyboard("{ArrowDown}{Enter}");
+    await user.keyboard("{ArrowDown}");
+    expect(field).toHaveAttribute("aria-activedescendant", "input-sym-panel-width-preset-0");
+    expect(document.getElementById("input-sym-panel-width-preset-0")).toHaveAttribute("role", "option");
+    await user.keyboard("{Enter}");
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue(String(firstPreset.width));
     expect(screen.queryByText("Material Presets")).toBeNull();
   });

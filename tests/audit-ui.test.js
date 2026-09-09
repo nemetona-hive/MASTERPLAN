@@ -196,7 +196,8 @@ describe("audit-ui", () => {
 
   it("treats a class assembled from a template hole as reachable", () => {
     const gr = fs.readFileSync(path.join(ROOT, "src", "components", "GoldenRatio.jsx"), "utf8");
-    expect(gr).toContain("gr-control-card-${tone}");
+    const dynamicControlClass = ["gr-control-card-", "$", "{tone}"].join("");
+    expect(gr).toContain(dynamicControlClass);
     const out = run();
     for (const tone of ["a", "b", "c", "d"]) {
       expect(out, `gr-control-card-${tone}`).not.toContain(`.gr-control-card-${tone} has no reference`);

@@ -51,157 +51,7 @@
 	align-items: start;
 }
 
-@media (max-width: 1024px) {
-	.layout-split {
-		grid-template-columns: 1fr;
-		gap: var(--sp-4);
-		padding-bottom: 140px;
-	}
 
-	/* Move sticky result card to a sticky bottom bar on mobile */
-	.layout-split > *:nth-child(2) {
-		order: 10;
-		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		top: auto !important;
-		margin-top: 0 !important;
-		z-index: 100;
-		background: color-mix(in srgb, var(--color-darkblue-light) 85%, transparent);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		border-top: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-		box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
-		padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
-		border-radius: 16px 16px 0 0;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--sp-4);
-	}
-
-	.result-card {
-		box-shadow: none;
-		border: none;
-		padding: 0;
-		background: transparent;
-		flex: 1;
-		flex-direction: row !important;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--sp-3);
-	}
-
-	.result-card-title {
-		font-size: var(--fs-xs);
-		margin-bottom: 0;
-	}
-
-	.result-card-value {
-		font-size: var(--fs-xl);
-	}
-
-	/* Refine secondary result info on mobile sticky bar */
-	.result-card span:not(.result-card-title):not(.result-card-value) {
-		font-size: var(--fs-sm);
-		/* --text at 0.7 over --surface-1 measures 6.89:1 on graphite and
-		   6.04:1 on verdant. audit-ui: contrast-ok */
-		opacity: 0.7;
-	}
-
-	.result-card .result-card-footer {
-		margin-top: 0 !important;
-		padding-top: 0 !important;
-		border-top: none !important;
-	}
-
-	/* The bar is a fixed-width row, and a flex item's min-width defaults to
-	   auto — so a child wider than its share pushes the row out rather than
-	   shrinking, which is what clipped the Global Reset button off the right
-	   edge at 360px. */
-	.layout-split > *:nth-child(2) > *,
-	.result-card > * {
-		min-width: 0;
-	}
-
-	/* The exact figure is a second decimal reading of the number already shown
-	   beside it. It is the first thing to go when there is no room. */
-	/* Full width of the card: it is the card's one action, and a button that only
-   spans part of a column reads as sitting beside something that is not there. */
-.result-card-print {
-	width: 100%;
-	margin-top: var(--sp-3);
-	justify-content: center;
-}
-
-.result-card-note {
-		display: none;
-	}
-
-	/* Stacked under the headline on desktop; beside it here, with the rule
-	   turned on its side to keep the two stats legibly apart. */
-	.result-card-split {
-		margin-top: 0;
-		padding-top: 0;
-		border-top: none;
-		padding-left: var(--sp-3);
-		border-left: 1px solid color-mix(in srgb, var(--color-white) 15%, transparent);
-	}
-
-	.result-card-split .result-card-value {
-		font-size: var(--fs-xl);
-	}
-
-
-	/* Large preview modal should use a normal stacked flow on mobile */
-	.mp-modal-large .layout-split {
-		grid-template-columns: 1fr;
-		gap: var(--sp-4);
-		padding-bottom: 0;
-	}
-
-	.mp-modal-large .layout-split > *:nth-child(2) {
-		display: block !important;
-		flex-direction: column !important;
-		align-items: stretch !important;
-		justify-content: flex-start !important;
-		position: static !important;
-		top: auto !important;
-		left: auto !important;
-		right: auto !important;
-		bottom: auto !important;
-		margin-top: 0 !important;
-		z-index: auto !important;
-		background: transparent !important;
-		box-shadow: none !important;
-		border-radius: 0 !important;
-		padding: 0 !important;
-	}
-
-	.mp-modal-large .layout-split > * {
-		width: 100%;
-	}
-
-	.mp-modal-large .data-control,
-	.mp-modal-large .control-panel {
-		width: auto;
-		max-width: none;
-	}
-
-	.mp-modal-large .data-control {
-		display: none !important;
-	}
-
-	.mp-modal-large .data-preview {
-		flex: 1;
-	}
-
-	.result-card .result-card-footer-item {
-		display: none; /* Hide label-value pairs in footer on mobile to keep it compact */
-	}
-}
 
 /* There is deliberately no orientation split for `.mp-modal-large .data-preview`
    here. One used to sit at this spot, giving portrait a two-column grid of
@@ -252,7 +102,7 @@
 	letter-spacing: 0.1em;
 	/* audit-ui: contrast-ok — --brand at 0.9 over --surface-1 measures 7.57:1
 	   on graphite and 4.57:1 on verdant. */
-	opacity: 0.9;
+	opacity: 1;
 }
 
 .result-card-value {
@@ -500,4 +350,120 @@
 
 .data-row-danger {
   color: var(--danger) !important;
+}
+
+.result-card-primary { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+.result-card-print { width: 100%; justify-content: center; }
+@media (max-width: 1024px) {
+	.layout-split {
+		grid-template-columns: 1fr;
+		gap: var(--sp-4);
+		padding-bottom: calc(var(--result-bar-height, 160px) + var(--sp-4));
+	}
+
+	/* Move sticky result card to a sticky bottom bar on mobile */
+	.layout-split > *:nth-child(2) {
+		order: 10;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		top: auto !important;
+		margin-top: 0 !important;
+		z-index: 100;
+		background: color-mix(in srgb, var(--color-darkblue-light) 85%, transparent);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border-top: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+		box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
+		padding: var(--sp-2) var(--sp-3) calc(var(--sp-2) + env(safe-area-inset-bottom));
+    max-height: 45dvh;
+    overflow-y: auto;
+		border-radius: 16px 16px 0 0;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--sp-4);
+	}
+
+	.result-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    gap: var(--sp-2) var(--sp-3);
+  }
+  .result-card > * { min-width: 0; }
+  .result-card-title { font-size: var(--fs-xs); }
+  .result-card-value { font-size: var(--fs-xl); overflow-wrap: anywhere; }
+  .result-card-note, .result-card .result-card-footer-item { display: none; }
+  .result-card .result-card-footer { margin: 0; padding: 0; border: none; }
+  .result-card-split {
+    margin: 0;
+    padding: 0 0 0 var(--sp-3);
+    border-top: none;
+    border-left: 1px solid var(--edge);
+  }
+  .result-card-split .result-card-value { flex-wrap: wrap; font-size: var(--fs-xl); }
+  .result-card--concrete { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .result-card-print {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0;
+    justify-content: center;
+  }
+
+
+	/* Large preview modal should use a normal stacked flow on mobile */
+	.mp-modal-large .layout-split {
+		grid-template-columns: 1fr;
+		gap: var(--sp-4);
+		padding-bottom: 0;
+	}
+
+	.mp-modal-large .layout-split > *:nth-child(2) {
+		display: block !important;
+		flex-direction: column !important;
+		align-items: stretch !important;
+		justify-content: flex-start !important;
+		position: static !important;
+		top: auto !important;
+		left: auto !important;
+		right: auto !important;
+		bottom: auto !important;
+		margin-top: 0 !important;
+		z-index: auto !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		border-radius: 0 !important;
+		padding: 0 !important;
+	}
+
+	.mp-modal-large .layout-split > * {
+		width: 100%;
+	}
+
+	.mp-modal-large .data-control,
+	.mp-modal-large .control-panel {
+		width: auto;
+		max-width: none;
+	}
+
+	.mp-modal-large .data-control {
+		display: none !important;
+	}
+
+	.mp-modal-large .data-preview {
+		flex: 1;
+	}
+
+	.result-card .result-card-footer-item {
+		display: none; /* Hide label-value pairs in footer on mobile to keep it compact */
+	}
 }

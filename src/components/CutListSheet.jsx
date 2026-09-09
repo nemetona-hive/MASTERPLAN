@@ -103,28 +103,25 @@ export function CutListSheet({ list }) {
       </section>
 
       {panels.length > 0 && (
-        <section className="doc-sheet-block">
+        <section className="doc-sheet-block doc-sheet-block--table">
           <h2 className="doc-sheet-h2">Cuts</h2>
           <p className="doc-sheet-note">
-            One row per panel that has to be cut. Where a panel shows two pieces, both come
-            out of the same {mm(material.length)} mm panel — cut it once and keep the
-            remainder for the row named beside it.
+            One row per stock panel. Cut the listed pieces for their numbered rows.
+            Saw kerf and fitting allowance are not included; allow for them before cutting.
           </p>
           <table className="doc-sheet-table">
             <thead>
               <tr>
-                <th>Panel</th><th>Cut to</th><th>Goes in</th>
-                <th>Remainder</th><th>Goes in</th><th>Waste</th>
+                <th>Panel</th><th>Pieces to cut → row</th><th>Waste</th>
               </tr>
             </thead>
             <tbody>
               {panels.map(panel => (
                 <tr key={panel.id}>
                   <td className="cut-ref-cell">{panel.id}</td>
-                  <td>{mm(panel.cut.width)}</td>
-                  <td>Row {panel.cut.row}</td>
-                  <td>{panel.offcut ? mm(panel.offcut.width) : "—"}</td>
-                  <td>{panel.offcut ? `Row ${panel.offcut.row}` : "—"}</td>
+                  <td>{panel.pieces.map((piece, index) => (
+                    <div key={index}>{mm(piece.width)} mm → Row {piece.row}</div>
+                  ))}</td>
                   <td>{panel.waste > 0 ? mm(panel.waste) : "—"}</td>
                 </tr>
               ))}
@@ -133,7 +130,7 @@ export function CutListSheet({ list }) {
         </section>
       )}
 
-      <section className="doc-sheet-block">
+      <section className="doc-sheet-block doc-sheet-block--table">
         <h2 className="doc-sheet-h2">Rows</h2>
         <p className="doc-sheet-note">
           Pieces in the order they are laid, left to right. A letter marks a piece that

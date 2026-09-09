@@ -30,7 +30,8 @@ function parseHHMM(s) {
 // started at 00:00.
 export function parseTime(raw) {
   if (!raw || !raw.trim()) return null;
-  return parseHHMM(raw.trim().replace(',', '.'));
+  const minutes = parseHHMM(raw.trim().replace(',', '.'));
+  return minutes !== null && minutes < 24 * 60 ? minutes : null;
 }
 
 export function parseLunch(raw) {

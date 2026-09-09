@@ -265,18 +265,28 @@ const DEFAULT_CONCRETE_PRESETS = [
 const canSaveStaticDefaults = () =>
   typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
 
-async function saveStaticDefaults(key, value) {
-  const res = await fetch("/api/save-defaults", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key, value })
+// Serialise snapshots per resource so an older request cannot overwrite a later
+// edit. Capture the JSON now, not when an earlier request eventually completes.
+const defaultSaveQueues = new Map();
+function saveStaticDefaults(key, value) {
+  const body = JSON.stringify({ key, value });
+  const previous = defaultSaveQueues.get(key) || Promise.resolve();
+  const task = previous.catch(() => {}).then(async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch("/api/save-defaults", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body, signal: controller.signal
+      });
+      const response = await res.json();
+      if (!res.ok) throw new Error(response.error || "Could not save defaults");
+      return response;
+    } finally { clearTimeout(timer); }
   });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  return res.json();
+  defaultSaveQueues.set(key, task);
+  const cleanup = () => { if (defaultSaveQueues.get(key) === task) defaultSaveQueues.delete(key); };
+  task.then(cleanup, cleanup);
+  return task;
 }
 
 const SUMMARY_LABELS = {

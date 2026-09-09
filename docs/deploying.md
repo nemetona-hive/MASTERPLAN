@@ -110,7 +110,7 @@ When running the application locally, a specialized persistence mechanism allows
   - It binds `127.0.0.1` explicitly. Listening on every interface handed any
     machine on the network an unauthenticated write to `config.js`.
   - `isLocalRequest()` additionally requires a loopback `Host` and, when one is
-    sent, a loopback `Origin` — loopback alone still leaves the endpoint
+    sent, an `Origin` whose authority exactly matches `Host` — loopback alone still leaves the endpoint
     reachable from the user's own browser, so any page could post to it, and a
     DNS-rebinding host resolving to `127.0.0.1` would satisfy the bind. A
     *missing* `Origin` is allowed: browsers always send it on a cross-origin
@@ -118,8 +118,8 @@ When running the application locally, a specialized persistence mechanism allows
 - `safeSaveStaticDefaults(key, value)` in `shared.jsx` is what components call: it
   rejects rather than throwing when the hook is absent, which is the case on
   GitHub Pages, where there is no dev server behind the page.
-- The server **rewrites `config.js` in place** — a tracked source file — after
-  validating the payload. There is no backup snapshot, unlike MONEYFLOW's
+- The server validates a bounded JSON payload and the generated JavaScript, then
+  replaces tracked `config.js` with a flushed temporary file through an atomic rename. There is no backup snapshot, unlike MONEYFLOW's
   `_personal/.backups/`. Check `git diff config.js` after a save you did not
   intend.
 - Currently utilized by:
@@ -155,3 +155,19 @@ every button that can lose work. And the dev server's `saveStaticDefaults` is
 the one thing that writes to a tracked file: driving the app in a browser
 rewrites `DEFAULT_SH` in `config.js` with whatever you typed. Check
 `git status` after any browser session.
+
+
+## Draft lifetime and offline behaviour
+
+Calculator drafts stay in App memory during route navigation. Concrete, pipe wrap
+and timesheet use `useSessionState`; surface and symmetric dimensions already live
+in App. Reloading clears these drafts. This is not browser-storage autosave.
+The home page explains this lifetime. The offline banner tells users to keep the
+loaded window open: calculations work with loaded assets, but offline reopening
+is not supported and no service worker is installed.
+
+Local default saves are queued per resource with a 10-second request timeout.
+Errors receive visible feedback; automatic dimension saves offer Retry using the
+latest state. The local server serves an explicit public file set plus asset and
+vendor trees, rejects symlinks, caps JSON at 256 KiB, and validates enums and
+numeric bounds. This does not change which files GitHub Pages publishes.

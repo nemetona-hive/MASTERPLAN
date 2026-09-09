@@ -63,8 +63,10 @@
 	.doc-sheet {
 		display: block;
 		/* Padding, not margin: a margin on the printed root collapses into the
-		   page box and would move the first page only. */
-		padding: 6mm;
+		   page box and would move the first page only. The page margin already
+		   protects the final edge, so no trailing root padding — when a long table
+		   exactly filled its last page, that extra 6mm emitted a blank page after it. */
+		padding: 6mm 6mm 0;
 		background: #fff;
 		color: #111;
 		font-family: var(--sans, system-ui, sans-serif);
@@ -113,11 +115,17 @@
 		break-inside: avoid;
 	}
 
-	/* The rows table is the one section allowed to break: a long layout has more
-	   rows than a page holds, and forcing it whole would push the whole table to
-	   page two and leave page one half empty. */
-	.doc-sheet-block:last-of-type {
+	/* Long table sections are allowed to use the room left on the current page.
+	   Selecting them by purpose rather than position matters: a large Cuts table
+	   is not the last section, and treating it as indivisible pushed it wholesale
+	   to page two, leaving most of page one blank. */
+	.doc-sheet-block--table {
 		break-inside: auto;
+	}
+
+	.doc-sheet-block--table > .doc-sheet-h2,
+	.doc-sheet-block--table > .doc-sheet-note {
+		break-after: avoid;
 	}
 
 	.doc-sheet-h2 {
@@ -215,6 +223,11 @@
 	}
 
 	.cut-table--rows td:last-child { width: 100%; }
+
+	/* Keep long row lists compact enough that a final row and the legend do not
+	   orphan onto a page of their own. Type size and line-height stay unchanged;
+	   only the vertical cell breathing room is slightly tighter. */
+	.cut-table--rows td { padding-block: 1mm; }
 
 	/* ── Pieces ── */
 

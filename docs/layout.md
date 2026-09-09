@@ -155,3 +155,11 @@ is what makes the identity key sound — keep it that way.
   segments use it, because the `<g>` above them already handles selection
 - `RangeSlider` starts locked; distinguishes horizontal drag (slider) from vertical swipe (scroll) on mobile
 - Large Preview modal is optimized for mobile by hiding non-essential controls and prioritizing visualization and statistics.
+
+
+The mobile header uses separate grid cells for the wordmark and actions. Result
+cards group their primary title/value; concrete uses a two-column result grid
+with a separate print row. Fixed result bars account for safe-area padding and
+report their actual height through ResizeObserver to reserve scroll space.
+The observer is disconnected on route changes. Short landscape bars have a
+bounded, scrollable height.

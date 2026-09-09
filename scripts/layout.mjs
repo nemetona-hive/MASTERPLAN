@@ -39,20 +39,8 @@
  * change to layout, positioning, the control scale, a theme, or the print sheet.
  */
 
-import http from "node:http";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-
-const TYPES = {
-  ".html": "text/html", ".js": "text/javascript", ".css": "text/css",
-  ".png": "image/png", ".woff2": "font/woff2", ".ico": "image/x-icon",
-  ".webmanifest": "application/manifest+json", ".map": "application/json",
-  ".svg": "image/svg+xml"
-};
+import { startBrowserServer } from "./browser-server.mjs";
 
 const failures = [];
 /* `key` is what the finding is ABOUT — a class, a page — and `detail` is one
@@ -78,40 +66,13 @@ const ratio = (a, b) => {
 };
 const over = (fg, bg, alpha) => fg.map((c, i) => c * alpha + bg[i] * (1 - alpha));
 
-function startServer() {
-  const server = http.createServer((req, res) => {
-    const url = decodeURIComponent(req.url.split("?")[0]);
-
-    /* Answered, and deliberately a no-op.
-     *
-     * `canSaveStaticDefaults()` is a hostname check, and this server is on
-     * 127.0.0.1, so the app believes defaults are savable and posts them. A 404
-     * would make every run report a console error that says nothing about the
-     * page. Writing them would be far worse: that is the path that rewrites
-     * DEFAULT_SH in config.js, and a gate must never dirty the tree it checks.
-     * So it says yes and does nothing. */
-    if (url === "/api/save-defaults") {
-      res.writeHead(200, { "content-type": "application/json" });
-      return res.end('{"ok":true}');
-    }
-    let rel = url === "/" ? "index.html" : url.replace(/^\//, "");
-    const file = path.join(ROOT, rel);
-    if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-      res.writeHead(404); return res.end("not found");
-    }
-    res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream" });
-    fs.createReadStream(file).pipe(res);
-  });
-  return new Promise(resolve => server.listen(0, "127.0.0.1", () => resolve(server)));
-}
-
 const PAGES = ["home", "pattern-layout", "symmetric-layout", "concrete",
   "pipe-wrap", "golden-ratio", "guider", "timesheet"];
 
 const THEMES = ["graphite", "verdant"];
 
 async function run() {
-  const server = await startServer();
+  const server = await startBrowserServer();
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await chromium.launch();
 
@@ -281,7 +242,7 @@ async function run() {
      * The trap is a keydown handler, so only a real browser dispatching real
      * Tab presses can say whether focus stayed in. */
     await page.goto(`${base}/#pattern-layout`, { waitUntil: "load" });
-    await page.locator(".sys-head").first().click();
+    await page.locator(".sys-disclosure").first().click();
     await page.waitForTimeout(300);
     const expand = page.locator(".viz-expand-btn").first();
     if (await expand.count()) {

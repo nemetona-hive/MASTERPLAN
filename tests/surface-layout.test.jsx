@@ -105,7 +105,7 @@ describe("a layout panel's open state", () => {
       hoveredType={null} setHoveredType={() => {}} />);
     expect(document.querySelector(".panel-body")).toBeNull();
 
-    fireEvent.click(document.querySelector(".sys-head"));
+    fireEvent.click(document.querySelector(".sys-disclosure"));
     expect(document.querySelector(".panel-body")).toBeTruthy();
   });
 
@@ -116,7 +116,7 @@ describe("a layout panel's open state", () => {
         open={false} setOpen={v => seen.push(v)} />);
     expect(document.querySelector(".panel-body")).toBeNull();
 
-    fireEvent.click(document.querySelector(".sys-head"));
+    fireEvent.click(document.querySelector(".sys-disclosure"));
     // It asks rather than deciding: still shut until the caller says otherwise.
     expect(seen).toEqual([true]);
     expect(document.querySelector(".panel-body")).toBeNull();
@@ -132,7 +132,7 @@ describe("a layout panel's open state", () => {
     expect(document.querySelector(".panel-body")).toBeTruthy();
     expect(document.querySelector(".sys-head-toggle")).toBeNull();
 
-    fireEvent.click(document.querySelector(".sys-head"));
+    fireEvent.click(document.querySelector(".sys-disclosure"));
     expect(document.querySelector(".panel-body")).toBeTruthy();
   });
 });

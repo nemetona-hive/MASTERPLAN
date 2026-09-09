@@ -120,3 +120,22 @@ visitor loads, so `npm run deploy:check` cannot report a changed manifest as
 already live. `background_color`, `theme_color` and the `theme-color` meta tag
 are three copies of graphite's `--bg`; a test keeps all three in step with
 `themes.js`.
+
+
+The simulation now owns stock allocation (`stockPlan`). The cut-list model maps
+its row references into document order without reallocating pieces. A panel can
+supply more than two cuts, including S4 long and short pieces. The table lists
+all of them. Quantities exclude saw kerf and fitting allowances, explicitly stated
+on the document. Editing calculation inputs invalidates a previously staged
+print sheet so a later print cannot silently reuse the previous job.
+
+All four corner measurements must be supplied before a corner-based take-off is
+ready; explicit zero is valid. A partial product specification containing an
+invalid value also blocks printing.
+
+Long cut-list sections carry `.doc-sheet-block--table`: their heading and note
+stay with the first table rows, while the body may begin in the room remaining
+on the current page. Table headers repeat after a page break. Do not restore a
+position-based exception such as `:last-of-type`; the Cuts table can be long as
+well as the final Rows table, and making it indivisible leaves most of the first
+page blank.

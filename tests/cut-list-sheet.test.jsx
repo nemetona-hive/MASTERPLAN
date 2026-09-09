@@ -45,7 +45,15 @@ describe("the printed cut list", () => {
     const first = cuts.querySelectorAll("tr")[0];
     // Panel A: cut to 600 for row 1, the 200 left goes to row 2.
     expect([...first.querySelectorAll("td")].map(td => td.textContent))
-      .toEqual(["A", "600", "Row 1", "200", "Row 2", "—"]);
+      .toEqual(["A", "600 mm → Row 1200 mm → Row 2", "—"]);
+  });
+
+  it("marks both long tables as pageable print sections", () => {
+    render(<CutListSheet list={list()} />);
+    const sections = document.querySelectorAll(".doc-sheet-block--table");
+    expect(sections).toHaveLength(2);
+    expect([...sections].map(section => section.querySelector(".doc-sheet-h2").textContent))
+      .toEqual(["Cuts", "Rows"]);
   });
 
   it("marks a piece with the panel it was cut from", () => {

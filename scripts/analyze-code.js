@@ -17,13 +17,13 @@ function walk(dir, predicate, out = []) {
   return out;
 }
 
-const sourceFiles = walk(SRC, file => /\.(js|jsx)$/.test(file));
+const sourceFiles = walk(SRC, file => /\.(js|jsx|cjs)$/.test(file));
 const cssFiles = walk(path.join(SRC, "styles"), file => file.endsWith(".css"));
 const sourceSet = new Set(sourceFiles);
 const rel = file => path.relative(ROOT, file).replaceAll(path.sep, "/");
 const searchableFiles = [
-  ...walk(SRC, file => /\.(js|jsx)$/.test(file)),
-  ...walk(path.join(ROOT, "tests"), file => /\.(js|jsx)$/.test(file)),
+  ...walk(SRC, file => /\.(js|jsx|cjs)$/.test(file)),
+  ...walk(path.join(ROOT, "tests"), file => /\.(js|jsx|cjs)$/.test(file)),
   ...walk(path.join(ROOT, "scripts"), file => file.endsWith(".js")),
   path.join(ROOT, "config.js"),
   path.join(ROOT, "simulation.js"),

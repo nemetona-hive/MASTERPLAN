@@ -45,6 +45,9 @@
   toggle first and that close lands second and undoes it, which is how opening
   another field's list came to need two clicks. `tests/preset-dropdown.test.jsx`
   pins every part of this.
+  With presets enabled the field exposes the combobox pattern: `aria-expanded`
+  and `aria-controls` identify the list, and `aria-activedescendant` follows the
+  option walked with the arrow keys while DOM focus stays in the editable field.
 - `<SaveDefaultsButton status onClick errorMessage labels />` — renders nothing
   unless `canSaveStaticDefaults()`. `status` is `""|"saving"|"saved"|"error"`;
   pass `errorMessage` so the failure reason reaches a tooltip instead of only
@@ -88,6 +91,9 @@ Three things it does, each for a reason worth keeping:
   to avoid, reached another way.
 - **Parks focus on the panel**, which is why the panel carries `tabIndex={-1}`.
   It is also where the trap holds focus in a dialog with nothing focusable.
+- **Counts only rendered tab stops.** The large preview contains desktop-only
+  controls hidden by the mobile stylesheet; including them as the first or last
+  stop lets a mobile browser skip the trap boundary and leave the dialog.
 
 Escape and the scrim click both come from `useModeExit`, so the two ways of
 dismissing a dialog cannot drift apart. That replaced a hand-written
@@ -139,6 +145,9 @@ same rule stated twice.
     `document.querySelector` for a class that never existed, so the guard was
     dead for as long as it had been written — and a query during render reads
     the *previous* commit even when the selector is right.
+  - Modal copies use a `large-` ID prefix. The background fields still exist
+    behind the scrim, so reusing their IDs can send label and ARIA relationships
+    to the wrong copy even while keyboard focus is trapped.
   - **Mobile Optimization**: Hides secondary settings on mobile to maximize visualization space; enables horizontal scrolling for wide room layouts.
 - **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
 - `PanelSummary` — displays detailed statistics and counts for segments.

@@ -114,48 +114,19 @@ export function buildCutList(result, sh, layout) {
     }))
   }));
 
-  /*
-   * One entry per stock panel that had to be cut, with both halves and the
-   * rows they landed in.
-   *
-   * Built by walking the ROWS as printed rather than the simulation's own
-   * order, so "row 3" in this table is the row 3 on the sheet. A panel whose
-   * offcut was never placed — the last cut in a layout, or one whose remainder
-   * fell under the minimum joint — keeps a null `offcut` and states the waste,
-   * because "this one has no second half" is the answer somebody wants before
-   * they cut it, not after.
-   */
-  const byPanel = new Map();
-  for (const row of rows) {
-    for (const piece of row.pieces) {
-      if (!piece.panel) continue;
-      if (!byPanel.has(piece.panel)) {
-        byPanel.set(piece.panel, { id: piece.panel, cut: null, offcut: null });
-      }
-      const entry = byPanel.get(piece.panel);
-      const placed = { width: piece.width, row: row.number };
-      if (piece.kind === KINDS.cut) entry.cut = placed;
-      else if (piece.kind === KINDS.offcut) entry.offcut = placed;
-    }
-  }
-
-  // The LENGTH, because that is the axis a piece is cut along — see the note
-  // at the top of this file.
   const stock = mm(meta.PPi || (sh && sh.PPi) || 0);
-  const panels = [...byPanel.values()]
-    .filter(entry => entry.cut)
-    .map(entry => ({
-      ...entry,
-      stock,
-      /* What is left over once both placed halves are taken out of the stock
-         panel. A panel whose offcut was placed wastes only the saw kerf, which
-         this does not model and does not pretend to — the figure is the
-         material not placed anywhere, and it is 0 for a fully used panel. */
-      waste: stock > 0
-        ? mm(Math.max(0, stock - entry.cut.width - (entry.offcut ? entry.offcut.width : 0)))
-        : 0
-    }))
-    .sort((a, b) => a.cut.row - b.cut.row || a.id.localeCompare(b.id));
+  const plan = result.stockPlan;
+  if (!plan) return null;
+  const rowNumbers = new Map(rows.map(row => [row.sourceRow, row.number]));
+  const panels = plan.panels.map(panel => {
+    const pieces = panel.pieces.map(piece => ({
+      width: mm(piece.width), row: rowNumbers.get(piece.row), kind: piece.kind
+    }));
+    const cut = pieces.find(piece => piece.kind !== "offcut") || pieces[0];
+    return { id: panel.id, stock: mm(panel.stock), pieces, cut,
+      offcut: pieces.find(piece => piece.kind === "offcut") || null,
+      waste: mm(panel.waste) };
+  }).sort((a, b) => a.cut.row - b.cut.row || a.id.localeCompare(b.id));
 
   const count = kind => rows.reduce(
     (total, row) => total + row.pieces.filter(p => p.kind === kind).length, 0);
@@ -187,7 +158,7 @@ export function buildCutList(result, sh, layout) {
          had to be cut. An offcut is NOT bought — it is the other half of a
          panel already counted, and adding it is the double-count that turns a
          material order into an over-order. */
-      panelsToBuy: count(KINDS.full) + panels.length
+      panelsToBuy: plan.panelsToBuy
     },
     /* A gap is a hole the layout could not fill, and it prints. A cut list that
        quietly omitted them is a plan that does not fit the surface, carried to

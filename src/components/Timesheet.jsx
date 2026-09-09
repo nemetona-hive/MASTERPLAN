@@ -1,3 +1,4 @@
+import { useSessionState } from "../utils/session-state.js";
 import { React, useState } from "../react-globals.js";
 import { Icon, Stack, useDocHistory, useTimedState } from "../shared.jsx";
 import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
@@ -30,7 +31,7 @@ function calcRowResult(row) {
   const s     = parseTime(row.start);
   const e     = parseTime(row.end);
   const lunch = parseLunch(row.lunch);
-  const hasInput = row.start.trim() || row.end.trim();
+  const hasInput = row.start.trim() || row.end.trim() || row.lunch.trim();
 
   if (!hasInput) return { dur: '', dec: '', status: 'empty', mins: 0 };
 
@@ -50,12 +51,12 @@ function calcRowResult(row) {
 }
 
 export function SheetTimesheet() {
-  const [calcRows,    setCalcRows]    = useState(makeCalcRows);
+  const [calcRows,    setCalcRows]    = useSessionState("Timesheet.jsx:calcRows", makeCalcRows);
   const [activeRowId, setActiveRowId] = useState(null);
   const [copied,      setCopied]      = useTimedState(false, 1800);
   const [copyError,   setCopyError]   = useTimedState(false, 1800);
 
-  const nextCalcId = React.useRef(4);
+  const nextCalcId = React.useRef(Math.max(3, ...calcRows.map(row => row.id)) + 1);
   const startRefs  = React.useRef({});
 
   /* Undo for the buttons on this page. `nextCalcId` rides along in the
@@ -77,7 +78,8 @@ export function SheetTimesheet() {
 
   const calcResults   = calcRows.map(r => calcRowResult(r));
   const calcTotalMins = calcResults.reduce((s, r) => s + r.mins, 0);
-  const hasCalcTotal  = calcResults.some(r => r.status === 'ok');
+  const incomplete = calcResults.some(r => ['partial', 'error', 'warn'].includes(r.status));
+  const hasCalcTotal = !incomplete && calcResults.some(r => r.status === 'ok');
 
   // ── Calc actions ───────────────────────────────────────────────────────────
 
@@ -242,6 +244,7 @@ export function SheetTimesheet() {
                               <span className="pw-preset-lbl-hide">Start</span>
                               <input 
                                 id={`ts-start-${row.id}`}
+                            aria-label={`Start time ${row.id}`}
                                 name={`ts-start-${row.id}`}
                                 className="num-input ts-input" type="text" placeholder="9, 9:30, 0930"
                                 value={row.start}
@@ -255,6 +258,7 @@ export function SheetTimesheet() {
                               <span className="pw-preset-lbl-hide">End</span>
                               <input 
                                 id={`ts-end-${row.id}`}
+                            aria-label={`End time ${row.id}`}
                                 name={`ts-end-${row.id}`}
                                 className="num-input ts-input" type="text" placeholder="17, 17:30"
                                 value={row.end}
@@ -267,6 +271,7 @@ export function SheetTimesheet() {
                               <span className="pw-preset-lbl-hide">Lunch</span>
                               <input 
                                 id={`ts-lunch-${row.id}`}
+                            aria-label={`Lunch duration ${row.id}`}
                                 name={`ts-lunch-${row.id}`}
                                 className="num-input ts-input" type="text" placeholder=".30"
                                 value={row.lunch}
@@ -288,7 +293,7 @@ export function SheetTimesheet() {
                             </div>
                             <div className="ts-remove-wrap">
                               <span className="pw-preset-lbl-hide">&nbsp;</span>
-                              <button className="num-btn ts-remove ctl-ghost ctl-sm ctl-icon ctl-danger" tabIndex={-1}
+                              <button className="num-btn ts-remove ctl-ghost ctl-sm ctl-icon ctl-danger"
                                 aria-label="Remove row"
                                 onClick={() => removeCalcRow(row.id)}><Icon name="close" /></button>
                             </div>
@@ -327,11 +332,14 @@ export function SheetTimesheet() {
           {/* Sticky Result Column */}
           <div className="u-sticky u-sticky-top" style={{ marginTop: 'var(--sticky-offset)', top: '20px' }}>
             <div className="result-card">
+              <div className="result-card-primary">
               <span className="result-card-title">Total Hours</span>
               <span className="result-card-value">
                 {fmtHHMM(calcTotalMins) || "0:00"} <span className="result-card-val-sub">h</span>
               </span>
               
+              </div>
+              {incomplete && <span role="status" className="input-error">Incomplete total — check the entries.</span>}
               <div className="result-card-footer">
                 <div className="result-card-footer-item">
                   <span className="result-card-footer-lbl">Decimal time: </span>
@@ -342,6 +350,7 @@ export function SheetTimesheet() {
                   <button 
                     className={"ts-copy" + (copied ? " ts-copy--done" : "") + (copyError ? " ts-copy--error" : "")}
                     onClick={handleCopy}
+                    disabled={!hasCalcTotal}
                     style={{width: '100%', padding: '12px', fontSize: 'var(--fs-md)', borderRadius: '6px', textAlign: 'center'}}
                   >
                     {copied ? 'Copied!' : copyError ? 'Error' : 'Copy decimal'}

@@ -33,7 +33,9 @@
 	border-radius: 6px;
 	border: none;
 	background: transparent;
-	color: var(--color-gray);
+	/* Inactive labels still carry navigation meaning. --text-subtle landed on
+	   the rendered Verdant rail at 4.49:1; use the gated text token here. */
+	color: var(--text-muted);
 	text-align: left;
 	width: 100%;
 	position: relative;

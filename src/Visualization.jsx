@@ -358,12 +358,16 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
   return (
     <div id={"panel-" + layout.id} className="sys-block">
-      <div className="sys-head" onClick={noToggle ? undefined : () => setOpen(!isOpen)} style={noToggle ? { cursor: "default" } : {}}>
-        {!noToggle && <span className="sys-head-toggle"><Icon name={isOpen ? "chevron-down" : "chevron-right"} /></span>}
-        <h3 className="sys-title">
-          {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
-        </h3>
-        <span className="sys-head-sub">{layout.description}</span>
+      <div className="sys-head">
+        <button type="button" className="sys-disclosure disclosure ctl-ghost"
+          disabled={noToggle} aria-expanded={isOpen} aria-controls={`panel-${layout.id}-body`}
+          onClick={() => setOpen(!isOpen)}>
+          {!noToggle && <span className="sys-head-toggle"><Icon name={isOpen ? "chevron-down" : "chevron-right"} /></span>}
+          <span className="sys-title">
+            {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
+          </span>
+          <span className="sys-head-sub">{layout.description}</span>
+        </button>
         {/* The slot already stops propagation, which is what lets a control
             live inside a header whose own click toggles the panel. */}
         <div className="sys-head-actions" onClick={e => e.stopPropagation()}>
@@ -372,16 +376,17 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
               type="button"
               className="num-btn ctl-ghost ctl-sm ctl-icon"
               onClick={onPrint}
+              disabled={!result.rows.length || !result.stockPlan}
               title={`Cut list for ${layout.title} — opens the print dialog, where Save as PDF is`}
               aria-label={`Print the cut list for ${layout.title}`}>
               <Icon name="print" />
             </button>
           )}
-          <span className="sys-head-count">{result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
+          <span className="sys-head-count">{result.stats.stockPanels ?? result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
         </div>
       </div>
       {isOpen && (
-        <Stack className="panel-body" gap={2}>
+        <Stack id={`panel-${layout.id}-body`} className="panel-body" gap={2}>
           {layout.renderControls && React.createElement(layout.renderControls, { state: layout.getState(), setState: layout.setState })}
           {result.summaryRows.length > 0 && <PanelSummary rows={result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
           {result.rows.length > 0 && (

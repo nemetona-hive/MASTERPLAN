@@ -1,6 +1,9 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const vm = require('node:vm');
+const { randomUUID } = require('node:crypto');
+const { parseMeasurement } = require('../src/utils/measurements.cjs');
 
 const PORT = 3005;
 // Bind loopback only. /api/save-defaults writes straight to config.js and has
@@ -32,7 +35,8 @@ function isLocalRequest(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
   try {
-    return LOCAL_HOSTS.has(hostnameOf(new URL(origin).host));
+    const parsed = new URL(origin);
+    return ["http:", "https:"].includes(parsed.protocol) && parsed.host.toLowerCase() === String(req.headers.host).toLowerCase();
   } catch {
     return false;
   }
@@ -54,13 +58,18 @@ const DEFAULT_WRITES = {
 
 const toStringField = value => value == null ? "" : String(value);
 
-const toNumberOrBlank = value => {
-  if (value === "" || value === null || value === undefined) return "";
-  const n = Number(value);
-  if (!Number.isFinite(n)) {
-    throwValidationError(`Expected a number or empty string, got ${JSON.stringify(value)}`);
+const toNumberOrBlank = (value, min = 0, max = Number.MAX_SAFE_INTEGER) => {
+  const n = parseMeasurement(value);
+  if (n === null) return "";
+  if (!Number.isFinite(n) || n < min || n > max) {
+    throwValidationError(`Expected a decimal between ${min} and ${max}, or an empty field`);
   }
   return n;
+};
+const enumField = (value, choices, fallback) => {
+  if (value === undefined || value === "") return fallback;
+  if (!choices.includes(value)) throwValidationError("Invalid layout option");
+  return value;
 };
 
 function throwValidationError(message) {
@@ -70,7 +79,7 @@ function throwValidationError(message) {
 }
 
 function validateConcretePresets(value) {
-  if (!Array.isArray(value)) {
+  if (!Array.isArray(value) || value.length > 128) {
     throwValidationError("concretePresets must be an array");
   }
 
@@ -81,15 +90,15 @@ function validateConcretePresets(value) {
 
     return {
       name: toStringField(preset.name),
-      rate: toNumberOrBlank(preset.rate),
-      bagKg: toNumberOrBlank(preset.bagKg),
+      rate: toNumberOrBlank(preset.rate, 0.01),
+      bagKg: toNumberOrBlank(preset.bagKg, 0.01),
       bagPrice: toNumberOrBlank(preset.bagPrice)
     };
   });
 }
 
 function validateGoldenRatioDefaults(value) {
-  if (!Array.isArray(value)) {
+  if (!Array.isArray(value) || value.length > 128) {
     throwValidationError("goldenRatioDefaults must be an array");
   }
 
@@ -120,7 +129,7 @@ function validateGoldenRatioDefaults(value) {
 }
 
 function validateMaterialPresets(value) {
-  if (!Array.isArray(value)) {
+  if (!Array.isArray(value) || value.length > 128) {
     throwValidationError("materialPresets must be an array");
   }
 
@@ -131,8 +140,8 @@ function validateMaterialPresets(value) {
 
     return {
       name: toStringField(preset.name),
-      length: toNumberOrBlank(preset.length),
-      width: toNumberOrBlank(preset.width)
+      length: toNumberOrBlank(preset.length, 100, 8000),
+      width: toNumberOrBlank(preset.width, 100, 8000)
     };
   });
 }
@@ -142,17 +151,18 @@ function validateShDefaults(value) {
     throwValidationError("shDefaults must be an object");
   }
   return {
-    W: toNumberOrBlank(value.W),
-    H: toNumberOrBlank(value.H),
-    PPi: toNumberOrBlank(value.PPi),
-    PLa: toNumberOrBlank(value.PLa),
-    offset: toNumberOrBlank(value.offset),
-    direction: toStringField(value.direction),
-    rowStart: toStringField(value.rowStart),
-    rowStartH: toStringField(value.rowStartH),
-    rowStartV: toStringField(value.rowStartV),
-    patternStartH: toStringField(value.patternStartH),
-    patternStartV: toStringField(value.patternStartV),
+    W: toNumberOrBlank(value.W, 100, 50000),
+    H: toNumberOrBlank(value.H, 100, 50000),
+    PPi: toNumberOrBlank(value.PPi, 100, 8000),
+    PLa: toNumberOrBlank(value.PLa, 100, 8000),
+    offset: toNumberOrBlank(value.offset, 0.1, 0.9),
+    direction: enumField(value.direction, ["H", "V"], "H"),
+    rowStart: enumField(value.rowStart, ["top", "bottom"], "top"),
+    rowStartH: enumField(value.rowStartH, ["top", "bottom"], "top"),
+    rowStartV: enumField(value.rowStartV, ["top", "bottom"], "top"),
+    patternStartH: enumField(value.patternStartH, ["left", "right"], "left"),
+    patternStartV: enumField(value.patternStartV, ["top", "bottom"], "bottom"),
+    patternStart: enumField(value.patternStart, ["left", "right", "top", "bottom"], value.direction === "V" ? "bottom" : "left"),
     minJ: toNumberOrBlank(value.minJ),
     startOff: toNumberOrBlank(value.startOff),
     s4Long: toNumberOrBlank(value.s4Long)
@@ -164,8 +174,8 @@ function validateSymDefaults(value) {
     throwValidationError("symDefaults must be an object");
   }
   return {
-    roomWidth: toNumberOrBlank(value.roomWidth),
-    panelWidth: toNumberOrBlank(value.panelWidth),
+    roomWidth: toNumberOrBlank(value.roomWidth, 100, 50000),
+    panelWidth: toNumberOrBlank(value.panelWidth, 100, 8000),
     oneFullEdge: Boolean(value.oneFullEdge),
     customFirstPieceWidth: value.customFirstPieceWidth === null || value.customFirstPieceWidth === "" ? null : toNumberOrBlank(value.customFirstPieceWidth)
   };
@@ -235,101 +245,124 @@ function replaceConstant(source, constName, newValue) {
   if (endIdx === -1) return null;
 
   let formattedValue = JSON.stringify(newValue, null, 2);
-  // Strip quotes from object keys to look like standard JS
-  formattedValue = formattedValue.replace(/"([a-zA-Z0-9_]+)":/g, "$1:");
+
 
   return source.slice(0, braceIdx) + formattedValue + source.slice(endIdx + 1);
 }
 
-const server = http.createServer((req, res) => {
-  // API Endpoint for saving defaults
-  if (req.method === 'POST' && req.url === '/api/save-defaults') {
-    if (!isLocalRequest(req)) {
-      res.writeHead(403, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'save-defaults is available to local requests only' }));
-      return;
-    }
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body);
-        const { key, value } = payload;
 
-        if (!DEFAULT_WRITES[key]) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: `Unknown save key: ${key}` }));
+const MAX_BODY_BYTES = 256 * 1024;
+const PUBLIC_FILES = new Set(["index.html", "components.js", "components.js.map", "app.css",
+  "config.js", "simulation.js", "themes.js", "version.js", "manifest.webmanifest", "masterplan.ico"]);
+const MIME_TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css",
+  ".json": "application/json", ".map": "application/json", ".webmanifest": "application/manifest+json",
+  ".woff2": "font/woff2", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
+
+function writeFileAtomic(file, contents, io = fs) {
+  const temp = `${file}.${randomUUID()}.tmp`;
+  let descriptor, failure;
+  try {
+    descriptor = io.openSync(temp, "wx", io.statSync(file).mode & 0o777);
+    io.writeFileSync(descriptor, contents, "utf8");
+    io.fsyncSync(descriptor);
+    io.closeSync(descriptor);
+    descriptor = undefined;
+    io.renameSync(temp, file);
+    // Windows cannot open directories for fsync; rename still prevents a
+    // partially written source file being observed there.
+    if (process.platform !== "win32") {
+      const dir = io.openSync(path.dirname(file), "r");
+      try { io.fsyncSync(dir); } finally { io.closeSync(dir); }
+    }
+  } catch (err) { failure = err; }
+  finally {
+    try { if (descriptor !== undefined) io.closeSync(descriptor); } catch (err) { failure ||= err; }
+    try { io.unlinkSync(temp); } catch (err) { if (err.code !== "ENOENT") failure ||= err; }
+  }
+  if (failure) throw failure;
+}
+
+function createRequestHandler({ rootDir = ROOT_DIR, io = fs } = {}) {
+  const root = io.realpathSync(rootDir);
+  const reply = (res, code, payload) => {
+    res.writeHead(code, { "Content-Type": "application/json", "X-Content-Type-Options": "nosniff" });
+    res.end(JSON.stringify(payload));
+  };
+  return (req, res) => {
+    if (!isLocalRequest(req)) { reply(res, 403, { error: "Local requests only" }); return; }
+    if (req.method === "POST" && req.url === "/api/save-defaults") {
+      if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") {
+        reply(res, 415, { error: "Send application/json" }); return;
+      }
+      let size = 0, ended = false;
+      const chunks = [];
+      req.on("aborted", () => { ended = true; });
+      req.on("error", () => { if (!ended) { ended = true; reply(res, 400, { error: "Incomplete request" }); } });
+      req.on("data", chunk => {
+        if (ended) return;
+        size += chunk.length;
+        if (size > MAX_BODY_BYTES) {
+          ended = true;
+          reply(res, 413, { error: "Defaults exceed the 256 KiB request limit" });
           return;
         }
-
-        const constantName = DEFAULT_WRITES[key];
-        const validatedValue = DEFAULT_VALIDATORS[key](value);
-        const configPath = path.join(ROOT_DIR, 'config.js');
-        
-        let configData = fs.readFileSync(configPath, 'utf8');
-        
-        const newConfigData = replaceConstant(configData, constantName, validatedValue);
-        if (!newConfigData) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: `Could not parse constant ${constantName} in config.js` }));
-          return;
+        chunks.push(Buffer.from(chunk));
+      });
+      req.on("end", () => {
+        if (ended) return;
+        ended = true;
+        try {
+          let payload;
+          try { payload = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
+          catch { throwValidationError("Invalid JSON"); }
+          if (!payload || typeof payload !== "object" || Array.isArray(payload)) throwValidationError("Expected an object");
+          const { key, value } = payload;
+          if (!Object.hasOwn(DEFAULT_WRITES, key)) throwValidationError("Unknown save key");
+          const validated = DEFAULT_VALIDATORS[key](value);
+          const file = path.join(root, "config.js");
+          if (io.realpathSync(file) !== file) throwValidationError("Configuration must not be a symlink");
+          const next = replaceConstant(io.readFileSync(file, "utf8"), DEFAULT_WRITES[key], validated);
+          if (!next) throw new Error("Could not locate the defaults in config.js");
+          new vm.Script(next); // Never replace the previous valid source with invalid JavaScript.
+          writeFileAtomic(file, next, io);
+          reply(res, 200, { success: true, key });
+        } catch (err) {
+          reply(res, err.statusCode || 500, { error: err.statusCode ? err.message : "Could not save defaults. The previous file is retained if replacement did not complete." });
         }
-
-        fs.writeFileSync(configPath, newConfigData, 'utf8');
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, key, constantName }));
-      } catch (err) {
-        console.error("Save error:", err);
-        res.writeHead(err.statusCode || 500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-      }
-    });
-    return;
-  }
-
-  // Static File Serving
-  if (req.method === 'GET') {
-    // Strip query parameters
-    let requestUrl = req.url.split('?')[0];
-    let filePath = path.join(ROOT_DIR, requestUrl === '/' ? 'index.html' : requestUrl);
-    
-    // Prevent directory traversal attacks
-    if (!filePath.startsWith(ROOT_DIR)) {
-      res.writeHead(403);
-      res.end('Forbidden');
+      });
       return;
     }
-    
-    const ext = path.extname(filePath);
-    const mimeTypes = {
-      '.html': 'text/html',
-      '.js': 'text/javascript',
-      '.css': 'text/css',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpg',
-      '.svg': 'image/svg+xml'
-    };
-    
-    fs.readFile(filePath, (err, content) => {
-      if (err) {
-        if(err.code == 'ENOENT') {
-          res.writeHead(404);
-          res.end('File not found');
-        } else {
-          res.writeHead(500);
-          res.end('Server error: ' + err.code);
-        }
-      } else {
-        res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
-        res.end(content, 'utf-8');
+    if (!["GET", "HEAD"].includes(req.method)) { reply(res, 405, { error: "Method not allowed" }); return; }
+    try {
+      const url = decodeURIComponent(req.url.split("?")[0]);
+      if (!url.startsWith("/") || url.includes("\\") || url.includes("\0")) throwValidationError("Invalid path");
+      const file = path.resolve(root, "." + (url === "/" ? "/index.html" : url));
+      const relative = path.relative(root, file);
+      const parts = relative.split(path.sep);
+      if (!relative || path.isAbsolute(relative) || parts.some(part => part.startsWith(".")) ||
+          !(PUBLIC_FILES.has(relative) || ["assets", "vendor"].includes(parts[0]))) {
+        reply(res, 403, { error: "File is not public" }); return;
       }
-    });
-  }
-});
+      const real = io.realpathSync(file);
+      const realRelative = path.relative(root, real);
+      if (real !== file || realRelative.startsWith("..") || path.isAbsolute(realRelative) || !io.statSync(real).isFile()) {
+        reply(res, 403, { error: "File is not public" }); return;
+      }
+      const contents = io.readFileSync(real);
+      res.writeHead(200, { "Content-Type": MIME_TYPES[path.extname(real)] || "application/octet-stream",
+        "X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache" });
+      res.end(req.method === "HEAD" ? undefined : contents);
+    } catch (err) {
+      reply(res, err.code === "ENOENT" ? 404 : err instanceof URIError || err.statusCode ? 400 : 500,
+        { error: "File unavailable" });
+    }
+  };
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`Local dev server running at http://localhost:${PORT}/`);
-  console.log(`Ready to save static defaults for: ${Object.keys(DEFAULT_WRITES).join(', ')}`);
-});
+function startServer({ port = PORT, rootDir = ROOT_DIR } = {}) {
+  const server = http.createServer(createRequestHandler({ rootDir }));
+  server.listen(port, HOST, () => console.log(`Local dev server running at http://${HOST}:${server.address().port}/`));
+  return server;
+}
+if (require.main === module) startServer();
+module.exports = { createRequestHandler, startServer, writeFileAtomic, replaceConstant, DEFAULT_VALIDATORS, MAX_BODY_BYTES };

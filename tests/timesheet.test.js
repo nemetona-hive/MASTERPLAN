@@ -106,7 +106,7 @@ describe("parseTime and parseLunch share one parser", () => {
     expect(parseTime("2359")).toBe(1439);
     expect(parseTime("059")).toBe(59);     // 3 digits: single leading hour
     expect(parseTime("0:59")).toBe(59);
-    expect(parseTime("99")).toBe(5940);    // bare hours are not range-checked
+    expect(parseTime("99")).toBeNull();    // clocks must fit a day
   });
 });
 

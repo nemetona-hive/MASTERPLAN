@@ -6,17 +6,13 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
   const link = useLinkedCardHighlight("golden-ratio");
   const PHI = 1.6180339887499;
 
-  /* Only two of useTimedSet's four slots are read here. The set itself is
-     never rendered, so `flashCommit` currently records a commit nothing
-     draws — left as is rather than removed, because the flash is a missing
-     feature and not a stale name. */
-  const [, addCommittedId, , clearCommittedIds] = useTimedSet(600);
+  /* Enter and the apply button share the same short confirmation already used
+     by the other calculator fields. useTimedSet owns its timer cleanup. */
+  const [committedIds, addCommittedId] = useTimedSet(600);
 
   const flashCommit = id => {
     addCommittedId(id);
   };
-
-  React.useEffect(() => () => clearCommittedIds(), []);
 
   /* Undo for the two buttons on each card. The items live in App's state and
      are handed down, so the snapshot reads the prop and `apply` calls the
@@ -125,9 +121,10 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
                   <Stack className="panel-data" gap={3}>
                     <Stack gap={1} className="num-wrap">
                       <span className="num-lbl">{valueInputLabel}</span>
-                      <div className="num-row">
+                      <div className={"num-row" + (committedIds.has(item.id) ? " num-input-flash" : "")}>
                         <input
                           id={`input-base-number-field-${item.id}`}
+                            aria-label={`Base value ${item.id}`}
                           name={`input-base-number-field-${item.id}`}
                           className="num-input"
                           type="text"
@@ -141,6 +138,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
                         <button
                           type="button"
                           className="num-btn"
+                          aria-label={`Apply entry ${item.id}` }
                           onClick={() => commitBaseValue(item.id, true)}>
                           <Icon name="corner-down-left" />
                         </button>
@@ -151,6 +149,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
                       <div className="num-row">
                         <input
                           id={`input-base-label-suffix-${item.id}`}
+                            aria-label={`Entry label ${item.id}`}
                           name={`input-base-label-suffix-${item.id}`}
                           className="num-input gr-label-input"
                           type="text"
@@ -161,6 +160,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
                         <button
                           type="button"
                           className="num-btn"
+                          aria-label={`Apply entry ${item.id}` }
                           onClick={() => {
                             const input = document.getElementById(`input-base-label-suffix-${item.id}`);
                             if (input instanceof HTMLInputElement) input.blur();

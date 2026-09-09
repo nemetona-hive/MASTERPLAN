@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { clampNumber, safeSaveStaticDefaults, toNumber } from "../src/shared.jsx";
 
 // The number coercions guard every dimension field in the app: whatever a user
@@ -55,7 +55,10 @@ describe("safeSaveStaticDefaults", () => {
   it("rejects rather than throwing when the dev-server hook is absent", async () => {
     // saveStaticDefaults only exists when the local dev server served the page.
     // On GitHub Pages it does not, and a save attempt must not take the app down.
-    await expect(safeSaveStaticDefaults("materialPresets", []))
-      .rejects.toThrow("saveStaticDefaults is not available");
+    vi.stubGlobal("saveStaticDefaults", undefined);
+    try {
+      await expect(safeSaveStaticDefaults("materialPresets", []))
+        .rejects.toThrow("saveStaticDefaults is not available");
+    } finally { vi.unstubAllGlobals(); }
   });
 });

@@ -1,3 +1,4 @@
+import { SessionDraftContext } from "./utils/session-state.js";
 import { React, ReactDOM, useState } from "./react-globals.js";
 import { SheetConcrete } from "./components/Concrete.jsx";
 import { SheetGoldenRatio } from "./components/GoldenRatio.jsx";
@@ -108,6 +109,20 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
 }
 
 function App() {
+  const drafts = React.useRef(new Map());
+  const [defaultSaveError, setDefaultSaveError] = React.useState(null);
+  const [offline, setOffline] = React.useState(() => !navigator.onLine);
+  React.useEffect(() => {
+    const update = () => setOffline(!navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
+  }, []);
+  const saveDefaults = React.useCallback((key, value) => {
+    safeSaveStaticDefaults(key, value).then(() => {
+      setDefaultSaveError(current => current?.key === key ? null : current);
+    }).catch(err => setDefaultSaveError({ key, message: err.message || "Save failed" }));
+  }, []);
   const [page, setPageState]                = useState(getHashPage);
   
   // Track mobile state reactively — updates on resize/rotate
@@ -188,20 +203,34 @@ function App() {
   // Enter in any input commits by blurring the field (matches NumInput button intent)
   React.useEffect(() => {
     const onEnterCommit = e => {
-      if (e.key !== "Enter") return;
+      if (e.key !== "Enter" || e.defaultPrevented || e.isComposing) return;
       const target = e.target;
       if (!(target instanceof HTMLInputElement)) return;
       e.preventDefault();
       target.blur();
     };
-    window.addEventListener("keydown", onEnterCommit, true);
-    return () => window.removeEventListener("keydown", onEnterCommit, true);
+    window.addEventListener("keydown", onEnterCommit);
+    return () => window.removeEventListener("keydown", onEnterCommit);
   }, []);
 
   /* Undo inside a text field, replacing the native stack the app keeps
      truncating. One delegated listener covers every input in the app; see
      src/utils/field-undo.js for why it is not a hook. */
   React.useEffect(() => installFieldUndo(), []);
+
+  // Reserve the bar's measured height, including wrapping and safe-area padding.
+  React.useEffect(() => {
+    const bar = document.querySelector(".layout-split > :nth-child(2)");
+    if (!bar || typeof ResizeObserver === "undefined") return;
+    const measure = () => document.documentElement.style.setProperty("--result-bar-height",
+      `${getComputedStyle(bar).position === "fixed" ? bar.getBoundingClientRect().height : 0}px`);
+    const observer = new ResizeObserver(measure);
+    observer.observe(bar);
+    window.addEventListener("resize", measure);
+    measure();
+    return () => { observer.disconnect(); window.removeEventListener("resize", measure);
+      document.documentElement.style.removeProperty("--result-bar-height"); };
+  }, [page]);
 
   // Ctrl/Cmd+B toggles the sidebar — mobile gets its overlay menu instead
   React.useEffect(() => {
@@ -232,11 +261,9 @@ function App() {
       return;
     }
     if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
-      safeSaveStaticDefaults("shDefaults", sh).catch(err => {
-        console.error("Error saving pattern layouts defaults:", err);
-      });
+      saveDefaults("shDefaults", sh);
     }
-  }, [sh]);
+  }, [sh, saveDefaults]);
 
   const isInitialSym = React.useRef(true);
   React.useEffect(() => {
@@ -245,13 +272,12 @@ function App() {
       return;
     }
     if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
-      safeSaveStaticDefaults("symDefaults", sym).catch(err => {
-        console.error("Error saving symmetric layouts defaults:", err);
-      });
+      saveDefaults("symDefaults", sym);
     }
-  }, [sym]);
+  }, [sym, saveDefaults]);
 
   return (
+    <SessionDraftContext.Provider value={drafts.current}>
     <div id="app" className="app">
       <div id="app-head" className="app-head">
         <svg className="header-logo" viewBox="0 0 410.86 63.9" xmlns="http://www.w3.org/2000/svg"
@@ -286,6 +312,12 @@ function App() {
           </div>
         </div>
       </div>
+      {offline && <p role="status" className="app-status">You’re offline. Open calculators still work; keep this window open.</p>}
+      {defaultSaveError && <div role="alert" className="app-status">
+        <span>Defaults were not saved: {defaultSaveError.message}</span>
+        <button type="button" className="num-btn ctl-ghost" onClick={() => saveDefaults(defaultSaveError.key,
+          defaultSaveError.key === "shDefaults" ? sh : sym)}>Retry</button>
+      </div>}
       <div id="app-page" className={"app-page" + (mobileMenuOpen ? " nav-open" : "")}>
         <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpen}
           mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile} />
@@ -300,6 +332,7 @@ function App() {
         </main>
       </div>
     </div>
+    </SessionDraftContext.Provider>
   );
 }
 

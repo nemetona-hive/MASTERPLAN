@@ -18,8 +18,9 @@
     "perf:check": "node scripts/check-bundle-size.js",
     "style:check": "node scripts/check-style-contract.js",
     "analyze:code": "node scripts/analyze-code.js",
-    "verify": "npm test && npm run build && npm run perf:check && npm run style:check && npm run theme:check && npm run analyze:code && npm run audit:ui && npm run lint && npm run layout",
-    "icon": "node scripts/make-icon.js"
+    "verify": "npm test && npm run build && npm run perf:check && npm run style:check && npm run theme:check && npm run analyze:code && npm run audit:ui && npm run lint && npm run layout && npm run test:browser",
+    "icon": "node scripts/make-icon.js",
+    "test:browser": "node scripts/journeys.mjs"
   },
   "keywords": [],
   "author": "",
@@ -30,7 +31,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.6",
-    "esbuild": "0.28.0",
+    "esbuild": "0.28.2",
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",

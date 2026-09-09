@@ -66,6 +66,15 @@ describe("the golden ratio page", () => {
     expect(valueField("a").value).toBe("1000.46");
   });
 
+  it("confirms an explicit apply on the edited field", () => {
+    render(<Page />);
+    fireEvent.change(valueField("a"), { target: { value: "1000" } });
+    fireEvent.click(screen.getAllByLabelText("Apply entry a")[0]);
+
+    expect(valueField("a").closest(".num-row").className).toContain("num-input-flash");
+    expect(valueField("b").closest(".num-row").className).not.toContain("num-input-flash");
+  });
+
   it("carries a custom label into the value row", () => {
     render(<Page />);
     setValue("a", 1000);

@@ -1,3 +1,5 @@
+import { parseMeasurement } from "./measurements.cjs";
+
 /*
  * What a concrete pour needs, described once.
  *
@@ -33,12 +35,14 @@
  * answers 0 for both cannot. `ready` below depends on the distinction.
  */
 const num = value => {
-  if (value === "" || value === null || value === undefined) return 0;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
+  const n = parseMeasurement(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
 };
-
-const given = value => value !== "" && value !== null && value !== undefined;
+const given = value => parseMeasurement(value) !== null;
+const supplied = value => {
+  const parsed = parseMeasurement(value);
+  return Number.isFinite(parsed) && parsed >= 0;
+};
 
 /* Rounded where a figure is read rather than carried. Volume keeps three
    decimals because a cubic metre is a big unit and the third decimal is a
@@ -74,9 +78,11 @@ export function buildTakeOff(fields) {
      corner mode exists and is carried separately: a slab averaging 100mm across
      corners of 80/80/120/120 is a very different pour from a flat 100mm one,
      and the average alone cannot say so. */
-  const corners = [ca, cb, cc, cd].map(num);
-  const average = thickMode === "avg" ? num(avgH) : corners.reduce((a, b) => a + b, 0) / 4;
-  const difference = thickMode === "avg" ? null : Math.max(...corners) - Math.min(...corners);
+  const cornerFields = [ca, cb, cc, cd];
+  const cornersComplete = cornerFields.every(supplied);
+  const corners = cornerFields.map(value => supplied(value) ? num(value) : null);
+  const average = thickMode === "avg" ? num(avgH) : (cornersComplete ? corners.reduce((a, b) => a + b, 0) / 4 : 0);
+  const difference = thickMode === "avg" || !cornersComplete ? null : Math.max(...corners) - Math.min(...corners);
 
   const volume = area * (average / 1000);
   // Consumption is stated per m² per mm, so the thickness goes in as mm here
@@ -93,11 +99,22 @@ export function buildTakeOff(fields) {
   const price = num(bagPrice);
   const total = toBuy > 0 && price > 0 ? toBuy * price : null;
 
+  const areaReady = areaMode === "dims" ? supplied(lenMm) && supplied(widMm) : supplied(areaManual);
+  const thicknessReady = thickMode === "avg" ? supplied(avgH) : cornersComplete;
+  const productValid = [rate, bagKg, bagPrice].every(value => !given(value) || supplied(value)) &&
+    (!given(bagKg) || num(bagKg) > 0);
+  const ready = areaReady && thicknessReady && productValid && area > 0 && average > 0 &&
+    [area, average, volume, mass, exact, toBuy].every(Number.isFinite) && (total === null || Number.isFinite(total));
+
   return {
+    issue: ready ? null : thickMode === "corners" && !cornersComplete
+      ? "Enter all four corner measurements. Enter 0 explicitly for a zero-thickness corner."
+      : !productValid ? "Correct the product measurements before printing."
+      : "Enter a valid area and thickness to finish the estimate.",
     /* Enough to be worth printing. Area and thickness alone give a volume,
        which is a real answer even with no product chosen — somebody ordering
        ready-mix wants the m³ and nothing else on this page. */
-    ready: area > 0 && average > 0,
+    ready,
 
     area: {
       value: round(area, 2),

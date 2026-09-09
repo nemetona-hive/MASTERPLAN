@@ -173,3 +173,16 @@ same thing would be a cost with no reader.
 [{ id, value, suffix, saved, savedCommitted }]
 // id = "a"|"b"|"c"|"d", PHI = 1.6180339887499
 ```
+
+
+## Calculation boundaries
+
+`simulation.js` supplies a `stockPlan` along with layout geometry. Screen order
+counts and `buildCutList` consume that same allocation. S4 packs cut pieces in
+descending size into the first stock panel that fits; it is a bounded heuristic,
+not a promise of globally optimal cutting. Each simulation is limited to 5,000
+estimated segments and 2,000 per axis before allocating geometry.
+
+`utils/measurements.cjs` is the small shared browser/server decimal parser:
+blank is missing, malformed or non-finite is invalid, and comma decimals are
+accepted. Explicit zero remains distinct from an unmeasured concrete corner.

@@ -21,6 +21,7 @@ html, body, #root {
 }
 
 :root {
+  --result-bar-height: 160px;
 	/* Semantic Theme Tokens */
 	--bg: #161718;
 	--surface-1: #1e2023;
@@ -296,10 +297,6 @@ input[type=range] {
 	background: transparent;
 	cursor: pointer;
 	height: 20px;
-}
-
-input[type=range]:focus {
-	outline: none;
 }
 
 /* Track */
