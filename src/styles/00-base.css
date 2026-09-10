@@ -31,20 +31,21 @@ html, body, #root {
 	--border-strong: #586069;
 
 	--text: #e1e3e6;
-	--text-muted: #a0a7af;
-	--text-subtle: #889399;
+	--text-muted: #bec2c8;
+	--text-subtle: #98a1a5;
 
 	--brand: #d4c07a;
-	--accent: #7e9fa8;
+	--accent: #84a4ac;
 	--accent-2: #7a8a92;
 
 	--success: #73b381;
 	--warning: #c4a04a;
-	--danger: #eb737b;
+	--danger: #ed7d85;
+	--opus-section: #7e9fa8;
 
 	/* System & Visualization Tokens */
 	--sys-s0: #d4c07a;
-	--sys-s1: #7e9fa8;
+	--sys-s1: #84a4ac;
 	--sys-s2: #8d969e;
 	--sys-s3: #84b782;
 	--sys-s4: #b592d6;
@@ -77,6 +78,14 @@ html, body, #root {
 
 	--edge: color-mix(in srgb, var(--text) 20%, transparent);
 	--btn-radius: 8px;
+	/* The rail and header share MONEYFLOW's glass treatment. These are derived
+	   from the semantic surface tokens, so both MASTERPLAN themes inherit it
+	   without carrying another palette. */
+	--glass-blur: 16px;
+	--surface-glass-1: color-mix(in srgb, var(--surface-1) 72%, transparent);
+	--surface-glass-2: color-mix(in srgb, var(--surface-2) 78%, transparent);
+	--pane-divider: color-mix(in srgb, var(--text-subtle) 50%, transparent);
+	--ring-soft: inset 0 0 0 1px var(--edge);
 
 	/* Composed elevation */
 	--sh-1: 0 1px 2px rgb(var(--shadow-rgb) / 45%);
@@ -152,11 +161,12 @@ html, body, #root {
 	--color-gray-opa10: color-mix(in srgb, var(--text-muted) 10%, transparent);
 
 	/* Dividers */
-	--divider-subtle: color-mix(in srgb, var(--text-muted) 12%, transparent);
-	--divider: color-mix(in srgb, var(--border) 70%, transparent);
+	--divider-subtle: color-mix(in srgb, var(--text) 12%, transparent);
+	--divider: color-mix(in srgb, var(--text) 16%, transparent);
 
 	--mono:        'JetBrains Mono', monospace;
 	--sans:        'IBM Plex Sans', sans-serif;
+	--font-ui:     'Inter', 'IBM Plex Sans', sans-serif;
 	--row-h:       33px;
 
 	/* Typography scale */
@@ -187,6 +197,7 @@ html, body, #root {
 
 	/* Nav collapsed width */
 	--nav-collapsed-w: 60px;
+	--nav-open-w: 260px;
 
 	/* Spacing scale */
 	--sp-05: 2px;
@@ -261,33 +272,12 @@ body {
 
 button {
 	cursor: pointer;
-	font-family: var(--sans);
 	position: relative;
-	overflow: hidden;
-	transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.18s ease;
-	transform: translateZ(0);
+	transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
-button::after {
-	content: "";
-	position: absolute;
-	inset: -35%;
-	border-radius: inherit;
-	background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 40%, transparent) 0%, transparent 62%);
-	opacity: 0;
-	transform: scale(0.6);
-	pointer-events: none;
-	transition: opacity 0.18s ease, transform 0.22s ease;
-}
-
-button:active {
-	transform: translateY(1px) scale(0.98);
-	filter: brightness(1.06);
-}
-
-button:active::after {
-	opacity: 1;
-	transform: scale(1);
+button:active:not(:disabled) {
+	transform: translateY(1px);
 }
 
 input[type=range] {

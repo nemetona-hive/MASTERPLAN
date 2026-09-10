@@ -23,14 +23,15 @@ const navButtons = () =>
   Array.from(document.querySelectorAll("#side-navi .nav-items .nav-btn"));
 
 describe("AppNav", () => {
-  it("renders one button per page, Home included despite noNav", () => {
-    // home carries noNav so it never shows as an ordinary item elsewhere, but
-    // the nav special-cases it: collapsed, the HIVE label is disabled, and this
-    // is the only way back to the home page.
+  it("keeps Home out of the ordinary list", () => {
+    // Expanded, HIVE is the Home action. Collapsed, a dedicated home icon takes
+    // over. Keeping Home out of the regular list prevents a duplicate current
+    // state and matches MONEYFLOW's rail structure.
     render(<AppNav {...props()} />);
     const labels = navButtons().map(b => b.textContent);
-    for (const pg of PAGES) expect(labels.join("|")).toContain(pg.label);
-    expect(navButtons()).toHaveLength(PAGES.length);
+    for (const pg of PAGES.filter(pg => !pg.noNav)) expect(labels.join("|")).toContain(pg.label);
+    expect(labels.join("|")).not.toContain(PAGES.find(pg => pg.id === "home").label);
+    expect(navButtons()).toHaveLength(PAGES.filter(pg => !pg.noNav).length);
   });
 
   it("navigates on click", async () => {
@@ -119,13 +120,14 @@ describe("AppNav", () => {
   });
 
   describe("collapsing", () => {
-    it("marks the nav collapsed and disables the HIVE label", () => {
+  it("marks the nav collapsed and disables the HIVE label", () => {
       // Collapsed, the label shrinks to zero width and sits under the toggle
       // icon; leaving it enabled makes a click near the icon navigate home as a
       // side effect of trying to expand.
       const { container } = render(<AppNav {...props({ navOpen: false })} />);
-      expect(container.querySelector("#side-navi").className).toContain("nav-collapsed");
-      expect(container.querySelector(".nav-toggle-label")).toBeDisabled();
+    expect(container.querySelector("#side-navi").className).toContain("nav-collapsed");
+    expect(container.querySelector(".nav-toggle-label")).toBeDisabled();
+	    expect(container.querySelector(".nav-home-btn")).toHaveAttribute("aria-current", "page");
     });
 
     it("leaves the label live when expanded", async () => {

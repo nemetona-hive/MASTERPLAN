@@ -15,6 +15,7 @@ const ICONS = {
   // Collapse / Expand toggles
   "chevron-down": "fa-solid fa-chevron-down",     // Section open
   "chevron-right": "fa-solid fa-chevron-right",    // Section closed
+  "chevron-left": "fa-solid fa-chevron-left",      // Sidebar collapse
   "maximize": "fa-solid fa-expand",
   "minimize": "fa-solid fa-compress",
 

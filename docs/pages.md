@@ -26,10 +26,10 @@ deliberately stops at both ends rather than wrapping.
 Collapsed-nav tooltips mount
 into `document.body` via a portal on hover/focus rather than sitting inside
 `.nav` — that container is `overflow-y: auto`, and a tooltip parked inside it
-either clips or forces the sidebar itself into horizontal scroll. The
-collapsed header disables click-to-home (Home stays reachable via its own
-nav item, which renders in every state) since the header shrinks to just the
-toggle icon but the div still spans the full strip.
+either clips or forces the sidebar itself into horizontal scroll. Home stays
+out of the ordinary list: HIVE is the expanded Home action, while the collapsed
+rail renders its own icon-only Home button. This preserves one current-page mark
+in either state and keeps the header toggle independent of navigation.
 
 ## Page components
 

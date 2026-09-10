@@ -274,12 +274,18 @@
 .page-main {
 	flex: 1;
 	overflow: hidden;
+	/* Match MONEYFLOW's scroll-container contract: a flex child's automatic
+	   min-width is its content width, which can push the shell wider instead of
+	   letting its owned scroller contain that width. */
+	min-width: 0;
 	background: var(--color-darkblue-light);
 }
 
 .page-side {
 	flex-shrink: 0;
-	border-right: 1px solid var(--color-darkblue);
+	/* The nav owns this seam as an inset so it stays aligned while its width
+	   animates between the open and collapsed rails. */
+	border-right: none;
 	overflow: visible;
 }
 
@@ -367,9 +373,4 @@
   color: var(--text);
   background: var(--surface-1);
   font-size: var(--fs-sm);
-}
-.session-note {
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-  text-align: center;
 }

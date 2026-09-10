@@ -136,9 +136,11 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
   const navRef = React.useRef(null);
   const isNavCollapsed = !mobile && !navOpen;
 
-  /* home is the one page that opts out of the ordinary list and still appears:
-     collapsed, the HIVE label is disabled, so its own item is the way back. */
-  const navItems = PAGES.filter(pg => !pg.noNav || pg.id === "home");
+  /* Home is represented by the HIVE header while expanded and by its own
+     icon-only control while collapsed. Keeping it out of this ordinary list
+     matches MONEYFLOW and prevents two simultaneous "you are here" marks. */
+  const homeItem = PAGES.find(pg => pg.id === "home");
+  const navItems = PAGES.filter(pg => !pg.noNav);
 
   const handleToggle = () => {
     if (mobile) {
@@ -170,9 +172,8 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
             HIVE label goes to zero width, so a click near the icon would
             otherwise fire setPage("home") as a side effect of trying to
             toggle. The label button is disabled when collapsed for that
-            reason, which also takes it out of the tab order; Home stays
-            reachable as its own item in the list below, which renders in
-            every state. */}
+            reason, which also takes it out of the tab order. The dedicated
+            Home icon immediately below takes over in the collapsed rail. */}
         <div className={"nav-section nav-toggle" + (page === "home" && !isNavCollapsed ? " active" : "")}>
           {/* Two separate controls, not one nested inside the other: a
               role="button" wrapping another role="button" is two overlapping
@@ -197,9 +198,21 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
             aria-expanded={mobile ? mobileMenuOpen : navOpen}
             title={mobile ? undefined : (navOpen ? "Collapse sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)")}
           >
-            <Icon name="panel-left-close" />
+            <Icon name={mobile ? "panel-left-close" : (navOpen ? "chevron-left" : "chevron-right")} />
           </button>
         </div>
+
+        {isNavCollapsed && homeItem && (
+          <button
+            type="button"
+            className={"nav-home-btn" + (page === "home" ? " active" : "")}
+            aria-label="Go to home"
+            aria-current={page === "home" ? "page" : undefined}
+            onClick={() => setPage("home")}
+          >
+            <Icon name={homeItem.icon} />
+          </button>
+        )}
 
         {/* Main nav items */}
         {/* No role="menubar". These are links to pages, not commands in an
@@ -249,4 +262,3 @@ function NavBuildStamp({ navOpen, mobile }) {
     </div>
   );
 }
-
