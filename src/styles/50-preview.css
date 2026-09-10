@@ -135,18 +135,16 @@
 	padding: 4px 10px;
 }
 
-/* An open layout is one detail region, not a loose continuation of the
-   surrounding data rows. The surface and two dividers give it a boundary
-   without returning to the former card treatment. */
+/* The open detail begins at the header's accent threshold. It keeps the
+   hierarchy legible without adding a card edge around the data itself. */
 .data-preview .sys-block-open .sys-head {
-	border-bottom: 1px solid var(--divider);
+	border-bottom: 2px solid var(--accent);
 }
 
 .data-preview .sys-block-open .panel-body {
-	margin-top: var(--sp-2);
+	margin-top: 0;
 	padding: var(--sp-4) var(--sp-3);
 	background: var(--surface-1);
-	border-top: 1px solid var(--divider);
 	border-bottom: 1px solid var(--divider);
 }
 

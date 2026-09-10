@@ -1573,14 +1573,13 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .data-preview .sys-block-open .sys-head {
-	border-bottom: 1px solid var(--divider);
+	border-bottom: 2px solid var(--accent);
 }
 
 .data-preview .sys-block-open .panel-body {
-	margin-top: var(--sp-2);
+	margin-top: 0;
 	padding: var(--sp-4) var(--sp-3);
 	background: var(--surface-1);
-	border-top: 1px solid var(--divider);
 	border-bottom: 1px solid var(--divider);
 }
 
