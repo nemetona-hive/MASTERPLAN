@@ -203,8 +203,8 @@ const DEFAULT_SH = {
 const DEFAULT_SYM = {
   roomWidth: 2500,
   panelWidth: 300,
-  oneFullEdge: true,
-  customFirstPieceWidth: null
+  oneFullEdge: false,
+  customFirstPieceWidth: 0
 };
 
 const DEFAULT_GR = [

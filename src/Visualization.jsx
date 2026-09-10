@@ -174,22 +174,42 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
 
   // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {
+    const segments = result.rows[0].segs;
+    const edgeLegend = result.meta.oneFullEdge
+      ? [
+        ...(result.meta.firstPieceWidth > 0
+          ? [["First piece", `${fmt.mm(result.meta.firstPieceWidth)}mm`, "color-edge"]]
+          : []),
+        ...(result.meta.edgeWidth > 0
+          ? [["Last piece", `${fmt.mm(result.meta.edgeWidth)}mm`, "color-edge"]]
+          : [])
+      ]
+      : [["Edge piece", `${fmt.mm(result.meta.edgeWidth)}mm`, "color-edge"]];
     return (
-      <div className="strip">
-        {result.rows[0].segs.map((seg, i) => {
+      <div className="strip-visual">
+        <div className="strip">
+        {segments.map((seg, i) => {
           const wp = seg.w / result.meta.roomWidth * 100;
           const segClass = seg.type === "edge" ? "color-edge" : "color-sys1";
           const isDimmed = hoveredType && seg.type === hoveredType;
           return (
             <div key={i} className={"strip-seg " + segClass + (isDimmed ? " seg-highlight" : "")}
-              title={`${fmt.decimal(seg.w)}mm`} style={{ width: `${wp}%` }}>
-              {wp > 5 && <span className="strip-seg-lbl">{fmt.mm(seg.w)}</span>}
-            </div>
+              title={`${fmt.decimal(seg.w)}mm`} style={{ width: `${wp}%` }} />
           );
         })}
+        </div>
+        <div className="strip-measurements" aria-label="Piece widths">
+          {segments.map((seg, i) => {
+            const wp = seg.w / result.meta.roomWidth * 100;
+            return (
+              <div key={i} className="strip-measurement" style={{ width: `${wp}%` }}>
+                <span aria-label={`${fmt.decimal(seg.w)} millimetres`}>{fmt.mm(seg.w)}</span>
+              </div>
+            );
+          })}
+        </div>
         <Stack direction="row" gap={3} className="strip-legend strip-legend-mt">
-          {[["Edge piece", `${fmt.mm(result.meta.edgeWidth)}mm`, "color-edge"],
-            ["Full panel", `${result.meta.panelWidth}mm`, "color-sys1"]].map(([label, value, color]) => (
+          {[...edgeLegend, ["Full panel", `${result.meta.panelWidth}mm`, "color-sys1"]].map(([label, value, color]) => (
             <div key={label} className="strip-legend-item">
               <div className={"strip-legend-dot " + color} />
               <span className="strip-legend-lbl">{label} ({value})</span>

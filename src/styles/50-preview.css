@@ -148,6 +148,13 @@
 	border-bottom: 1px solid var(--divider);
 }
 
+.data-preview .strip-visual {
+	min-width: 0;
+}
+
+/* The colour band is deliberately free of numbers. The measured row below
+   shares each segment's percentage width, so the length stays attached to the
+   material it describes without needing an opaque label over the finish. */
 .data-preview .strip {
 	display: flex;
 	height: 38px;
@@ -157,9 +164,6 @@
 }
 
 .data-preview .strip-seg {
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	border-right: 0.5px solid color-mix(in srgb, var(--color-darkblue) 15%, transparent);
 	overflow: hidden;
 	flex-shrink: 0;
@@ -169,20 +173,37 @@
 	box-shadow: inset 0 0 0 1.5px var(--color-white);
 }
 
-.data-preview .strip-seg-lbl {
+.data-preview .strip-measurements {
+	display: flex;
+	margin-top: var(--sp-2);
+	border-top: 1px solid var(--divider);
+	min-width: 0;
+}
+
+.data-preview .strip-measurement {
+	position: relative;
+	flex-shrink: 0;
+	padding-top: var(--sp-2);
+	overflow: hidden;
+	text-align: center;
+	white-space: nowrap;
+	color: var(--text-muted);
+}
+
+.data-preview .strip-measurement::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 1px;
+	height: var(--sp-2);
+	background: var(--divider);
+}
+
+.data-preview .strip-measurement span {
 	font-family: var(--mono);
-	font-size: var(--fs-md);
-	/* A chip, not bare text on the segment.
-	   --color-white is --text, which flips with the theme while the segment
-	   fill stays mid-tone — so the label always landed near its ground's
-	   lightness: 2.20:1 on graphite, 3.32:1 on verdant, over --accent. No
-	   single ink can serve both, because the fill is not a theme colour. Giving
-	   the number its own opaque ground puts it back on a gated pair (--text on
-	   --surface-1) whatever the segment underneath it is. */
-	color: var(--text);
-	background: var(--surface-1);
-	padding: 1px var(--sp-1);
-	border-radius: 4px;
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-med);
 }
 
 .data-preview .strip-legend {

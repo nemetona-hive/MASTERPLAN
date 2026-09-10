@@ -254,6 +254,12 @@ describe("computeS0", () => {
     // lands at the far end.
     expect(result.rows[0].segs[0].type).toBe("full");
   });
+
+  it("keeps a custom first piece distinct from a zero final remainder", () => {
+    const result = computeS0({ roomWidth: 2500, panelWidth: 300, oneFullEdge: true, customFirstPieceWidth: 100 });
+    expect(result.rows[0].segs[0]).toEqual({ w: 100, type: "edge" });
+    expect(result.meta).toMatchObject({ firstPieceWidth: 100, edgeWidth: 0, oneFullEdge: true });
+  });
 });
 
 describe("computeS3", () => {

@@ -267,7 +267,17 @@ function computeS0(state) {
         { label: L.layoutLength, value: layoutLength, unit: "mm" },
         { label: L.roomGap,      value: fmt.decimal(roomGap), unit: "mm" }
       ],
-      meta: { edgeWidth: remainder, panelWidth, roomWidth, visualization: "strip" }
+      // A custom opening cut and a closing remainder are independent pieces.
+      // Keep both widths in the model so the strip legend cannot describe a
+      // real first piece with the (possibly zero) final remainder.
+      meta: {
+        edgeWidth: remainder,
+        firstPieceWidth: hasCustom ? firstPieceWidth : 0,
+        panelWidth,
+        roomWidth,
+        visualization: "strip",
+        oneFullEdge: true
+      }
     };
   }
 

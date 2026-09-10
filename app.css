@@ -1728,6 +1728,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	border-bottom: 1px solid var(--divider);
 }
 
+.data-preview .strip-visual {
+	min-width: 0;
+}
+
 .data-preview .strip {
 	display: flex;
 	height: 38px;
@@ -1737,9 +1741,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 }
 
 .data-preview .strip-seg {
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	border-right: 0.5px solid color-mix(in srgb, var(--color-darkblue) 15%, transparent);
 	overflow: hidden;
 	flex-shrink: 0;
@@ -1749,14 +1750,37 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	box-shadow: inset 0 0 0 1.5px var(--color-white);
 }
 
-.data-preview .strip-seg-lbl {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
+.data-preview .strip-measurements {
+	display: flex;
+	margin-top: var(--sp-2);
+	border-top: 1px solid var(--divider);
+	min-width: 0;
+}
 
-	color: var(--text);
-	background: var(--surface-1);
-	padding: 1px var(--sp-1);
-	border-radius: 4px;
+.data-preview .strip-measurement {
+	position: relative;
+	flex-shrink: 0;
+	padding-top: var(--sp-2);
+	overflow: hidden;
+	text-align: center;
+	white-space: nowrap;
+	color: var(--text-muted);
+}
+
+.data-preview .strip-measurement::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 1px;
+	height: var(--sp-2);
+	background: var(--divider);
+}
+
+.data-preview .strip-measurement span {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	font-weight: var(--fw-med);
 }
 
 .data-preview .strip-legend {
@@ -2756,7 +2780,7 @@ input[type="range"]:focus-visible {
 		flex-shrink: 0;
 	}
 
-	.data-preview .strip-seg-lbl,
+	.data-preview .strip-measurement span,
 .data-preview .strip-legend-lbl,
 .data-preview .strip-note {
 		font-size: var(--fs-sm);
