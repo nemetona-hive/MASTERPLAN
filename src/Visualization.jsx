@@ -357,20 +357,24 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
   const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
   return (
-    <div id={"panel-" + layout.id} className="sys-block">
+    <div id={"panel-" + layout.id} className={`sys-block${isOpen ? " sys-block-open" : ""}`}>
       <div className="sys-head">
-        <button type="button" className="sys-disclosure disclosure ctl-ghost"
+        <button type="button" className="sys-disclosure disclosure"
           disabled={noToggle} aria-expanded={isOpen} aria-controls={`panel-${layout.id}-body`}
           onClick={() => setOpen(!isOpen)}>
           {!noToggle && <span className="sys-head-toggle"><Icon name={isOpen ? "chevron-down" : "chevron-right"} /></span>}
-          <span className="sys-title">
-            {layout.icon && <Icon name={layout.icon} className="sys-title-icon" />} {layout.title}
+          <span className="sys-head-copy">
+            <span className="sys-title-line">
+              <span className="sys-title">{layout.title}</span>
+            </span>
+            {layout.description && <span className="sys-head-sub">{layout.description}</span>}
           </span>
-          <span className="sys-head-sub">{layout.description}</span>
         </button>
         {/* The slot already stops propagation, which is what lets a control
             live inside a header whose own click toggles the panel. */}
         <div className="sys-head-actions" onClick={e => e.stopPropagation()}>
+          <span className="sys-head-count">{result.stats.stockPanels ?? result.stats.total} pcs</span>
+          {isBest && <span className="sys-head-best">Best</span>}
           {onPrint && (
             <button
               type="button"
@@ -382,7 +386,6 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
               <Icon name="print" />
             </button>
           )}
-          <span className="sys-head-count">{result.stats.stockPanels ?? result.stats.total} pcs {isBest ? <Icon name="best-badge" /> : ""}</span>
         </div>
       </div>
       {isOpen && (

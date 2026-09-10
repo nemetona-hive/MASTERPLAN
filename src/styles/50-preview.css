@@ -21,37 +21,66 @@
 }
 
 .data-preview .sys-head {
-	border-radius: 6px 6px 0 0;
-	padding: 7px 14px;
+	position: relative;
+	border-top: 1px solid var(--divider);
+	padding: var(--sp-2) 0;
 	margin-bottom: 0;
 	display: flex;
 	align-items: center;
 	gap: var(--sp-2);
-	cursor: pointer;
-	user-select: none;
-	background: var(--color-darkblue);
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	font-weight: var(--fw-bold);
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--color-gray-opa80);
+}
+
+/* The measured datum identifies the layout column without restoring a card or
+   applying an accent treatment to the details it reveals. */
+.data-preview .sys-head::before {
+	content: "";
+	position: absolute;
+	pointer-events: none;
+	left: calc(var(--ctl-h-xs) + var(--sp-2));
+	top: -1px;
+	width: min(120px, 32%);
+	height: 2px;
+	background: var(--accent);
 }
 
 @media (hover: hover) {
-	.data-preview .sys-head:hover .sys-head-toggle {
-		color: var(--text);
+	.data-preview .sys-disclosure:hover .sys-title,
+	.data-preview .sys-disclosure:hover .sys-head-toggle {
+		color: var(--brand);
 	}
 }
 
 .data-preview .sys-head-toggle {
-	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	/* 0.5 put this at 2.46:1 / 2.00:1 — a chevron is a mark and owes 3:1, and
-	   it was under even that. Full --accent is 5.76:1 / 4.71:1. */
-	color: var(--color-blue);
+	background: transparent;
+	color: var(--text-muted);
 	transition: color 0.15s;
 	flex-shrink: 0;
+}
+
+.data-preview .sys-disclosure {
+	display: grid;
+	grid-template-columns: var(--ctl-h-xs) minmax(0, 1fr);
+	align-items: center;
+	gap: var(--sp-2);
+	background: transparent;
+	box-shadow: none;
+	padding: 0;
+}
+
+.data-preview .sys-head-copy {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	grid-column: 2;
+}
+
+.data-preview .sys-title-line {
+	display: flex;
+	align-items: baseline;
+	min-width: 0;
 }
 
 .data-preview .sys-title {
@@ -60,7 +89,7 @@
 	font-weight: var(--fw-bold);
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
-	color: var(--color-primary);
+	color: var(--text);
 }
 
 .data-preview .sys-title-icon {
@@ -73,25 +102,52 @@
 .data-preview .sys-head-sub {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
+	letter-spacing: 0.02em;
+	text-transform: none;
+	color: var(--text-muted);
 }
 .data-preview .sys-head-count {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
+	font-weight: var(--fw-med);
+	color: var(--text-muted);
+}
+
+.data-preview .sys-head-best {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
 	font-weight: var(--fw-semi);
-	color: var(--color-white);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--brand);
 }
 
 .data-preview .sys-head-actions {
 	display: flex;
 	align-items: center;
-	gap: var(--sp-1);
+	gap: var(--sp-2);
 	margin-left: auto;
+	flex-shrink: 0;
 }
 
 .data-preview .sys-head-actions .ts-btn {
 	font-size: var(--fs-xs);
 	padding: 4px 10px;
+}
+
+/* An open layout is one detail region, not a loose continuation of the
+   surrounding data rows. The surface and two dividers give it a boundary
+   without returning to the former card treatment. */
+.data-preview .sys-block-open .sys-head {
+	border-bottom: 1px solid var(--divider);
+}
+
+.data-preview .sys-block-open .panel-body {
+	margin-top: var(--sp-2);
+	padding: var(--sp-4) var(--sp-3);
+	background: var(--surface-1);
+	border-top: 1px solid var(--divider);
+	border-bottom: 1px solid var(--divider);
 }
 
 .data-preview .strip {
