@@ -130,15 +130,31 @@
 	flex-shrink: 0;
 }
 
-.data-preview .sys-head-actions .ts-btn {
+.data-preview .sys-head-actions .ts-btn,
+.data-preview .sys-head-actions .num-btn {
 	font-size: var(--fs-xs);
 	padding: 4px 10px;
+	gap: var(--sp-1);
 }
 
 /* The open detail begins at the header's accent threshold. It keeps the
    hierarchy legible without adding a card edge around the data itself. */
 .data-preview .sys-block-open .sys-head {
-	border-bottom: 2px solid var(--accent);
+	border-bottom: 0;
+}
+
+/* Open panels receive their lower boundary from a centred accent datum rather
+   than a full-width rule: it reads as a continuation of the header marker and
+   dissipates cleanly into the surrounding surface. */
+.data-preview .sys-block-open .sys-head::after {
+	content: "";
+	position: absolute;
+	pointer-events: none;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 2px;
+	background: linear-gradient(to right, transparent, var(--accent) 50%, transparent);
 }
 
 .data-preview .sys-block-open .panel-body {

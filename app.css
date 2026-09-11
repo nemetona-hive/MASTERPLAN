@@ -1182,7 +1182,7 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	display: flex;
 	align-items: center;
 	padding: 8px 14px;
-	border-bottom: 1px solid var(--color-gray);
+	border-bottom: 1px solid var(--divider);
 	font-family: var(--mono);
 	font-size: var(--fs-md);
 }
@@ -1712,13 +1712,26 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	flex-shrink: 0;
 }
 
-.data-preview .sys-head-actions .ts-btn {
+.data-preview .sys-head-actions .ts-btn,
+.data-preview .sys-head-actions .num-btn {
 	font-size: var(--fs-xs);
 	padding: 4px 10px;
+	gap: var(--sp-1);
 }
 
 .data-preview .sys-block-open .sys-head {
-	border-bottom: 2px solid var(--accent);
+	border-bottom: 0;
+}
+
+.data-preview .sys-block-open .sys-head::after {
+	content: "";
+	position: absolute;
+	pointer-events: none;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 2px;
+	background: linear-gradient(to right, transparent, var(--accent) 50%, transparent);
 }
 
 .data-preview .sys-block-open .panel-body {

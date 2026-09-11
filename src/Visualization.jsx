@@ -398,12 +398,12 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
           {onPrint && (
             <button
               type="button"
-              className="num-btn ctl-ghost ctl-sm ctl-icon"
+              className="num-btn ctl-ghost ctl-sm"
               onClick={onPrint}
               disabled={!result.rows.length || !result.stockPlan}
               title={`Cut list for ${layout.title} — opens the print dialog, where Save as PDF is`}
               aria-label={`Print the cut list for ${layout.title}`}>
-              <Icon name="print" />
+              <Icon name="print" /> PDF
             </button>
           )}
         </div>
