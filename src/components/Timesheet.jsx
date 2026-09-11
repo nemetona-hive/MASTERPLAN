@@ -229,9 +229,9 @@ export function SheetTimesheet() {
                     <div className="ts-grid-hd" style={{marginTop: 'var(--sp-2)'}}>
                       <span className="ts-col-lbl">Start</span>
                       <span className="ts-col-lbl">End</span>
-                      <span className="ts-col-lbl">Lunch</span>
-                      <span className="ts-col-lbl">Duration</span>
-                      <span className="ts-col-lbl ts-col-dec">Decimal</span>
+                      <span className="ts-col-lbl ts-col-lbl--center">Lunch</span>
+                      <span className="ts-col-lbl ts-col-lbl--center">Duration</span>
+                      <span className="ts-col-lbl ts-col-lbl--center ts-col-dec">Decimal</span>
                       <span />
                     </div>
 
@@ -246,7 +246,7 @@ export function SheetTimesheet() {
                                 id={`ts-start-${row.id}`}
                             aria-label={`Start time ${row.id}`}
                                 name={`ts-start-${row.id}`}
-                                className="num-input ts-input" type="text" placeholder="9, 9:30, 0930"
+                                className="num-input ts-input" type="text"
                                 value={row.start}
                                 ref={el => { startRefs.current[row.id] = el; }}
                                 {...cellProps(idx, 0)}
@@ -260,7 +260,7 @@ export function SheetTimesheet() {
                                 id={`ts-end-${row.id}`}
                             aria-label={`End time ${row.id}`}
                                 name={`ts-end-${row.id}`}
-                                className="num-input ts-input" type="text" placeholder="17, 17:30"
+                                className="num-input ts-input" type="text"
                                 value={row.end}
                                 {...cellProps(idx, 1)}
                                 onFocus={() => setActiveRowId(row.id)}
@@ -273,7 +273,7 @@ export function SheetTimesheet() {
                                 id={`ts-lunch-${row.id}`}
                             aria-label={`Lunch duration ${row.id}`}
                                 name={`ts-lunch-${row.id}`}
-                                className="num-input ts-input" type="text" placeholder=".30"
+                                className="num-input ts-input" type="text"
                                 value={row.lunch}
                                 {...cellProps(idx, 2, e => handleLunchTab(e, idx))}
                                 onFocus={() => setActiveRowId(row.id)}

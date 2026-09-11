@@ -100,21 +100,19 @@
 	padding: 0 3px;
 }
 
+/* The two time fields read from the left edge like their entries. Computed and
+   numeric columns are values in fixed tracks, so their headings sit on the
+   column centre rather than borrowing the input inset. */
+.ts-col-lbl--center {
+	text-align: center;
+}
+
 /* Input ------------------------------------------------------------------- */
 
 /* .num-input provides base styles; ts-input overrides for grid context */
 .ts-input {
 	width: 100%;
 	height: 32px;
-}
-
-.ts-input::placeholder {
-	/* --color-gray-light is an alias onto --border, so this was a hint drawn
-	   in a hairline colour: 1.66:1 on graphite, 1.50:1 on verdant. The format
-	   guidance in a placeholder is words, so it owes 4.5:1. --text-muted is
-	   6.72:1 / 7.89:1 here and still reads as quieter than the gold value. */
-	color: var(--text-muted);
-	opacity: 1;
 }
 
 /* Duration / Decimal cells ------------------------------------------------ */
@@ -129,6 +127,8 @@
 	height: 32px;
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	text-align: center;
 }
 
 .ts-decimal {

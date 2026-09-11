@@ -375,7 +375,6 @@ export function SheetConcrete() {
                             name={`preset-name-${idx}`}
                             type="text"
                             className="num-input"
-                            placeholder="Product description..."
                             value={p.name}
                             onChange={e => updatePreset(idx, "name", e.target.value)}
                           />

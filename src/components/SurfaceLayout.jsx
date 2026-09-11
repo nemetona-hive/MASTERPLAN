@@ -220,7 +220,6 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                             name={`mat-preset-name-${idx}`}
                             type="text"
                             className="num-input"
-                            placeholder="e.g. Standard Tile 300×300"
                             value={p.name}
                             onChange={e => updatePreset(idx, "name", e.target.value)}
                           />
