@@ -34,6 +34,15 @@ because GitHub Pages serves the tree directly.
 98-layout-svg.css      SVG layout visualisation
 ```
 
+## Browser autofill
+
+Browser history remains available for fields, but Chromium paints an autofilled
+entry with its own light surface and text. The global `:-webkit-autofill` rule
+in `30-data.css` delays that UA surface and sets the themed text and caret.
+Do not replace it with a fixed inset fill: some fields, including the Timesheet
+grid, choose their own background and must keep it when a history value is
+selected.
+
 ## Theme system
 
 Defined in `themes.js` (loaded as global, not inside `src/`).
