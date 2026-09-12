@@ -198,10 +198,12 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
       </div>
       <div id="data-preview" className="data-preview">
         <Stack className="gr-preview-list" gap={3}>
-          <Stack className="sys-head" gap={1}>
-            <h3 className="sys-title"><Icon name="golden-phi" className="sys-title-icon" /> Golden Ratio phi</h3>
-            <span className="sys-head-sub">phi = 1.6180339887499</span>
-          </Stack>
+          <div className="preview-head">
+            <div className="preview-head-main">
+              <h2 className="preview-title">Golden Ratio phi</h2>
+              <p className="preview-desc">Build proportion series from saved base values using φ = 1.6180339887499.</p>
+            </div>
+          </div>
           {baseItems.map((item, idx) => {
             const tone = getLinkedCardTone(item.id);
             const trimmedSuffix = item.suffix.trim();

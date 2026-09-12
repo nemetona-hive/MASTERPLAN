@@ -374,9 +374,7 @@
 	gap: var(--sp-3);
 }
 
-.gr-preview-list > .sys-head {
-	padding-bottom: var(--sp-2);
-	border-bottom: 1px solid var(--color-gray-light);
+.gr-preview-list > .preview-head {
 	margin-bottom: 0;
 }
 

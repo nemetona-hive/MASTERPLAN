@@ -29,7 +29,6 @@ export function SheetHome({ page, setPage }) {
                   <Icon name={pg.icon} />
                 </span>
                 <span className="home-card-title">{pg.title}</span>
-                <span className="home-card-desc">{pg.desc}</span>
                 <span className="home-card-arrow">
                   <Icon name="chevron-right" />
                 </span>
@@ -52,4 +51,3 @@ export function SheetHome({ page, setPage }) {
     </div>
   );
 }
-

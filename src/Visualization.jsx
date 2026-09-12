@@ -1,14 +1,34 @@
 import { React } from "./react-globals.js";
 import { Icon, linkedHighlightProps, Row, Stack } from "./shared.jsx";
 
-export function PanelSummary({ rows, hoveredType, setHoveredType }) {
+export function PanelSummary({ rows, hoveredType, setHoveredType, grouped = false, groupTitles = ["Material", "Placement"] }) {
+  const renderRows = summaryRows => summaryRows.map((row, i) => (
+    <Row key={i} label={row.label} value={row.value} unit={row.unit} hi={row.hi} danger={row.danger}
+      hoverType={row.hoverType} hoveredType={hoveredType} setHoveredType={setHoveredType} />
+  ));
+
+  if (!grouped || rows.length < 3) return <>{renderRows(rows)}</>;
+
+  const statusIndex = rows.findIndex(row => row.unit === "" && (row.value === "Valid" || row.value === "Invalid"));
+  const statusRow = statusIndex >= 0 ? rows[statusIndex] : null;
+  const metricRows = statusRow ? rows.filter((_, i) => i !== statusIndex) : rows;
+  const materialRows = metricRows.slice(0, 2);
+  const placementRows = metricRows.slice(2);
+
   return (
-    <>
-      {rows.map((row, i) => (
-        <Row key={i} label={row.label} value={row.value} unit={row.unit} hi={row.hi} danger={row.danger}
-          hoverType={row.hoverType} hoveredType={hoveredType} setHoveredType={setHoveredType} />
-      ))}
-    </>
+    <div className="layout-summary">
+      <section className="layout-summary-group layout-summary-group--material" aria-label="Material summary">
+        <h3 className="layout-summary-title">{groupTitles[0]}</h3>
+        {renderRows(materialRows)}
+      </section>
+      {placementRows.length > 0 && (
+        <section className="layout-summary-group" aria-label="Placement summary">
+          <h3 className="layout-summary-title">{groupTitles[1]}</h3>
+          {renderRows(placementRows)}
+        </section>
+      )}
+      {statusRow && <div className="layout-summary-status">{renderRows([statusRow])}</div>}
+    </div>
   );
 }
 
@@ -411,7 +431,7 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
       {isOpen && (
         <Stack id={`panel-${layout.id}-body`} className="panel-body" gap={2}>
           {layout.renderControls && React.createElement(layout.renderControls, { state: layout.getState(), setState: layout.setState })}
-          {result.summaryRows.length > 0 && <PanelSummary rows={result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />}
+          {result.summaryRows.length > 0 && <PanelSummary rows={result.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} grouped={!!layout.summaryGroupTitles} groupTitles={layout.summaryGroupTitles} />}
           {result.rows.length > 0 && (
             <LayoutVisualization
               result={result}

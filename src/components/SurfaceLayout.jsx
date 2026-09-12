@@ -179,7 +179,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         <PreviewSection 
           id="pattern-layouts" 
           title="Pattern Layouts"
-          description="Compare row-based layouts that share the same surface and material settings."
+          description="Compare four row-based layouts using the selected surface and material."
         >
           {["s1", "s2", "s3", "s4"].map(id => {
             const panel = panelResultsById[id];

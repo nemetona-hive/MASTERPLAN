@@ -222,14 +222,6 @@
 	line-height: var(--lh-tight);
 }
 
-.home-card-desc {
-	font-family: var(--mono);
-	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
-	line-height: var(--lh-base);
-	flex: 1;
-}
-
 .home-card-arrow {
 	position: absolute;
 	bottom: 16px;

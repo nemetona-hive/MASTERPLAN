@@ -152,4 +152,5 @@ input[type="range"]:focus-visible {
 .detail-section-head.disclosure {
   height: var(--ctl-h);
   padding-block: 0;
+	padding-inline: var(--sp-3);
 }

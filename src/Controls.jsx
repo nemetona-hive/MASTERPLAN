@@ -36,6 +36,7 @@ export const LAYOUT_REGISTRY = ["s1", "s2", "s3", "s4"].map(id => {
     title:          sys.title,
     compute:        { s1: computeS1, s2: computeS2, s3: computeS3, s4: computeS4 }[id],
     renderControls: { s2: S2Controls, s4: S4Controls }[id] || null,
-    includeInBest:  true
+    includeInBest:  true,
+    summaryGroupTitles: ["Material", "Placement"]
   };
 });

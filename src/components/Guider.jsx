@@ -5,12 +5,12 @@ function GuiderLihtluliti() {
   return (
     <Stack gap={4}>
       {/* Page head */}
-      <Stack className="sys-head" gap={1}>
-        <h3 className="sys-title">
-          <Icon name="guider" className="sys-title-icon" /> Lihtlüliti
-        </h3>
-        <span className="sys-head-sub">Valgusti ja lüliti skeem — 1-juhtmeline lülitus</span>
-      </Stack>
+      <div className="preview-head">
+        <div className="preview-head-main">
+          <h2 className="preview-title">Lihtlüliti</h2>
+          <p className="preview-desc">Valgusti ja lüliti skeem — 1-juhtmeline lülitus</p>
+        </div>
+      </div>
 
       {/* Diagram card */}
       <div className="sys-block">
@@ -201,12 +201,12 @@ function GuiderLihtluliti() {
 function GuiderVeksellulit() {
   return (
     <Stack gap={4}>
-      <Stack className="sys-head" gap={1}>
-        <h3 className="sys-title">
-          <Icon name="guider" className="sys-title-icon" /> Veksellüliti
-        </h3>
-        <span className="sys-head-sub">Valgusti ja kahe lülitiga skeem — 3-juhtmeline veksel</span>
-      </Stack>
+      <div className="preview-head">
+        <div className="preview-head-main">
+          <h2 className="preview-title">Veksellüliti</h2>
+          <p className="preview-desc">Valgusti ja kahe lülitiga skeem — 3-juhtmeline veksel</p>
+        </div>
+      </div>
 
       <div className="sys-block">
         <div style={{ padding: "var(--sp-5) var(--sp-4) var(--sp-4)" }}>
@@ -469,10 +469,12 @@ export function SheetGuider() {
             )
           ) : (
             <>
-              <Stack className="sys-head" gap={1}>
-                <h3 className="sys-title"><Icon name="guider" className="sys-title-icon" /> Guider</h3>
-                <span className="sys-head-sub">Select an entry to view details</span>
-              </Stack>
+              <div className="preview-head">
+                <div className="preview-head-main">
+                  <h2 className="preview-title">Guider</h2>
+                  <p className="preview-desc">Select an entry to view details</p>
+                </div>
+              </div>
               <div className="sys-block">
                 <Stack className="section-pad" gap={2}>
                   <div className="ctrl-sublbl">No entry selected. Pick one from the panel on the left.</div>

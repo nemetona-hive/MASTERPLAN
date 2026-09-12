@@ -141,43 +141,43 @@ var PAGES = [{
   id: "pattern-layout",
   label: "Pattern Layouts",
   title: "Pattern Layouts",
-  desc: "Compare straight, shifted, stepped and long-short panel strategies. Highlights the fewest-piece option automatically.",
+  desc: "Compare four row-based panel layouts and their material counts.",
   icon: "rows-3"
 }, {
   id: "symmetric-layout",
-  label: "Symmetric Layout",
-  title: "Symmetric Layout",
-  desc: "Equal edge pieces with full panels in the center. Asymmetric and custom first-piece modes included.",
+  label: "Axial Alignment",
+  title: "Axial Alignment",
+  desc: "Align full panels on an axis with balanced edge pieces.",
   icon: "columns-2"
 }, {
   id: "concrete",
   label: "Concrete",
   title: "Concrete",
-  desc: "Select product — calculate bags, mass and total price from area and layer thickness.",
+  desc: "Estimate bags, mass and cost from area and layer thickness.",
   icon: "layer-group"
 }, {
   id: "pipe-wrap",
   label: "Pipe Wrap",
   title: "Pipe Wrap Calculator",
-  desc: "Material length to wrap around a pipe. Overlap and gap adjustments with live SVG diagram.",
+  desc: "Calculate wrap length from pipe diameter, material thickness, overlap and gap.",
   icon: "ring"
 }, {
   id: "golden-ratio",
   label: "Golden Ratio φ",
   title: "Golden Ratio φ",
-  desc: "Generate phi-based proportion sequences from any base value. Up to 4 parallel series.",
+  desc: "Build φ-based proportion series from saved base values.",
   icon: "golden-phi"
 }, {
   id: "guider",
   label: "Guider",
   title: "Guider",
-  desc: "Guider page. Content and data will be added later.",
+  desc: "Reference diagrams for simple and two-way lighting circuits.",
   icon: "guider"
 }, {
   id: "timesheet",
   label: "Timesheet",
   title: "Timesheet",
-  desc: "Work hours from start, end and lunch. Multi-row, decimal output and one-tap clipboard copy.",
+  desc: "Calculate worked time across multiple rows and copy the decimal total.",
   icon: "clock"
 }];
 

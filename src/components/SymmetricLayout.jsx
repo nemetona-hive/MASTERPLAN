@@ -1,6 +1,6 @@
 import { React } from "../react-globals.js";
 import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
-import { LayoutPanel } from "../Visualization.jsx";
+import { LayoutPanel, PreviewSection } from "../Visualization.jsx";
 
 export function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
@@ -37,8 +37,11 @@ export function SheetSymmetricLayout({ sym, setSym }) {
   );
 
   const layout = {
-    id: "s0", title: "Symmetric layout", description: "Equal edge pieces, full pieces in center",
+    id: "s0",
+    title: sym.oneFullEdge ? "Asymmetric layout" : "Symmetric layout",
+    description: sym.oneFullEdge ? "One full edge piece, then repeated pieces" : "Equal edge pieces, full pieces in center",
     defaultOpen: true, renderControls: null, icon: "s0",
+    summaryGroupTitles: ["Pieces", "Totals"],
     getState: () => ({}), setState: () => {},
     compute: () => computeS0(sym),
     includeInBest: false
@@ -87,7 +90,13 @@ export function SheetSymmetricLayout({ sym, setSym }) {
         </ControlPanel>
       </Stack>
       <div id="data-preview" className="data-preview">
-        <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} noToggle />
+        <PreviewSection
+          id="symmetric-layout-preview"
+          title="Axial Alignment"
+          description="Align full panels on an axis and resolve the edge pieces."
+        >
+          <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} noToggle />
+        </PreviewSection>
       </div>
     </>
   );
