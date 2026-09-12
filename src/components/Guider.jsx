@@ -1,5 +1,5 @@
 import { React } from "../react-globals.js";
-import { ControlPanel, Icon, Stack } from "../shared.jsx";
+import { ControlPanel, Stack } from "../shared.jsx";
 
 function GuiderLihtluliti() {
   return (
