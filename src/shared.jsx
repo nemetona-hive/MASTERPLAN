@@ -900,7 +900,7 @@ export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApp
               role="option"
               aria-selected={isActive}
               className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
-              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
+              onPointerDown={e => { e.preventDefault(); e.stopPropagation(); onApply(p, idx); }}
             >
               <div className="rate-preset-info">
                 <span className="rate-preset-name">{p.name}</span>

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
 import { SheetSymmetricLayout } from "../src/components/SymmetricLayout.jsx";
@@ -45,6 +45,7 @@ describe("material presets on the symmetric layout page", () => {
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue("");
     expect(screen.getByText("Build your layout preview")).toBeInTheDocument();
     expect(document.querySelector(".sys-block")).toBeNull();
+    expect(document.querySelectorAll(".layout-empty-axial .layout-empty-tile")).toHaveLength(14);
   });
 
   it("stays shut when the field is clicked and typed into", async () => {
@@ -122,6 +123,18 @@ describe("material presets on the symmetric layout page", () => {
  * focus and toggle inside the button shows.
  */
 describe("material presets on the surface layout page", () => {
+  it("applies a preset from a touch pointer", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+
+    await user.click(screen.getAllByTitle("Presets")[0]);
+    fireEvent.pointerDown(screen.getByText(firstPreset.name), { pointerType: "touch" });
+
+    expect(document.getElementById("input-PLa")).toHaveDisplayValue(String(firstPreset.width));
+    expect(document.getElementById("input-PPi")).toHaveDisplayValue(String(firstPreset.length));
+    expect(screen.queryByText("Material Presets")).toBeNull();
+  });
+
   it("fills the material cells but waits for the surface before rendering", async () => {
     const user = userEvent.setup();
     render(<SurfaceHarness />);

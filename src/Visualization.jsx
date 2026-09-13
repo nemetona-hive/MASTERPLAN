@@ -32,13 +32,82 @@ export function PanelSummary({ rows, hoveredType, setHoveredType, grouped = fals
   );
 }
 
-export function LayoutEmptyState({ message, steps }) {
+export function LayoutEmptyState({ message, steps, visual = "mosaic" }) {
   return (
     <section className="layout-empty-state" aria-labelledby="layout-empty-title">
       <div className="layout-empty-wireframe" aria-hidden="true">
-        <span className="layout-empty-panel layout-empty-panel--wide" />
-        <span className="layout-empty-panel layout-empty-panel--tall" />
-        <span className="layout-empty-panel layout-empty-panel--cut" />
+        {visual === "axial" ? (
+          <svg className="layout-empty-graphic layout-empty-axial" viewBox="0 0 700 420" focusable="false">
+            <defs>
+              <linearGradient id="layout-empty-axial-a" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" className="layout-empty-stop-a-top" />
+                <stop offset="0.14" className="layout-empty-stop-a-mid" />
+                <stop offset="1" className="layout-empty-stop-bottom" />
+              </linearGradient>
+              <linearGradient id="layout-empty-axial-b" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" className="layout-empty-stop-b-top" />
+                <stop offset="0.16" className="layout-empty-stop-b-mid" />
+                <stop offset="1" className="layout-empty-stop-bottom" />
+              </linearGradient>
+            </defs>
+
+            <g>
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="0" y="0" width="80" height="259.56" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="0" y="259.56" width="80" height="160.44" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="80" y="0" width="108" height="160.44" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="80" y="160.44" width="108" height="259.56" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="188" y="0" width="108" height="320.88" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="188" y="320.88" width="108" height="99.12" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="296" y="0" width="108" height="210" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="296" y="210" width="108" height="210" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="404" y="0" width="108" height="320.88" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="404" y="320.88" width="108" height="99.12" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="512" y="0" width="108" height="160.44" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="512" y="160.44" width="108" height="259.56" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-a" x="620" y="0" width="80" height="259.56" />
+              <rect className="layout-empty-tile layout-empty-axial-tile-b" x="620" y="259.56" width="80" height="160.44" />
+            </g>
+            <rect className="layout-empty-mosaic-outline" x="1" y="1" width="698" height="418" />
+            <path className="layout-empty-mosaic-highlight" d="M2 2H698" />
+          </svg>
+        ) : (
+        <svg className="layout-empty-graphic layout-empty-mosaic" viewBox="0 0 2720 2720" focusable="false">
+          <defs>
+            <linearGradient id="layout-empty-tile-a" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" className="layout-empty-stop-a-top" />
+              <stop offset="0.14" className="layout-empty-stop-a-mid" />
+              <stop offset="1" className="layout-empty-stop-bottom" />
+            </linearGradient>
+            <linearGradient id="layout-empty-tile-b" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" className="layout-empty-stop-b-top" />
+              <stop offset="0.16" className="layout-empty-stop-b-mid" />
+              <stop offset="1" className="layout-empty-stop-bottom" />
+            </linearGradient>
+          </defs>
+
+          <g>
+            <rect className="layout-empty-tile layout-empty-tile-a is-lifted" x="0" y="0" width="848" height="480" />
+            <rect className="layout-empty-tile layout-empty-tile-b" x="848" y="0" width="600" height="480" />
+            <rect className="layout-empty-tile layout-empty-tile-b" x="0" y="480" width="480" height="680" />
+            <rect className="layout-empty-tile layout-empty-tile-a" x="0" y="1160" width="480" height="960" />
+            <rect className="layout-empty-tile layout-empty-tile-a is-lifted" x="480" y="480" width="968" height="980" />
+            <rect className="layout-empty-tile layout-empty-tile-b" x="480" y="1460" width="560" height="660" />
+            <rect className="layout-empty-tile layout-empty-tile-b" x="0" y="2120" width="240" height="600" />
+            <rect className="layout-empty-tile layout-empty-tile-a" x="240" y="2120" width="800" height="600" />
+
+            <rect className="layout-empty-tile layout-empty-tile-b" x="1040" y="1460" width="1008" height="1020" />
+            <rect className="layout-empty-tile layout-empty-tile-a" x="1040" y="2480" width="1008" height="240" />
+            <rect className="layout-empty-tile layout-empty-tile-a" x="1448" y="0" width="912" height="800" />
+            <rect className="layout-empty-tile layout-empty-tile-b is-lifted" x="2360" y="0" width="360" height="800" />
+            <rect className="layout-empty-tile layout-empty-tile-b" x="1448" y="800" width="600" height="660" />
+            <rect className="layout-empty-tile layout-empty-tile-a" x="2048" y="800" width="672" height="1160" />
+            <rect className="layout-empty-tile layout-empty-tile-b" x="2048" y="1960" width="672" height="520" />
+            <rect className="layout-empty-tile layout-empty-tile-a" x="2048" y="2480" width="672" height="240" />
+          </g>
+          <rect className="layout-empty-mosaic-outline" x="1" y="1" width="2718" height="2718" />
+          <path className="layout-empty-mosaic-highlight" d="M2 2H2718" />
+        </svg>
+        )}
       </div>
       <div className="layout-empty-copy">
         <h3 id="layout-empty-title">Build your layout preview</h3>

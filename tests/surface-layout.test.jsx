@@ -39,6 +39,7 @@ describe("the surface layout page", () => {
     }
     expect(screen.getByText("Build your layout preview")).toBeInTheDocument();
     expect(document.querySelector(".sys-block")).toBeNull();
+    expect(document.querySelectorAll(".layout-empty-mosaic .layout-empty-tile")).toHaveLength(16);
   });
 
   it("guides partial input and renders when the last required field is complete", () => {

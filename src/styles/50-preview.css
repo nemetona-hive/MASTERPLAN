@@ -31,44 +31,92 @@
 }
 
 .layout-empty-wireframe {
-	position: relative;
+	display: flex;
+	align-items: center;
+	min-width: 0;
 	min-height: 210px;
-	border: 1px solid var(--border-strong);
-	border-radius: 8px;
-	background:
-		linear-gradient(to right, transparent 49.5%, var(--divider) 49.5%, var(--divider) 50.5%, transparent 50.5%),
-		linear-gradient(to bottom, transparent 49.5%, var(--divider) 49.5%, var(--divider) 50.5%, transparent 50.5%);
-	overflow: hidden;
+	padding: var(--sp-2);
 }
 
-.layout-empty-panel {
-	position: absolute;
+.layout-empty-graphic {
 	display: block;
-	border: 1px solid var(--brand);
-	background: color-mix(in srgb, var(--brand) 8%, var(--surface-1));
-	border-radius: 6px;
+	width: 100%;
+	height: auto;
+	overflow: visible;
 }
 
-.layout-empty-panel--wide {
-	left: 12%;
-	top: 18%;
-	width: 58%;
-	height: 28%;
+.layout-empty-mosaic {
+	width: 60%;
+	margin-inline: auto;
+	aspect-ratio: 1;
 }
 
-.layout-empty-panel--tall {
-	right: 12%;
-	top: 18%;
-	width: 14%;
-	height: 64%;
+.layout-empty-axial {
+	aspect-ratio: 5 / 3;
 }
 
-.layout-empty-panel--cut {
-	left: 12%;
-	bottom: 18%;
-	width: 38%;
-	height: 22%;
-	border-style: dashed;
+.layout-empty-stop-a-top {
+	stop-color: color-mix(in srgb, var(--brand) 10%, var(--surface-hover));
+}
+
+.layout-empty-stop-a-mid {
+	stop-color: color-mix(in srgb, var(--brand) 5%, var(--surface-2));
+}
+
+.layout-empty-stop-b-top {
+	stop-color: color-mix(in srgb, var(--surface-2) 88%, var(--text));
+}
+
+.layout-empty-stop-b-mid {
+	stop-color: var(--surface-2);
+}
+
+.layout-empty-stop-bottom {
+	stop-color: color-mix(in srgb, var(--surface-1) 92%, var(--bg));
+}
+
+.layout-empty-tile {
+	stroke: var(--border-strong);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.layout-empty-tile-a {
+	fill: url("#layout-empty-tile-a");
+	stroke: color-mix(in srgb, var(--brand) 12%, var(--border-strong));
+}
+
+.layout-empty-tile-b {
+	fill: url("#layout-empty-tile-b");
+	stroke: color-mix(in srgb, var(--brand) 20%, var(--border-strong));
+}
+
+.layout-empty-axial-tile-a {
+	fill: url("#layout-empty-axial-a");
+	stroke: color-mix(in srgb, var(--brand) 12%, var(--border-strong));
+}
+
+.layout-empty-axial-tile-b {
+	fill: url("#layout-empty-axial-b");
+	stroke: color-mix(in srgb, var(--brand) 20%, var(--border-strong));
+}
+
+.layout-empty-tile.is-lifted {
+	filter: drop-shadow(0 4px 3px rgb(var(--shadow-rgb) / 58%));
+}
+
+.layout-empty-mosaic-outline {
+	fill: none;
+	stroke: var(--border-strong);
+	stroke-width: 1.5;
+	vector-effect: non-scaling-stroke;
+}
+
+.layout-empty-mosaic-highlight {
+	fill: none;
+	stroke: color-mix(in srgb, var(--brand) 28%, var(--edge-hi));
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
 }
 
 .layout-empty-copy h3 {

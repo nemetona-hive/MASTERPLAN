@@ -113,6 +113,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
             <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} noToggle />
           ) : (
             <LayoutEmptyState
+              visual="axial"
               message={!started
                 ? "Choose a material preset or enter a product width to begin."
                 : !materialComplete
