@@ -52,8 +52,7 @@ const DEFAULT_WRITES = {
   concretePresets: "DEFAULT_CONCRETE_PRESETS",
   goldenRatioDefaults: "DEFAULT_GR",
   materialPresets: "DEFAULT_MATERIAL_PRESETS",
-  shDefaults: "DEFAULT_SH",
-  symDefaults: "DEFAULT_SYM"
+  surfacePresets: "DEFAULT_SURFACE_PRESETS"
 };
 
 const toStringField = value => value == null ? "" : String(value);
@@ -66,12 +65,6 @@ const toNumberOrBlank = (value, min = 0, max = Number.MAX_SAFE_INTEGER) => {
   }
   return n;
 };
-const enumField = (value, choices, fallback) => {
-  if (value === undefined || value === "") return fallback;
-  if (!choices.includes(value)) throwValidationError("Invalid layout option");
-  return value;
-};
-
 function throwValidationError(message) {
   const err = new Error(message);
   err.statusCode = 400;
@@ -146,47 +139,29 @@ function validateMaterialPresets(value) {
   });
 }
 
-function validateShDefaults(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throwValidationError("shDefaults must be an object");
+function validateSurfacePresets(value) {
+  if (!Array.isArray(value) || value.length > 128) {
+    throwValidationError("surfacePresets must be an array");
   }
-  return {
-    W: toNumberOrBlank(value.W, 100, 50000),
-    H: toNumberOrBlank(value.H, 100, 50000),
-    PPi: toNumberOrBlank(value.PPi, 100, 8000),
-    PLa: toNumberOrBlank(value.PLa, 100, 8000),
-    offset: toNumberOrBlank(value.offset, 0.1, 0.9),
-    direction: enumField(value.direction, ["H", "V"], "H"),
-    rowStart: enumField(value.rowStart, ["top", "bottom"], "top"),
-    rowStartH: enumField(value.rowStartH, ["top", "bottom"], "top"),
-    rowStartV: enumField(value.rowStartV, ["top", "bottom"], "top"),
-    patternStartH: enumField(value.patternStartH, ["left", "right"], "left"),
-    patternStartV: enumField(value.patternStartV, ["top", "bottom"], "bottom"),
-    patternStart: enumField(value.patternStart, ["left", "right", "top", "bottom"], value.direction === "V" ? "bottom" : "left"),
-    minJ: toNumberOrBlank(value.minJ),
-    startOff: toNumberOrBlank(value.startOff),
-    s4Long: toNumberOrBlank(value.s4Long)
-  };
-}
 
-function validateSymDefaults(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throwValidationError("symDefaults must be an object");
-  }
-  return {
-    roomWidth: toNumberOrBlank(value.roomWidth, 100, 50000),
-    panelWidth: toNumberOrBlank(value.panelWidth, 100, 8000),
-    oneFullEdge: Boolean(value.oneFullEdge),
-    customFirstPieceWidth: value.customFirstPieceWidth === null || value.customFirstPieceWidth === "" ? null : toNumberOrBlank(value.customFirstPieceWidth)
-  };
+  return value.map((preset, idx) => {
+    if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
+      throwValidationError(`surfacePresets[${idx}] must be an object`);
+    }
+
+    return {
+      name: toStringField(preset.name),
+      length: toNumberOrBlank(preset.length, 100, 50000),
+      width: toNumberOrBlank(preset.width, 100, 50000)
+    };
+  });
 }
 
 const DEFAULT_VALIDATORS = {
   concretePresets: validateConcretePresets,
   goldenRatioDefaults: validateGoldenRatioDefaults,
   materialPresets: validateMaterialPresets,
-  shDefaults: validateShDefaults,
-  symDefaults: validateSymDefaults
+  surfacePresets: validateSurfacePresets
 };
 
 // Robust bracket matcher to safely replace constant values

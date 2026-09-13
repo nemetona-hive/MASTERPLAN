@@ -102,10 +102,9 @@ build unless there is a reason not to.
 
 **It serves the app itself, statically, on an OS-assigned port** — it does *not*
 use `scripts/local-dev-server.js`. That server exposes `/api/save-defaults`,
-which writes `DEFAULT_SH` straight into `config.js`; a gate that drove the app
-through it would rewrite tracked source on every run. The static server answers
-that endpoint with a no-op so the app logs no error, and writes nothing. It also
-matches production, since Pages has no API either.
+which can write explicitly saved preset libraries into `config.js`. The static
+server answers that endpoint with a no-op so a browser gate can never mutate
+tracked source. It also matches production, since Pages has no API either.
 
 The contrast half is the part `theme:check` structurally cannot do. That one
 compares token pairs out of `themes.js` — fast, portable, and blind to a colour

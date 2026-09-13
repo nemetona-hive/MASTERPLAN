@@ -58,6 +58,14 @@ try {
   await page.pdf({ path: path.join(output, "concrete.pdf"), preferCSSPageSize: true });
 
   await go("pattern-layout");
+  const inputPreset = await page.evaluate(() => DEFAULT_SURFACE_PRESETS.find(preset => preset.name));
+  await page.locator("#control-surface .num-btn--presets").first().click();
+  await page.getByRole("option").first().click();
+  await page.waitForFunction(({ width, length }) => document.getElementById("input-W").value === String(width)
+    && document.getElementById("input-H").value === String(length), inputPreset);
+  check(await page.locator("#input-W").inputValue() === String(inputPreset.width)
+    && await page.locator("#input-H").inputValue() === String(inputPreset.length),
+    "Inputs preset fills both surface dimensions");
   for (const [id, value] of [["input-PLa", "200"], ["input-PPi", "1000"], ["input-W", "2500"], ["input-H", "200"]]) await enter(id, value);
   // Choose horizontal by its visible text; the control's accessible name is unchanged.
   await page.getByRole("button", { name: "Horizontal", exact: true }).click();
@@ -78,15 +86,15 @@ try {
   check(pdfPages > 1, "Long cut list produces multiple PDF pages");
   check(pdfPages === 3, `Long cut list avoids a trailing blank page (got ${pdfPages})`);
 
-  await page.route("**/api/save-defaults", route => route.fulfill({ status: 500,
-    contentType: "application/json", body: '{"error":"Fixture save failure"}' }));
+  let jobDimensionSaves = 0;
+  await page.route("**/api/save-defaults", route => {
+    jobDimensionSaves += 1;
+    return route.fulfill({ status: 200, contentType: "application/json", body: '{"success":true}' });
+  });
   await enter("input-W", "2600");
-  await page.getByRole("alert").filter({ hasText: "Fixture save failure" }).waitFor();
-  check(true, "Automatic save failure is visible");
+  await page.waitForTimeout(120);
+  check(jobDimensionSaves === 0, "Editing a job dimension does not persist it as configuration");
   await page.unroute("**/api/save-defaults");
-  await page.getByRole("button", { name: "Retry", exact: true }).click();
-  await page.getByRole("alert").filter({ hasText: "Fixture save failure" }).waitFor({ state: "hidden" });
-  check(true, "Retry clears the save error after success");
 
   await go("timesheet");
   await enter("ts-start-1", "25:00"); await enter("ts-end-1", "26:00");
@@ -184,8 +192,17 @@ try {
     `Focused input remains above the result bar in a keyboard-height viewport (${JSON.stringify(keyboardClearance)})`);
 
   await touchPage.goto(`${base}/#pattern-layout`);
-  await touchPage.locator(".sys-disclosure").first().tap();
-  const modalOpener = touchPage.locator(".viz-expand-btn").first();
+  for (const [id, value] of [["input-PLa", "1200"], ["input-PPi", "2600"], ["input-W", "1390"], ["input-H", "2200"]]) {
+    const input = touchPage.locator(`#${id}`);
+    await input.fill(value);
+    await input.press("Enter");
+  }
+  await touchPage.waitForTimeout(300);
+  let modalOpener = touchPage.locator(".sys-block-open .viz-expand-btn").first();
+  if (!await modalOpener.count()) {
+    await touchPage.locator(".sys-disclosure").first().tap();
+    modalOpener = touchPage.locator(".sys-block-open .viz-expand-btn").first();
+  }
   await modalOpener.tap();
   check(await touchPage.locator(".mp-modal").evaluate(el => el === document.activeElement), "Touch-opened modal takes focus");
   const duplicateModalIds = await touchPage.evaluate(() => {
@@ -199,7 +216,7 @@ try {
   await touchPage.keyboard.press("Escape");
   check(await touchPage.locator(".mp-modal").count() === 0, "Escape closes the mobile modal");
   check(await modalOpener.evaluate(el => el === document.activeElement), "Closing the modal restores focus to its opener");
-  await touchPage.getByRole("button", { name: "Manage Presets", exact: true }).tap();
+  await touchPage.locator("#control-material").getByRole("button", { name: "Manage Presets", exact: true }).tap();
   await touchPage.locator(".mp-modal-overlay").tap({ position: { x: 3, y: 3 } });
   check(await touchPage.locator(".mp-modal").count() === 0, "Tapping the scrim closes the mobile modal");
 

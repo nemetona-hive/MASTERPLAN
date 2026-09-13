@@ -184,25 +184,26 @@ var PAGES = [{
 
 // Default application state — edit initial values here
 const DEFAULT_SH = {
-  W: 1390,
-  H: 2200,
-  PPi: 2600,
-  PLa: 1200,
-  offset: 0.5,
-  direction: "H",
-  rowStart: "top",
-  rowStartH: "top",
-  rowStartV: "top",
-  patternStartH: "left",
-  patternStartV: "bottom",
-  minJ: 100,
-  startOff: 0,
-  s4Long: 2400
+  "W": "",
+  "H": "",
+  "PPi": "",
+  "PLa": "",
+  "offset": 0.5,
+  "direction": "H",
+  "rowStart": "top",
+  "rowStartH": "top",
+  "rowStartV": "top",
+  "patternStartH": "left",
+  "patternStartV": "bottom",
+  "patternStart": "left",
+  "minJ": 100,
+  "startOff": 0,
+  "s4Long": 2400
 };
 
 const DEFAULT_SYM = {
-  roomWidth: 2500,
-  panelWidth: 300,
+  roomWidth: "",
+  panelWidth: "",
   oneFullEdge: false,
   customFirstPieceWidth: 0
 };
@@ -233,6 +234,14 @@ const DEFAULT_MATERIAL_PRESETS = [
     name: "Plaat 600×300",
     length: 600,
     width: 300
+  }
+];
+
+const DEFAULT_SURFACE_PRESETS = [
+  {
+    "name": "Default",
+    "length": 3000,
+    "width": 5000
   }
 ];
 

@@ -650,7 +650,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
 }
 
 // Single collapsible replaces both Section and ControlPanel
-function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "", noToggle = false }) {
+function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "", noToggle = false }) {
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const defaultOpen = variant === "detail" ? false : true;
   // Uncontrolled: `open` seeds the initial state and nothing more. Every
@@ -673,13 +673,14 @@ function Collapsible({ id, title, bg, open: openProp, setOpen: setOpenProp, chil
   const titleContent = <><span>{title}</span>{!noToggle && <span className="sys-head-toggle">
     <Icon name={open ? "minus" : "plus"} /></span>}</>;
   return (
-    <div id={id} className={[classes[0], className].filter(Boolean).join(" ")}>
+    <div id={id} className={[classes[0], headerDetail && "control-panel--has-header-detail", className].filter(Boolean).join(" ")}>
       {noToggle
         ? <div className={classes[1]} style={bg ? { background: bg } : undefined}>{titleContent}</div>
         : <button type="button" className={`${classes[1]} disclosure ctl-ghost`}
             aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>
             {titleContent}
           </button>}
+      {headerDetail}
       <div id={contentId} hidden={!open} className={classes[2]}>{open && children}</div>
     </div>
   );
@@ -872,7 +873,7 @@ export function SaveDefaultsButton({ status, onClick, disabled = false, errorMes
   );
 }
 
-export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1 }) {
+export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1, title = "Material Presets" }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
   React.useLayoutEffect(() => {
@@ -884,8 +885,8 @@ export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApp
 
   return ReactDOM.createPortal(
     <div className="rate-presets-dropdown" style={{ position: "absolute", top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}>
-      <div className="rate-presets-header">Material Presets</div>
-      <div id={`${inputId}-presets`} className="rate-presets-list" role="listbox" aria-label="Material presets">
+      <div className="rate-presets-header">{title}</div>
+      <div id={`${inputId}-presets`} className="rate-presets-list" role="listbox" aria-label={title}>
         {presets.map((p, idx) => {
           if (!p.name) return null;
           const displayVal = field === "width" ? p.width : p.length;

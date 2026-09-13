@@ -12,7 +12,7 @@ import { AppNav } from "./Nav.jsx";
 import { ThemeButton } from "./components/ThemeButton.jsx";
 import { UndoButtons } from "./components/UndoButtons.jsx";
 import { installFieldUndo } from "./utils/field-undo.js";
-import { COMPACT_NAV_MEDIA_QUERY, MOBILE_MEDIA_QUERY, isCompactNavViewport, isMobileViewport, safeSaveStaticDefaults } from "./shared.jsx";
+import { COMPACT_NAV_MEDIA_QUERY, MOBILE_MEDIA_QUERY, isCompactNavViewport, isMobileViewport } from "./shared.jsx";
 
 /* ── The NEMETONA wordmark ─────────────────────────────────────────────────
  *
@@ -110,18 +110,12 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
 
 function App() {
   const drafts = React.useRef(new Map());
-  const [defaultSaveError, setDefaultSaveError] = React.useState(null);
   const [offline, setOffline] = React.useState(() => !navigator.onLine);
   React.useEffect(() => {
     const update = () => setOffline(!navigator.onLine);
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
     return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
-  }, []);
-  const saveDefaults = React.useCallback((key, value) => {
-    safeSaveStaticDefaults(key, value).then(() => {
-      setDefaultSaveError(current => current?.key === key ? null : current);
-    }).catch(err => setDefaultSaveError({ key, message: err.message || "Save failed" }));
   }, []);
   const [page, setPageState]                = useState(getHashPage);
   
@@ -254,28 +248,6 @@ function App() {
   const [grItems, setGrItems] = useState(DEFAULT_GR);
   const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
-  const isInitialSh = React.useRef(true);
-  React.useEffect(() => {
-    if (isInitialSh.current) {
-      isInitialSh.current = false;
-      return;
-    }
-    if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
-      saveDefaults("shDefaults", sh);
-    }
-  }, [sh, saveDefaults]);
-
-  const isInitialSym = React.useRef(true);
-  React.useEffect(() => {
-    if (isInitialSym.current) {
-      isInitialSym.current = false;
-      return;
-    }
-    if (typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults()) {
-      saveDefaults("symDefaults", sym);
-    }
-  }, [sym, saveDefaults]);
-
   return (
     <SessionDraftContext.Provider value={drafts.current}>
     <div id="app" className="app">
@@ -313,11 +285,6 @@ function App() {
         </div>
       </div>
       {offline && <p role="status" className="app-status">You’re offline. Open calculators still work; keep this window open.</p>}
-      {defaultSaveError && <div role="alert" className="app-status">
-        <span>Defaults were not saved: {defaultSaveError.message}</span>
-        <button type="button" className="num-btn ctl-ghost" onClick={() => saveDefaults(defaultSaveError.key,
-          defaultSaveError.key === "shDefaults" ? sh : sym)}>Retry</button>
-      </div>}
       <div id="app-page" className={"app-page" + (mobileMenuOpen ? " nav-open" : "")}>
         <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpen}
           mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile} />

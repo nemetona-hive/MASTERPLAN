@@ -8,8 +8,10 @@ import { LayoutPanel } from "../src/Visualization.jsx";
 /* The page's state lives in App, so the harness owns it the way App does —
    which is what makes the per-direction save answerable at all. DEFAULT_SH
    arrives as a global from config.js, published by tests/setup.js. */
-function Page({ over = {} }) {
-  const [sh, setSh] = React.useState({ ...DEFAULT_SH, ...over });
+const VALID_SH = { ...DEFAULT_SH, W: 1390, H: 2200, PPi: 2600, PLa: 1200 };
+
+function Page({ over = {}, empty = false }) {
+  const [sh, setSh] = React.useState({ ...(empty ? DEFAULT_SH : VALID_SH), ...over });
   const [panelOpen, setPanelOpen] = React.useState({ s1: false, s2: false, s3: false, s4: false });
   return <SheetSurfaceLayout sh={sh} setSh={setSh} panelOpen={panelOpen} setPanelOpen={setPanelOpen} />;
 }
@@ -28,6 +30,64 @@ const orderButtons = () => [...document.querySelectorAll(".ctrl-dir")]
 const activeOrder = () => orderButtons().find(b => b.className.includes("on"))?.textContent.trim();
 
 describe("the surface layout page", () => {
+  it("starts empty and guides without marking untouched fields as errors", () => {
+    render(<Page empty />);
+
+    for (const id of ["input-PLa", "input-PPi", "input-W", "input-H"]) {
+      expect(document.getElementById(id)).toHaveDisplayValue("");
+      expect(document.getElementById(id)).not.toHaveClass("num-input--req");
+    }
+    expect(screen.getByText("Build your layout preview")).toBeInTheDocument();
+    expect(document.querySelector(".sys-block")).toBeNull();
+  });
+
+  it("guides partial input and renders when the last required field is complete", () => {
+    render(<Page empty />);
+    const enter = (id, value) => {
+      fireEvent.change(document.getElementById(id), { target: { value: String(value) } });
+      fireEvent.blur(document.getElementById(id));
+    };
+
+    enter("input-PLa", 1200);
+    expect(document.getElementById("input-PPi")).toHaveClass("num-input--req");
+    expect(screen.getByText("Complete the material width and length.")).toBeInTheDocument();
+
+    enter("input-PPi", 2600);
+    expect(screen.getByText("Choose an input preset or enter the surface width and length.")).toBeInTheDocument();
+    enter("input-W", 1390);
+    enter("input-H", 2200);
+
+    expect(screen.queryByText("Build your layout preview")).toBeNull();
+    expect(document.querySelectorAll(".sys-block")).toHaveLength(4);
+    const firstBestPanel = document.querySelector(".sys-head-best").closest(".sys-block");
+    expect(firstBestPanel).toHaveClass("sys-block-open");
+    expect(firstBestPanel.querySelector(".panel-body")).toBeTruthy();
+  });
+
+  it("does not reopen the best layout after the user closes it", () => {
+    render(<Page />);
+    const firstBestPanel = document.querySelector(".sys-head-best").closest(".sys-block");
+
+    fireEvent.click(firstBestPanel.querySelector(".sys-disclosure"));
+    expect(firstBestPanel).not.toHaveClass("sys-block-open");
+
+    const width = document.getElementById("input-W");
+    fireEvent.change(width, { target: { value: "1400" } });
+    fireEvent.blur(width);
+    expect(document.querySelectorAll(".sys-block-open")).toHaveLength(0);
+  });
+
+  it("returns to guidance when a required dimension is cleared", () => {
+    render(<Page />);
+    const width = document.getElementById("input-W");
+    fireEvent.change(width, { target: { value: "" } });
+    fireEvent.blur(width);
+
+    expect(width).toHaveDisplayValue("");
+    expect(screen.getByText("Choose an input preset or enter the surface width and length.")).toBeInTheDocument();
+    expect(document.querySelector(".sys-block")).toBeNull();
+  });
+
   describe("switching direction", () => {
     it("changes which axis the pattern runs along", () => {
       render(<Page over={{ direction: "H" }} />);
@@ -97,7 +157,7 @@ describe("the surface layout page", () => {
 
 describe("a layout panel's open state", () => {
   const layout = { id: "s1", title: "Straight layout", icon: null, description: "" };
-  const result = () => computeS1({ ...DEFAULT_SH, direction: "H" });
+  const result = () => computeS1({ ...VALID_SH, direction: "H" });
 
   it("keeps its own when nothing is passed", () => {
     // Uncontrolled: `open` seeds the first render and nothing more.

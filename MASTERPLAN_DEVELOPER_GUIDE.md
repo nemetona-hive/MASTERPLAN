@@ -101,11 +101,12 @@ build`. Both are committed, because Pages serves them.
 and a step rather than inventing a hover or a height. `npm run audit:ui` blocks
 on both. These are token systems — do not hand-write what they generate.
 
-**Driving the app in a browser rewrites `config.js`.** The dev server's
-`/api/save-defaults` writes `DEFAULT_SH` straight into tracked source, and
-`canSaveStaticDefaults()` is a hostname check that localhost passes. Run
-`git status` after any browser session. `npm run layout` serves the tree
-statically for exactly this reason.
+**Explicit preset saves rewrite `config.js`.** Job dimensions are transient and
+begin empty; ordinary calculator edits never write them. Under `npm run dev`, a
+**Save Defaults** control writes its preset library into tracked source, and
+`canSaveStaticDefaults()` is only a hostname check. Inspect `git diff config.js`
+after deliberately saving presets. `npm run layout` serves the tree statically
+and answers the endpoint with a no-op.
 
 ## Important conventions
 

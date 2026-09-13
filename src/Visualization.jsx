@@ -32,6 +32,30 @@ export function PanelSummary({ rows, hoveredType, setHoveredType, grouped = fals
   );
 }
 
+export function LayoutEmptyState({ message, steps }) {
+  return (
+    <section className="layout-empty-state" aria-labelledby="layout-empty-title">
+      <div className="layout-empty-wireframe" aria-hidden="true">
+        <span className="layout-empty-panel layout-empty-panel--wide" />
+        <span className="layout-empty-panel layout-empty-panel--tall" />
+        <span className="layout-empty-panel layout-empty-panel--cut" />
+      </div>
+      <div className="layout-empty-copy">
+        <h3 id="layout-empty-title">Build your layout preview</h3>
+        <p role="status" aria-live="polite">{message}</p>
+        <ol className="layout-empty-steps">
+          {steps.map((step, index) => (
+            <li key={step.label} className={step.complete ? "is-complete" : ""}>
+              <span aria-hidden="true">{step.complete ? "✓" : index + 1}</span>
+              {step.label}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
 
 
 function buildLayoutSvgRects(result, orderedRows, rowStart) {

@@ -83,6 +83,11 @@ rather than scroll.
 LAYOUT_REGISTRY in Controls.jsx maps s1–s4 to their compute functions and control components.
 Best layout = fewest total pieces among valid results.
 
+When the four required dimensions first become valid, the first valid layout
+tied for that best count opens automatically. This is a readiness transition,
+not a standing override: closing it or editing already-valid values does not
+force it open again.
+
 Every `compute*` returns one of three shapes, and a caller that only looks at
 `rows` cannot tell them apart:
 

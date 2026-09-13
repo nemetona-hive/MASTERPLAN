@@ -17,7 +17,8 @@
   over and sets `aria-expanded`. The page still owns whether the list is
   open — see below.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
-- `<ControlPanel id title open setOpen>` — collapsible panel for controls sidebar
+- `<ControlPanel id title headerDetail open setOpen>` — collapsible panel for controls sidebar;
+  `headerDetail` renders optional contextual metadata directly below the panel heading.
   (`Section`, `ControlPanel` and `DetailSection` are one internal `Collapsible`
   wearing three variants; the base is not exported). Pass **both** `open` and
   `setOpen` to control it. `open` on its own is read once as the initial state
@@ -29,7 +30,7 @@
 - `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
-- `<MaterialPresetDropdown anchorRef presets activePreset onApply field />` — floating portal dropdown for material quick-select.
+- `<MaterialPresetDropdown anchorRef presets activePreset onApply field title />` — floating portal dropdown for width/length quick-select; `title` distinguishes material and input libraries.
   **It opens from the field's chevron button and nothing else.** It used to
   open on focus or on a click anywhere in the field, so the list covered the
   controls below it whenever somebody went to type a number, and clicking

@@ -1,16 +1,43 @@
 import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
 import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
-import { LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
+import { LayoutEmptyState, LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 import { CutListSheet } from "./CutListSheet.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { buildCutList } from "../utils/cut-list.js";
 
+const hasValue = value => value !== "" && value !== null && value !== undefined;
+const validDimension = (value, min, max) => {
+  const parsed = parseMeasurement(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max;
+};
+const clampOptionalDimension = (value, min, max) => value === "" ? "" : clampNumber(value, min, max, min);
+const dimensionsMatch = (actual, expected) => parseMeasurement(actual) === parseMeasurement(expected);
+const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+function getSurfaceReadiness(sh) {
+  const valid = {
+    PLa: validDimension(sh.PLa, 100, 8000),
+    PPi: validDimension(sh.PPi, 100, 8000),
+    W: validDimension(sh.W, 100, 50000),
+    H: validDimension(sh.H, 100, 50000)
+  };
+  const materialComplete = valid.PLa && valid.PPi;
+  const surfaceComplete = valid.W && valid.H;
+  return {
+    started: [sh.PLa, sh.PPi, sh.W, sh.H].some(hasValue),
+    materialComplete,
+    surfaceComplete,
+    ready: materialComplete && surfaceComplete,
+    missing: new Set(Object.keys(valid).filter(key => !valid[key]))
+  };
+}
+
 export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
-  /* `direction`, `minJ`, `startOff` and `patternStart` used to be read here
-     too. They are LayoutSettings' business now and were left behind when it
-     was split out; the markup below reaches for `sh.direction` directly. */
-  const { W, H, PPi, PLa, offset, s4Long } = sh;
+  /* Most fields belong to the readiness model or LayoutSettings; only these
+     two feed the per-layout control adapters below. */
+  const { offset, s4Long } = sh;
+  const readiness = getSurfaceReadiness(sh);
   const rowStart = sh.rowStart || "top";
   const [hoveredType, setHoveredType] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
@@ -31,6 +58,42 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const [presetError, setPresetError] = React.useState("");
   const [saveError, setSaveError] = React.useState("");
   const [activePresetDropdown, setActivePresetDropdown] = React.useState(null);
+
+  // Surface-size presets are separate from products: both happen to be a
+  // width/length pair, but one describes the job and the other the stock.
+  const [surfacePresets, setSurfacePresets] = React.useState(() =>
+    (typeof DEFAULT_SURFACE_PRESETS !== "undefined"
+      ? DEFAULT_SURFACE_PRESETS
+      : [{ name: "Viz-card development 1390×2200", width: 1390, length: 2200 }]
+    ).map(p => ({ ...p }))
+  );
+  const [activeSurfacePreset, setActiveSurfacePreset] = React.useState(null);
+  const [surfaceFlashIdx, setSurfaceFlashIdx] = useTimedState(null, 1200);
+  const [surfaceFieldFlash, setSurfaceFieldFlash] = useTimedState(false, 900);
+  const [showSurfaceModal, setShowSurfaceModal] = React.useState(false);
+  const [surfacePresetSaveStatus, setSurfacePresetSaveStatus] = useTimedState("");
+  const [surfacePresetError, setSurfacePresetError] = React.useState("");
+  const [surfaceSaveError, setSurfaceSaveError] = React.useState("");
+
+  // Selection describes the values, not focus timing. A dropdown applies both
+  // dimensions while its input still owns focus; that input can later blur and
+  // commit the same value from an older render. Derive invalidation from the
+  // resulting pair so that no-op commits preserve the title and real edits do not.
+  React.useEffect(() => {
+    if (activePreset === null) return;
+    const preset = presets[activePreset];
+    if (!preset || !dimensionsMatch(sh.PLa, preset.width) || !dimensionsMatch(sh.PPi, preset.length)) {
+      setActivePreset(null);
+    }
+  }, [activePreset, presets, sh.PLa, sh.PPi]);
+
+  React.useEffect(() => {
+    if (activeSurfacePreset === null) return;
+    const preset = surfacePresets[activeSurfacePreset];
+    if (!preset || !dimensionsMatch(sh.W, preset.width) || !dimensionsMatch(sh.H, preset.length)) {
+      setActiveSurfacePreset(null);
+    }
+  }, [activeSurfacePreset, surfacePresets, sh.W, sh.H]);
 
   /*
    * The cut list currently staged for printing.
@@ -104,13 +167,50 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
     }
   };
 
-  const setShField = (key, normalize = v => v, resetActive = false) => value => {
-    setSh(s => ({ ...s, [key]: normalize(value) }));
-    if (resetActive) setActivePreset(null);
+  const applySurfacePreset = (p, idx) => {
+    const width = parseMeasurement(p.width), length = parseMeasurement(p.length);
+    if (![width, length].every(n => Number.isFinite(n) && n >= 100 && n <= 50000)) {
+      setSurfacePresetError("Surface dimensions must be between 100 and 50000 mm.");
+      return;
+    }
+    setSurfacePresetError("");
+    markStep("Apply input preset");
+    setSh(s => ({ ...s, W: width, H: length }));
+    setActiveSurfacePreset(idx);
+    setSurfaceFlashIdx(idx);
+    setSurfaceFieldFlash(true);
   };
 
-  const setMat = k => setShField(k, v => clampNumber(v, 100, 8000, 100), true);
-  const setSurf = k => setShField(k, v => clampNumber(v, 100, 50000, 100));
+  const updateSurfacePreset = (idx, field, value) => {
+    const next = [...surfacePresets];
+    next[idx] = { ...next[idx], [field]: value };
+    setSurfacePresets(next);
+  };
+
+  const addSurfacePreset = () => setSurfacePresets([...surfacePresets, { name: "", width: "", length: "" }]);
+
+  const saveSurfaceDefaults = async () => {
+    setSurfacePresetSaveStatus("saving", 0);
+    try {
+      await safeSaveStaticDefaults("surfacePresets", surfacePresets);
+      setSurfacePresetSaveStatus("saved");
+    } catch (err) {
+      console.error(err);
+      setSurfaceSaveError(err.message || String(err));
+      setSurfacePresetSaveStatus("error");
+    }
+  };
+
+  const setShField = (key, normalize = v => v) => value => {
+    const normalized = normalize(value);
+    setSh(s => ({ ...s, [key]: normalized }));
+  };
+
+  const setMat = k => setShField(k, v => clampOptionalDimension(v, 100, 8000));
+  const setSurf = k => value => {
+    const normalized = clampOptionalDimension(value, 100, 50000);
+    setSh(s => ({ ...s, [k]: normalized }));
+  };
   const setS2PanelState = patch => setSh(s => ({ ...s, offset: patch.offset !== undefined ? patch.offset : s.offset }));
   const setS4PanelState = patch => setSh(s => ({ ...s,
     s4Long: patch.s4Long !== undefined ? patch.s4Long : s.s4Long
@@ -131,33 +231,25 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   // replaced wholesale by setSh — so keying the memo on it skips the work for
   // renders driven by hover, panel collapse, preset flashes and the like.
   const computedResults = React.useMemo(
-    () => LAYOUT_REGISTRY.map(sys => sys.compute(sh)),
-    [sh]
+    () => readiness.ready ? LAYOUT_REGISTRY.map(sys => sys.compute(sh)) : [],
+    [sh, readiness.ready]
   );
-  const panelResults      = layoutRegistry.map((layout, i) => ({ layout, result: computedResults[i] }));
+  const panelResults      = readiness.ready
+    ? layoutRegistry.map((layout, i) => ({ layout, result: computedResults[i] }))
+    : [];
   const panelResultsById  = panelResults.reduce((acc, p) => { acc[p.layout.id] = p; return acc; }, {});
   const comparableResults = panelResults.filter(p => p.layout.includeInBest && p.result.valid);
   const best = comparableResults.length ? Math.min(...comparableResults.map(p => p.result.stats.stockPanels)) : Infinity;
+  const firstBestId = comparableResults.find(p => p.result.stats.stockPanels === best)?.layout.id || null;
+  const wasReadyRef = React.useRef(false);
 
-  if (W <= 0 || H <= 0 || PPi <= 0 || PLa <= 0) {
-    return (
-      <>
-        <Stack id="data-control" className="data-control" gap={3}>
-          <MaterialSpecification 
-            sh={sh} setSh={setSh} setMat={setMat} 
-            presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
-            fieldFlash={fieldFlash} setShowModal={setShowModal}
-            activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
-            largePreviewOpen={!!largePreview}
-          />
-          <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
-        </Stack>
-        <div id="data-preview" className="data-preview">
-          <p className="desc">Select all input values - all must be greater than 0!</p>
-        </div>
-      </>
-    );
-  }
+  React.useEffect(() => {
+    const becameReady = readiness.ready && !wasReadyRef.current;
+    wasReadyRef.current = readiness.ready;
+    if (!becameReady || !firstBestId) return;
+    setPanelOpen(current => ({ ...current, [firstBestId]: true }));
+  }, [firstBestId, readiness.ready, setPanelOpen]);
+
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
@@ -167,13 +259,21 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           fieldFlash={fieldFlash} setShowModal={setShowModal}
           activePresetDropdown={activePresetDropdown} setActivePresetDropdown={setActivePresetDropdown}
           largePreviewOpen={!!largePreview}
+          showRequired={readiness.started} missing={readiness.missing}
         />
-        <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} />
-        <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
-          <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
-        </ControlPanel>
+        <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf}
+          presets={surfacePresets} activePreset={activeSurfacePreset} applyPreset={applySurfacePreset}
+          fieldFlash={surfaceFieldFlash} setShowModal={setShowSurfaceModal}
+          showRequired={readiness.started} missing={readiness.missing}
+          largePreviewOpen={!!largePreview} />
+        {readiness.ready && (
+          <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
+            <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
+          </ControlPanel>
+        )}
       </Stack>
       {presetError && <p role="alert" className="input-error">{presetError}</p>}
+      {surfacePresetError && <p role="alert" className="input-error">{surfacePresetError}</p>}
       <CutListSheet list={printList} />
       <div id="data-preview" className="data-preview">
         <PreviewSection 
@@ -181,7 +281,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           title="Pattern Layouts"
           description="Compare four row-based layouts using the selected surface and material."
         >
-          {["s1", "s2", "s3", "s4"].map(id => {
+          {readiness.ready ? ["s1", "s2", "s3", "s4"].map(id => {
             const panel = panelResultsById[id];
             if (!panel) return null;
             return (
@@ -194,7 +294,20 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                 onPrint={() => setPrintList(buildCutList(panel.result, sh, panel.layout))}
                 isBest={panel.layout.includeInBest && panel.result.valid && panel.result.stats.stockPanels === best} />
             );
-          })}
+          }) : (
+            <LayoutEmptyState
+              message={!readiness.started
+                ? "Choose a material preset or enter material dimensions to begin."
+                : !readiness.materialComplete
+                  ? "Complete the material width and length."
+                  : "Choose an input preset or enter the surface width and length."}
+              steps={[
+                { label: "Choose or enter the material", complete: readiness.materialComplete },
+                { label: "Choose or enter the surface dimensions", complete: readiness.surfaceComplete },
+                { label: "Compare the rendered layouts", complete: false }
+              ]}
+            />
+          )}
         </PreviewSection>
       </div>
 
@@ -283,7 +396,24 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
               </Stack>
         </Modal>
       )}
-      {largePreview && (() => {
+      {showSurfaceModal && (
+        <DimensionPresetManager
+          title="Manage Input Presets"
+          nameLabel="Configuration Name"
+          idPrefix="surface-preset"
+          presets={surfacePresets}
+          activePreset={activeSurfacePreset}
+          flashIdx={surfaceFlashIdx}
+          updatePreset={updateSurfacePreset}
+          applyPreset={applySurfacePreset}
+          addPreset={addSurfacePreset}
+          saveStatus={surfacePresetSaveStatus}
+          saveError={surfaceSaveError}
+          saveDefaults={saveSurfaceDefaults}
+          onClose={() => setShowSurfaceModal(false)}
+        />
+      )}
+      {readiness.ready && largePreview && (() => {
         const currentResult = panelResultsById[largePreview.layout.id]?.result || largePreview.result;
         return (
           <Modal
@@ -313,7 +443,9 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                         presets={presets} activePreset={activePreset} applyPreset={applyPreset}
                         fieldFlash={fieldFlash} setShowModal={setShowModal}
                       />
-                      <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} idPrefix="large-" />
+                      <SurfaceInputs sh={sh} setSh={setSh} setSurf={setSurf} idPrefix="large-"
+                        presets={surfacePresets} activePreset={activeSurfacePreset} applyPreset={applySurfacePreset}
+                        fieldFlash={surfaceFieldFlash} isLargePreview />
                     </Stack>
 
                     {/* Column 2: Layout Engine (25%) */}
@@ -458,9 +590,32 @@ function LargePreviewMaterialSpec({ sh, setSh, setMat, presets, activePreset, ap
   );
 }
 
-function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false, largePreviewOpen = false, idPrefix = "" }) {
+function SelectedPresetDetail({ preset }) {
+  if (!preset) return null;
+  const dimensions = `${preset.width} × ${preset.length} mm`;
+  const dimensionSuffix = new RegExp(
+    `\\s*${escapeRegExp(preset.width)}\\s*[×x]\\s*${escapeRegExp(preset.length)}(?:\\s*mm)?\\s*$`,
+    "i"
+  );
+  const displayName = String(preset.name).replace(dimensionSuffix, "").trim();
+  const fullTitle = displayName ? `${displayName} — ${dimensions}` : dimensions;
+  return (
+    <div className="panel-preset-meta" role="status" aria-live="polite">
+      <span className="panel-preset-meta-label">Preset</span>
+      <span className="panel-preset-meta-value" title={fullTitle}>
+        {displayName && <><span>{displayName}</span><span aria-hidden="true"> · </span></>}
+        <span>{dimensions}</span>
+      </span>
+    </div>
+  );
+}
+
+function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset, fieldFlash, setShowModal, activePresetDropdown, setActivePresetDropdown, isLargePreview = false, largePreviewOpen = false, idPrefix = "", showRequired = false, missing = new Set() }) {
   const { PLa, PPi } = sh;
   const validPresets = presets.filter(p => p.name);
+  const selectedPreset = Number.isInteger(activePreset) && presets[activePreset]?.name
+    ? presets[activePreset]
+    : null;
   
   const widWrapRef = React.useRef(null);
   const lenWrapRef = React.useRef(null);
@@ -474,25 +629,26 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
     setActivePresetDropdown(null);
   }, activePresetDropdown !== null && !isBackground);
 
-  const localApply = (p, idx) => {
-    applyPreset(p, idx);
+  const localApply = (p) => {
+    applyPreset(p, presets.indexOf(p));
     setActivePresetDropdown(null);
   };
 
   const { hoveredIndex: widHovered, onKeyDown: onWidKeyDown } = useDropdownKeyboard(
     activePresetDropdown === "wid" ? validPresets.length : 0,
-    (idx) => localApply(validPresets[idx], presets.indexOf(validPresets[idx])),
+    (idx) => localApply(validPresets[idx]),
     () => setActivePresetDropdown(null)
   );
 
   const { hoveredIndex: lenHovered, onKeyDown: onLenKeyDown } = useDropdownKeyboard(
     activePresetDropdown === "len" ? validPresets.length : 0,
-    (idx) => localApply(validPresets[idx], presets.indexOf(validPresets[idx])),
+    (idx) => localApply(validPresets[idx]),
     () => setActivePresetDropdown(null)
   );
 
   return (
-    <ControlPanel id={`${idPrefix}control-material`} title="Material Specification" noToggle>
+    <ControlPanel id={`${idPrefix}control-material`} title="Material Specification" noToggle
+      headerDetail={selectedPreset && <SelectedPresetDetail preset={selectedPreset} />}>
       <Stack gap={3} className="ctrl-list">
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
           <NumInput
@@ -507,6 +663,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onTogglePresets={() => setActivePresetDropdown(open => (open === "wid" ? null : "wid"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onWidKeyDown}
+            req={showRequired && missing.has("PLa")}
           />
           {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="width" inputId={`${idPrefix}input-PLa`} hoveredIndex={widHovered} />}
         </div>
@@ -523,6 +680,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onTogglePresets={() => setActivePresetDropdown(open => (open === "len" ? null : "len"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onLenKeyDown}
+            req={showRequired && missing.has("PPi")}
           />
           {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" inputId={`${idPrefix}input-PPi`} hoveredIndex={lenHovered} />}
         </div>
@@ -536,13 +694,127 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
   );
 }
 
-function SurfaceInputs({ sh, setSh, setSurf, idPrefix = "" }) {
-  const { W, H } = sh;
+function DimensionPresetManager({ title, nameLabel, idPrefix, presets, activePreset, flashIdx, updatePreset, applyPreset, addPreset, saveStatus, saveError, saveDefaults, onClose }) {
   return (
-    <ControlPanel id={`${idPrefix}control-surface`} title="Inputs" noToggle>
-      <Stack gap={3}>
-        <NumInput id={`${idPrefix}input-W`} label="Width — horizontal (mm)"  labelIcon="arrow-h" value={W} onChange={setSurf("W")} />
-        <NumInput id={`${idPrefix}input-H`} label="Length — vertical (mm)" labelIcon="arrow-v" value={H} onChange={setSurf("H")} />
+    <Modal title={title} onClose={onClose}>
+      <Stack gap={4}>
+        <Stack gap={3}>
+          <div className="pw-preset-header" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
+            <span>{nameLabel}</span>
+            <span>Width mm</span>
+            <span>Length mm</span>
+            <span>&nbsp;</span>
+          </div>
+          {presets.map((p, idx) => (
+            <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
+              <div className="pw-preset-fields" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
+                <div>
+                  <span className="pw-preset-lbl-hide">{nameLabel}</span>
+                  <input id={`${idPrefix}-name-${idx}`} name={`${idPrefix}-name-${idx}`}
+                    aria-label={`${nameLabel} ${idx + 1}`} type="text" className="num-input"
+                    value={p.name} onChange={e => updatePreset(idx, "name", e.target.value)} />
+                </div>
+                <div>
+                  <span className="pw-preset-lbl-hide">Width mm</span>
+                  <input id={`${idPrefix}-width-${idx}`} name={`${idPrefix}-width-${idx}`}
+                    aria-label={`Preset width ${idx + 1}`} type="text" inputMode="decimal"
+                    autoComplete="off" className="num-input" value={p.width}
+                    onChange={e => updatePreset(idx, "width", e.target.value)} />
+                </div>
+                <div>
+                  <span className="pw-preset-lbl-hide">Length mm</span>
+                  <input id={`${idPrefix}-length-${idx}`} name={`${idPrefix}-length-${idx}`}
+                    aria-label={`Preset length ${idx + 1}`} type="text" inputMode="decimal"
+                    autoComplete="off" className="num-input" value={p.length}
+                    onChange={e => updatePreset(idx, "length", e.target.value)} />
+                </div>
+                <div className="num-wrap" style={{ justifyContent: "center" }}>
+                  <span className="pw-preset-lbl-hide">&nbsp;</span>
+                  {activePreset === idx
+                    ? <div className="pw-preset-badge">active</div>
+                    : <button className={"ctrl-dir on pw-preset-apply" + (flashIdx === idx ? " pw-preset-flash" : "")}
+                        onClick={() => applyPreset(p, idx)} title="Apply these values to the inputs">
+                        {flashIdx === idx ? <><Icon name="check" /> Applied</> : <><Icon name="check" /> Apply</>}
+                      </button>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </Stack>
+        <Stack direction="row" gap={2}>
+          <button className="ctrl-dir" onClick={addPreset}><Icon name="plus" /> Add Row</button>
+          <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveDefaults} />
+        </Stack>
+        <div className="pw-formula-text">
+          Fill preset data above and click "Apply" to update the inputs, or "Save Defaults" to persist.
+        </div>
+      </Stack>
+    </Modal>
+  );
+}
+
+function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, fieldFlash = false, setShowModal, idPrefix = "", showRequired = false, missing = new Set(), isLargePreview = false, largePreviewOpen = false }) {
+  const { W, H } = sh;
+  const validPresets = presets.filter(p => p.name);
+  const selectedPreset = Number.isInteger(activePreset) && presets[activePreset]?.name
+    ? presets[activePreset]
+    : null;
+  const [activeDropdown, setActiveDropdown] = React.useState(null);
+  const widthWrapRef = React.useRef(null);
+  const lengthWrapRef = React.useRef(null);
+  const isBackground = !isLargePreview && largePreviewOpen;
+
+  useClickOutside([widthWrapRef, lengthWrapRef], () => setActiveDropdown(null),
+    activeDropdown !== null && !isBackground);
+
+  const localApply = (preset) => {
+    applyPreset(preset, presets.indexOf(preset));
+    setActiveDropdown(null);
+  };
+  const { hoveredIndex: widthHovered, onKeyDown: onWidthKeyDown } = useDropdownKeyboard(
+    activeDropdown === "width" ? validPresets.length : 0,
+    idx => localApply(validPresets[idx]),
+    () => setActiveDropdown(null)
+  );
+  const { hoveredIndex: lengthHovered, onKeyDown: onLengthKeyDown } = useDropdownKeyboard(
+    activeDropdown === "length" ? validPresets.length : 0,
+    idx => localApply(validPresets[idx]),
+    () => setActiveDropdown(null)
+  );
+
+  return (
+    <ControlPanel id={`${idPrefix}control-surface`} title="Inputs" noToggle
+      headerDetail={selectedPreset && <SelectedPresetDetail preset={selectedPreset} />}>
+      <Stack gap={3} className="ctrl-list">
+        <div className={fieldFlash ? "num-input-flash" : ""} ref={widthWrapRef} style={{ position: "relative" }}>
+          <NumInput id={`${idPrefix}input-W`} label="Width — horizontal (mm)" labelIcon="arrow-h" value={W}
+            onChange={setSurf("W")} req={showRequired && missing.has("W")}
+            presetsOpen={activeDropdown === "width"} presetHoveredIndex={widthHovered}
+            onTogglePresets={() => setActiveDropdown(open => open === "width" ? null : "width")}
+            onCommit={() => setActiveDropdown(null)} onKeyDown={onWidthKeyDown} />
+          {activeDropdown === "width" && validPresets.length > 0 && (
+            <MaterialPresetDropdown anchorRef={widthWrapRef} presets={validPresets} activePreset={activePreset}
+              onApply={localApply} field="width" inputId={`${idPrefix}input-W`} hoveredIndex={widthHovered}
+              title="Input Presets" />
+          )}
+        </div>
+        <div className={fieldFlash ? "num-input-flash" : ""} ref={lengthWrapRef} style={{ position: "relative" }}>
+          <NumInput id={`${idPrefix}input-H`} label="Length — vertical (mm)" labelIcon="arrow-v" value={H}
+            onChange={setSurf("H")} req={showRequired && missing.has("H")}
+            presetsOpen={activeDropdown === "length"} presetHoveredIndex={lengthHovered}
+            onTogglePresets={() => setActiveDropdown(open => open === "length" ? null : "length")}
+            onCommit={() => setActiveDropdown(null)} onKeyDown={onLengthKeyDown} />
+          {activeDropdown === "length" && validPresets.length > 0 && (
+            <MaterialPresetDropdown anchorRef={lengthWrapRef} presets={validPresets} activePreset={activePreset}
+              onApply={localApply} field="length" inputId={`${idPrefix}input-H`} hoveredIndex={lengthHovered}
+              title="Input Presets" />
+          )}
+        </div>
+        {!isLargePreview && typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
+          <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
+            <Icon name="plus" /> Manage Presets
+          </button>
+        )}
       </Stack>
     </ControlPanel>
   );

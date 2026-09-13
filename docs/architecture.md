@@ -133,8 +133,8 @@ same thing would be a cost with no reader.
 |---|---|
 | `PAGES` | Navigation page definitions (id, label, title, desc, icon, noNav) — a flat list |
 | `SYSTEMS` | Layout system metadata (id, title, icon, subtitle — subtitle can be a function) |
-| `DEFAULT_SH` | Default state for surface layout (W, H, PPi, PLa, offset, direction, minJ, startOff, s4Long, s4Short, rowStart) |
-| `DEFAULT_SYM` | Default state for symmetric layout (roomWidth, panelWidth, oneFullEdge, customFirstPieceWidth) |
+| `DEFAULT_SH` | Initial surface-layout state. Job dimensions (W, H, PPi, PLa) are blank; layout choices and engine settings have defaults. |
+| `DEFAULT_SYM` | Initial symmetric-layout state. Room and panel widths are blank; layout choices retain defaults. |
 | `DEFAULT_GR` | Default items for golden ratio tool |
 | `ICONS` | Map of icon name → FontAwesome class string (defined in config.js) |
 | `PAL_CLASSES` | Palette class maps for segment coloring (s1, s2, s3, s4l, s4s — the three row systems deliberately share one colour) |
@@ -148,6 +148,7 @@ same thing would be a cost with no reader.
 | `BUILD` | `{ id }` — content hash of the deployed files, from the generated `version.js`. Read it through `typeof BUILD !== "undefined"`: a browser on a cached pre-versioning `index.html` never loaded the script |
 | `DEFAULT_CONCRETE_PRESETS` | Initial product list for Concrete calculator (name, rate, bagKg, bagPrice) |
 | `DEFAULT_MATERIAL_PRESETS` | Initial material list for Surface Layout (name, length, width) |
+| `DEFAULT_SURFACE_PRESETS` | Reusable Surface Layout input sizes (name, width, length) |
 | `canSaveStaticDefaults()` | Boolean check for local dev environment |
 | `saveStaticDefaults(key, value)` | API call to persist config changes to disk during development |
 | `getThemeOrder()` | Ordered list of theme keys |

@@ -236,6 +236,17 @@
 		padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
 	}
 
+	.layout-empty-state {
+		grid-template-columns: 1fr;
+		gap: var(--sp-3);
+		min-height: 0;
+		padding: var(--sp-3);
+	}
+
+	.layout-empty-wireframe {
+		min-height: 140px;
+	}
+
 	.data-preview .sys-block {
 		margin-bottom: 10px;
 	}

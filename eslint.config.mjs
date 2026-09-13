@@ -49,7 +49,7 @@ const APP_GLOBALS = {
   ICONS: "readonly", PAGES: "readonly", SYSTEMS: "readonly",
   PAL_CLASSES: "readonly", SUMMARY_LABELS: "readonly",
   DEFAULT_SH: "readonly", DEFAULT_SYM: "readonly", DEFAULT_GR: "readonly",
-  DEFAULT_MATERIAL_PRESETS: "readonly", DEFAULT_CONCRETE_PRESETS: "readonly",
+  DEFAULT_MATERIAL_PRESETS: "readonly", DEFAULT_SURFACE_PRESETS: "readonly", DEFAULT_CONCRETE_PRESETS: "readonly",
   fmt: "readonly", fmtFixed: "readonly",
   getDescription: "readonly", getSegmentClass: "readonly",
   canSaveStaticDefaults: "readonly", saveStaticDefaults: "readonly",

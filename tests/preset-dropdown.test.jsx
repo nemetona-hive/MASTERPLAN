@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
 import { SheetSymmetricLayout } from "../src/components/SymmetricLayout.jsx";
@@ -39,6 +39,14 @@ function Harness() {
 const firstPreset = DEFAULT_MATERIAL_PRESETS.filter(p => p.name)[0];
 
 describe("material presets on the symmetric layout page", () => {
+  it("starts with empty measurements and a guided preview", () => {
+    render(<Harness />);
+    expect(document.getElementById("input-sym-room-width")).toHaveDisplayValue("");
+    expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue("");
+    expect(screen.getByText("Build your layout preview")).toBeInTheDocument();
+    expect(document.querySelector(".sys-block")).toBeNull();
+  });
+
   it("stays shut when the field is clicked and typed into", async () => {
     const user = userEvent.setup();
     render(<Harness />);
@@ -74,6 +82,7 @@ describe("material presets on the symmetric layout page", () => {
 
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue(String(firstPreset.width));
     expect(screen.queryByText("Material Presets")).toBeNull();
+    expect(screen.getByText("Now enter the area width.")).toBeInTheDocument();
   });
 
   it("can be walked with the keyboard, because the field keeps focus", async () => {
@@ -113,6 +122,78 @@ describe("material presets on the symmetric layout page", () => {
  * focus and toggle inside the button shows.
  */
 describe("material presets on the surface layout page", () => {
+  it("fills the material cells but waits for the surface before rendering", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+
+    await user.click(screen.getAllByTitle("Presets")[0]);
+    await user.click(screen.getByText(firstPreset.name));
+
+    expect(document.getElementById("input-PLa")).toHaveDisplayValue(String(firstPreset.width));
+    expect(document.getElementById("input-PPi")).toHaveDisplayValue(String(firstPreset.length));
+    const materialPanel = document.getElementById("control-material");
+    expect(within(materialPanel).getByText("Preset")).toBeInTheDocument();
+    expect(materialPanel.querySelector(".panel-preset-meta-value"))
+      .toHaveTextContent(`${firstPreset.width} × ${firstPreset.length} mm`);
+
+    await user.click(screen.getByText("Pattern Layouts"));
+    expect(materialPanel.querySelector(".panel-preset-meta-value"))
+      .toHaveTextContent(`${firstPreset.width} × ${firstPreset.length} mm`);
+    expect(screen.getByText("Choose an input preset or enter the surface width and length.")).toBeInTheDocument();
+    expect(document.querySelector(".sys-block")).toBeNull();
+  });
+
+  it("loads a saved configuration from the Inputs panel", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+    const surfacePreset = DEFAULT_SURFACE_PRESETS[0];
+
+    await user.click(screen.getAllByTitle("Presets")[0]);
+    await user.click(screen.getByText(firstPreset.name));
+    await user.click(screen.getAllByTitle("Presets")[2]);
+    expect(screen.getByText("Input Presets")).toBeInTheDocument();
+    await user.click(screen.getByText(surfacePreset.name));
+
+    expect(document.getElementById("input-W")).toHaveDisplayValue(String(surfacePreset.width));
+    expect(document.getElementById("input-H")).toHaveDisplayValue(String(surfacePreset.length));
+    const inputsPanel = document.getElementById("control-surface");
+    expect(within(inputsPanel).getByText("Preset")).toBeInTheDocument();
+    expect(inputsPanel.querySelector(".panel-preset-meta-value"))
+      .toHaveTextContent(`${surfacePreset.name} · ${surfacePreset.width} × ${surfacePreset.length} mm`);
+
+    await user.click(screen.getByText("Pattern Layouts"));
+    expect(inputsPanel.querySelector(".panel-preset-meta-value"))
+      .toHaveTextContent(`${surfacePreset.name} · ${surfacePreset.width} × ${surfacePreset.length} mm`);
+    expect(document.querySelectorAll(".sys-block")).toHaveLength(4);
+  });
+
+  it("clears the selected preset title when an input is edited", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+    const surfacePreset = DEFAULT_SURFACE_PRESETS[0];
+    const inputsPanel = document.getElementById("control-surface");
+
+    await user.click(within(inputsPanel).getAllByTitle("Presets")[0]);
+    await user.click(screen.getByText(surfacePreset.name));
+    expect(within(inputsPanel).getByText(surfacePreset.name)).toBeInTheDocument();
+
+    const width = document.getElementById("input-W");
+    await user.click(width);
+    await user.clear(width);
+    await user.type(width, "5100{Enter}");
+    expect(within(inputsPanel).queryByText("Preset")).toBeNull();
+    expect(within(inputsPanel).queryByText(surfacePreset.name)).toBeNull();
+  });
+
+  it("opens a separate manager for Inputs presets", async () => {
+    const user = userEvent.setup();
+    render(<SurfaceHarness />);
+
+    await user.click(within(document.getElementById("control-surface")).getByRole("button", { name: "Manage Presets" }));
+    expect(screen.getByRole("dialog", { name: "Manage Input Presets" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue(DEFAULT_SURFACE_PRESETS[0].name)).toBeInTheDocument();
+  });
+
   it("opens another field's list from one click while a field is active", async () => {
     /* The bug: the toggle set the state and then moved focus, so the field
        being left committed on blur, its page closed the list from there, and

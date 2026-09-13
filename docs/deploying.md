@@ -98,7 +98,9 @@ Two consequences worth knowing:
 
 ## Local Static Defaults (Dev environment only)
 
-When running the application locally, a specialized persistence mechanism allows saving UI state (presets, defaults) directly back into the source code (`config.js`).
+When running the application locally, a specialized persistence mechanism
+allows explicitly saving shared preset libraries directly back into the source
+code (`config.js`). Job dimensions are not accepted by this endpoint.
 
 - `canSaveStaticDefaults()`: Returns `true` if the app is running on `localhost`
   or `127.0.0.1`. This decides whether the Save Defaults **button renders** —
@@ -125,6 +127,7 @@ When running the application locally, a specialized persistence mechanism allows
 - Currently utilized by:
   - **Concrete Calculator**: To persist product presets.
   - **Surface Layout**: To persist material presets.
+  - **Surface Layout Inputs**: To persist reusable surface-size presets.
   - **Golden Ratio Tool**: To persist saved value series.
 
 ## What this app deliberately does not keep
@@ -142,7 +145,7 @@ two things actually worth keeping already have homes:
 
 | Worth keeping | Where it goes |
 |---|---|
-| The values you reuse across jobs | `saveStaticDefaults` → `config.js`, dev only |
+| Preset definitions reused across jobs | `saveStaticDefaults` → `config.js`, dev only |
 | The output of a calculation | The printed cut list |
 
 So there is no `useAutoSave`, no `_personal/`, no restore points, and no
@@ -152,9 +155,9 @@ nobody can re-derive; nothing here is in that category.
 **Two consequences worth carrying.** Undo is the only way back from a
 destructive action — there is nothing behind it, which is why `doc-undo` covers
 every button that can lose work. And the dev server's `saveStaticDefaults` is
-the one thing that writes to a tracked file: driving the app in a browser
-rewrites `DEFAULT_SH` in `config.js` with whatever you typed. Check
-`git status` after any browser session.
+the one thing that writes to a tracked file: an explicit preset save changes
+`config.js`, while typing job dimensions does not. Inspect that diff after a
+deliberate save.
 
 
 ## Draft lifetime and offline behaviour
@@ -167,7 +170,7 @@ loaded window open: calculations work with loaded assets, but offline reopening
 is not supported and no service worker is installed.
 
 Local default saves are queued per resource with a 10-second request timeout.
-Errors receive visible feedback; automatic dimension saves offer Retry using the
-latest state. The local server serves an explicit public file set plus asset and
-vendor trees, rejects symlinks, caps JSON at 256 KiB, and validates enums and
-numeric bounds. This does not change which files GitHub Pages publishes.
+Errors receive visible feedback on the Save Defaults control. The local server
+serves an explicit public file set plus asset and vendor trees, rejects
+symlinks, caps JSON at 256 KiB, and validates preset numeric bounds. This does
+not change which files GitHub Pages publishes.

@@ -9,7 +9,7 @@ import { createRequestHandler, MAX_BODY_BYTES } from "../scripts/local-dev-serve
 let root, handler;
 beforeEach(() => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), "masterplan-server-"));
-  fs.writeFileSync(path.join(root, "config.js"), 'const DEFAULT_CONCRETE_PRESETS = [];\nconst DEFAULT_SH = {};');
+  fs.writeFileSync(path.join(root, "config.js"), 'const DEFAULT_CONCRETE_PRESETS = [];\nconst DEFAULT_SURFACE_PRESETS = [];\nconst DEFAULT_SH = {};');
   fs.writeFileSync(path.join(root, "index.html"), "fixture");
   fs.mkdirSync(path.join(root, "assets"));
   fs.mkdirSync(path.join(root, ".git"));
@@ -57,6 +57,9 @@ describe("isolated local server", () => {
     expect(save({ body: "{" }).code).toBe(400);
     expect(save({ body: "null" }).code).toBe(400);
     expect(save({ body: { key: "constructor", value: [] } }).code).toBe(400);
+    expect(save({ body: { key: "shDefaults", value: { W: 100 } } }).code).toBe(400);
+    expect(save({ body: { key: "symDefaults", value: { roomWidth: 100 } } }).code).toBe(400);
+    expect(save({ body: { key: "surfacePresets", value: [{ name: "Room A", width: 1390, length: 2200 }] } }).code).toBe(200);
     expect(save({ headers: { "content-type": "text/plain" } }).code).toBe(415);
     expect(save({ body: { key: "concretePresets", value: [{ rate: "1kg", bagKg: 25 }] } }).code).toBe(400);
     expect(save().code).toBe(200);

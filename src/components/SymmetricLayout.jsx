@@ -1,9 +1,20 @@
 import { React } from "../react-globals.js";
 import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
-import { LayoutPanel, PreviewSection } from "../Visualization.jsx";
+import { LayoutEmptyState, LayoutPanel, PreviewSection } from "../Visualization.jsx";
+import { parseMeasurement } from "../utils/measurements.cjs";
+
+const validDimension = (value, min, max) => {
+  const parsed = parseMeasurement(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max;
+};
+const clampOptionalDimension = (value, min, max) => value === "" ? "" : clampNumber(value, min, max, min);
 
 export function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
+  const roomComplete = validDimension(sym.roomWidth, 100, 50000);
+  const materialComplete = validDimension(sym.panelWidth, 100, 8000);
+  const started = [sym.roomWidth, sym.panelWidth].some(value => value !== "" && value !== null && value !== undefined);
+  const ready = roomComplete && materialComplete;
 
   // ── Material presets (shared with pattern layouts) ─────────────────────────
   const presets = React.useMemo(() =>
@@ -46,20 +57,23 @@ export function SheetSymmetricLayout({ sym, setSym }) {
     compute: () => computeS0(sym),
     includeInBest: false
   };
-  const result = layout.compute();
+  const result = ready ? layout.compute() : null;
   return (
     <>
       <Stack id="data-control" className="data-control" gap={3}>
         <ControlPanel id="control-sym-surface" title="Inputs" noToggle>
           <Stack gap={3}>
-            <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth} onChange={v => setSym(s => ({ ...s, roomWidth: clampNumber(v, 100, 50000, 100) }))} min={100} />
+            <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth}
+              onChange={v => setSym(s => ({ ...s, roomWidth: clampOptionalDimension(v, 100, 50000) }))}
+              min={100} req={started && !roomComplete} />
             <div ref={widWrapRef} style={{ position: "relative" }}>
               <NumInput
                 id="input-sym-panel-width"
                 label="Product width (mm)"
                 value={sym.panelWidth}
-                onChange={v => { setSym(s => ({ ...s, panelWidth: clampNumber(v, 100, 8000, 100) })); setActivePreset(null); }}
+                onChange={v => { setSym(s => ({ ...s, panelWidth: clampOptionalDimension(v, 100, 8000) })); setActivePreset(null); }}
                 min={100}
+                req={started && !materialComplete}
                 presetsOpen={showWidDropdown}
                 presetHoveredIndex={hoveredIndex}
                 onTogglePresets={() => setShowWidDropdown(open => !open)}
@@ -95,7 +109,22 @@ export function SheetSymmetricLayout({ sym, setSym }) {
           title="Axial Alignment"
           description="Align full panels on an axis and resolve the edge pieces."
         >
-          <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} noToggle />
+          {ready ? (
+            <LayoutPanel layout={layout} result={result} hoveredType={hoveredType} setHoveredType={setHoveredType} isBest={false} noToggle />
+          ) : (
+            <LayoutEmptyState
+              message={!started
+                ? "Choose a material preset or enter a product width to begin."
+                : !materialComplete
+                  ? "Complete the product width."
+                  : "Now enter the area width."}
+              steps={[
+                { label: "Choose or enter the product width", complete: materialComplete },
+                { label: "Enter the area width", complete: roomComplete },
+                { label: "Review the rendered alignment", complete: false }
+              ]}
+            />
+          )}
         </PreviewSection>
       </div>
     </>

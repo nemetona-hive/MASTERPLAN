@@ -26,21 +26,15 @@ refuses a push where `components.js`, `app.css`, `version.js` or the font
 subsets no longer match `src/`. The one exception is `components.js.map`, which
 is gitignored.
 
-## Never let a browser session write to config.js
+## Preset saves write to config.js
 
-The dev server's `/api/save-defaults` writes `DEFAULT_SH` **straight into
-`config.js`**, which is tracked source, and `canSaveStaticDefaults()` is a
-hostname check that any localhost passes. Type a dimension into the app with
-`npm run dev` running and the repo's default material size changes.
-
-That is the feature working as intended — it is how the defaults are edited —
-but it means:
-
-- **Run `git status` after any browser session.** A test value left in
-  `DEFAULT_SH` is a real change to what every visitor sees first.
-- `npm run layout` serves the tree with a **static** server for exactly this
-  reason, and answers that endpoint with a no-op. Never point a check at
-  `npm run dev`.
+Job dimensions are transient and begin empty. The dev server's
+`/api/save-defaults` accepts only explicit preset/default-library saves and
+writes them straight into tracked `config.js`; ordinary calculator edits never
+call it. `canSaveStaticDefaults()` is only a hostname check, so keep automated
+browser checks on `npm run layout`, whose static server answers the endpoint
+with a no-op. After deliberately using a **Save Defaults** control under
+`npm run dev`, inspect `git diff config.js`.
 
 ## These are token systems — don't hand-write what they generate
 

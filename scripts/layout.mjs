@@ -26,10 +26,9 @@
  *
  * This starts a plain file server on an OS-assigned port. It does NOT use
  * `scripts/local-dev-server.js`, and that is the point: that server exposes
- * `/api/save-defaults`, which writes `DEFAULT_SH` straight into `config.js`.
- * A gate that drove the app through it would rewrite tracked source every run —
- * a check that dirties the tree it is checking. Serving statically also matches
- * production, since GitHub Pages has no API either.
+ * `/api/save-defaults`, which writes explicitly saved preset libraries into
+ * `config.js`. A gate must never mutate the tree it is checking. Serving
+ * statically also matches production, since GitHub Pages has no API either.
  *
  * ## When to run it
  *
@@ -242,9 +241,14 @@ async function run() {
      * The trap is a keydown handler, so only a real browser dispatching real
      * Tab presses can say whether focus stayed in. */
     await page.goto(`${base}/#pattern-layout`, { waitUntil: "load" });
-    await page.locator(".sys-disclosure").first().click();
+    if (await page.locator(".layout-empty-state").count()) pass();
+    else fail("empty-layout-missing", "pattern-layout", "fresh layout page did not show its guided empty state");
+    for (const [id, value] of [["input-PLa", "1200"], ["input-PPi", "2600"], ["input-W", "1390"], ["input-H", "2200"]]) {
+      await page.locator(`#${id}`).fill(value);
+      await page.locator(`#${id}`).press("Enter");
+    }
     await page.waitForTimeout(300);
-    const expand = page.locator(".viz-expand-btn").first();
+    const expand = page.locator(".sys-block-open .viz-expand-btn").first();
     if (await expand.count()) {
       await expand.scrollIntoViewIfNeeded();
       await expand.click();
