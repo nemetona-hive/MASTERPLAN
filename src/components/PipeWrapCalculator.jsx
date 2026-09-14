@@ -3,6 +3,7 @@ import { React } from "../react-globals.js";
 import { NumInput, RangeSlider, Row, Section, Stack } from "../shared.jsx";
 
 const PRESETS = [100, 125, 160, 200];
+const THICKNESS_PRESETS = [20, 30, 50, 100];
 
 export function PipeWrapCalculator() {
   const [pipeDiam, setPipeDiam] = useSessionState("PipeWrapCalculator.jsx:pipeDiam", "");
@@ -60,38 +61,55 @@ export function PipeWrapCalculator() {
               <div className="section-body">
                 <Stack className="section-pad" gap={3}>
                   <div className="pw-grid-2col" style={{marginBottom: 0}}>
-                    <NumInput
-                      id="input-pipeDiam"
-                      label="Pipe outer diameter (mm)"
-                      value={pipeDiam}
-                      min={1}
-                      onChange={setPipeDiam}
-                    />
+                    <Stack gap={3}>
+                      <NumInput
+                        id="input-pipeDiam"
+                        label="Pipe outer diameter (mm)"
+                        value={pipeDiam}
+                        min={1}
+                        onChange={setPipeDiam}
+                      />
+                      <div className="preset-group">
+                        <span className="ctrl-sublbl">Pipe diameter presets</span>
+                        <div className="ctrl-btns preset-options">
+                          {PRESETS.map(p => (
+                            <button
+                              key={p}
+                              className={`pill-btn${d === p ? " on" : ""}`}
+                              onClick={() => setPipeDiam(d === p ? "" : p)}
+                            >
+                              Ø {p}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </Stack>
 
-                    <NumInput
-                      id="input-matThick"
-                      label="Material thickness (mm)"
-                      value={matThick}
-                      min={0}
-                      onChange={setMatThick}
-                    />
+                    <Stack gap={3}>
+                      <NumInput
+                        id="input-matThick"
+                        label="Material thickness (mm)"
+                        value={matThick}
+                        min={0}
+                        onChange={setMatThick}
+                      />
+                      <div className="preset-group">
+                        <span className="ctrl-sublbl">Material thickness presets</span>
+                        <div className="ctrl-btns preset-options">
+                          {THICKNESS_PRESETS.map(p => (
+                            <button
+                              key={p}
+                              className={`pill-btn${t === p ? " on" : ""}`}
+                              onClick={() => setMatThick(t === p ? "" : p)}
+                            >
+                              {p} mm
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </Stack>
                   </div>
 
-                  {/* presets */}
-                  <Stack gap={2}>
-                    <div className="num-lbl pw-preset-label">Pipe diameter presets</div>
-                    <div className="ctrl-btns">
-                      {PRESETS.map(p => (
-                        <button
-                          key={p}
-                          className={`pill-btn${d === p ? " on" : ""}`}
-                          onClick={() => setPipeDiam(p)}
-                        >
-                          Ø {p}
-                        </button>
-                      ))}
-                    </div>
-                  </Stack>
                 </Stack>
               </div>
             </div>

@@ -67,6 +67,7 @@
 
 	:root {
 		--row-h: 22px;
+		--form-control-h: var(--ctl-h-touch);
 	}
 
 	.app {

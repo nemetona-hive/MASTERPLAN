@@ -208,6 +208,19 @@ html, body, #root {
 	--sp-5: 20px;
 	--sp-6: 24px;
 	--sp-7: 32px;
+
+	/* Form system: the control panels use the base spacing scale rather than
+	   local one-off margins. Labels sit 8px above a field, fields are 12px
+	   apart, and cards are 16px apart. */
+	--form-label-gap: var(--sp-2);
+	--form-field-gap: var(--sp-3);
+	--form-card-gap: var(--sp-4);
+	--form-card-pad: var(--sp-3);
+	--form-control-h: var(--ctl-h-lg);
+	--form-card-bg: var(--surface-1);
+	--form-section-fg: var(--accent);
+	--form-label-fg: var(--text-muted);
+	--form-field-edge: var(--border);
  }
 
 body {
@@ -340,8 +353,7 @@ input[type=range]:active::-webkit-slider-thumb {
    equivalent. Every numeric field is type="text" now — see NumInput — so there
    is no spinner to hide and no type=number left for a selector to match. */
 .num-input:focus {
-	border-color: var(--color-primary);
-	box-shadow: 0 0 0 2px var(--color-gray);
+	box-shadow: inset 0 0 0 1px var(--brand), 0 0 0 2px var(--border-strong);
 	outline: none;
 }
 

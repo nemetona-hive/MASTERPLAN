@@ -157,16 +157,6 @@
 	justify-self: end;
 }
 
-/* Lunch presets ----------------------------------------------------------- */
-
-.ts-pills {
-	display: flex;
-	gap: var(--sp-1);
-	flex-wrap: wrap;
-	align-items: flex-start;
-	margin-top: 6px;
-}
-
 /* Controls row ------------------------------------------------------------ */
 
 .ts-controls {

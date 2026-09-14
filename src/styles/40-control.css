@@ -11,7 +11,7 @@
 	padding: var(--sp-4) var(--sp-3);
 	display: flex;
 	flex-direction: column;
-	gap: var(--sp-3);
+	gap: var(--form-card-gap);
 	overflow-y: auto;
 }
 
@@ -19,7 +19,49 @@
 .data-control .control-panel .panel-data {
 	display: flex;
 	flex-direction: column;
-	gap: var(--sp-4);
+	gap: var(--form-field-gap);
+}
+
+/* Reusable form-section-card: a card establishes the visual group; the
+   fields within it share label, row and action metrics. */
+.data-control .form-section-card {
+	padding: var(--form-card-pad);
+	background: var(--form-card-bg);
+	box-shadow: var(--ring-soft);
+	border-radius: var(--btn-radius);
+}
+
+.data-control .control-panel.form-section-card .panel-head {
+	min-height: var(--form-control-h);
+	padding: 0;
+	font-size: var(--fs-md);
+	font-weight: var(--fw-semi);
+	line-height: var(--lh-tight);
+	color: var(--form-section-fg);
+	letter-spacing: 0.12em;
+}
+
+.data-control .form-section-card .panel-data,
+.data-control .form-section-card .ctrl-list {
+	gap: var(--form-field-gap);
+}
+
+.data-control .form-section-card .num-input,
+.data-control .form-section-card .num-btn {
+	min-height: var(--form-control-h);
+	height: var(--form-control-h);
+}
+
+.data-control .form-section-card .num-btn {
+	min-width: var(--form-control-h);
+}
+
+.data-control .form-section-card .form-section-action {
+	flex: none;
+	width: 100%;
+	min-height: var(--form-control-h);
+	height: var(--form-control-h);
+	padding-inline: var(--ctl-pad-x-md);
 }
 
 .data-control .control-panel .panel-head {
@@ -74,13 +116,14 @@
 .ctrl-lbl {
 	display: flex;
 	flex-direction: column;
-	gap: var(--sp-1);
+	gap: var(--form-label-gap);
 }
 
 .ctrl-sublbl {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	color: var(--color-primary);
+	color: var(--form-label-fg);
+	font-weight: var(--fw-med);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
@@ -89,6 +132,18 @@
 	display: flex;
 	gap: var(--sp-1);
 	flex-wrap: wrap;
+}
+
+/* Quick-set values are one pattern across calculators: a secondary label
+   followed by a wrapped run of ghost pill controls. */
+.preset-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-2);
+}
+
+.preset-options {
+	gap: var(--sp-2);
 }
 
 /* ── Segmented control wrapper ────────────────────────────────

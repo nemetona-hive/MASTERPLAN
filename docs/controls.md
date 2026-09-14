@@ -95,6 +95,12 @@ flex-item boundary instead of rendering it, so relying on the JSX space
 between the icon and the label collapses it to zero width and runs the icon
 into the text.
 
+**Quick presets** are one shared group: `.preset-group` wraps a `.ctrl-sublbl`
+and `.ctrl-btns.preset-options` containing `.pill-btn`s. Both gaps take
+`--sp-2`; place the group directly beneath the field it changes when one field
+owns the options. A selected pill may toggle its value back to empty on a second
+click, so its active state must be derived from that field's current value.
+
 Classes live in `65-controls.css`, deliberately after the base controls in
 30/40/60 — every one is a single class, so source order is what decides. Tokens
 live in `:root` in `00-base.css`; four are per-theme in `themes.js`

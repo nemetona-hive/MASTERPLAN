@@ -306,17 +306,15 @@ export function SheetTimesheet() {
 
                   {/* Controls */}
                   <Stack gap={4}>
-                    <Stack gap={2} className="ts-pills">
-                      <div className="pw-preset-header" style={{ display: 'block', gridTemplateColumns: 'none' }}>
-                        <span>Lunch presets:</span>
-                      </div>
-                      <div className="ctrl-btns" style={{ flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-start' }}>
+                    <div className="preset-group">
+                      <span className="ctrl-sublbl">Lunch presets</span>
+                      <div className="ctrl-btns preset-options">
                         {LUNCH_PRESETS.map(([label, val]) => (
                           <button key={val} className="pill-btn"
                             onClick={() => applyLunchPreset(val)}>{label}</button>
                         ))}
                       </div>
-                    </Stack>
+                    </div>
 
                     <Stack direction="row" gap={2} className="ts-controls">
                       <button className="ts-btn" onClick={addCalcRow}>+ Add row</button>

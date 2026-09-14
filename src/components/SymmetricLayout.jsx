@@ -20,11 +20,20 @@ export function SheetSymmetricLayout({ sym, setSym }) {
   const presets = React.useMemo(() =>
     (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : []).filter(p => p.name),
   []);
+  const areaPresets = React.useMemo(() =>
+    (typeof DEFAULT_SURFACE_PRESETS !== "undefined" ? DEFAULT_SURFACE_PRESETS : []).filter(p => p.name),
+  []);
   const [activePreset,     setActivePreset]     = React.useState(null);
+  const [activeAreaPreset, setActiveAreaPreset] = React.useState(null);
   const [showWidDropdown,  setShowWidDropdown]  = React.useState(false);
+  const [showAreaDropdown, setShowAreaDropdown] = React.useState(false);
   const widWrapRef = React.useRef(null);
+  const areaWrapRef = React.useRef(null);
 
-  useClickOutside([widWrapRef], () => setShowWidDropdown(false));
+  useClickOutside([widWrapRef, areaWrapRef], () => {
+    setShowWidDropdown(false);
+    setShowAreaDropdown(false);
+  });
 
   /* `sym` is this page's whole document and lives in App's state. The active
      preset and the open dropdown are view state and stay out. */
@@ -41,10 +50,26 @@ export function SheetSymmetricLayout({ sym, setSym }) {
     setShowWidDropdown(false);
   };
 
+  // Axial Alignment consumes only the width axis of an input preset: the
+  // surface length has no meaning in its one-dimensional calculation.
+  const applyAreaPreset = (p, idx) => {
+    const width = parseMeasurement(p.width);
+    if (!Number.isFinite(width) || width < 100 || width > 50000) return;
+    markStep("Apply input preset width");
+    setSym(s => ({ ...s, roomWidth: width }));
+    setActiveAreaPreset(idx);
+    setShowAreaDropdown(false);
+  };
+
   const { hoveredIndex, onKeyDown } = useDropdownKeyboard(
     showWidDropdown ? presets.length : 0,
     (idx) => applyPreset(presets[idx], idx),
     () => setShowWidDropdown(false)
+  );
+  const { hoveredIndex: areaHoveredIndex, onKeyDown: onAreaKeyDown } = useDropdownKeyboard(
+    showAreaDropdown ? areaPresets.length : 0,
+    (idx) => applyAreaPreset(areaPresets[idx], idx),
+    () => setShowAreaDropdown(false)
   );
 
   const layout = {
@@ -60,12 +85,24 @@ export function SheetSymmetricLayout({ sym, setSym }) {
   const result = ready ? layout.compute() : null;
   return (
     <>
-      <Stack id="data-control" className="data-control" gap={3}>
-        <ControlPanel id="control-sym-surface" title="Inputs" noToggle>
+      <Stack id="data-control" className="data-control" gap={4}>
+        <ControlPanel id="control-sym-surface" title="Inputs" noToggle className="form-section-card">
           <Stack gap={3}>
-            <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth}
-              onChange={v => setSym(s => ({ ...s, roomWidth: clampOptionalDimension(v, 100, 50000) }))}
-              min={100} req={started && !roomComplete} />
+            <div ref={areaWrapRef} style={{ position: "relative" }}>
+              <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth}
+                onChange={v => setSym(s => ({ ...s, roomWidth: clampOptionalDimension(v, 100, 50000) }))}
+                min={100} req={started && !roomComplete}
+                presetsOpen={showAreaDropdown}
+                presetHoveredIndex={areaHoveredIndex}
+                onTogglePresets={() => setShowAreaDropdown(open => !open)}
+                onCommit={() => setShowAreaDropdown(false)}
+                onKeyDown={onAreaKeyDown} />
+              {showAreaDropdown && areaPresets.length > 0 && (
+                <MaterialPresetDropdown anchorRef={areaWrapRef} presets={areaPresets} activePreset={activeAreaPreset}
+                  onApply={applyAreaPreset} field="width" inputId="input-sym-room-width"
+                  hoveredIndex={areaHoveredIndex} title="Input Presets" />
+              )}
+            </div>
             <div ref={widWrapRef} style={{ position: "relative" }}>
               <NumInput
                 id="input-sym-panel-width"
@@ -86,7 +123,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
             </div>
           </Stack>
         </ControlPanel>
-        <ControlPanel id="control-sym-settings" title="Settings" noToggle>
+        <ControlPanel id="control-sym-settings" title="Settings" noToggle className="form-section-card">
           <Stack gap={3}>
             <Stack gap={1} className="ctrl-lbl">
               <span className="ctrl-sublbl">Layout style</span>

@@ -252,7 +252,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
   return (
     <>
-      <Stack id="data-control" className="data-control" gap={3}>
+      <Stack id="data-control" className="data-control" gap={4}>
         <MaterialSpecification 
           sh={sh} setSh={setSh} setMat={setMat} 
           presets={presets} activePreset={activePreset} applyPreset={applyPreset} 
@@ -647,7 +647,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
   );
 
   return (
-    <ControlPanel id={`${idPrefix}control-material`} title="Material Specification" noToggle
+    <ControlPanel id={`${idPrefix}control-material`} title="Material Specification" noToggle className="form-section-card"
       headerDetail={selectedPreset && <SelectedPresetDetail preset={selectedPreset} />}>
       <Stack gap={3} className="ctrl-list">
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widWrapRef} style={{ position: "relative" }}>
@@ -685,7 +685,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
           {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" inputId={`${idPrefix}input-PPi`} hoveredIndex={lenHovered} />}
         </div>
         {!isLargePreview && typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
-          <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
+          <button className="ctrl-dir form-section-action" onClick={() => setShowModal(true)}>
             <Icon name="plus" /> Manage Presets
           </button>
         )}
@@ -783,7 +783,7 @@ function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, f
   );
 
   return (
-    <ControlPanel id={`${idPrefix}control-surface`} title="Inputs" noToggle
+    <ControlPanel id={`${idPrefix}control-surface`} title="Inputs" noToggle className="form-section-card"
       headerDetail={selectedPreset && <SelectedPresetDetail preset={selectedPreset} />}>
       <Stack gap={3} className="ctrl-list">
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widthWrapRef} style={{ position: "relative" }}>
@@ -811,7 +811,7 @@ function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, f
           )}
         </div>
         {!isLargePreview && typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
-          <button className="ctrl-dir" style={{ marginTop: "var(--sp-1)" }} onClick={() => setShowModal(true)}>
+          <button className="ctrl-dir form-section-action" onClick={() => setShowModal(true)}>
             <Icon name="plus" /> Manage Presets
           </button>
         )}

@@ -45,6 +45,32 @@ describe("the pipe wrap calculator", () => {
     expect(totalMm()).toBeCloseTo(Math.PI * 100, 1);
   });
 
+  it("sets material thickness from its quick presets", () => {
+    render(<PipeWrapCalculator />);
+
+    fireEvent.click(screen.getByRole("button", { name: "50 mm" }));
+    expect(document.getElementById("input-matThick")).toHaveValue("50");
+    expect(screen.getByRole("button", { name: "50 mm" })).toHaveClass("on");
+  });
+
+  it("clears an active quick preset on its second click", () => {
+    render(<PipeWrapCalculator />);
+
+    const diameter = screen.getByRole("button", { name: "Ø 100" });
+    fireEvent.click(diameter);
+    expect(document.getElementById("input-pipeDiam")).toHaveValue("100");
+    fireEvent.click(diameter);
+    expect(document.getElementById("input-pipeDiam")).toHaveValue("");
+    expect(diameter).not.toHaveClass("on");
+
+    const thickness = screen.getByRole("button", { name: "20 mm" });
+    fireEvent.click(thickness);
+    expect(document.getElementById("input-matThick")).toHaveValue("20");
+    fireEvent.click(thickness);
+    expect(document.getElementById("input-matThick")).toHaveValue("");
+    expect(thickness).not.toHaveClass("on");
+  });
+
   describe("the adjustments", () => {
     const open = () => fireEvent.click(screen.getByText("Adjustments"));
 

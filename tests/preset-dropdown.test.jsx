@@ -37,6 +37,7 @@ function Harness() {
 }
 
 const firstPreset = DEFAULT_MATERIAL_PRESETS.filter(p => p.name)[0];
+const firstSurfacePreset = DEFAULT_SURFACE_PRESETS.filter(p => p.name)[0];
 
 describe("material presets on the symmetric layout page", () => {
   it("starts with empty measurements and a guided preview", () => {
@@ -52,8 +53,9 @@ describe("material presets on the symmetric layout page", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    await user.click(screen.getByLabelText("Show presets"));
-    await user.click(screen.getByTitle("Presets"));   // shut again
+    const productToggle = screen.getAllByTitle("Presets")[1];
+    await user.click(productToggle);
+    await user.click(productToggle);   // shut again
     expect(screen.queryByText("Material Presets")).toBeNull();
 
     const field = document.getElementById("input-sym-panel-width");
@@ -66,11 +68,11 @@ describe("material presets on the symmetric layout page", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    await user.click(screen.getByTitle("Presets"));
+    await user.click(screen.getAllByTitle("Presets")[1]);
     expect(screen.getByText("Material Presets")).toBeInTheDocument();
     expect(screen.getByText(firstPreset.name)).toBeInTheDocument();
 
-    await user.click(screen.getByTitle("Presets"));
+    await user.click(screen.getAllByTitle("Presets")[1]);
     expect(screen.queryByText("Material Presets")).toBeNull();
   });
 
@@ -78,7 +80,7 @@ describe("material presets on the symmetric layout page", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    await user.click(screen.getByTitle("Presets"));
+    await user.click(screen.getAllByTitle("Presets")[1]);
     await user.click(screen.getByText(firstPreset.name));
 
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue(String(firstPreset.width));
@@ -92,7 +94,7 @@ describe("material presets on the symmetric layout page", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    await user.click(screen.getByTitle("Presets"));
+    await user.click(screen.getAllByTitle("Presets")[1]);
     const field = document.getElementById("input-sym-panel-width");
     expect(document.activeElement).toBe(field);
     expect(field).toHaveAttribute("role", "combobox");
@@ -110,10 +112,24 @@ describe("material presets on the symmetric layout page", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    await user.click(screen.getByTitle("Presets"));
+    await user.click(screen.getAllByTitle("Presets")[1]);
     await user.keyboard("{Escape}");
     expect(screen.queryByText("Material Presets")).toBeNull();
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue(String(DEFAULT_SYM.panelWidth));
+  });
+
+  it("applies only the width from an input preset to area width", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getAllByTitle("Presets")[0]);
+    expect(screen.getByText("Input Presets")).toBeInTheDocument();
+    await user.click(screen.getByText(firstSurfacePreset.name));
+
+    expect(document.getElementById("input-sym-room-width"))
+      .toHaveDisplayValue(String(firstSurfacePreset.width));
+    expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue("");
+    expect(screen.queryByText("Input Presets")).toBeNull();
   });
 });
 
