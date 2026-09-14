@@ -16,7 +16,9 @@
 }
 
 .data-control .control-panel,
-.data-control .control-panel .panel-data {
+.data-control .control-panel .panel-data,
+.mp-modal-large .control-panel.form-section-card,
+.mp-modal-large .control-panel.form-section-card .panel-data {
 	display: flex;
 	flex-direction: column;
 	gap: var(--form-field-gap);
@@ -24,14 +26,16 @@
 
 /* Reusable form-section-card: a card establishes the visual group; the
    fields within it share label, row and action metrics. */
-.data-control .form-section-card {
+.data-control .form-section-card,
+.mp-modal-large .form-section-card {
 	padding: var(--form-card-pad);
 	background: var(--form-card-bg);
 	box-shadow: var(--ring-soft);
 	border-radius: var(--btn-radius);
 }
 
-.data-control .control-panel.form-section-card .panel-head {
+.data-control .control-panel.form-section-card .panel-head,
+.mp-modal-large .control-panel.form-section-card .panel-head {
 	min-height: var(--form-control-h);
 	padding: 0;
 	font-size: var(--fs-md);
@@ -42,21 +46,27 @@
 }
 
 .data-control .form-section-card .panel-data,
-.data-control .form-section-card .ctrl-list {
+.data-control .form-section-card .ctrl-list,
+.mp-modal-large .form-section-card .panel-data,
+.mp-modal-large .form-section-card .ctrl-list {
 	gap: var(--form-field-gap);
 }
 
 .data-control .form-section-card .num-input,
-.data-control .form-section-card .num-btn {
+.data-control .form-section-card .num-btn,
+.mp-modal-large .form-section-card .num-input,
+.mp-modal-large .form-section-card .num-btn {
 	min-height: var(--form-control-h);
 	height: var(--form-control-h);
 }
 
-.data-control .form-section-card .num-btn {
+.data-control .form-section-card .num-btn,
+.mp-modal-large .form-section-card .num-btn {
 	min-width: var(--form-control-h);
 }
 
-.data-control .form-section-card .form-section-action {
+.data-control .form-section-card .form-section-action,
+.mp-modal-large .form-section-card .form-section-action {
 	flex: none;
 	width: 100%;
 	min-height: var(--form-control-h);

@@ -429,7 +429,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   }
                   
                   {/* ── 2. MIDDLE: Visualization ── */}
-                    <div className="large-layout-vis-wrap data-preview" style={{ background: "var(--color-bg-alt)", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)" }}>
+                    <div className="large-layout-vis-wrap data-preview">
                       <LayoutVisualization result={currentResult} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={1000} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
                     </div>
 
@@ -449,7 +449,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                     </Stack>
 
                     {/* Column 2: Layout Engine (25%) */}
-                    <ControlPanel id="control-settings-large" title="Layout Engine" open={true} noToggle className="u-hide-mobile">
+                    <ControlPanel id="control-settings-large" title="Layout Engine" open={true} noToggle className="form-section-card u-hide-mobile">
                       <div className="panel-data">
                         <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} idPrefix="large-" />
                       </div>
@@ -457,7 +457,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
                     {/* Column 3: Detailed Statistics (50%) */}
                     <Stack gap={4}>
-                      <ControlPanel id="control-stats-large" title="Detailed Statistics" open={true} noToggle>
+                      <ControlPanel id="control-stats-large" title="Detailed Statistics" open={true} noToggle className="form-section-card">
                         <div className="panel-data">
                           {(() => {
                             const r = currentResult.rows;
@@ -509,12 +509,13 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
 
   return (
     <Stack gap={3}>
-      <div style={{ padding: "var(--sp-3)", borderRadius: "14px", border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)", background: "color-mix(in srgb, var(--color-primary) 6%, transparent)" }}>
-        <Stack gap={1} className="ctrl-lbl">
-          <span className="ctrl-sublbl" style={{ fontSize: "var(--fs-lg)", fontWeight: "var(--fw-bold)" }}>Direction</span>
-          <span className="ctrl-sublbl">Primary layout axis for the pattern preview.</span>
-        </Stack>
-        <div id={`${idPrefix}ctrl-direction`} className="seg-group" style={{ marginTop: "var(--sp-2)" }}>
+      <div className="layout-setting-card">
+        <Stack gap={2}>
+          <Stack gap={1} className="ctrl-lbl">
+            <span className="ctrl-sublbl">Direction</span>
+            <span className="layout-setting-help">Primary layout axis for the pattern preview.</span>
+          </Stack>
+          <div id={`${idPrefix}ctrl-direction`} className="seg-group">
           {["V", "H"].map(s => (
             <button key={s} aria-label={s === "V" ? "Vertical" : "Horizontal"} aria-pressed={direction === s} className={"ctrl-dir " + (direction === s ? "on" : "")}
               onClick={() => { markStep("Switch direction"); setSh(st => {
@@ -533,12 +534,14 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
                 };
               }); }}>{s}</button>
           ))}
-        </div>
+          </div>
+        </Stack>
       </div>
-      <div style={{ padding: "var(--sp-3)", borderRadius: "14px", border: "1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)", background: "color-mix(in srgb, var(--color-primary) 6%, transparent)" }}>
-        <Stack gap={1} className="ctrl-lbl">
-          <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
-          <div id={`${idPrefix}ctrl-row-order`} className="seg-group">
+      <div className="layout-setting-card">
+        <Stack gap={3}>
+          <Stack gap={1} className="ctrl-lbl">
+            <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
+            <div id={`${idPrefix}ctrl-row-order`} className="seg-group">
             <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
               onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
               {direction === "V" ? "R1 Left" : "R1 top"}
@@ -547,11 +550,11 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
               onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
               {direction === "V" ? "R1 Right" : "R1 bottom"}
             </button>
-          </div>
-        </Stack>
-        <Stack gap={1} className="ctrl-lbl" style={{ marginTop: "var(--sp-3)" }}>
-          <span className="ctrl-sublbl">Layout Start</span>
-          <div id={`${idPrefix}ctrl-pattern-start`} className="seg-group">
+            </div>
+          </Stack>
+          <Stack gap={1} className="ctrl-lbl">
+            <span className="ctrl-sublbl">Layout Start</span>
+            <div id={`${idPrefix}ctrl-pattern-start`} className="seg-group">
             {direction === "V" ? (
               <>
                 <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
@@ -567,7 +570,8 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
                   onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>right</button>
               </>
             )}
-          </div>
+            </div>
+          </Stack>
         </Stack>
       </div>
       <NumInput id={`${idPrefix}input-minJ`}     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")} />

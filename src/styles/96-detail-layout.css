@@ -285,6 +285,25 @@
   min-height: 360px;
   max-height: calc(100vh - 240px);
   overflow: auto;
+	background: var(--surface-1);
+	border: 1px solid var(--border);
+	border-radius: var(--btn-radius);
+}
+
+.layout-setting-card {
+	padding: var(--form-card-pad);
+	background: var(--surface-2);
+	box-shadow: var(--ring-soft);
+	border-radius: var(--btn-radius);
+}
+
+.layout-setting-help {
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	line-height: var(--lh-base);
+	color: var(--text-muted);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 }
 
 @keyframes mp-slide-in {
