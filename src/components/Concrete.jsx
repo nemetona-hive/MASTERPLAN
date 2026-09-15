@@ -357,7 +357,7 @@ export function SheetConcrete() {
             <DetailSection title="Product Presets" open={false}>
               <Stack gap={4}>
                 <Stack gap={3}>
-                  <div className="pw-preset-header">
+                  <div className="pw-preset-header pw-preset-grid--product">
                     <span>Product Name</span>
                     <span>kg/m²·mm</span>
                     <span>Bag kg</span>
@@ -366,7 +366,7 @@ export function SheetConcrete() {
                   </div>
                   {presets.map((p, idx) => (
                     <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
-                      <div className="pw-preset-fields">
+                      <div className="pw-preset-fields pw-preset-grid--product">
                         <div>
                           <span className="pw-preset-lbl-hide">Product Name</span>
                           <input

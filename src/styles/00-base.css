@@ -142,6 +142,7 @@ html, body, #root {
 	--ctl-pad-x-sm: var(--sp-1);
 	--ctl-pad-x-md: var(--sp-2);
 	--ctl-pad-x-lg: 14px;
+	--pw-preset-action-width: 96px;
 	/* A glyph is not a label, so it does not take the step's label size — a
 	   remove × inheriting --fs-sm renders at 10px inside a 24px button. */
 	--ctl-glyph: 13px;

@@ -229,9 +229,9 @@ export function SheetTimesheet() {
                     <div className="ts-grid-hd" style={{marginTop: 'var(--sp-2)'}}>
                       <span className="ts-col-lbl">Start</span>
                       <span className="ts-col-lbl">End</span>
-                      <span className="ts-col-lbl ts-col-lbl--center">Lunch</span>
-                      <span className="ts-col-lbl ts-col-lbl--center">Duration</span>
-                      <span className="ts-col-lbl ts-col-lbl--center ts-col-dec">Decimal</span>
+                      <span className="ts-col-lbl">Lunch</span>
+                      <span className="ts-col-lbl">Duration</span>
+                      <span className="ts-col-lbl ts-col-dec">Decimal</span>
                       <span />
                     </div>
 

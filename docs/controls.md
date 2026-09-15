@@ -101,6 +101,15 @@ and `.ctrl-btns.preset-options` containing `.pill-btn`s. Both gaps take
 owns the options. A selected pill may toggle its value back to empty on a second
 click, so its active state must be derived from that field's current value.
 
+**Editable grids** distinguish a field label from a column header. A label above
+one rounded input aligns with that control's outer edge; it names the control as
+a whole. A column header aligns with the text inset of every cell in its track,
+so headers and values share a reading axis. Keep the header and row on the same
+grid template with no horizontal row inset. Product/material preset managers
+use the shared `.pw-preset-grid--product` or `--dimensions` track contract;
+Timesheet follows the same text-origin rule. Ordinary printed tables retain
+their common table-cell padding.
+
 Classes live in `65-controls.css`, deliberately after the base controls in
 30/40/60 — every one is a single class, so source order is what decides. Tokens
 live in `:root` in `00-base.css`; four are per-theme in `themes.js`

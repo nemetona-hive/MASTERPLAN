@@ -316,7 +316,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
         <Modal title="Manage Material Presets" onClose={() => setShowModal(false)}>
               <Stack gap={4}>
                 <Stack gap={3}>
-                  <div className="pw-preset-header" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
+                  <div className="pw-preset-header pw-preset-grid--dimensions">
                     <span>Product Name</span>
                     <span>Width mm</span>
                     <span>Length mm</span>
@@ -324,7 +324,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   </div>
                   {presets.map((p, idx) => (
                     <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
-                      <div className="pw-preset-fields" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
+                      <div className="pw-preset-fields pw-preset-grid--dimensions">
                         <div>
                           <span className="pw-preset-lbl-hide">Product Name</span>
                           <input
@@ -703,7 +703,7 @@ function DimensionPresetManager({ title, nameLabel, idPrefix, presets, activePre
     <Modal title={title} onClose={onClose}>
       <Stack gap={4}>
         <Stack gap={3}>
-          <div className="pw-preset-header" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
+          <div className="pw-preset-header pw-preset-grid--dimensions">
             <span>{nameLabel}</span>
             <span>Width mm</span>
             <span>Length mm</span>
@@ -711,7 +711,7 @@ function DimensionPresetManager({ title, nameLabel, idPrefix, presets, activePre
           </div>
           {presets.map((p, idx) => (
             <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
-              <div className="pw-preset-fields" style={{ gridTemplateColumns: "2.2fr 1fr 1fr 84px" }}>
+              <div className="pw-preset-fields pw-preset-grid--dimensions">
                 <div>
                   <span className="pw-preset-lbl-hide">{nameLabel}</span>
                   <input id={`${idPrefix}-name-${idx}`} name={`${idPrefix}-name-${idx}`}

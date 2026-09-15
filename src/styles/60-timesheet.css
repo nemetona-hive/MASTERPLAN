@@ -79,12 +79,14 @@
 }
 
 .ts-grid-hd {
-	margin-bottom: 2px;
+	margin-bottom: var(--sp-05);
 }
 
 .ts-grid-row {
-	padding: 2px 3px;
-	border-radius: 6px;
+	/* Header and row must share the same grid origin: a horizontal row inset
+	   shifts later fractional tracks away from their column titles. */
+	padding-block: var(--sp-05);
+	border-radius: var(--btn-radius);
 	transition: background 0.08s;
 }
 
@@ -97,14 +99,9 @@
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
 	color: var(--color-gray-opa80);
-	padding: 0 3px;
-}
-
-/* The two time fields read from the left edge like their entries. Computed and
-   numeric columns are values in fixed tracks, so their headings sit on the
-   column centre rather than borrowing the input inset. */
-.ts-col-lbl--center {
-	text-align: center;
+	/* Match .num-input so a heading identifies the first character in its cell,
+	   not the field's outer edge. */
+	padding-inline: var(--ctl-pad-x-md);
 }
 
 /* Input ------------------------------------------------------------------- */
@@ -123,12 +120,12 @@
 	font-size: var(--fs-md);
 	font-weight: var(--fw-med);
 	color: var(--color-primary);
-	padding: 0 3px;
+	padding-inline: var(--ctl-pad-x-md);
 	height: 32px;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	text-align: center;
+	justify-content: flex-start;
+	text-align: left;
 }
 
 .ts-decimal {
@@ -276,7 +273,7 @@
 	.ts-input {
 		height: 34px;
 		font-size: 16px; /* prevent iOS zoom */
-		padding: 4px 6px;
+		padding: var(--sp-1) var(--ctl-pad-x-md);
 	}
 
 	/* A row action wants a larger target on a touch screen, but that is still a
