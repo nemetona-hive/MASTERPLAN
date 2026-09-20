@@ -88,6 +88,13 @@ WSL shell to see why. The likeliest cause is node: it is **not** on PATH in the
 non-interactive shell the shortcut spawns, which is what the NVM block at the
 top of `run.sh` is for.
 
+The Git hooks use the same Linux-native toolchain rule. From a non-interactive
+WSL shell they reject a missing `node` or a `node`/`npm` resolved under `/mnt/`,
+then load `$HOME/.nvm/nvm.sh`. This prevents Windows npm from launching
+`cmd.exe` and losing the WSL worktree. If the fallback cannot select Linux Node
+and npm, the hook stops with their resolved paths rather than running in the
+wrong directory.
+
 ## The three things that bite
 
 Everything below is in a topic file too. These are here because they are what
@@ -110,6 +117,11 @@ and answers the endpoint with a no-op.
 
 ## Important conventions
 
+- **Start with the smallest correct change.** Read the code path first, then
+  reuse an existing component, helper or established pattern before adding one.
+  Prefer native HTML/browser features and an installed dependency over new
+  packages or abstractions. Add only what the requirement needs; this never
+  relaxes validation, accessibility, input handling or error handling.
 - Hooks come from `react-globals.js`. Most call sites use `React.useXxx`, which
   reaches every hook; `useState` is additionally re-exported by name because two
   files import it that way. It is the only one — re-export another only when
@@ -179,6 +191,8 @@ and answers the endpoint with a no-op.
 - No CSS-in-JS except inline style for dynamic values; use className strings
 - Local persistence uses `saveStaticDefaults` for dev-mode configuration updates.
 - CSS class names follow BEM-ish patterns: block, block-element, modifier
+- `AGENTS.md` and `CLAUDE.md` are two agent entry points for the same project
+  rules. Keep their shared guidance semantically aligned when one changes.
 
 ## What does NOT exist yet (possible future work)
 

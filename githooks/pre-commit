@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # MASTERPLAN pre-commit gate.
 #
@@ -17,6 +17,45 @@
 
 set -e
 
+# Git normally invokes hooks from the worktree root, but do not rely on that:
+# Windows' npm launcher can hand cmd.exe a UNC directory and make it start at
+# C:\Windows instead. Resolve the root before every project command.
+repo_root="$(git rev-parse --show-toplevel)" || {
+  echo "✖ pre-commit: could not resolve the Git repository root." >&2
+  exit 1
+}
+cd "$repo_root"
+
+# A non-interactive WSL shell can inherit only Windows npm from /mnt/c while
+# node itself is absent. Calling that npm launches cmd.exe and loses the WSL
+# worktree. Prefer the NVM-managed Linux toolchain in either case.
+tool_is_windows_mounted() {
+  [[ "$1" == /mnt/* ]]
+}
+
+node_path="$(command -v node || true)"
+npm_path="$(command -v npm || true)"
+if [[ -z "$node_path" || -z "$npm_path" ]] || \
+   tool_is_windows_mounted "$node_path" || tool_is_windows_mounted "$npm_path"; then
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    # shellcheck source=/dev/null
+    . "$NVM_DIR/nvm.sh"
+  fi
+fi
+
+node_path="$(command -v node || true)"
+npm_path="$(command -v npm || true)"
+if [[ -z "$node_path" || -z "$npm_path" ]] || \
+   tool_is_windows_mounted "$node_path" || tool_is_windows_mounted "$npm_path"; then
+  echo "✖ pre-commit: Linux-native Node.js and npm are required in WSL." >&2
+  echo "  node: ${node_path:-not found}" >&2
+  echo "  npm:  ${npm_path:-not found}" >&2
+  echo "  A /mnt/* path is Windows tooling and cannot run this hook safely." >&2
+  echo '  Install/select Node with NVM, then retry (for example: source "$HOME/.nvm/nvm.sh").' >&2
+  exit 1
+fi
+
 # Nothing relevant staged? Nothing to check.
 #
 # Every hand-written file the build id hashes counts, not just src/: index.html
@@ -32,8 +71,6 @@ set -e
 if git diff --cached --quiet -- src config.js simulation.js themes.js index.html manifest.webmanifest assets; then
   exit 0
 fi
-
-cd "$(git rev-parse --show-toplevel)"
 
 # ---- 1. src compiles --------------------------------------------------------
 if ! npm run build >/dev/null 2>&1; then

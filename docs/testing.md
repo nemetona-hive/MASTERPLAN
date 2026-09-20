@@ -2,7 +2,7 @@
 
 *Part of the [MASTERPLAN developer guide](../MASTERPLAN_DEVELOPER_GUIDE.md).*
 
-# Checks
+## Checks
 
 `npm test` runs the vitest suite (`tests/`), covering the layout maths in
 `simulation.js`, the timesheet parsers, the number coercions, the shared
@@ -18,11 +18,23 @@ audit.
 | `npm run layout` | where a box actually landed, what a word was actually painted in, whether a dialog keeps the keyboard — in a real browser |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run perf:check` | download budgets for the two committed bundles |
-| `npm run build` | rebuilds `components.js`, `app.css` and the icon subset |
+| `npm run build` | rebuilds `components.js`, `app.css`, the icon subset and `version.js` |
 | `npm run icon` | regenerates `masterplan.ico` and the installable app's PNGs — by hand, not part of the build |
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
 | `npm run deploy:check` | whether the live site is serving the build you have (network; not part of `verify`) |
+
+### Minimum checks by change
+
+| Change | Run before calling it done |
+|---|---|
+| Source logic, calculations or shared behaviour | `npm test`, then `npm run build` |
+| CSS, theme, layout, controls or printed sheets | `npm run build`, `npm run audit:ui`, `npm run theme:check`, `npm run layout` |
+| A page, route or user journey | `npm run build`, `npm run test:browser`, plus relevant unit tests |
+| Deployment | `npm run verify`, then `npm run deploy:check` after pushing |
+
+These are the minimum targeted checks. `npm run verify` remains the full local
+gate whenever its runtime is proportionate to the change.
 
 UI interaction is covered in four places, all jsdom. `tests/nav.test.jsx`
 drives `AppNav` — roving focus, the collapsed strip, the portalled tooltip, the
@@ -122,6 +134,12 @@ GitHub Pages serves this tree directly, so a push **is** the deploy — the hook
 refuses if the committed `components.js` or `app.css` no longer matches `src/`,
 which is a staleness only visitors would ever see. Bypass either with
 `--no-verify`.
+
+Hooks first resolve the Git root and require Linux-native `node` and `npm`.
+When a non-interactive WSL shell has neither, or resolves either under `/mnt/`,
+they load `$HOME/.nvm/nvm.sh`; failure to select Linux tooling stops the hook
+with a diagnostic. Windows npm must not run these WSL hooks because it can hand
+`cmd.exe` a UNC worktree and make npm search from `C:\Windows` instead.
 
 `undefined-class` is the mirror of the dead-CSS check and the half that finds
 bugs rather than untidiness: an element whose class no stylesheet defines gets

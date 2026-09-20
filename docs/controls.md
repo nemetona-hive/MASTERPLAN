@@ -2,7 +2,7 @@
 
 *Part of the [MASTERPLAN developer guide](../MASTERPLAN_DEVELOPER_GUIDE.md).*
 
-# Controls And Buttons
+## Controls and buttons
 
 Every interactive control composes from one shared set of tokens. **Do not
 write a new hover or active recipe** — reach for these.

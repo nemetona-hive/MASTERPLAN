@@ -26,6 +26,10 @@ refuses a push where `components.js`, `app.css`, `version.js` or the font
 subsets no longer match `src/`. The one exception is `components.js.map`, which
 is gitignored.
 
+When a non-interactive WSL shell lacks Linux Node or resolves `node`/`npm` under
+`/mnt/`, the Git hooks load `$HOME/.nvm/nvm.sh`. For direct commands, do the
+same; Windows npm cannot run hooks safely from this WSL checkout.
+
 ## Preset saves write to config.js
 
 Job dimensions are transient and begin empty. The dev server's
