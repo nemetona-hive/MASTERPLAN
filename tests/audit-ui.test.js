@@ -26,8 +26,8 @@ describe("audit-ui", () => {
   });
 
   it("does not read an HTML numeric entity as a hex colour", () => {
-    // Visualization.jsx renders &#128161; — if this regresses it reports as
-    // "#128161 in markup".
+    // The source sentinel remains invisible in the UI; if the scanner regresses
+    // it reports the numeric entity as "#128161 in markup".
     expect(fs.readFileSync(path.join(ROOT, "src", "Visualization.jsx"), "utf8"))
       .toContain("&#128161;");
     expect(run()).not.toContain("#128161");

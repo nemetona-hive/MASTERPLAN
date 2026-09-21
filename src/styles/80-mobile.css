@@ -256,11 +256,6 @@
 		height: 28px;
 	}
 
-	.data-preview .strip-note {
-		padding: 7px 10px;
-		line-height: 1.5;
-	}
-
 	.section-pad {
 		padding: var(--sp-2);
 	}

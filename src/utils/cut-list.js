@@ -105,7 +105,7 @@ export function buildCutList(result, sh, layout) {
     number: position + 1,
     sourceRow: idx,
     height: row.h === undefined ? null : mm(row.h),
-    pieces: (row.segs || []).map(seg => ({
+    pieces: (row.segs || []).filter(seg => seg.type !== "joint").map(seg => ({
       kind: KINDS[seg.type] || seg.type,
       width: mm(seg.w),
       // Only a cut and its offcut carry one, which is what makes it the join

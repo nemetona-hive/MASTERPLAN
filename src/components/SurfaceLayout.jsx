@@ -39,7 +39,9 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   const { offset, s4Long } = sh;
   const readiness = getSurfaceReadiness(sh);
   const rowStart = sh.rowStart || "top";
-  const [hoveredType, setHoveredType] = React.useState(null);
+  // A type such as "full" exists in every system. Keep its owner alongside
+  // the type so hovering S1 cannot also light matching pieces in S2–S4.
+  const [hoveredHighlight, setHoveredHighlight] = React.useState(null);
   const [settingsOpen, setSettingsOpen] = React.useState(true);
 
   // ── Material presets ───────────────────────────────────────────────────────
@@ -121,6 +123,8 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 
   const openLargePreview = (layout, result) => setLargePreview({ layout, result });
   const closeLargePreview = () => setLargePreview(null);
+  const hoveredTypeFor = layoutId => hoveredHighlight?.layoutId === layoutId ? hoveredHighlight.type : null;
+  const setHoveredTypeFor = layoutId => type => setHoveredHighlight(type ? { layoutId, type } : null);
 
   /* `sh` is the document every pattern-layout page edits, so the key is the
      document rather than the route: moving between layout systems keeps the
@@ -286,7 +290,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
             if (!panel) return null;
             return (
               <LayoutPanel key={id} layout={panel.layout} result={panel.result}
-                hoveredType={hoveredType} setHoveredType={setHoveredType}
+                hoveredType={hoveredTypeFor(id)} setHoveredType={setHoveredTypeFor(id)}
                 rowStart={rowStart}
                 open={panelOpen[id]}
                 setOpen={v => setPanelOpen(s => ({ ...s, [id]: v }))}
@@ -424,13 +428,13 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
                   {/* ── 1. TOP: Summary Bar ── */}
                   {currentResult.summaryRows.length > 0 &&
                     <div className="summary-grid">
-                      <PanelSummary rows={currentResult.summaryRows} hoveredType={hoveredType} setHoveredType={setHoveredType} />
+                      <PanelSummary rows={currentResult.summaryRows} hoveredType={hoveredTypeFor(largePreview.layout.id)} setHoveredType={setHoveredTypeFor(largePreview.layout.id)} />
                     </div>
                   }
                   
                   {/* ── 2. MIDDLE: Visualization ── */}
                     <div className="large-layout-vis-wrap data-preview">
-                      <LayoutVisualization result={currentResult} hoveredType={hoveredType} setHoveredType={setHoveredType} rowStart={rowStart} maxHeight={1000} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
+                      <LayoutVisualization result={currentResult} hoveredType={hoveredTypeFor(largePreview.layout.id)} setHoveredType={setHoveredTypeFor(largePreview.layout.id)} rowStart={rowStart} maxHeight={1000} alwaysShowLabels={true} onLargePreview={closeLargePreview} />
                     </div>
 
                   {/* ── 3. BOTTOM: 3-Column Dashboard Split ── */}
@@ -500,7 +504,10 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
 }
 
 function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
-  const { PPi, direction, minJ, startOff } = sh;
+  const { PPi, direction, minJ, startOff, gap, horizontalGap, verticalGap } = sh;
+  // Old saved jobs used directional values without an explicit mode. Preserve
+  // those choices rather than making them silently disappear on first open.
+  const separateGaps = sh.separateGaps ?? (horizontalGap !== "" || verticalGap !== "");
   const rowStart = sh.rowStart || "top";
   const psRaw = sh.patternStart;
   const patternStart = psRaw || (direction === "V" ? "bottom" : "left");
@@ -572,6 +579,32 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
             )}
             </div>
           </Stack>
+        </Stack>
+      </div>
+      <div className="layout-setting-card">
+        <Stack gap={3}>
+          <NumInput id={`${idPrefix}input-gap`} label="Gap (mm)" value={gap} onChange={set("gap")} min={0} />
+          <Stack gap={1} className="ctrl-lbl">
+            <span className="ctrl-sublbl">Gap direction</span>
+            <div id={`${idPrefix}ctrl-gap-direction`} className="seg-group">
+              <button aria-pressed={!separateGaps} className={'ctrl-dir ' + (!separateGaps ? 'on' : '')}
+                onClick={() => { markStep("Use shared gap"); setSh(st => ({ ...st, separateGaps: false })); }}>
+                Shared
+              </button>
+              <button aria-pressed={separateGaps} className={'ctrl-dir ' + (separateGaps ? 'on' : '')}
+                onClick={() => { markStep("Use separate gaps"); setSh(st => ({ ...st, separateGaps: true })); }}>
+                Separate
+              </button>
+            </div>
+          </Stack>
+          {separateGaps && (
+            <Stack gap={2}>
+              <NumInput id={`${idPrefix}input-horizontal-gap`} label="Horizontal gap (mm)" value={horizontalGap}
+                onChange={set("horizontalGap")} min={0} />
+              <NumInput id={`${idPrefix}input-vertical-gap`} label="Vertical gap (mm)" value={verticalGap}
+                onChange={set("verticalGap")} min={0} />
+            </Stack>
+          )}
         </Stack>
       </div>
       <NumInput id={`${idPrefix}input-minJ`}     label="Min remainder (mm)"  value={minJ}     onChange={set("minJ")} />

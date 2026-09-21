@@ -83,6 +83,13 @@ rather than scroll.
 LAYOUT_REGISTRY in Controls.jsx maps s1–s4 to their compute functions and control components.
 Best layout = fewest total pieces among valid results.
 
+Pattern layouts have one shared **Gap** by default. Choosing **Separate** reveals
+horizontal and vertical values; hidden directional values do not affect the
+calculation. A joint consumes surface space between adjacent pieces, including
+between rows or columns, but is not an uncovered `gap` or a material piece.
+The S1–S3 simulators retain the source ID of an offcut carried into the next row
+when joints are present, so both the preview and the cut list keep that chain.
+
 When the four required dimensions first become valid, the first valid layout
 tied for that best count opens automatically. This is a readiness transition,
 not a standing override: closing it or editing already-valid values does not

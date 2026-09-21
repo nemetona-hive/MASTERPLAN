@@ -112,6 +112,12 @@
   stroke: var(--danger);
 }
 
+.layout-svg-joint {
+  fill: var(--surface-2);
+  stroke: var(--divider);
+  stroke-width: 1;
+}
+
 .layout-svg-row-bg {
   fill: var(--surface-1);
   stroke: rgba(255, 255, 255, 0.05);

@@ -154,6 +154,38 @@ describe("the surface layout page", () => {
       expect(dirButton("V").className).toContain("on");
     });
   });
+
+  describe("gap direction", () => {
+    it("keeps one shared gap until separate directional gaps are requested", () => {
+      render(<Page />);
+      openSettings();
+      expect(document.getElementById("input-horizontal-gap")).toBeNull();
+      expect(document.getElementById("input-vertical-gap")).toBeNull();
+
+      fireEvent.click(within(document.getElementById("ctrl-gap-direction")).getByText("Separate"));
+      expect(document.getElementById("input-horizontal-gap")).toBeTruthy();
+      expect(document.getElementById("input-vertical-gap")).toBeTruthy();
+
+      fireEvent.click(within(document.getElementById("ctrl-gap-direction")).getByText("Shared"));
+      expect(document.getElementById("input-horizontal-gap")).toBeNull();
+      expect(document.getElementById("input-vertical-gap")).toBeNull();
+    });
+  });
+
+  it("keeps a preview hover inside the layout being hovered", () => {
+    render(<Page />);
+    const first = document.getElementById("panel-s1");
+    const second = document.getElementById("panel-s2");
+    for (const panel of [first, second]) {
+      if (!panel.classList.contains("sys-block-open")) {
+        fireEvent.click(panel.querySelector(".sys-disclosure"));
+      }
+    }
+
+    fireEvent.mouseEnter(first.querySelector(".layout-svg-seg"));
+    expect(first.querySelector(".layout-svg-seg.is-highlighted")).toBeTruthy();
+    expect(second.querySelector(".layout-svg-seg.is-highlighted")).toBeNull();
+  });
 });
 
 describe("a layout panel's open state", () => {

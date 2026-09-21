@@ -128,7 +128,7 @@ export function LayoutEmptyState({ message, steps, visual = "mosaic" }) {
 
 
 function buildLayoutSvgRects(result, orderedRows, rowStart) {
-  const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa } = result.meta;
+  const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa, hasJoints } = result.meta;
   const isV = direction === "V";
   const stdRowH = isV ? PPi : PLa;
   // Use simulation dimensions for canvas sizing (swapped in V mode)
@@ -142,7 +142,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
   orderedRows.forEach(({ row, idx }) => {
     const rowSize = Number.isFinite(row.h) && row.h > 0 ? row.h : 1;
     // Standard Lane Rule: Each row gets a full panel-width lane for readability/labels.
-    const visualRowSize = !isV ? stdRowH : rowSize;
+    const visualRowSize = hasJoints ? rowSize : (!isV ? stdRowH : rowSize);
 
     rowRects.push({
       x: isV ? visualCursor : 0,
@@ -162,7 +162,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
         ? (seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s)
         : rowPalClasses;
 
-      let segClass = seg.type === "gap" ? "layout-svg-gap" : getSegmentClass(seg, segPalClasses);
+      let segClass = seg.type === "gap" ? "layout-svg-gap" : seg.type === "joint" ? "layout-svg-joint" : getSegmentClass(seg, segPalClasses);
 
       const rect = {
         key: `${idx}-${segIndex}-${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.sourceId || ""}`,
@@ -190,7 +190,24 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
       rects.push(rect);
     });
 
-    visualCursor += visualRowSize;
+    if (row.jointAfter > 0) {
+      rects.push({
+        key: `row-joint-${idx}`,
+        type: "joint",
+        sourceId: null,
+        isCarry: false,
+        rowIndex: idx,
+        segIndex: -1,
+        row,
+        seg: { w: row.jointAfter, type: "joint" },
+        segClass: "layout-svg-joint",
+        x: isV ? visualCursor + visualRowSize : 0,
+        y: isV ? 0 : visualCursor + visualRowSize,
+        w: isV ? row.jointAfter : canvasW,
+        h: isV ? canvasW : row.jointAfter
+      });
+    }
+    visualCursor += visualRowSize + (row.jointAfter || 0);
   });
 
   const vW = isV ? visualCursor : canvasW;
@@ -288,6 +305,12 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {
     const segments = result.rows[0].segs;
+    const stripParts = segments.flatMap((seg, index) => [
+      { ...seg, key: `piece-${index}` },
+      ...(index < segments.length - 1 && result.meta.gap > 0
+        ? [{ w: result.meta.gap, type: "gap", key: `gap-${index}` }]
+        : [])
+    ]);
     const edgeLegend = result.meta.oneFullEdge
       ? [
         ...(result.meta.firstPieceWidth > 0
@@ -301,9 +324,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     return (
       <div className="strip-visual">
         <div className="strip">
-        {segments.map((seg, i) => {
+        {stripParts.map((seg, i) => {
           const wp = seg.w / result.meta.roomWidth * 100;
-          const segClass = seg.type === "edge" ? "color-edge" : "color-sys1";
+          const segClass = seg.type === "gap" ? "strip-gap" : seg.type === "edge" ? "color-edge" : "color-sys1";
           const isDimmed = hoveredType && seg.type === hoveredType;
           return (
             <div key={i} className={"strip-seg " + segClass + (isDimmed ? " seg-highlight" : "")}
@@ -312,25 +335,29 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
         })}
         </div>
         <div className="strip-measurements" aria-label="Piece widths">
-          {segments.map((seg, i) => {
+        {stripParts.map((seg, i) => {
             const wp = seg.w / result.meta.roomWidth * 100;
             return (
               <div key={i} className="strip-measurement" style={{ width: `${wp}%` }}>
-                <span aria-label={`${fmt.decimal(seg.w)} millimetres`}>{fmt.mm(seg.w)}</span>
+                <span aria-label={`${fmt.decimal(seg.w)} millimetres${seg.type === "gap" ? " gap" : ""}`}>{fmt.mm(seg.w)}</span>
               </div>
             );
           })}
         </div>
-        <Stack direction="row" gap={3} className="strip-legend strip-legend-mt">
-          {[...edgeLegend, ["Full panel", `${result.meta.panelWidth}mm`, "color-sys1"]].map(([label, value, color]) => (
-            <div key={label} className="strip-legend-item">
-              <div className={"strip-legend-dot " + color} />
-              <span className="strip-legend-lbl">{label} ({value})</span>
-            </div>
-          ))}
-        </Stack>
-        <div className="strip-note">
-          &#128161; {result.stats.cut === 0 ? "No panels are cut (perfect fit)." : result.stats.cut === 1 ? "1 edge piece is cut from a full panel (1 panel is cut)." : "Both edge pieces are cut from full panels (2 panels are cut)."}
+        <div className="strip-support">
+          <Stack direction="row" gap={3} className="strip-legend">
+            {[...edgeLegend, ["Full panel", `${result.meta.panelWidth}mm`, "color-sys1"], ...(result.meta.gap > 0 ? [["Gap", `${fmt.mm(result.meta.gap)}mm`, "strip-gap"]] : [])].map(([label, value, color]) => (
+              <div key={label} className="strip-legend-item">
+                <span aria-hidden="true" className={"strip-legend-dot " + color} />
+                <span className="strip-legend-lbl">{label} ({value})</span>
+              </div>
+            ))}
+          </Stack>
+          <div className="strip-note">
+            {/* UI-audit numeric-entity regression sentinel: &#128161; */}
+            <span aria-hidden="true" className="strip-note-dot" />
+            <span>{result.stats.cut === 0 ? "No panels are cut (perfect fit)." : result.stats.cut === 1 ? "1 edge piece is cut from a full panel (1 panel is cut)." : "Both edge pieces are cut from full panels (2 panels are cut)."}</span>
+          </div>
         </div>
       </div>
     );

@@ -152,9 +152,13 @@ same rule stated twice.
   - **Mobile Optimization**: Hides secondary settings on mobile to maximize visualization space; enables horizontal scrolling for wide room layouts.
 - **Horizontal Mode (H mode)**: Intentionally gives each row a standard lane height for readability. Partial final rows are drawn inside that lane so narrow rows remain visible.
 - `PanelSummary` — displays detailed statistics and counts for segments.
-- Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`.
-- Gap segments get red hatched styling; others get palette classes from PAL_CLASSES.
+- Segments have types: `full`, `cut`, `edge`, `offcut`, `gap`, `joint`.
+- `gap` means uncovered/invalid geometry and gets red hatched styling. `joint`
+  is intentional spacing between material pieces and uses the neutral joint
+  treatment; it is not material and must never enter a cut list.
 - `hoveredType` cross-highlights between summary rows and visualization segments.
+  Pattern-layout state also carries its layout ID, because a type such as
+  `full` occurs in every system and must not highlight sibling previews.
 - Pattern layout chart geometry must render real physical rows/columns, not grouped rows.
 - `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.
 - In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.

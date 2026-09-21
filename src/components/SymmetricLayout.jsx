@@ -125,6 +125,8 @@ export function SheetSymmetricLayout({ sym, setSym }) {
         </ControlPanel>
         <ControlPanel id="control-sym-settings" title="Settings" noToggle className="form-section-card">
           <Stack gap={3}>
+            <NumInput id="input-sym-gap" label="Gap (mm)" value={sym.gap ?? 0}
+              onChange={v => setSym(s => ({ ...s, gap: clampNumber(v, 0, 50000, 0) }))} min={0} />
             <Stack gap={1} className="ctrl-lbl">
               <span className="ctrl-sublbl">Layout style</span>
               <div className="seg-group">

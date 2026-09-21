@@ -247,12 +247,33 @@ describe("computeS0", () => {
     expect(laid).toBeCloseTo(3200, 6);
   });
 
+  it("reserves the configured gap between every adjacent piece", () => {
+    const result = computeS0({ roomWidth: 3200, panelWidth: 500, gap: 10, oneFullEdge: false });
+    expect(result.valid).toBe(true);
+    // The existing 20%-minimum-edge rule keeps five full panels here; the
+    // six joints therefore consume 60mm and the balanced edges take 320mm.
+    expect(result.rows[0].segs[0]).toMatchObject({ w: 320, type: "edge" });
+    expect(result.rows[0].segs.filter(seg => seg.type === "full")).toHaveLength(5);
+    expect(result.meta).toMatchObject({ gap: 10, gapCount: 6 });
+    expect(result.summaryRows.find(row => row.label === SUMMARY_LABELS.s0.gapTotal)).toMatchObject({ value: "60.0", unit: "mm" });
+    expect(result.summaryRows.find(row => row.label === SUMMARY_LABELS.s0.layoutLength)).toMatchObject({ value: 3200, unit: "mm" });
+  });
+
   it("starts flush with one full edge when asked", () => {
     const result = computeS0({ roomWidth: 3200, panelWidth: 500, oneFullEdge: true });
     expect(result.valid).toBe(true);
     // No custom first piece: the run starts on a full panel and any remainder
     // lands at the far end.
     expect(result.rows[0].segs[0].type).toBe("full");
+  });
+
+  it("leaves a trailing room gap rather than rejecting an asymmetric run", () => {
+    const result = computeS0({ roomWidth: 1500, panelWidth: 100, gap: 50, oneFullEdge: true });
+    expect(result.valid).toBe(true);
+    expect(result.rows[0].segs).toHaveLength(10);
+    expect(result.rows[0].segs.every(seg => seg.type === "full" && seg.w === 100)).toBe(true);
+    expect(result.meta).toMatchObject({ gap: 50, gapCount: 9 });
+    expect(result.summaryRows.find(row => row.label === SUMMARY_LABELS.s0.roomGap)).toMatchObject({ value: "50.0", unit: "mm" });
   });
 
   it("keeps a custom first piece distinct from a zero final remainder", () => {
@@ -314,6 +335,45 @@ describe("computeS3", () => {
   it("returns an empty result for a surface with no size", () => {
     expect(computeS3({ ...sheet, W: 0 }).valid).toBe(false);
     expect(computeS3({ ...sheet, PPi: 0 }).rows).toEqual([]);
+  });
+
+  it("renders intentional horizontal and vertical joints separately from invalid gaps", () => {
+    const result = computeS1({ ...sheet, W: 2500, H: 1000, PPi: 1000, PLa: 300, gap: 20, horizontalGap: 30, verticalGap: 40 });
+    expect(result.valid).toBe(true);
+    expect(countSegs(result.rows, "joint")).toBeGreaterThan(0);
+    expect(result.rows.some(row => row.jointAfter === 40)).toBe(true);
+    expect(result.summaryRows.find(row => row.label === "Horizontal joint gap")).toMatchObject({ value: "30.0", unit: "mm" });
+    expect(result.summaryRows.find(row => row.label === "Vertical joint gap")).toMatchObject({ value: "40.0", unit: "mm" });
+  });
+
+  it("uses the shared gap until separate gaps are selected", () => {
+    const shared = computeS1({ ...sheet, W: 2500, H: 1000, PPi: 1000, PLa: 300,
+      gap: 20, horizontalGap: 30, verticalGap: 40, separateGaps: false });
+    expect(shared.meta).toMatchObject({ horizontalGap: 20, verticalGap: 20 });
+
+    const separate = computeS1({ ...sheet, W: 2500, H: 1000, PPi: 1000, PLa: 300,
+      gap: 20, horizontalGap: 30, verticalGap: 40, separateGaps: true });
+    expect(separate.meta).toMatchObject({ horizontalGap: 30, verticalGap: 40 });
+  });
+
+  it("keeps the straight-layout offcut chain when joints are enabled", () => {
+    const result = computeS1({ ...sheet, W: 4600, H: 600, PPi: 600, PLa: 300, gap: 2 });
+    const [firstRow, secondRow] = result.rows;
+    const endCut = firstRow.segs.find(seg => seg.type === "cut");
+    const openingOffcut = secondRow.segs.find(seg => seg.type === "offcut");
+    expect(endCut).toBeDefined();
+    expect(openingOffcut).toMatchObject({ sourceId: endCut.sourceId });
+    expect(openingOffcut.w + endCut.w).toBeCloseTo(600, 6);
+  });
+
+  it.each([["S2", computeS2], ["S3", computeS3]])("keeps the %s cut chain when joints are enabled", (_, compute) => {
+    const result = compute({ ...sheet, W: 4600, H: 900, PPi: 600, PLa: 300, gap: 2 });
+    const hasLinkedCarry = result.rows.slice(0, -1).some((row, index) => {
+      const cut = row.segs.find(seg => seg.type === "cut" && seg.sourceId);
+      const offcut = result.rows[index + 1].segs.find(seg => seg.type === "offcut" && seg.sourceId === cut?.sourceId);
+      return !!offcut;
+    });
+    expect(hasLinkedCarry).toBe(true);
   });
 
   it("reports capped geometry as invalid rather than a valid empty layout", () => {

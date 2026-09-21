@@ -124,10 +124,11 @@ are three copies of graphite's `--bg`; a test keeps all three in step with
 
 The simulation now owns stock allocation (`stockPlan`). The cut-list model maps
 its row references into document order without reallocating pieces. A panel can
-supply more than two cuts, including S4 long and short pieces. The table lists
-all of them. Quantities exclude saw kerf and fitting allowances, explicitly stated
-on the document. Editing calculation inputs invalidates a previously staged
-print sheet so a later print cannot silently reuse the previous job.
+supply more than two cuts, including S4 long and short pieces. Intentional
+`joint` segments are layout spacing, not material, and are omitted from the
+table. Quantities exclude saw kerf and fitting allowances, explicitly stated on
+the document. Editing calculation inputs invalidates a previously staged print
+sheet so a later print cannot silently reuse the previous job.
 
 All four corner measurements must be supplied before a corner-based take-off is
 ready; explicit zero is valid. A partial product specification containing an

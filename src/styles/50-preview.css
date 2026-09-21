@@ -370,6 +370,7 @@
 
 .data-preview .strip-visual {
 	min-width: 0;
+	--strip-key-size: 12px;
 }
 
 /* The colour band is deliberately free of numbers. The measured row below
@@ -391,6 +392,11 @@
 
 .data-preview .strip-seg.seg-highlight {
 	box-shadow: inset 0 0 0 1.5px var(--color-white);
+}
+
+.data-preview .strip-seg.strip-gap {
+	background: var(--surface-2);
+	box-shadow: inset 1px 0 var(--divider), inset -1px 0 var(--divider);
 }
 
 .data-preview .strip-measurements {
@@ -426,10 +432,16 @@
 	font-weight: var(--fw-med);
 }
 
+.data-preview .strip-support {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+	margin-top: var(--sp-3);
+}
+
 .data-preview .strip-legend {
 	display: flex;
 	gap: var(--sp-4);
-	margin-top: 10px;
 }
 
 .data-preview .strip-legend-item {
@@ -438,10 +450,18 @@
 	gap: var(--sp-2);
 }
 
-.data-preview .strip-legend-dot {
-	width: 12px;
-	height: 12px;
-	border-radius: 2px;
+.data-preview .strip-legend-dot,
+.data-preview .strip-note-dot {
+	display: block;
+	width: var(--strip-key-size);
+	height: var(--strip-key-size);
+	border-radius: 50%;
+	flex: 0 0 var(--strip-key-size);
+}
+
+.data-preview .strip-legend-dot.strip-gap {
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--divider);
 }
 
 .data-preview .strip-legend-lbl {
@@ -451,14 +471,18 @@
 }
 
 .data-preview .strip-note {
-	margin-top: 12px;
-	background: var(--color-darkblue-light);
-	border-radius: 6px;
-	padding: 10px 12px;
+	display: grid;
+	grid-template-columns: var(--strip-key-size) minmax(0, 1fr);
+	align-items: flex-start;
+	gap: var(--sp-2);
 	font-family: var(--mono);
 	font-size: var(--fs-md);
 	color: var(--color-gray-opa80);
-	line-height: 1.7;
+	line-height: 1.5;
+}
+
+.data-preview .strip-note-dot {
+	background: var(--success);
 }
 
 .preview-head {

@@ -131,6 +131,16 @@ describe("material presets on the symmetric layout page", () => {
     expect(document.getElementById("input-sym-panel-width")).toHaveDisplayValue("");
     expect(screen.queryByText("Input Presets")).toBeNull();
   });
+
+  it("renders each configured axial gap in the strip preview", () => {
+    render(<SheetSymmetricLayout
+      sym={{ roomWidth: 3200, panelWidth: 500, gap: 10, oneFullEdge: false, customFirstPieceWidth: 0 }}
+      setSym={() => {}} />);
+
+    expect(screen.getByLabelText("Gap (mm)")).toHaveDisplayValue("10");
+    expect(document.querySelectorAll(".strip-seg.strip-gap")).toHaveLength(6);
+    expect(screen.getByText("Gap (10mm)")).toBeInTheDocument();
+  });
 });
 
 /*

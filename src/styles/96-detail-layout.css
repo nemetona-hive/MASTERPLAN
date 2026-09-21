@@ -4,10 +4,6 @@
  * ----------------------------------------------------------
  */
 
-.strip-legend-mt {
-	margin-top: 10px;
-}
-
 /* Concrete Side-by-Side Layout */
 .concrete-split-wrap {
 	display: grid;

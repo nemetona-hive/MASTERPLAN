@@ -197,6 +197,10 @@ const DEFAULT_SH = {
   "patternStartV": "bottom",
   "patternStart": "left",
   "minJ": 100,
+  "gap": 0,
+  "separateGaps": false,
+  "horizontalGap": "",
+  "verticalGap": "",
   "startOff": 0,
   "s4Long": 2400
 };
@@ -204,6 +208,7 @@ const DEFAULT_SH = {
 const DEFAULT_SYM = {
   roomWidth: "",
   panelWidth: "",
+  gap: 0,
   oneFullEdge: false,
   customFirstPieceWidth: 0
 };
@@ -305,6 +310,8 @@ const SUMMARY_LABELS = {
     edgeWidth: "Edge piece width",
     cutEdge: "Cut edge panels",
     totalToBuy: "TOTAL panels to buy",
+    gap: "Gap between pieces",
+    gapTotal: "Total joint gap",
     layoutLength: "Total layout length",
     roomGap: "Gap from room"
   },
