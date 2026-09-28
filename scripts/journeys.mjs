@@ -192,6 +192,11 @@ try {
     `Focused input remains above the result bar in a keyboard-height viewport (${JSON.stringify(keyboardClearance)})`);
 
   await touchPage.goto(`${base}/#pattern-layout`);
+  await touchPage.locator("#input-PLa").focus();
+  await touchPage.locator("#control-material .num-btn--presets").first().tap();
+  check(await touchPage.getByRole("listbox", { name: "Material Presets" }).isVisible(), "Touch opens material presets");
+  check(await touchPage.locator("#input-PLa").evaluate(el => document.activeElement !== el), "Touch preset toggle leaves the numeric input unfocused");
+  await touchPage.getByRole("listbox", { name: "Material Presets" }).getByRole("option").first().tap();
   for (const [id, value] of [["input-PLa", "1200"], ["input-PPi", "2600"], ["input-W", "1390"], ["input-H", "2200"]]) {
     const input = touchPage.locator(`#${id}`);
     await input.fill(value);

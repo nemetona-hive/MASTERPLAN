@@ -38,13 +38,14 @@
   **It opens from the field's chevron button and nothing else.** It used to
   open on focus or on a click anywhere in the field, so the list covered the
   controls below it whenever somebody went to type a number, and clicking
-  elsewhere was the only way to dismiss it. The three fields that carry a
-  list — Surface Layout's width and length, Symmetric Layout's product
-  width, Concrete's consumption — pass `onTogglePresets` to `NumInput` and
-  keep owning the open/closed state themselves. The toggle hands focus back
-  to the input on the way, because `useDropdownKeyboard` is wired to the
-  field's keydown: a button that kept focus would leave the list open and
-  unwalkable. **It focuses before it toggles, and the order is load-bearing:**
+  elsewhere was the only way to dismiss it. The dimension fields in Pattern
+  Layouts and Axial Alignment, plus Concrete's consumption, pass
+  `onTogglePresets` to `NumInput` and keep owning the open/closed state
+  themselves. Desktop clicks and keyboard
+  activation hand focus to the input, because `useDropdownKeyboard` is wired
+  to the field's keydown. A mobile tap opens the list without focusing the
+  input or summoning the numeric keyboard; tapping the input still permits
+  manual entry. **It settles focus before it toggles, and the order is load-bearing:**
   moving focus blurs whichever field had it, which commits that field, and a
   page whose fields share one open-list value closes the list from there —
   toggle first and that close lands second and undoes it, which is how opening

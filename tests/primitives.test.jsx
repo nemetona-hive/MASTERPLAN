@@ -197,6 +197,28 @@ describe("NumInput", () => {
     expect(document.activeElement).toBe(screen.getByRole("combobox"));
   });
 
+  it("opens presets on a phone tap without focusing the numeric input", async () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+    try {
+      const user = userEvent.setup();
+      const onTogglePresets = vi.fn();
+      render(<NumInput value={1200} onChange={() => {}} onTogglePresets={onTogglePresets} />);
+      const input = screen.getByRole("combobox");
+      input.focus();
+
+      await user.click(screen.getByTitle("Presets"));
+      expect(onTogglePresets).toHaveBeenCalledTimes(1);
+      expect(document.activeElement).not.toBe(input);
+
+      await user.keyboard("{Enter}");
+      expect(onTogglePresets).toHaveBeenCalledTimes(2);
+      expect(document.activeElement).toBe(input);
+    } finally {
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: originalWidth });
+    }
+  });
+
   it("says which way the toggle will go", () => {
     const { rerender } = render(
       <NumInput value={1200} onChange={() => {}} onTogglePresets={() => {}} />);

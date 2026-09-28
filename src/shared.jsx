@@ -605,14 +605,15 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
           * be rid of it was to click somewhere else. Opening a menu is a thing
           * you ask for, so now there is something to ask with.
           *
-          * mousedown is swallowed so the click cannot pull focus out of the
-          * field and fire its commit-on-blur mid-edit. Focus is then moved to
-          * this field's own input deliberately, because the arrow/Enter/Escape
-          * handling for the open list lives on the field's own keydown — the
-          * button holding focus would leave the list open and unwalkable.
+          * Desktop and keyboard activation move focus to this field's input:
+          * arrow/Enter/Escape handling for the open list lives on its keydown.
+          * A mobile pointer activation leaves the input unfocused so opening
+          * presets does not also open the on-screen numeric keyboard. Blur an
+          * already active input before toggling, so its commit cannot close
+          * the newly opened list.
           *
-          * FOCUS FIRST, THEN TOGGLE, and the order is the whole of a bug worth
-          * keeping in mind. Moving focus here blurs whichever field had it,
+          * SETTLE FOCUS FIRST, THEN TOGGLE, and the order is the whole of a bug
+          * worth keeping in mind. Moving focus here blurs whichever field had it,
           * which fires that field's commit — and a page whose fields share one
           * "which list is open" between them closes the list from there. Toggle
           * first and that close lands second and undoes it: the list opened and
@@ -628,8 +629,15 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             aria-controls={`${fieldId}-presets`}
             aria-label={presetsOpen ? "Hide presets" : "Show presets"}
             title="Presets"
-            onMouseDown={e => e.preventDefault()}
-            onClick={() => { if (inputRef.current) inputRef.current.focus(); onTogglePresets(); }}>
+            onMouseDown={e => { if (!isMobileViewport()) e.preventDefault(); }}
+            onClick={e => {
+              if (isMobileViewport() && e.detail !== 0) {
+                if (document.activeElement?.matches?.("input, textarea")) document.activeElement.blur();
+              } else {
+                inputRef.current?.focus();
+              }
+              onTogglePresets();
+            }}>
             <Icon name="chevron-down" />{showActionLabels && <span>Presets</span>}
           </button>
         )}
