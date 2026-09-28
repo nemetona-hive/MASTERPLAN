@@ -43,6 +43,14 @@
 	align-items: stretch;
 }
 
+.num-row--labeled {
+	gap: var(--sp-1);
+}
+
+.num-row--labeled .num-btn {
+	gap: var(--sp-1);
+}
+
 .num-input {
 	min-height: var(--ctl-h-md);
 	height: var(--ctl-h-md);

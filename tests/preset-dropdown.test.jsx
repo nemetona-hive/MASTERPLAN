@@ -40,6 +40,15 @@ const firstPreset = DEFAULT_MATERIAL_PRESETS.filter(p => p.name)[0];
 const firstSurfacePreset = DEFAULT_SURFACE_PRESETS.filter(p => p.name)[0];
 
 describe("material presets on the symmetric layout page", () => {
+  it("names both actions on the area and product width fields", () => {
+    render(<Harness />);
+    for (const id of ["input-sym-room-width", "input-sym-panel-width"]) {
+      const row = document.getElementById(id).closest(".num-row");
+      expect(within(row).getByText("Presets").closest("button")).toHaveClass("ctl-ghost");
+      expect(within(row).getByText("Apply").closest("button")).toHaveClass("num-btn");
+    }
+  });
+
   it("starts with empty measurements and a guided preview", () => {
     render(<Harness />);
     expect(document.getElementById("input-sym-room-width")).toHaveDisplayValue("");

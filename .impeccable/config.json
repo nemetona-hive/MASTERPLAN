@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/styles/30-data.css"
+        ],
+        "createdAt": "2026-09-28T12:58:18.086Z",
+        "reason": "Agent: committed active preset list option marker, not a decorative card side accent"
+      }
+    ]
+  }
+}

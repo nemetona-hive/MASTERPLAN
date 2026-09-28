@@ -10,6 +10,10 @@
 	overflow-y: auto;
 }
 
+.pattern-results-link {
+	display: none;
+}
+
 .data-preview .preview-data {
 	display: flex;
 	flex-direction: column;
@@ -255,6 +259,13 @@
 	letter-spacing: 0.02em;
 	text-transform: none;
 	color: var(--text-muted);
+}
+
+.data-preview .sys-head-error {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	line-height: 1.4;
+	color: var(--danger);
 }
 .data-preview .sys-head-count {
 	font-family: var(--mono);

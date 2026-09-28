@@ -16,6 +16,10 @@
   chevron button next to the commit button; `presetsOpen` turns the chevron
   over and sets `aria-expanded`. The page still owns whether the list is
   open — see below.
+  `showActionLabels` adds visible **Presets** and **Apply** words to those two
+  buttons. Pattern Layouts uses it on its four required dimension fields,
+  Axial Alignment on its area and product widths, and Concrete on consumption.
+  Other numeric fields keep their compact single-action presentation.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
 - `<ControlPanel id title headerDetail open setOpen>` — collapsible panel for controls sidebar;
   `headerDetail` renders optional contextual metadata directly below the panel heading.

@@ -516,6 +516,9 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   const isOpen = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
+  const unavailableReason = result.valid ? null : result.reason
+    || (result.capped ? result.summaryRows[0]?.label : null)
+    || (result.rows.length ? "This layout leaves uncovered gaps." : "This layout cannot be calculated with these dimensions.");
   return (
     <div id={"panel-" + layout.id} className={`sys-block${isOpen ? " sys-block-open" : ""}`}>
       <div className="sys-head">
@@ -528,19 +531,20 @@ export function LayoutPanel({ layout, result, hoveredType, isBest, setHoveredTyp
               <span className="sys-title">{layout.title}</span>
             </span>
             {layout.description && <span className="sys-head-sub">{layout.description}</span>}
+            {unavailableReason && <span className="sys-head-error">{unavailableReason}</span>}
           </span>
         </button>
         {/* The slot already stops propagation, which is what lets a control
             live inside a header whose own click toggles the panel. */}
         <div className="sys-head-actions" onClick={e => e.stopPropagation()}>
-          <span className="sys-head-count">{result.stats.stockPanels ?? result.stats.total} pcs</span>
+          <span className="sys-head-count">{result.valid ? `${result.stats.stockPanels ?? result.stats.total} pcs` : "Unavailable"}</span>
           {isBest && <span className="sys-head-best">Best</span>}
           {onPrint && (
             <button
               type="button"
               className="num-btn ctl-ghost ctl-sm"
               onClick={onPrint}
-              disabled={!result.rows.length || !result.stockPlan}
+              disabled={!result.valid || !result.rows.length || !result.stockPlan}
               title={`Cut list for ${layout.title} — opens the print dialog, where Save as PDF is`}
               aria-label={`Print the cut list for ${layout.title}`}>
               <Icon name="print" /> PDF

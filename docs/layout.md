@@ -95,6 +95,17 @@ tied for that best count opens automatically. This is a readiness transition,
 not a standing override: closing it or editing already-valid values does not
 force it open again.
 
+On phone-sized viewports, Pattern Layouts starts with advanced Settings closed
+so the comparison follows the four required dimensions. A View layouts button
+appears once those dimensions are valid; it scrolls to and focuses the result
+region. Desktop keeps Settings open at first render, and either viewport lets
+the user toggle it afterward.
+
+On screens at or below 360px, Concrete's Consumption value sits above its
+labeled Presets and Apply buttons. That control column is narrower than the
+main calculator controls, so one row would leave too little width for a
+decimal value.
+
 Every `compute*` returns one of three shapes, and a caller that only looks at
 `rows` cannot tell them apart:
 
@@ -103,6 +114,10 @@ Every `compute*` returns one of three shapes, and a caller that only looks at
 | A real layout | normal | `valid: true` (or `false` for uncovered gaps) |
 | `emptyLayoutResult()` | a dimension is zero or missing | `valid: false`, no summary rows |
 | `cappedLayoutResult()` | geometry exceeds `MAX_SIM_STEPS` (2000) pieces per axis | `valid: false`, `capped: true`, one danger summary row |
+
+An invalid layout panel says **Unavailable** in its header, shows the reason
+there, and disables its cut-list print action. Never show its empty or partial
+row count as a purchasable `0 pcs` result.
 
 The cap exists because `simulate`/`simulateS4` loop per piece and `s4Long` is
 unclamped in the UI, so a typo is an unbounded loop. Both simulators share

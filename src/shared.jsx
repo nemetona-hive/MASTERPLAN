@@ -525,7 +525,7 @@ function cleanNumericInput(raw) {
  * validation — commitValue clamps with them — and a text input ignores them.
  * step went with the spinner it belonged to.
  */
-export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1 }) {
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const inputRef = React.useRef(null);
   const [error, setError] = React.useState("");
@@ -557,7 +557,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
   return (
     <div className="num-wrap">
       {label && <label htmlFor={fieldId} className="num-lbl">{label}{labelIcon && <Icon name={labelIcon} className="num-lbl-icon" />}</label>}
-      <div className="num-row">
+      <div className={"num-row" + (showActionLabels ? " num-row--labeled" : "")}>
         <input
           id={fieldId}
           name={fieldId}
@@ -621,7 +621,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
           */}
         {onTogglePresets && (
           <button
-            className="num-btn num-btn--presets"
+            className={"num-btn num-btn--presets" + (showActionLabels ? " ctl-ghost" : "")}
             type="button"
             aria-haspopup="listbox"
             aria-expanded={presetsOpen}
@@ -630,7 +630,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             title="Presets"
             onMouseDown={e => e.preventDefault()}
             onClick={() => { if (inputRef.current) inputRef.current.focus(); onTogglePresets(); }}>
-            <Icon name="chevron-down" />
+            <Icon name="chevron-down" />{showActionLabels && <span>Presets</span>}
           </button>
         )}
         <button
@@ -641,7 +641,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             commitValue();
             if (onCommit) onCommit();
           }}>
-          <Icon name="corner-down-left" />
+          <Icon name="corner-down-left" />{showActionLabels && <span>Apply</span>}
         </button>
       </div>
       {error && <span id={`${fieldId}-error`} role="alert" className="input-error">{error}</span>}

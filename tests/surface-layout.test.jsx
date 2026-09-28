@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, fireEvent, screen, within } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
 import { SheetSurfaceLayout } from "../src/components/SurfaceLayout.jsx";
@@ -40,6 +40,16 @@ describe("the surface layout page", () => {
     expect(screen.getByText("Build your layout preview")).toBeInTheDocument();
     expect(document.querySelector(".sys-block")).toBeNull();
     expect(document.querySelectorAll(".layout-empty-mosaic .layout-empty-tile")).toHaveLength(16);
+  });
+
+  it("names the preset and apply actions beside each required dimension", () => {
+    render(<Page empty />);
+    for (const id of ["input-PLa", "input-PPi", "input-W", "input-H"]) {
+      const row = document.getElementById(id).closest(".num-row");
+      expect(row).toHaveClass("num-row--labeled");
+      expect(within(row).getByText("Presets").closest("button")).toHaveClass("ctl-ghost");
+      expect(within(row).getByText("Apply").closest("button")).toHaveClass("num-btn");
+    }
   });
 
   it("guides partial input and renders when the last required field is complete", () => {
@@ -87,6 +97,24 @@ describe("the surface layout page", () => {
     expect(width).toHaveDisplayValue("");
     expect(screen.getByText("Choose an input preset or enter the surface width and length.")).toBeInTheDocument();
     expect(document.querySelector(".sys-block")).toBeNull();
+  });
+
+  it("starts with settings closed on a phone and offers a route to the layouts", () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+    const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+    try {
+      render(<Page />);
+      expect(document.getElementById("ctrl-direction")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "View layouts" }));
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" });
+      expect(document.activeElement).toBe(screen.getByRole("region", { name: "Pattern layout results" }));
+      fireEvent.click(screen.getByText("Settings"));
+      expect(document.getElementById("ctrl-direction")).toBeTruthy();
+    } finally {
+      scrollIntoView.mockRestore();
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: originalWidth });
+    }
   });
 
   describe("switching direction", () => {
@@ -227,5 +255,16 @@ describe("a layout panel's open state", () => {
 
     fireEvent.click(document.querySelector(".sys-disclosure"));
     expect(document.querySelector(".panel-body")).toBeTruthy();
+  });
+
+  it("shows an impossible layout as unavailable without a purchasable count", () => {
+    const impossible = computeS4({ ...VALID_SH, PPi: 600, PLa: 300, s4Long: 2400 });
+    render(<LayoutPanel layout={{ ...layout, id: "s4", title: "Long-Short" }} result={impossible}
+      hoveredType={null} setHoveredType={() => {}} onPrint={() => {}} />);
+
+    expect(document.querySelector(".sys-head-count")).toHaveTextContent("Unavailable");
+    expect(document.querySelector(".sys-head-error")).toHaveTextContent("Long piece cannot exceed the stock length.");
+    expect(screen.queryByText("0 pcs")).toBeNull();
+    expect(screen.getByRole("button", { name: /Print the cut list/ })).toBeDisabled();
   });
 });

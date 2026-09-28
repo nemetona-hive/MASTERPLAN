@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, fireEvent, screen } from "@testing-library/react";
+import { render, fireEvent, screen, within } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
 import { SheetConcrete } from "../src/components/Concrete.jsx";
 
@@ -34,6 +34,13 @@ const fillPour = () => {
 beforeEach(() => { vi.restoreAllMocks(); });
 
 describe("the concrete page", () => {
+  it("names the consumption preset and apply actions", () => {
+    render(<SheetConcrete />);
+    const row = field("input-slf-rate").closest(".num-row");
+    expect(within(row).getByText("Presets").closest("button")).toHaveClass("ctl-ghost");
+    expect(within(row).getByText("Apply").closest("button")).toHaveClass("num-btn");
+  });
+
   it("takes area from two dimensions once the mode is switched", () => {
     render(<SheetConcrete />);
     click("Dimensions");

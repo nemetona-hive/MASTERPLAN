@@ -296,6 +296,7 @@ export function SheetConcrete() {
                         req={hasAnyInput && !rate}
                         presetsOpen={showRatePresets}
                         presetHoveredIndex={hoveredIndex}
+                        showActionLabels
                         onTogglePresets={() => setShowRatePresets(open => !open)}
                         onCommit={() => setShowRatePresets(false)}
                         onKeyDown={onKeyDown}

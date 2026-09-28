@@ -1018,6 +1018,14 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	align-items: stretch;
 }
 
+.num-row--labeled {
+	gap: var(--sp-1);
+}
+
+.num-row--labeled .num-btn {
+	gap: var(--sp-1);
+}
+
 .num-input {
 	min-height: var(--ctl-h-md);
 	height: var(--ctl-h-md);
@@ -1715,6 +1723,10 @@ select:-webkit-autofill {
 	overflow-y: auto;
 }
 
+.pattern-results-link {
+	display: none;
+}
+
 .data-preview .preview-data {
 	display: flex;
 	flex-direction: column;
@@ -1956,6 +1968,13 @@ select:-webkit-autofill {
 	letter-spacing: 0.02em;
 	text-transform: none;
 	color: var(--text-muted);
+}
+
+.data-preview .sys-head-error {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	line-height: 1.4;
+	color: var(--danger);
 }
 .data-preview .sys-head-count {
 	font-family: var(--mono);
@@ -3057,6 +3076,11 @@ input[type="range"]:focus-visible {
 		gap: var(--sp-2);
 	}
 
+	.pattern-results-link {
+		display: block;
+		width: 100%;
+	}
+
 	.data-control .control-panel,
 	.data-control .control-panel .panel-data {
 		gap: var(--sp-3);
@@ -3256,6 +3280,19 @@ input[type="range"]:focus-visible {
 
 	.page-scroll {
 		padding: 12px;
+	}
+
+	.num-input-wrap-relative .num-row--labeled {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.num-input-wrap-relative .num-row--labeled .num-input {
+		grid-column: 1 / -1;
+	}
+
+	.num-input-wrap-relative .num-row--labeled .num-btn {
+		width: 100%;
 	}
 
 }

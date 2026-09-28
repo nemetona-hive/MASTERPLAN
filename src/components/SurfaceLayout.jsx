@@ -1,6 +1,6 @@
 import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
-import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, isMobileViewport, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
 import { LayoutEmptyState, LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 import { CutListSheet } from "./CutListSheet.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
@@ -42,7 +42,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   // A type such as "full" exists in every system. Keep its owner alongside
   // the type so hovering S1 cannot also light matching pieces in S2–S4.
   const [hoveredHighlight, setHoveredHighlight] = React.useState(null);
-  const [settingsOpen, setSettingsOpen] = React.useState(true);
+  const [settingsOpen, setSettingsOpen] = React.useState(() => !isMobileViewport());
 
   // ── Material presets ───────────────────────────────────────────────────────
   const [presets, setPresets] = React.useState(() =>
@@ -271,6 +271,16 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
           showRequired={readiness.started} missing={readiness.missing}
           largePreviewOpen={!!largePreview} />
         {readiness.ready && (
+          <button type="button" className="num-btn pattern-results-link"
+            onClick={() => {
+              const preview = document.getElementById("data-preview");
+              preview?.scrollIntoView({ block: "start" });
+              preview?.focus({ preventScroll: true });
+            }}>
+            View layouts
+          </button>
+        )}
+        {readiness.ready && (
           <ControlPanel id="control-settings" title="Settings" open={settingsOpen} setOpen={setSettingsOpen}>
             <LayoutSettings sh={sh} setField={setShField} setSh={setSh} markStep={markStep} />
           </ControlPanel>
@@ -279,7 +289,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
       {presetError && <p role="alert" className="input-error">{presetError}</p>}
       {surfacePresetError && <p role="alert" className="input-error">{surfacePresetError}</p>}
       <CutListSheet list={printList} />
-      <div id="data-preview" className="data-preview">
+      <div id="data-preview" className="data-preview" role="region" aria-label="Pattern layout results" tabIndex={-1}>
         <PreviewSection 
           id="pattern-layouts" 
           title="Pattern Layouts"
@@ -700,6 +710,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onTogglePresets={() => setActivePresetDropdown(open => (open === "wid" ? null : "wid"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onWidKeyDown}
+            showActionLabels
             req={showRequired && missing.has("PLa")}
           />
           {activePresetDropdown === "wid" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={widWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="width" inputId={`${idPrefix}input-PLa`} hoveredIndex={widHovered} />}
@@ -717,6 +728,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             onTogglePresets={() => setActivePresetDropdown(open => (open === "len" ? null : "len"))}
             onCommit={() => setActivePresetDropdown(null)}
             onKeyDown={onLenKeyDown}
+            showActionLabels
             req={showRequired && missing.has("PPi")}
           />
           {activePresetDropdown === "len" && validPresets.length > 0 && <MaterialPresetDropdown anchorRef={lenWrapRef} presets={validPresets} activePreset={activePreset} onApply={localApply} field="length" inputId={`${idPrefix}input-PPi`} hoveredIndex={lenHovered} />}
@@ -826,6 +838,7 @@ function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, f
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widthWrapRef} style={{ position: "relative" }}>
           <NumInput id={`${idPrefix}input-W`} label="Width — horizontal (mm)" labelIcon="arrow-h" value={W}
             onChange={setSurf("W")} req={showRequired && missing.has("W")}
+            showActionLabels
             presetsOpen={activeDropdown === "width"} presetHoveredIndex={widthHovered}
             onTogglePresets={() => setActiveDropdown(open => open === "width" ? null : "width")}
             onCommit={() => setActiveDropdown(null)} onKeyDown={onWidthKeyDown} />
@@ -838,6 +851,7 @@ function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, f
         <div className={fieldFlash ? "num-input-flash" : ""} ref={lengthWrapRef} style={{ position: "relative" }}>
           <NumInput id={`${idPrefix}input-H`} label="Length — vertical (mm)" labelIcon="arrow-v" value={H}
             onChange={setSurf("H")} req={showRequired && missing.has("H")}
+            showActionLabels
             presetsOpen={activeDropdown === "length"} presetHoveredIndex={lengthHovered}
             onTogglePresets={() => setActiveDropdown(open => open === "length" ? null : "length")}
             onCommit={() => setActiveDropdown(null)} onKeyDown={onLengthKeyDown} />

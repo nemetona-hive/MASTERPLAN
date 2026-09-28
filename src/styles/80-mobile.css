@@ -222,6 +222,11 @@
 		gap: var(--sp-2);
 	}
 
+	.pattern-results-link {
+		display: block;
+		width: 100%;
+	}
+
 	.data-control .control-panel,
 	.data-control .control-panel .panel-data {
 		gap: var(--sp-3);
@@ -460,6 +465,21 @@
 
 	.page-scroll {
 		padding: 12px;
+	}
+
+	/* Concrete's consumption card is narrower than the main control column.
+	   Keep its value readable once the two actions have visible labels. */
+	.num-input-wrap-relative .num-row--labeled {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.num-input-wrap-relative .num-row--labeled .num-input {
+		grid-column: 1 / -1;
+	}
+
+	.num-input-wrap-relative .num-row--labeled .num-btn {
+		width: 100%;
 	}
 
 }

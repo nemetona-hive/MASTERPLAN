@@ -94,6 +94,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
                 min={100} req={started && !roomComplete}
                 presetsOpen={showAreaDropdown}
                 presetHoveredIndex={areaHoveredIndex}
+                showActionLabels
                 onTogglePresets={() => setShowAreaDropdown(open => !open)}
                 onCommit={() => setShowAreaDropdown(false)}
                 onKeyDown={onAreaKeyDown} />
@@ -113,6 +114,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
                 req={started && !materialComplete}
                 presetsOpen={showWidDropdown}
                 presetHoveredIndex={hoveredIndex}
+                showActionLabels
                 onTogglePresets={() => setShowWidDropdown(open => !open)}
                 onCommit={() => setShowWidDropdown(false)}
                 onKeyDown={onKeyDown}
