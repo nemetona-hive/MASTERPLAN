@@ -73,6 +73,12 @@ plus line-height, near a step without being on it.
 | lg | `--ctl-h-lg` (36px) | page-level and segmented controls |
 | touch | `--ctl-h-touch` (44px) | **not a visual step** — the floor a finger needs (WCAG 2.5.5), applied as a `min-height` inside the mobile queries so a control grows to meet it without leaving the step it is on |
 
+Fields are the exception to the touch floor. `.num-input`, `input[type="text"]`
+and the `.num-btn` beside them sit at **md (32px) on desktop and lg (36px) on
+phones**, everywhere including the form-section cards (`--form-control-h`).
+At 44px every form read as a stack of tall slabs; 36px still clears the 24px
+target of WCAG 2.5.8. Buttons that are not part of a field keep the floor.
+
 `.ctl-icon` squares a control off its own height, so there has to be one:
 compose it with a base that carries a height or with `.ctl-sm`. With only a
 tier class the width falls back to 32px and the height to the glyph — a 32×19

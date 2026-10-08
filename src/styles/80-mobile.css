@@ -67,7 +67,7 @@
 
 	:root {
 		--row-h: 22px;
-		--form-control-h: var(--ctl-h-touch);
+		--form-control-h: var(--ctl-h-lg);
 	}
 
 	.app {
@@ -203,13 +203,15 @@
 	}
 
 	/* Keep 16px to prevent iOS auto-zoom; reduce padding for compactness.
-	   --ctl-h-touch is the finger floor, applied as a min-height so a control
-	   grows to meet it without leaving the step it is on. */
+	   Fields and their apply buttons take the lg step (36px), not the 44px
+	   touch floor: at 44 every form read as a stack of tall slabs, and 36 is
+	   still well clear of the 24px target WCAG 2.5.8 sets. Buttons that are
+	   not part of a field keep --ctl-h-touch. */
 	input[type="text"],
 	.num-input,
 	.num-btn {
 		font-size: 16px !important;
-		min-height: var(--ctl-h-touch);
+		min-height: var(--ctl-h-lg);
 		height: auto;
 	}
 
@@ -315,16 +317,19 @@
 		max-width: 100%;
 	}
 
-	input[type="range"],
+	input[type="range"] {
+		min-height: var(--ctl-h-touch);
+	}
+
 	.num-input,
 	.num-btn {
-		min-height: var(--ctl-h-touch);
+		min-height: var(--ctl-h-lg);
 		height: auto;
 		font-size: 16px;
 	}
 
 	.num-wrap .num-input {
-		padding: 7px 10px;
+		padding: 0 10px;
 		border-radius: 6px;
 	}
 

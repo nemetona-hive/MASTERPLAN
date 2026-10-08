@@ -163,7 +163,7 @@ html, body, #root {
 	--form-field-gap: var(--sp-3);
 	--form-card-gap: var(--sp-4);
 	--form-card-pad: var(--sp-3);
-	--form-control-h: var(--ctl-h-lg);
+	--form-control-h: var(--ctl-h-md);
 	--form-card-bg: var(--surface-1);
 	--form-section-fg: var(--accent);
 	--form-label-fg: var(--text-muted);
@@ -3238,7 +3238,7 @@ input[type="range"]:focus-visible {
 
 	:root {
 		--row-h: 22px;
-		--form-control-h: var(--ctl-h-touch);
+		--form-control-h: var(--ctl-h-lg);
 	}
 
 	.app {
@@ -3368,7 +3368,7 @@ input[type="range"]:focus-visible {
 	.num-input,
 	.num-btn {
 		font-size: 16px !important;
-		min-height: var(--ctl-h-touch);
+		min-height: var(--ctl-h-lg);
 		height: auto;
 	}
 
@@ -3474,16 +3474,19 @@ input[type="range"]:focus-visible {
 		max-width: 100%;
 	}
 
-	input[type="range"],
+	input[type="range"] {
+		min-height: var(--ctl-h-touch);
+	}
+
 	.num-input,
 	.num-btn {
-		min-height: var(--ctl-h-touch);
+		min-height: var(--ctl-h-lg);
 		height: auto;
 		font-size: 16px;
 	}
 
 	.num-wrap .num-input {
-		padding: 7px 10px;
+		padding: 0 10px;
 		border-radius: 6px;
 	}
 

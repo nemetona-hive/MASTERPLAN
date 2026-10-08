@@ -223,7 +223,7 @@ html, body, #root {
 	--form-field-gap: var(--sp-3);
 	--form-card-gap: var(--sp-4);
 	--form-card-pad: var(--sp-3);
-	--form-control-h: var(--ctl-h-lg);
+	--form-control-h: var(--ctl-h-md);
 	--form-card-bg: var(--surface-1);
 	--form-section-fg: var(--accent);
 	--form-label-fg: var(--text-muted);
