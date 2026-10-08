@@ -248,7 +248,7 @@ export function GuiderToruPolv70() {
       <div className="preview-head">
         <div className="preview-head-main">
           <h2 className="preview-title">Toru põlv 70°</h2>
-          <p className="preview-desc">Vihmaveetoru nihe kahe 70° põlvega — sisesta B või L, teine arvutatakse</p>
+          <p className="preview-desc">Ühendustoru kahe 70° põlvega — sisesta B või L, teine arvutatakse</p>
         </div>
       </div>
 
