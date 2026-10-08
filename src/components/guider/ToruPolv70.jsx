@@ -15,7 +15,7 @@ const PIPE_PATH = "M295 1220 L295 650 A80 80 0 0 1 347.6 574.8 L629.6 472.2 A80 
 function PipeDrawing() {
   return (
     <svg viewBox="0 0 860 1220" className="guider-pipe-svg" role="img"
-      aria-label="Vihmaveetoru nihe kahe 70° põlvega: L on põlvede vaheline kaldtoru, B vertikaaltorude horisontaalne nihe">
+      aria-label="Vihmaveetoru nihe kahe 70° põlvega: L on põlvede vaheline kaldtoru, B horisontaalne kaugus seinast ülemise toruni">
       <g fill="none" strokeLinejoin="round">
         <path d={PIPE_PATH} stroke="var(--text-muted)" strokeWidth="64" />
         <path d={PIPE_PATH} stroke="var(--surface-2)" strokeWidth="59" />
@@ -33,14 +33,18 @@ function PipeDrawing() {
         <path d="M626 238 Q682 292 738 238" fill="var(--surface-1)" />
         <rect x="612" y="226" width="140" height="12" rx="4" fill="var(--surface-2)" />
       </g>
-      {/* Dimension B, edge to edge of the vertical pipes */}
+      {/* Wall surface, full height. The lower pipe stands about 30 mm off it
+          (20 units on a 60-unit pipe), so the line never touches the pipe. */}
       <g stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
-        <line x1="265" y1="640" x2="265" y2="345" />
-        <line x1="265" y1="360" x2="652.2" y2="360" />
-        <line x1="255" y1="370" x2="275" y2="350" />
+        <line x1="245" y1="345" x2="245" y2="1220" />
+      </g>
+      {/* Dimension B, from the wall to the upper pipe */}
+      <g stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
+        <line x1="245" y1="360" x2="652.2" y2="360" />
+        <line x1="235" y1="370" x2="255" y2="350" />
         <line x1="642.2" y1="370" x2="662.2" y2="350" />
       </g>
-      <text x="458" y="335" textAnchor="middle" className="guider-pipe-lbl">B</text>
+      <text x="448.6" y="335" textAnchor="middle" className="guider-pipe-lbl">B</text>
       {/* Dimension L, parallel to the sloped pipe */}
       <g stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
         <line x1="361.3" y1="612.4" x2="393.8" y2="701.7" />
