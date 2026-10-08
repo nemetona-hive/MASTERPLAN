@@ -15,7 +15,11 @@ falls back to `home` for an unknown id), `setPage` calls `history.pushState`,
 and a `popstate` listener restores the page on back/forward. In
 `MainPageContent` any `PAGES` id without its own branch renders
 `SheetSurfaceLayout` (this is how `pattern-layout` is served), so a new page
-needs its own branch. Hash links need no server support, so deep links work
+needs its own branch. `setPage` ignores the page already shown, so it adds no history entry, and an
+effect sets `document.title` from `PAGES`. The routed page sits inside
+`PageErrorBoundary` (`components/PageErrorBoundary.jsx`), keyed by page: a render
+error shows a message with "Try again" and leaves the nav, header and theme
+control working. Hash links need no server support, so deep links work
 under the `/MASTERPLAN/` base path on Pages.
 
 Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`,

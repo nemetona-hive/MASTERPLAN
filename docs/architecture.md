@@ -204,7 +204,7 @@ happens once, in the model, and renderers format without rounding again:
 | Concrete area, mass, price | 2, 1, 2 decimals; volume 3 | `take-off.js` |
 | Bags to buy | ceiling of the *unrounded* exact count | `take-off.js` |
 | Timesheet decimal hours | nearest quarter hour (7:20 shows 7.25), applied to the summed minutes, not row by row | `fmtDecimal` in `utils/timesheet.js` |
-| Typed dimensions | clamped to the field's range on commit | `NumInput`, page `clamp*` helpers |
+| Typed dimensions | clamped to the field's `min`/`max` on commit, with a "Minimum is …" message; unparseable text reports blank upward (never the raw string) | `NumInput`, page `clamp*` helpers |
 
 Job entries are transient (see
 [Draft lifetime](deploying.md#draft-lifetime-and-offline-behaviour)).
