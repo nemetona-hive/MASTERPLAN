@@ -67,8 +67,8 @@ const range = (lo, hi, step) => {
   for (let v = lo; v <= hi; v += step) out.push(v);
   return out;
 };
-const FINE_B = range(GRAPH_B[0], GRAPH_B[1], 10);
-const FINE_L = range(GRAPH_L[0], GRAPH_L[1], 10);
+const GRID_B = range(200, GRAPH_B[1], 100);
+const GRID_L = range(100, GRAPH_L[1], 100);
 
 function useWidth(ref, fallback) {
   const [width, setWidth] = React.useState(fallback);
@@ -139,23 +139,23 @@ function OffsetGraph({ angle, C, point, onPick }) {
           <clipPath id={clipId}><rect x={PAD.left} y={PAD.top} width={plotW} height={plotH} /></clipPath>
         </defs>
 
-        {/* 10 mm grid, every 100 mm stronger */}
+        {/* 100 mm grid */}
         <g strokeWidth="1" shapeRendering="crispEdges">
-          {FINE_B.map(b => (
+          {GRID_B.map(b => (
             <line key={"b" + b} x1={x(b)} x2={x(b)} y1={PAD.top} y2={PAD.top + plotH}
-              className={b % 100 === 0 ? "guider-graph-major" : "guider-graph-minor"} />
+              className="guider-graph-grid" />
           ))}
-          {FINE_L.map(l => (
+          {GRID_L.map(l => (
             <line key={"l" + l} y1={y(l)} y2={y(l)} x1={PAD.left} x2={PAD.left + plotW}
-              className={l % 100 === 0 ? "guider-graph-major" : "guider-graph-minor"} />
+              className="guider-graph-grid" />
           ))}
         </g>
 
         {/* Ticks every 100 mm; every 200 on a narrow screen */}
-        {FINE_B.filter(b => b % (plotW < 420 ? 200 : 100) === 0).map(b => (
+        {GRID_B.filter(b => b % (plotW < 420 ? 200 : 100) === 0).map(b => (
           <text key={"tb" + b} x={x(b)} y={PAD.top + plotH + 16} textAnchor="middle" className="guider-graph-tick">{b}</text>
         ))}
-        {FINE_L.filter(l => l % (plotH < 300 ? 200 : 100) === 0).map(l => (
+        {GRID_L.filter(l => l % (plotH < 300 ? 200 : 100) === 0).map(l => (
           <text key={"tl" + l} x={PAD.left - 6} y={y(l) + 4} textAnchor="end" className="guider-graph-tick">{l}</text>
         ))}
         <text x={PAD.left + plotW} y={height - 4} textAnchor="end" className="guider-graph-axis">B (mm)</text>

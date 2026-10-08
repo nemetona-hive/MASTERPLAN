@@ -80,7 +80,7 @@ branch shows a placeholder card.
   (`NumInput live`). C = 152 mm was fitted to that chart (±5 mm), so outside
   L 100–1150 the answer is shown with an extrapolation warning. The drawing is
   the manufacturer's schematic, deliberately not scaled to the input. Below it, a
-  graph of L against B (B 200–1250, L 50–1150, 10 mm grid) draws the line for
+  graph of L against B (B 200–1250, L 50–1150, 100 mm grid) draws the line for
   the current α and C and marks the result; pressing or dragging on it sets
   the value through whichever field is the entered one. It is drawn at its
   measured pixel width (ResizeObserver) rather than a scaled viewBox, so tick

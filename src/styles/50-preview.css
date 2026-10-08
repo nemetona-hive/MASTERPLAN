@@ -607,14 +607,7 @@
 	user-select: none;
 }
 
-.guider-graph-minor {
-	stroke: var(--border);
-	/* audit-ui: decorative — a grid line, it paints no words. 105 + 110 fine
-	   lines at full --border read as a fill rather than a grid. */
-	opacity: 0.5;
-}
-
-.guider-graph-major {
+.guider-graph-grid {
 	stroke: var(--border-strong);
 }
 
