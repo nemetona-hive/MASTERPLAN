@@ -2,9 +2,9 @@
 import { describe, expect, it } from "vitest";
 import { render, fireEvent, screen } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
-import { GuiderToruPolv70 } from "../src/components/guider/ToruPolv70.jsx";
+import { GRAPH_B, GuiderToruPolv70 } from "../src/components/guider/ToruPolv70.jsx";
 import {
-  MESSAGES, chartRows, lengthFromOffset, offsetFromLength, solveOffset
+  MESSAGES, lengthFromOffset, offsetFromLength, solveOffset
 } from "../src/utils/downpipe-offset.js";
 
 /* The manufacturer chart's check values at α 70°, C 152. The source prompt
@@ -37,13 +37,6 @@ describe("the downpipe offset formula", () => {
   it("will not divide by sin 0", () => {
     expect(solveOffset({ source: "B", value: 500, angle: 0, C: 152 }).error).toBe(MESSAGES.params);
     expect(solveOffset({ source: "B", value: 500, angle: null, C: 152 }).error).toBe(MESSAGES.params);
-  });
-
-  it("tabulates L 100–1150 in 50 mm steps", () => {
-    const rows = chartRows();
-    expect(rows).toHaveLength(22);
-    expect(rows[0].L).toBe(100);
-    expect(rows.at(-1).L).toBe(1150);
   });
 });
 
@@ -105,5 +98,39 @@ describe("the Toru põlv 70° calculator", () => {
   it("prompts for a value before anything is entered", () => {
     render(<GuiderToruPolv70 />);
     expect(screen.getByText(MESSAGES.empty)).toBeTruthy();
+  });
+
+  /* jsdom has no layout and no PointerEvent: give the graph a 640px box and
+     a pointer event that carries clientX, so a press lands where it would. */
+  const pressGraph = B => {
+    if (!window.PointerEvent) window.PointerEvent = class extends MouseEvent {};
+    const svg = document.querySelector(".guider-graph-svg");
+    svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 640, height: 397 });
+    const plotW = 640 - 52 - 14;
+    fireEvent.pointerDown(svg, { clientX: 52 + (B - GRAPH_B[0]) / (GRAPH_B[1] - GRAPH_B[0]) * plotW });
+  };
+
+  it("sets L from a press on the graph, keeping L as the entered field", () => {
+    render(<GuiderToruPolv70 />);
+    pressGraph(622);
+    expect(Number(field("input-toru-L").value)).toBeCloseTo(500.2, 1);
+    expect(field("input-toru-B").value).toBe("622");
+    expect(screen.getByText("L sisestatud · B arvutatud")).toBeTruthy();
+  });
+
+  it("sets B from a press when B is the entered field", () => {
+    render(<GuiderToruPolv70 />);
+    type("input-toru-B", 400);
+    pressGraph(700);
+    expect(field("input-toru-B").value).toBe("700");
+    expect(screen.getByText("B sisestatud · L arvutatud")).toBeTruthy();
+  });
+
+  it("marks the current value on the graph", () => {
+    render(<GuiderToruPolv70 />);
+    expect(document.querySelector(".guider-graph-dot")).toBeNull();
+    type("input-toru-L", 500);
+    expect(document.querySelector(".guider-graph-dot")).not.toBeNull();
+    expect(document.querySelector(".guider-graph-svg").getAttribute("aria-label")).toContain("B 621.8 mm");
   });
 });

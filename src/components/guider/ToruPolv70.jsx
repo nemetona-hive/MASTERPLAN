@@ -1,13 +1,12 @@
 import { React } from "../../react-globals.js";
 import { useSessionState } from "../../utils/session-state.js";
-import { NumInput, Row, Section, Stack } from "../../shared.jsx";
+import { NumInput, Section, Stack } from "../../shared.jsx";
 import {
-  ANGLE_MAX, ANGLE_MIN, CHART_L_STEP, DEFAULT_ANGLE, DEFAULT_ELBOW_OFFSET,
-  MESSAGES, chartRows, roundMm, solveOffset
+  ANGLE_MAX, ANGLE_MIN, CHART_L_MAX, CHART_L_MIN, DEFAULT_ANGLE, DEFAULT_ELBOW_OFFSET,
+  MESSAGES, lengthFromOffset, offsetFromLength, roundMm, solveOffset
 } from "../../utils/downpipe-offset.js";
 
 const KEY = "Guider.ToruPolv70:";
-const CHART_ROWS = chartRows();
 
 /* The drawing is the manufacturer's schematic, not to scale: it shows what L
    and B measure, and stays the same whatever is entered. */
@@ -55,6 +54,146 @@ function PipeDrawing() {
   );
 }
 
+/* ── L ↔ B graph ──────────────────────────────────────────────────────────
+ * B across, L up, over the manufacturer chart's range. Drawn in real pixels
+ * rather than a scaled viewBox, so the tick labels stay a readable size on a
+ * phone. Pointing at it reads the line off at that B; pressing or dragging
+ * sets the value, keeping whichever field the user is entering in. */
+export const GRAPH_B = [200, 1250];
+export const GRAPH_L = [50, 1150];
+const PAD = { left: 52, right: 14, top: 14, bottom: 40 };
+const range = (lo, hi, step) => {
+  const out = [];
+  for (let v = lo; v <= hi; v += step) out.push(v);
+  return out;
+};
+const FINE_B = range(GRAPH_B[0], GRAPH_B[1], 10);
+const FINE_L = range(GRAPH_L[0], GRAPH_L[1], 10);
+
+function useWidth(ref, fallback) {
+  const [width, setWidth] = React.useState(fallback);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(([entry]) => {
+      const w = Math.round(entry.contentRect.width);
+      if (w > 0) setWidth(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return width;
+}
+
+function OffsetGraph({ angle, C, point, onPick }) {
+  const wrapRef = React.useRef(null);
+  const width = useWidth(wrapRef, 640);
+  const height = Math.round(Math.min(420, Math.max(260, width * 0.62)));
+  const [hover, setHover] = React.useState(null);
+  const dragging = React.useRef(false);
+  const clipId = React.useId();
+
+  const plotW = width - PAD.left - PAD.right;
+  const plotH = height - PAD.top - PAD.bottom;
+  const x = b => PAD.left + (b - GRAPH_B[0]) / (GRAPH_B[1] - GRAPH_B[0]) * plotW;
+  const y = l => PAD.top + (1 - (l - GRAPH_L[0]) / (GRAPH_L[1] - GRAPH_L[0])) * plotH;
+  const valid = Number.isFinite(angle) && Number.isFinite(C);
+
+  // The pointer's B, read back onto the line.
+  const readAt = e => {
+    if (!valid) return null;
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (!rect.width) return null;
+    const px = (e.clientX - rect.left) * (width / rect.width);
+    const b = GRAPH_B[0] + (px - PAD.left) / plotW * (GRAPH_B[1] - GRAPH_B[0]);
+    const B = Math.round(Math.min(GRAPH_B[1], Math.max(GRAPH_B[0], b)));
+    const L = lengthFromOffset(B, angle, C);
+    return L >= 0 ? { B, L } : null;
+  };
+
+  const lineFrom = { L: CHART_L_MIN, B: valid ? offsetFromLength(CHART_L_MIN, angle, C) : 0 };
+  const lineTo = { L: CHART_L_MAX, B: valid ? offsetFromLength(CHART_L_MAX, angle, C) : 0 };
+  const label = point
+    ? `Graafik: L ${roundMm(point.L)} mm vastab B ${roundMm(point.B)} mm`
+    : "Graafik: mõõt L sõltuvalt mõõdust B";
+
+  return (
+    <div ref={wrapRef} className="guider-graph">
+      <svg width={width} height={height} className="guider-graph-svg" role="img" aria-label={label}
+        onPointerDown={e => {
+          const hit = readAt(e);
+          if (!hit) return;
+          dragging.current = true;
+          e.currentTarget.setPointerCapture?.(e.pointerId);
+          onPick(hit);
+        }}
+        onPointerMove={e => {
+          const hit = readAt(e);
+          setHover(hit);
+          if (dragging.current && hit) onPick(hit);
+        }}
+        onPointerUp={() => { dragging.current = false; }}
+        onPointerCancel={() => { dragging.current = false; }}
+        onPointerLeave={() => { if (!dragging.current) setHover(null); }}>
+        <defs>
+          <clipPath id={clipId}><rect x={PAD.left} y={PAD.top} width={plotW} height={plotH} /></clipPath>
+        </defs>
+
+        {/* 10 mm grid, every 100 mm stronger */}
+        <g strokeWidth="1" shapeRendering="crispEdges">
+          {FINE_B.map(b => (
+            <line key={"b" + b} x1={x(b)} x2={x(b)} y1={PAD.top} y2={PAD.top + plotH}
+              className={b % 100 === 0 ? "guider-graph-major" : "guider-graph-minor"} />
+          ))}
+          {FINE_L.map(l => (
+            <line key={"l" + l} y1={y(l)} y2={y(l)} x1={PAD.left} x2={PAD.left + plotW}
+              className={l % 100 === 0 ? "guider-graph-major" : "guider-graph-minor"} />
+          ))}
+        </g>
+
+        {/* Ticks every 100 mm; every 200 on a narrow screen */}
+        {FINE_B.filter(b => b % (plotW < 420 ? 200 : 100) === 0).map(b => (
+          <text key={"tb" + b} x={x(b)} y={PAD.top + plotH + 16} textAnchor="middle" className="guider-graph-tick">{b}</text>
+        ))}
+        {FINE_L.filter(l => l % (plotH < 300 ? 200 : 100) === 0).map(l => (
+          <text key={"tl" + l} x={PAD.left - 6} y={y(l) + 4} textAnchor="end" className="guider-graph-tick">{l}</text>
+        ))}
+        <text x={PAD.left + plotW} y={height - 4} textAnchor="end" className="guider-graph-axis">B (mm)</text>
+        <text x={4} y={PAD.top + 4} className="guider-graph-axis" dominantBaseline="hanging"
+          transform={`rotate(-90 4 ${PAD.top + 4})`} textAnchor="end">L (mm)</text>
+
+        <g clipPath={`url(#${clipId})`}>
+          {valid && (
+            <line x1={x(lineFrom.B)} y1={y(lineFrom.L)} x2={x(lineTo.B)} y2={y(lineTo.L)}
+              className="guider-graph-line" />
+          )}
+
+          {hover && (
+            <g className="guider-graph-hover">
+              <line x1={x(hover.B)} x2={x(hover.B)} y1={PAD.top} y2={PAD.top + plotH} />
+              <circle cx={x(hover.B)} cy={y(hover.L)} r="4" />
+            </g>
+          )}
+
+          {point && (
+            <g>
+              <line x1={PAD.left} x2={x(point.B)} y1={y(point.L)} y2={y(point.L)} className="guider-graph-cross" />
+              <line x1={x(point.B)} x2={x(point.B)} y1={y(point.L)} y2={PAD.top + plotH} className="guider-graph-cross" />
+              <circle cx={x(point.B)} cy={y(point.L)} r="5.5" className="guider-graph-dot" />
+            </g>
+          )}
+        </g>
+
+        {hover && (
+          <text x={PAD.left + 8} y={PAD.top + 8} dominantBaseline="hanging" className="guider-graph-readout">
+            B {hover.B} mm · L {roundMm(hover.L).toFixed(1)} mm
+          </text>
+        )}
+      </svg>
+    </div>
+  );
+}
+
 export function GuiderToruPolv70() {
   // The field typed in last stays fixed; the other is always derived from it.
   const [source, setSource] = useSessionState(KEY + "source", "L");
@@ -83,10 +222,12 @@ export function GuiderToruPolv70() {
     setValue(v);
   };
 
+  const pickFromGraph = hit => {
+    setValue(source === "B" ? hit.B : roundMm(hit.L));
+  };
+
   const resetParams = () => { setAngle(DEFAULT_ANGLE); setElbowOffset(DEFAULT_ELBOW_OFFSET); };
   const atChartValues = angle === DEFAULT_ANGLE && elbowOffset === DEFAULT_ELBOW_OFFSET;
-  const nearestRow = result.L === null ? null
-    : CHART_ROWS.find(r => Math.abs(r.L - result.L) < CHART_L_STEP / 2);
 
   return (
     <Stack gap={4}>
@@ -139,12 +280,13 @@ export function GuiderToruPolv70() {
       </div>
 
       <div className="sys-block">
-        <div className="guider-card-head">Tootja tabel (α {DEFAULT_ANGLE}°, C {DEFAULT_ELBOW_OFFSET} mm)</div>
+        <div className="guider-card-head">Graafik — vali punkt joonel</div>
         <div className="section-pad">
-          {CHART_ROWS.map(row => (
-            <Row key={row.L} label={`L ${row.L} mm`} value={roundMm(row.B).toFixed(1)} unit="mm"
-              hi={row === nearestRow} />
-          ))}
+          <OffsetGraph
+            angle={angle === "" ? NaN : angle}
+            C={elbowOffset === "" ? NaN : elbowOffset}
+            point={result.L === null ? null : { L: result.L, B: result.B }}
+            onPick={pickFromGraph} />
         </div>
       </div>
     </Stack>

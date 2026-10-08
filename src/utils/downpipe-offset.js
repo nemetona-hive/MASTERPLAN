@@ -16,7 +16,6 @@ export const ANGLE_MIN = 1;
 export const ANGLE_MAX = 89;
 export const CHART_L_MIN = 100;
 export const CHART_L_MAX = 1150;
-export const CHART_L_STEP = 50;
 
 export const MESSAGES = {
   empty: "Sisesta L või B.",
@@ -57,16 +56,6 @@ export function solveOffset({ source, value, angle, C }) {
 
   const warning = L < CHART_L_MIN || L > CHART_L_MAX ? MESSAGES.extrapolated : null;
   return { L, B, error: null, warning };
-}
-
-/* The chart's own rows: always at the chart's α and C, since those are the
-   values the table stands for. */
-export function chartRows() {
-  const rows = [];
-  for (let L = CHART_L_MIN; L <= CHART_L_MAX; L += CHART_L_STEP) {
-    rows.push({ L, B: offsetFromLength(L) });
-  }
-  return rows;
 }
 
 export const roundMm = n => Math.round(n * 10) / 10;
