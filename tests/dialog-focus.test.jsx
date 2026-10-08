@@ -136,4 +136,39 @@ describe("the modal's focus behaviour", () => {
       expect(onClose).toHaveBeenCalled();
     });
   });
+
+  it("pulls a forward Tab back in when focus has fallen to the body", async () => {
+    render(<Page open />);
+    document.activeElement.blur();
+    expect(document.activeElement).toBe(document.body);
+
+    await userEvent.tab();
+    expect(panel().contains(document.activeElement)).toBe(true);
+  });
+
+  it("closes on Escape, but Escape in a field only leaves the field", async () => {
+    const onClose = vi.fn();
+    render(<Page open onClose={onClose} />);
+    const field = screen.getByLabelText("first");
+    field.focus();
+
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).not.toBe(field);
+
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not close on an Escape something inside already used", async () => {
+    const onClose = vi.fn();
+    render(
+      <Modal title="t" onClose={onClose}>
+        <button onKeyDown={e => { if (e.key === "Escape") e.preventDefault(); }}>list</button>
+      </Modal>
+    );
+    screen.getByText("list").focus();
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

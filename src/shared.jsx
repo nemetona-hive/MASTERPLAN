@@ -226,7 +226,10 @@ export function useModeExit(inside, onExit, active = true) {
 
   React.useEffect(() => {
     if (!active) return;
-    const onKeyDown = event => { if (event.key === "Escape") onExit(event); };
+    /* A handler lower down that already took the key (an open preset list
+       closing itself) has used this Escape; leaving the mode as well would
+       make one press do two things. */
+    const onKeyDown = event => { if (event.key === "Escape" && !event.defaultPrevented) onExit(event); };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [active, onExit]);
@@ -305,7 +308,9 @@ export function useDialogFocus(panelRef) {
       if (event.shiftKey && (active === first || active === panel || !panel.contains(active))) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && active === last) {
+      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
+        // Focus can fall to <body> when the focused control unmounts or is
+        // disabled; a forward Tab from there must come back in, not walk the page.
         event.preventDefault();
         first.focus();
       }
@@ -338,7 +343,16 @@ export function Modal({ title, onClose, className = "", children }) {
   const titleId = React.useId();
 
   useDialogFocus(panelRef);
-  useModeExit([panelRef], onClose);
+  /* Escape typed in a field leaves the field; a second Escape closes. Click
+     away and Escape from anywhere else close straight away. */
+  useModeExit([panelRef], event => {
+    const target = event.target;
+    if (event.type === "keydown" && target instanceof HTMLInputElement && panelRef.current?.contains(target)) {
+      target.blur();
+      return;
+    }
+    onClose();
+  });
 
   return (
     <div className="mp-modal-overlay">

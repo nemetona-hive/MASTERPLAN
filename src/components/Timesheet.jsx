@@ -38,6 +38,8 @@ function calcRowResult(row) {
   if (s !== null && e !== null) {
     if (lunch === null) return { dur: 'invalid lunch', dec: '', status: 'error', mins: 0 };
     let diff = e - s;
+    // Equal times are ambiguous (no time, or a full day), so neither is assumed.
+    if (diff === 0) return { dur: 'start = end', dec: '', status: 'warn', mins: 0 };
     if (diff < 0) diff += 24 * 60;        // overnight support
     if (lunch > diff) return { dur: 'lunch > work', dec: '', status: 'warn', mins: 0 };
     diff -= lunch;
@@ -55,6 +57,7 @@ export function SheetTimesheet() {
   const [activeRowId, setActiveRowId] = useState(null);
   const [copied,      setCopied]      = useTimedState(false, 1800);
   const [copyError,   setCopyError]   = useTimedState(false, 1800);
+  const [needRow,     setNeedRow]     = useTimedState(false, 3000);
 
   const nextCalcId = React.useRef(Math.max(3, ...calcRows.map(row => row.id)) + 1);
   const startRefs  = React.useRef({});
@@ -109,7 +112,7 @@ export function SheetTimesheet() {
      button did and what a keystroke did: nobody typed this, so field-undo
      never saw it and there would be nothing to take it back with. */
   const applyLunchPreset = val => {
-    if (activeRowId == null) return;
+    if (activeRowId == null) { setNeedRow(true); return; }
     markStep("Set lunch");
     updateCalcRow(activeRowId, 'lunch', val);
   };
@@ -231,7 +234,7 @@ export function SheetTimesheet() {
                       <span className="ts-col-lbl">End</span>
                       <span className="ts-col-lbl">Lunch</span>
                       <span className="ts-col-lbl">Duration</span>
-                      <span className="ts-col-lbl ts-col-dec">Decimal</span>
+                      <span className="ts-col-lbl ts-col-dec" title="Rounded to the nearest quarter hour">Decimal (¼ h)</span>
                       <span />
                     </div>
 
@@ -273,6 +276,7 @@ export function SheetTimesheet() {
                                 id={`ts-lunch-${row.id}`}
                             aria-label={`Lunch duration ${row.id}`}
                                 name={`ts-lunch-${row.id}`}
+                                placeholder=".30" title="Minutes as .30, hours as 1:00"
                                 className="num-input ts-input" type="text"
                                 value={row.lunch}
                                 {...cellProps(idx, 2, e => handleLunchTab(e, idx))}
@@ -316,6 +320,8 @@ export function SheetTimesheet() {
                       </div>
                     </div>
 
+                    {needRow && <span role="status" className="input-error">Click a row first, then choose a lunch length.</span>}
+
                     <Stack direction="row" gap={2} className="ts-controls">
                       <button className="ts-btn" onClick={addCalcRow}>+ Add row</button>
                       <button className="ts-btn ctl-ghost ctl-danger" onClick={clearCalc}>Clear all</button>
@@ -343,11 +349,13 @@ export function SheetTimesheet() {
                   <span className="result-card-footer-lbl">Decimal time: </span>
                   <span className="result-card-footer-val">{fmtDecimal(calcTotalMins) || "0.00"}</span>
                 </div>
+                <p className="result-card-note">Decimal time is rounded to the nearest quarter hour.</p>
                 
                 <div style={{marginTop: 'var(--sp-4)'}}>
                   <button 
                     className={"ts-copy" + (copied ? " ts-copy--done" : "") + (copyError ? " ts-copy--error" : "")}
                     onClick={handleCopy}
+                    title="Copies the decimal total, rounded to the nearest quarter hour"
                     disabled={!hasCalcTotal}
                     style={{width: '100%', padding: '12px', fontSize: 'var(--fs-md)', borderRadius: '6px', textAlign: 'center'}}
                   >

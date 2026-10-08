@@ -120,3 +120,33 @@ describe("timesheet arrow-key navigation", () => {
     expect(document.activeElement).toBe(cell("start", 3));
   });
 });
+
+describe("timesheet entry feedback", () => {
+  const type = async (user, column, rowId, text) => {
+    await user.click(cell(column, rowId));
+    await user.keyboard(text);
+  };
+
+  it("does not treat an equal start and end as a worked day", async () => {
+    const user = userEvent.setup();
+    render(<SheetTimesheet />);
+    await type(user, "start", 1, "8:00");
+    await type(user, "end", 1, "8:00");
+    await user.tab();
+    expect(screen.getByText("start = end")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy decimal" })).toBeDisabled();
+  });
+
+  it("says what to do when a lunch preset is pressed with no row chosen", async () => {
+    const user = userEvent.setup();
+    render(<SheetTimesheet />);
+    await user.click(screen.getByRole("button", { name: "30 min" }));
+    expect(screen.getByRole("status")).toHaveTextContent(/click a row first/i);
+  });
+
+  it("states the quarter-hour rounding where the decimal is shown and copied", () => {
+    render(<SheetTimesheet />);
+    expect(screen.getByText("Decimal (¼ h)")).toHaveAttribute("title", expect.stringMatching(/quarter hour/));
+    expect(screen.getByRole("button", { name: "Copy decimal" })).toHaveAttribute("title", expect.stringMatching(/quarter hour/));
+  });
+});

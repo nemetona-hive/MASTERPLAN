@@ -59,6 +59,14 @@ describe("the golden ratio page", () => {
     expect(Number(stepsIn("b")[0])).toBe(Math.round(500 / PHI));
   });
 
+  it("says why a value below 1 was emptied, and stops saying it once retyped", () => {
+    render(<Page />);
+    setValue("a", "0.5");
+    expect(screen.getByRole("alert")).toHaveTextContent("1 or more");
+    fireEvent.change(valueField("a"), { target: { value: "5" } });
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
   it("rounds a typed base to the value it will actually use", () => {
     // commitBaseValue rounds on blur, so the series and the field agree.
     render(<Page />);

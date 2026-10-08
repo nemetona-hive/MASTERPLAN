@@ -24,7 +24,11 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
     apply: setBaseItems
   });
 
+  // Ids whose last committed value was refused, so the field does not just empty itself.
+  const [refused, setRefused] = React.useState({});
+
   const setItemField = (id, key, value) => {
+    if (key === "value") setRefused(r => (r[id] ? { ...r, [id]: false } : r));
     setBaseItems(items => items.map(item => (item.id === id ? { ...item, [key]: value } : item)));
   };
 
@@ -45,6 +49,10 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
   };
 
   const commitBaseValue = (id, flash = false) => {
+    const current = baseItems.find(item => item.id === id);
+    const text = String(current?.value ?? "").trim().replace(",", ".");
+    const n = Number(text);
+    setRefused(r => ({ ...r, [id]: text !== "" && (!Number.isFinite(n) || n < 1) }));
     setBaseItems(items => items.map(item => {
       if (item.id !== id) return item;
       const raw = String(item.value ?? "").trim().replace(",", ".");
@@ -143,6 +151,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
                           <Icon name="corner-down-left" />
                         </button>
                       </div>
+                      {refused[item.id] && <span role="alert" className="input-error">Enter a number of 1 or more.</span>}
                     </Stack>
                     <Stack gap={1} className="ctrl-lbl">
                       <span className="ctrl-sublbl">Custom label</span>
