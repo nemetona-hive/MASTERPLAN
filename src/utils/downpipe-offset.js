@@ -20,7 +20,7 @@ export const CHART_L_MIN = 100;
 export const CHART_L_MAX = 1150;
 
 export const MESSAGES = {
-  empty: "Sisesta L või B.",
+  empty: "Sisesta B või L.",
   params: `Sisesta nurk α (${ANGLE_MIN}–${ANGLE_MAX}°) ja konstant C.`,
   tooShort: "B on väiksem kui kaks põlve kokku. Seda nihet ei saa kahe 70° põlvega teha.",
   extrapolated: `Väljaspool tootja tabelit (L ${CHART_L_MIN}–${CHART_L_MAX} mm). Väärtus on ekstrapoleeritud.`

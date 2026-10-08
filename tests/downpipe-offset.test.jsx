@@ -124,8 +124,16 @@ describe("the Toru põlv 70° calculator", () => {
     fireEvent.pointerDown(svg, { clientX: 52 + (B - GRAPH_B[0]) / (GRAPH_B[1] - GRAPH_B[0]) * plotW });
   };
 
+  it("puts B first and treats it as the entered field until L is typed", () => {
+    render(<GuiderToruPolv70 />);
+    const cells = [...document.querySelectorAll(".guider-strip-cell[data-field]")].map(c => c.dataset.field);
+    expect(cells).toEqual(["B", "L"]);
+    expect(entered()).toBe("B");
+  });
+
   it("sets L from a press on the graph, keeping L as the entered field", () => {
     render(<GuiderToruPolv70 />);
+    type("input-toru-L", 300);
     pressGraph(622);
     expect(Number(field("input-toru-L").value)).toBeCloseTo(500.2, 1);
     expect(field("input-toru-B").value).toBe("622");

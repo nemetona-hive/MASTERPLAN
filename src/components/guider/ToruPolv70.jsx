@@ -207,7 +207,8 @@ function OffsetGraph({ angle, C, point, onPick }) {
 
 export function GuiderToruPolv70() {
   // The field typed in last stays fixed; the other is always derived from it.
-  const [source, setSource] = useSessionState(KEY + "source", "L");
+  // B is the figure usually measured on site, so it starts as the entered one.
+  const [source, setSource] = useSessionState(KEY + "source", "B");
   const [value, setValue] = useSessionState(KEY + "value", "");
   const [angle, setAngle] = useSessionState(KEY + "angle", DEFAULT_ANGLE);
   const [elbowOffset, setElbowOffset] = useSessionState(KEY + "C", DEFAULT_ELBOW_OFFSET);
@@ -248,14 +249,14 @@ export function GuiderToruPolv70() {
       <div className="preview-head">
         <div className="preview-head-main">
           <h2 className="preview-title">Toru põlv 70°</h2>
-          <p className="preview-desc">Vihmaveetoru nihe kahe 70° põlvega — sisesta L või B, teine arvutatakse</p>
+          <p className="preview-desc">Vihmaveetoru nihe kahe 70° põlvega — sisesta B või L, teine arvutatakse</p>
         </div>
       </div>
 
       {/* The figures, ruled like a datasheet. L and B are the job; α and C are
           the chart's parameters, summarised and opened only when needed. */}
       <div className="guider-strip">
-        {["L", "B"].map(field => (
+        {["B", "L"].map(field => (
           <div key={field} data-field={field}
             className={"guider-strip-cell" + (field === derived ? " guider-strip-cell--derived" : "")}>
             <NumInput id={`input-toru-${field}`} label={`Mõõt ${field} (mm)`} value={shown[field]}
