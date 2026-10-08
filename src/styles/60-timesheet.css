@@ -48,8 +48,13 @@
 
 .ts-grid-hd,
 .ts-grid-row {
+	/* Header and row must share the same grid origin: a horizontal inset on one
+	   shifts later fractional tracks away from their column titles. Both carry
+	   it, so the active row's outline has room to sit around its cells instead
+	   of touching the first input and the remove button. */
+	padding-inline: var(--sp-2);
 	display: grid;
-	grid-template-columns: 1fr 1fr 72px 94px 70px 44px;
+	grid-template-columns: 1fr 1fr 72px 94px 104px 44px;
 	gap: var(--sp-2);
 	align-items: center;
 }
@@ -79,29 +84,35 @@
 }
 
 .ts-grid-hd {
-	margin-bottom: var(--sp-05);
+	/* Reads as the table's head, not a first row: a rule beneath it and more
+	   room around it than the rows keep between themselves. */
+	padding-block: var(--sp-2);
+	margin-bottom: var(--sp-2);
+	border-bottom: 1px solid var(--divider);
 }
 
 .ts-grid-row {
-	/* Header and row must share the same grid origin: a horizontal row inset
-	   shifts later fractional tracks away from their column titles. */
-	padding-block: var(--sp-05);
-	border-radius: var(--btn-radius);
-	transition: background 0.08s;
+	padding-block: var(--sp-2);
+	border-radius: var(--row-hl-radius);
+	transition: var(--row-hl-fade);
 }
 
+.ts-grid-row:hover,
+.ts-grid-row:focus-within,
 .ts-grid-row--active {
-	background: var(--color-darkblue-light);
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent), 0 0 10px color-mix(in srgb, var(--color-primary) 10%, transparent);
+	background: var(--row-hl-bg);
 }
 
 .ts-col-lbl {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
+	color: var(--text-subtle);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
 	/* Match .num-input so a heading identifies the first character in its cell,
 	   not the field's outer edge. */
 	padding-inline: var(--ctl-pad-x-md);
+	white-space: nowrap;
 }
 
 /* Input ------------------------------------------------------------------- */
@@ -119,7 +130,7 @@
 	font-family: var(--mono);
 	font-size: var(--fs-md);
 	font-weight: var(--fw-med);
-	color: var(--color-primary);
+	color: var(--text);
 	padding-inline: var(--ctl-pad-x-md);
 	height: 32px;
 	display: flex;
@@ -129,7 +140,7 @@
 }
 
 .ts-decimal {
-	color: var(--color-gray-opa80);
+	color: var(--text-muted);
 }
 
 .ts-duration--error {
@@ -282,4 +293,41 @@
 		--ctl-h: var(--ctl-h-md);
 		height: var(--ctl-h-md);
 	}
+}
+
+/* Result card footer ------------------------------------------------------ */
+
+/* The pair MONEYFLOW's footer draws: a quiet uppercase label at one edge and
+   the figure at the other, so the card reads as a column of readings. */
+.ts-page .result-card-footer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-2);
+}
+
+.ts-page .result-card-footer-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+}
+
+.ts-page .result-card-footer-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--text-subtle);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.ts-page .result-card-footer-val {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-bold);
+	color: var(--text);
+}
+
+.ts-page .result-card-note {
+	margin-top: 0;
+	color: var(--text-muted);
 }

@@ -114,6 +114,10 @@ html, body, #root {
 	--divider-subtle: color-mix(in srgb, var(--text) 12%, transparent);
 	--divider: color-mix(in srgb, var(--text) 16%, transparent);
 
+	--row-hl-bg:     color-mix(in srgb, var(--surface-hover) 55%, transparent);
+	--row-hl-radius: 8px;
+	--row-hl-fade:   background 0.2s ease;
+
 	--mono:        'JetBrains Mono', monospace;
 	--sans:        'IBM Plex Sans', sans-serif;
 	--font-ui:     'Inter', 'IBM Plex Sans', sans-serif;
@@ -2264,8 +2268,10 @@ select:-webkit-autofill {
 
 .ts-grid-hd,
 .ts-grid-row {
+
+	padding-inline: var(--sp-2);
 	display: grid;
-	grid-template-columns: 1fr 1fr 72px 94px 70px 44px;
+	grid-template-columns: 1fr 1fr 72px 94px 104px 44px;
 	gap: var(--sp-2);
 	align-items: center;
 }
@@ -2281,27 +2287,33 @@ select:-webkit-autofill {
 }
 
 .ts-grid-hd {
-	margin-bottom: var(--sp-05);
+
+	padding-block: var(--sp-2);
+	margin-bottom: var(--sp-2);
+	border-bottom: 1px solid var(--divider);
 }
 
 .ts-grid-row {
-
-	padding-block: var(--sp-05);
-	border-radius: var(--btn-radius);
-	transition: background 0.08s;
+	padding-block: var(--sp-2);
+	border-radius: var(--row-hl-radius);
+	transition: var(--row-hl-fade);
 }
 
+.ts-grid-row:hover,
+.ts-grid-row:focus-within,
 .ts-grid-row--active {
-	background: var(--color-darkblue-light);
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent), 0 0 10px color-mix(in srgb, var(--color-primary) 10%, transparent);
+	background: var(--row-hl-bg);
 }
 
 .ts-col-lbl {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
-	color: var(--color-gray-opa80);
+	color: var(--text-subtle);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
 
 	padding-inline: var(--ctl-pad-x-md);
+	white-space: nowrap;
 }
 
 .ts-input {
@@ -2314,7 +2326,7 @@ select:-webkit-autofill {
 	font-family: var(--mono);
 	font-size: var(--fs-md);
 	font-weight: var(--fw-med);
-	color: var(--color-primary);
+	color: var(--text);
 	padding-inline: var(--ctl-pad-x-md);
 	height: 32px;
 	display: flex;
@@ -2324,7 +2336,7 @@ select:-webkit-autofill {
 }
 
 .ts-decimal {
-	color: var(--color-gray-opa80);
+	color: var(--text-muted);
 }
 
 .ts-duration--error {
@@ -2461,6 +2473,39 @@ select:-webkit-autofill {
 		--ctl-h: var(--ctl-h-md);
 		height: var(--ctl-h-md);
 	}
+}
+
+.ts-page .result-card-footer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-2);
+}
+
+.ts-page .result-card-footer-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-4);
+}
+
+.ts-page .result-card-footer-lbl {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--text-subtle);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.ts-page .result-card-footer-val {
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-bold);
+	color: var(--text);
+}
+
+.ts-page .result-card-note {
+	margin-top: 0;
+	color: var(--text-muted);
 }
 
 .ctl-ghost {

@@ -306,7 +306,7 @@ export function SheetTimesheet() {
                     })}
                   </Stack>
 
-                  <div style={{height: '1px', background: 'var(--divider-subtle)', margin: 'var(--sp-2) 0'}} />
+                  <div style={{height: '1px', background: 'var(--divider-subtle)', margin: 'calc(var(--sp-2) * -1) 0 var(--sp-2)'}} />
 
                   {/* Controls */}
                   <Stack gap={4}>
@@ -346,7 +346,7 @@ export function SheetTimesheet() {
               {incomplete && <span role="status" className="input-error">Incomplete total — check the entries.</span>}
               <div className="result-card-footer">
                 <div className="result-card-footer-item">
-                  <span className="result-card-footer-lbl">Decimal time: </span>
+                  <span className="result-card-footer-lbl">Decimal time</span>
                   <span className="result-card-footer-val">{fmtDecimal(calcTotalMins) || "0.00"}</span>
                 </div>
                 <p className="result-card-note">Decimal time is rounded to the nearest quarter hour.</p>

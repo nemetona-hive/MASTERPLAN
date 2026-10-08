@@ -165,6 +165,12 @@ html, body, #root {
 	--divider-subtle: color-mix(in srgb, var(--text) 12%, transparent);
 	--divider: color-mix(in srgb, var(--text) 16%, transparent);
 
+	/* Row highlight — the same recipe as MONEYFLOW's: a tint off --surface-hover
+	   that a grid row wears on hover, focus and selection, in place of an outline. */
+	--row-hl-bg:     color-mix(in srgb, var(--surface-hover) 55%, transparent);
+	--row-hl-radius: 8px;
+	--row-hl-fade:   background 0.2s ease;
+
 	--mono:        'JetBrains Mono', monospace;
 	--sans:        'IBM Plex Sans', sans-serif;
 	--font-ui:     'Inter', 'IBM Plex Sans', sans-serif;

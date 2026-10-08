@@ -50,6 +50,14 @@ built with them keeps its desktop spacing in the bar and pushes the row wide.
 Concrete's card did exactly that — its Global Reset was clipped off the right
 edge at 360px — while Timesheet's, built from these classes, was fine.
 
+**Timesheet rows and the card footer follow MONEYFLOW's look.** A row is marked
+by a tint (`--row-hl-bg`, `--row-hl-radius`, `--row-hl-fade` in 00-base.css) on
+hover, focus and the active row — never an outline, which collided with the
+first input and the remove button. `.ts-grid-hd` and `.ts-grid-row` carry the
+same inline padding so headings stay over their columns. The footer pair is
+styled under `.ts-page` only (uppercase subtle label left, figure right); the
+shared `.result-card-footer-*` names are still unstyled elsewhere.
+
 Destructive actions arm before they fire. Concrete's Global Reset clears every
 field, so the first click swaps its label to "Confirm reset?" and gives it the
 danger treatment; the second does the work. It disarms on a timeout and on focus
