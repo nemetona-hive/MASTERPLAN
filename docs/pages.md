@@ -74,22 +74,27 @@ branch shows a placeholder card.
   (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each diagram.
 - **Ruukki** (`control-guider-ruukki`): `Vihmaveesüsteemid` opens
   Toru põlv 70° (`components/guider/ToruPolv70.jsx`), a two-way calculator
-  for a downpipe offset made of two 70° elbows: `B = L·sin α + C`, with B
-  measured from the wall as the chart measures it (the lower pipe's ~30 mm
-  stand-off is inside C, not added on top). The maths is
-  in `utils/downpipe-offset.js` and tested against the manufacturer's chart;
-  the field typed last stays fixed and the other follows it as you type
-  (`NumInput live`). C = 152 mm was fitted to that chart (±5 mm), so outside
-  L 100–1150 the answer is shown with an extrapolation warning. The drawing is
-  the manufacturer's schematic, deliberately not scaled to the input; its B and
-  L labels carry the current values. The page is laid out as a datasheet: a
-  ruled strip of L and B with a summary of α and C (their fields open from
-  **Muuda**, since they are rarely changed), the drawing and the graph
-  side by side, and a footer with the formula and the chart's limits. Its
-  breakpoints are container queries on `.guider-sheet`, since the preview's
-  width depends on the sidebar and the control column. Beside the drawing, a
-  graph of L against B (B 200–1250, L 50–1150, 100 mm grid) draws the line for
-  the current α and C and marks the result; pressing or dragging on it sets
-  the value through whichever field is the entered one. It is drawn at its
-  measured pixel width (ResizeObserver) rather than a scaled viewBox, so tick
-  labels stay legible on a phone.
+  for a pipe offset made of two 70° elbows: `B = L·sin α + C`. B is measured
+  from the **wall**, as the manufacturer's chart measures it, so the lower
+  pipe's ~30 mm stand-off is inside C and is not added on top. C = 152 mm was
+  fitted to that chart (±5 mm); outside L 100–1150 the answer carries an
+  extrapolation warning. The maths is in `utils/downpipe-offset.js`.
+  - **Entry.** B is first and is the entered field by default (it is what gets
+    measured on site); whichever of B or L was typed last stays fixed and the
+    other follows as you type (`NumInput live`), shown in `--accent`. α and C
+    are folded into a summary cell and open from **Muuda**, because they are
+    rarely changed. An empty page shows no prompt — only real errors and the
+    extrapolation warning are drawn.
+  - **Layout** is a datasheet: the B / L / parameters strip, the schematic and
+    the graph side by side at one height, and a footer with the formula and the
+    chart's limits. Breakpoints are container queries on `.guider-sheet`,
+    because the preview's width depends on the sidebar and the control column,
+    not the viewport.
+  - **Schematic** is the manufacturer's drawing, deliberately not scaled to the
+    input; its B and L labels carry the current values, and the wall line
+    stands clear of the pipe.
+  - **Graph** of L against B (B 200–1250, L 50–1150, 100 mm grid) draws the
+    line for the current α and C and marks the result; pressing or dragging
+    sets the value through the entered field. It is drawn at its measured pixel
+    width (ResizeObserver), not a scaled viewBox, so tick labels stay legible on
+    a phone.
