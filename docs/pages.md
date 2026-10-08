@@ -81,7 +81,12 @@ branch shows a placeholder card.
   the field typed last stays fixed and the other follows it as you type
   (`NumInput live`). C = 152 mm was fitted to that chart (±5 mm), so outside
   L 100–1150 the answer is shown with an extrapolation warning. The drawing is
-  the manufacturer's schematic, deliberately not scaled to the input. Below it, a
+  the manufacturer's schematic, deliberately not scaled to the input; its B and
+  L labels carry the current values. The page is laid out as a datasheet: a
+  ruled strip of L, B, α and C (all four editable), the drawing and the graph
+  side by side, and a footer with the formula and the chart's limits. Its
+  breakpoints are container queries on `.guider-sheet`, since the preview's
+  width depends on the sidebar and the control column. Beside the drawing, a
   graph of L against B (B 200–1250, L 50–1150, 100 mm grid) draws the line for
   the current α and C and marks the result; pressing or dragging on it sets
   the value through whichever field is the entered one. It is drawn at its

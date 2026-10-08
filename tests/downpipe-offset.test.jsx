@@ -41,6 +41,7 @@ describe("the downpipe offset formula", () => {
 });
 
 const field = id => document.getElementById(id);
+const entered = () => document.querySelector(".guider-strip-cell[data-field]:not(.guider-strip-cell--derived)").dataset.field;
 const type = (id, value) => fireEvent.change(field(id), { target: { value: String(value) } });
 
 describe("the Toru põlv 70° calculator", () => {
@@ -66,7 +67,6 @@ describe("the Toru põlv 70° calculator", () => {
   it("keeps the entered field fixed when α changes", () => {
     render(<GuiderToruPolv70 />);
     type("input-toru-L", 500);
-    fireEvent.click(screen.getByText("Täpsemalt"));
     type("input-toru-angle", 60);
     expect(field("input-toru-L").value).toBe("500");
     expect(field("input-toru-B").value).toBe(String(Math.round((500 * Math.sin(Math.PI / 3) + 152) * 10) / 10));
@@ -79,7 +79,7 @@ describe("the Toru põlv 70° calculator", () => {
     type("input-toru-L", 500);
     fireEvent.blur(field("input-toru-L"));
     fireEvent.blur(field("input-toru-B"));
-    expect(screen.getByText("L sisestatud · B arvutatud")).toBeTruthy();
+    expect(entered()).toBe("L");
   });
 
   it("explains an impossible offset instead of showing a negative length", () => {
@@ -115,7 +115,7 @@ describe("the Toru põlv 70° calculator", () => {
     pressGraph(622);
     expect(Number(field("input-toru-L").value)).toBeCloseTo(500.2, 1);
     expect(field("input-toru-B").value).toBe("622");
-    expect(screen.getByText("L sisestatud · B arvutatud")).toBeTruthy();
+    expect(entered()).toBe("L");
   });
 
   it("sets B from a press when B is the entered field", () => {
@@ -123,7 +123,7 @@ describe("the Toru põlv 70° calculator", () => {
     type("input-toru-B", 400);
     pressGraph(700);
     expect(field("input-toru-B").value).toBe("700");
-    expect(screen.getByText("B sisestatud · L arvutatud")).toBeTruthy();
+    expect(entered()).toBe("B");
   });
 
   it("marks the current value on the graph", () => {
@@ -132,5 +132,13 @@ describe("the Toru põlv 70° calculator", () => {
     type("input-toru-L", 500);
     expect(document.querySelector(".guider-graph-dot")).not.toBeNull();
     expect(document.querySelector(".guider-graph-svg").getAttribute("aria-label")).toContain("B 621.8 mm");
+  });
+
+  it("labels the drawing with the current figures once there is a result", () => {
+    render(<GuiderToruPolv70 />);
+    const labels = () => [...document.querySelectorAll(".guider-pipe-lbl")].map(t => t.textContent.trim());
+    expect(labels()).toEqual(["B", "L"]);
+    type("input-toru-L", 500);
+    expect(labels()).toEqual(["B = 621.8", "L = 500"]);
   });
 });

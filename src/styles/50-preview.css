@@ -537,21 +537,126 @@
  * ----------------------------------------------------------
  */
 
-/* Inputs beside the drawing while there is room for both, stacked below it.
-   auto-fit decides from the preview's own width, which the sidebar and the
-   control column change independently of the viewport. */
-.guider-calc {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-	gap: var(--sp-4);
-	align-items: start;
+/* Laid out as a datasheet: a ruled strip of the four figures, the drawing
+   and the graph side by side at one height, a footer of the formula and the
+   chart's limits. Sized from the sheet's own width (container query), because
+   the sidebar and the control column change it independently of the viewport. */
+.guider-sheet {
+	container-type: inline-size;
 }
 
-.data-preview .guider-calc .sys-block {
+/* The reset action drops under the title rather than squeezing it into a
+   one-word column on a phone. */
+.guider-sheet > .preview-head {
+	flex-wrap: wrap;
 	margin-bottom: 0;
 }
 
+.guider-sheet > .preview-head .preview-head-main {
+	min-width: 220px;
+}
+
+.guider-strip {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	border: 1px solid var(--border);
+	border-radius: var(--btn-radius);
+	overflow: hidden;
+}
+
+.guider-strip-cell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-1);
+	min-width: 0;
+	padding: var(--sp-3);
+	border-right: 1px solid var(--border);
+}
+
+.guider-strip-cell:last-child {
+	border-right: 0;
+}
+
+.guider-strip-cell--derived .num-input {
+	color: var(--accent);
+}
+
+.guider-strip-tag {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--text-subtle);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+.guider-strip-cell:not(.guider-strip-cell--derived)[data-field] .guider-strip-tag {
+	color: var(--brand);
+}
+
+.guider-msgs:empty {
+	display: none;
+}
+
+.guider-sheet-main {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+	gap: var(--sp-4);
+	align-items: stretch;
+}
+
+.data-preview .guider-sheet-main .sys-block {
+	margin-bottom: 0;
+}
+
+.guider-sheet-card {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--border);
+	border-radius: var(--btn-radius);
+}
+
+.guider-pipe-wrap {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.guider-sheet-foot {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--sp-2) var(--sp-4);
+	padding-top: var(--sp-3);
+	border-top: 1px solid var(--border);
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--text-subtle);
+}
+
+@container (max-width: 600px) {
+	.guider-sheet-main {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@container (max-width: 560px) {
+	.guider-strip {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.guider-strip-cell:nth-child(2) {
+		border-right: 0;
+	}
+	.guider-strip-cell:nth-child(-n + 2) {
+		border-bottom: 1px solid var(--border);
+	}
+}
+
 .guider-card-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: var(--sp-3);
 	padding: var(--sp-3) var(--sp-4);
 	border-bottom: 1px solid var(--border);
 	font-family: var(--mono);
@@ -561,11 +666,16 @@
 	letter-spacing: 0.12em;
 }
 
-/* The drawing is tall (860 × 1220); width alone would make it a page long. */
+.guider-card-note {
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+/* The drawing is tall; width alone would make it a page long. */
 .guider-pipe-svg {
 	display: block;
 	width: 100%;
-	max-height: 440px;
+	max-height: 400px;
 }
 
 .guider-pipe-lbl {
@@ -573,6 +683,10 @@
 	font-size: 80px;
 	font-weight: var(--fw-bold);
 	fill: var(--text);
+}
+
+.guider-pipe-lbl--value {
+	font-size: 60px;
 }
 
 .guider-msg {
@@ -586,10 +700,6 @@
 
 .guider-msg--warning {
 	color: var(--warning);
-}
-
-.guider-reset {
-	align-self: flex-start;
 }
 
 /* Toru põlv 70° graph. Grid lines are edge tokens drawing lines, which is

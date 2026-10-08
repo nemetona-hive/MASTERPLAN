@@ -1,6 +1,6 @@
 import { React } from "../../react-globals.js";
 import { useSessionState } from "../../utils/session-state.js";
-import { NumInput, Section, Stack } from "../../shared.jsx";
+import { NumInput, Stack } from "../../shared.jsx";
 import {
   ANGLE_MAX, ANGLE_MIN, CHART_L_MAX, CHART_L_MIN, DEFAULT_ANGLE, DEFAULT_ELBOW_OFFSET,
   MESSAGES, lengthFromOffset, offsetFromLength, roundMm, solveOffset
@@ -9,12 +9,15 @@ import {
 const KEY = "Guider.ToruPolv70:";
 
 /* The drawing is the manufacturer's schematic, not to scale: it shows what L
-   and B measure, and stays the same whatever is entered. */
+   and B measure and does not change shape with them. The labels carry the
+   current values once there is a result. */
 const PIPE_PATH = "M295 1220 L295 650 A80 80 0 0 1 347.6 574.8 L629.6 472.2 A80 80 0 0 0 682.2 397 L682.2 330";
 
-function PipeDrawing() {
+function PipeDrawing({ L, B }) {
+  const valued = L !== null && B !== null;
+  const lblClass = "guider-pipe-lbl" + (valued ? " guider-pipe-lbl--value" : "");
   return (
-    <svg viewBox="0 0 860 1220" className="guider-pipe-svg" role="img"
+    <svg viewBox="160 200 680 1020" className="guider-pipe-svg" role="img"
       aria-label="Vihmaveetoru nihe kahe 70° põlvega: L on põlvede vaheline kaldtoru, B horisontaalne kaugus seinast ülemise toruni">
       <g fill="none" strokeLinejoin="round">
         <path d={PIPE_PATH} stroke="var(--text-muted)" strokeWidth="64" />
@@ -44,7 +47,9 @@ function PipeDrawing() {
         <line x1="235" y1="370" x2="255" y2="350" />
         <line x1="642.2" y1="370" x2="662.2" y2="350" />
       </g>
-      <text x="448.6" y="335" textAnchor="middle" className="guider-pipe-lbl">B</text>
+      <text x="448.6" y="335" textAnchor="middle" className={lblClass}>
+        {valued ? `B = ${roundMm(B)}` : "B"}
+      </text>
       {/* Dimension L, parallel to the sloped pipe */}
       <g stroke="var(--text)" strokeWidth="2.5" strokeLinecap="round">
         <line x1="361.3" y1="612.4" x2="393.8" y2="701.7" />
@@ -53,7 +58,9 @@ function PipeDrawing() {
         <line x1="382.7" y1="700.3" x2="394.5" y2="674.9" />
         <line x1="664.7" y1="597.7" x2="676.5" y2="572.3" />
       </g>
-      <text x="560" y="720" textAnchor="middle" className="guider-pipe-lbl">L</text>
+      <text x={valued ? 590 : 560} y={valued ? 760 : 720} textAnchor="middle" className={lblClass}>
+        {valued ? `L = ${roundMm(L)}` : "L"}
+      </text>
     </svg>
   );
 }
@@ -204,7 +211,6 @@ export function GuiderToruPolv70() {
   const [value, setValue] = useSessionState(KEY + "value", "");
   const [angle, setAngle] = useSessionState(KEY + "angle", DEFAULT_ANGLE);
   const [elbowOffset, setElbowOffset] = useSessionState(KEY + "C", DEFAULT_ELBOW_OFFSET);
-  const [advancedOpen, setAdvancedOpen] = React.useState(false);
 
   const result = solveOffset({
     source,
@@ -233,65 +239,81 @@ export function GuiderToruPolv70() {
   const resetParams = () => { setAngle(DEFAULT_ANGLE); setElbowOffset(DEFAULT_ELBOW_OFFSET); };
   const atChartValues = angle === DEFAULT_ANGLE && elbowOffset === DEFAULT_ELBOW_OFFSET;
 
+  const tag = field => (field === source ? "sisestatud" : "arvutatud");
+  const paramTag = (v, chart) => (v === chart ? "tootja tabel" : "muudetud");
+
   return (
-    <Stack gap={4}>
+    <Stack gap={4} className="guider-sheet">
       <div className="preview-head">
         <div className="preview-head-main">
           <h2 className="preview-title">Toru põlv 70°</h2>
           <p className="preview-desc">Vihmaveetoru nihe kahe 70° põlvega — sisesta L või B, teine arvutatakse</p>
         </div>
+        <div className="preview-head-actions">
+          <button type="button" className="num-btn ctl-ghost" onClick={resetParams} disabled={atChartValues}>
+            Taasta tabeli väärtused
+          </button>
+        </div>
       </div>
 
-      <div className="guider-calc">
-        <div className="sys-block">
-          <div className="guider-card-head">Mõõdud</div>
-          <Stack className="section-pad" gap={3}>
-            <NumInput id="input-toru-L" label="Mõõt L (mm)" value={shown.L} live onChange={onField("L")} />
-            <NumInput id="input-toru-B" label="Mõõt B (mm)" value={shown.B} live onChange={onField("B")} />
-            <div className="ctrl-sublbl">{source} sisestatud · {derived} arvutatud</div>
-            <div aria-live="polite">
-              {/* Nothing entered yet is a prompt, not a fault. */}
-              {result.error && (
-                <p className={"guider-msg" + (result.error === MESSAGES.empty ? "" : " guider-msg--error")}>
-                  {result.error}
-                </p>
-              )}
-              {result.warning && <p className="guider-msg guider-msg--warning">{result.warning}</p>}
-            </div>
-          </Stack>
-
-          <Section title="Täpsemalt" open={advancedOpen} setOpen={setAdvancedOpen}>
-            <Stack className="section-pad" gap={3}>
-              <NumInput id="input-toru-angle" label="Nurk α (°)" value={angle}
-                min={ANGLE_MIN} max={ANGLE_MAX} live onChange={setAngle} />
-              <NumInput id="input-toru-C" label="Konstant C (mm)" value={elbowOffset}
-                live onChange={setElbowOffset} />
-              <div className="ctrl-sublbl">B = L · sin α + C · L = (B − C) / sin α</div>
-              <button type="button" className="num-btn ctl-ghost guider-reset" onClick={resetParams}
-                disabled={atChartValues}>
-                Taasta tabeli väärtused
-              </button>
-            </Stack>
-          </Section>
+      {/* The four figures, ruled like a datasheet. L and B are the job; α and C
+          are the chart's parameters, editable in place. */}
+      <div className="guider-strip">
+        {["L", "B"].map(field => (
+          <div key={field} data-field={field}
+            className={"guider-strip-cell" + (field === derived ? " guider-strip-cell--derived" : "")}>
+            <NumInput id={`input-toru-${field}`} label={`Mõõt ${field} (mm)`} value={shown[field]}
+              live onChange={onField(field)} />
+            <span className="guider-strip-tag">{tag(field)}</span>
+          </div>
+        ))}
+        <div className="guider-strip-cell">
+          <NumInput id="input-toru-angle" label="Nurk α (°)" value={angle}
+            min={ANGLE_MIN} max={ANGLE_MAX} live onChange={setAngle} />
+          <span className="guider-strip-tag">{paramTag(angle, DEFAULT_ANGLE)}</span>
         </div>
+        <div className="guider-strip-cell">
+          <NumInput id="input-toru-C" label="Konstant C (mm)" value={elbowOffset}
+            live onChange={setElbowOffset} />
+          <span className="guider-strip-tag">{paramTag(elbowOffset, DEFAULT_ELBOW_OFFSET)}</span>
+        </div>
+      </div>
 
-        <div className="sys-block">
+      <div aria-live="polite" className="guider-msgs">
+        {/* Nothing entered yet is a prompt, not a fault. */}
+        {result.error && (
+          <p className={"guider-msg" + (result.error === MESSAGES.empty ? "" : " guider-msg--error")}>
+            {result.error}
+          </p>
+        )}
+        {result.warning && <p className="guider-msg guider-msg--warning">{result.warning}</p>}
+      </div>
+
+      <div className="guider-sheet-main">
+        <div className="sys-block guider-sheet-card">
           <div className="guider-card-head">Skeem</div>
+          <div className="section-pad guider-pipe-wrap">
+            <PipeDrawing L={result.L} B={result.B} />
+          </div>
+        </div>
+        <div className="sys-block guider-sheet-card">
+          <div className="guider-card-head">
+            <span>Graafik L ↔ B</span>
+            <span className="guider-card-note">vali punkt joonel</span>
+          </div>
           <div className="section-pad">
-            <PipeDrawing />
+            <OffsetGraph
+              angle={angle === "" ? NaN : angle}
+              C={elbowOffset === "" ? NaN : elbowOffset}
+              point={result.L === null ? null : { L: result.L, B: result.B }}
+              onPick={pickFromGraph} />
           </div>
         </div>
       </div>
 
-      <div className="sys-block">
-        <div className="guider-card-head">Graafik — vali punkt joonel</div>
-        <div className="section-pad">
-          <OffsetGraph
-            angle={angle === "" ? NaN : angle}
-            C={elbowOffset === "" ? NaN : elbowOffset}
-            point={result.L === null ? null : { L: result.L, B: result.B }}
-            onPick={pickFromGraph} />
-        </div>
+      <div className="guider-sheet-foot">
+        <span>B = L · sin α + C · L = (B − C) / sin α</span>
+        <span>Tootja tabel L {CHART_L_MIN}–{CHART_L_MAX} mm · C täpsus ±5 mm · B mõõdetud seinast</span>
       </div>
     </Stack>
   );
