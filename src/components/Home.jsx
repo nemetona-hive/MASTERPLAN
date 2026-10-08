@@ -37,6 +37,10 @@ export function SheetHome({ page, setPage }) {
           })}
         </div>
 
+        <p className="home-note">
+          Entries are kept only while this window stays open. Reloading or closing it clears them.
+        </p>
+
         <div className="home-divider" />
 
         <div className="home-footer">NEMETONA HIVE</div>

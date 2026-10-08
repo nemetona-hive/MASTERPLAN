@@ -2802,6 +2802,12 @@ input[type="range"]:focus-visible {
 	}
 }
 
+.home-note {
+	margin: 0;
+	font-size: var(--fs-sm);
+	color: var(--text-muted);
+}
+
 .home-footer {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);

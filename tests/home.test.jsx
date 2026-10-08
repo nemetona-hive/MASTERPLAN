@@ -15,6 +15,11 @@ describe("SheetHome", () => {
     expect(container.textContent).not.toMatch(/^Home$/m);
   });
 
+  it("says that entries do not survive a reload", () => {
+    const { container } = render(<SheetHome page="home" setPage={vi.fn()} />);
+    expect(container.querySelector(".home-note").textContent).toMatch(/reloading/i);
+  });
+
   it("navigates on click", async () => {
     const setPage = vi.fn();
     render(<SheetHome page="home" setPage={setPage} />);
