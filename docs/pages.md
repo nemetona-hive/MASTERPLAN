@@ -62,8 +62,21 @@ Cards use tone system (a/b/c/d) for visual identity.
 
 ## Guider tool
 
-Reference/guide page with a selectable entry list (`ControlPanel` on the left, detail view on the right).
-Currently ships wiring-diagram entries (`Lihtlüliti`, `Veksellüliti`) built as inline SVG schematics
-inside `components/Guider.jsx` — square dashed switch boxes with open-circle contacts and a floating
-lever, consistent stroke widths (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each
-diagram. New entries are added to the `ENTRIES` array in `SheetGuider`.
+Reference/guide page. The left column holds one `ControlPanel` per category,
+built from the `CATEGORIES` array in `SheetGuider` (each with its own `panelId`
+and open state); the right column shows the selected entry. Add an entry to a
+category's `entries` and route its id in the preview branch. An entry with no
+branch shows a placeholder card.
+
+- **Electrism** (`control-guider-list`): `Lihtlüliti`, `Veksellüliti` — inline
+  SVG schematics inside `components/Guider.jsx`: square dashed switch boxes
+  with open-circle contacts and a floating lever, consistent stroke widths
+  (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each diagram.
+- **Ruukki** (`control-guider-ruukki`): `Vihmaveesüsteemid` (placeholder) and
+  `Toru põlv 70°` (`components/guider/ToruPolv70.jsx`), a two-way calculator
+  for a downpipe offset made of two 70° elbows: `B = L·sin α + C`. The maths is
+  in `utils/downpipe-offset.js` and tested against the manufacturer's chart;
+  the field typed last stays fixed and the other follows it as you type
+  (`NumInput live`). C = 152 mm was fitted to that chart (±5 mm), so outside
+  L 100–1150 the answer is shown with an extrapolation warning. The drawing is
+  the manufacturer's schematic, deliberately not scaled to the input.

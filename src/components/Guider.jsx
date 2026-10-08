@@ -1,5 +1,6 @@
 import { React } from "../react-globals.js";
 import { ControlPanel, Stack } from "../shared.jsx";
+import { GuiderToruPolv70 } from "./guider/ToruPolv70.jsx";
 
 function GuiderLihtluliti() {
   return (
@@ -424,34 +425,60 @@ function GuiderVeksellulit() {
 }
 
 export function SheetGuider() {
-  const [listOpen, setListOpen] = React.useState(true);
+  const [openPanels, setOpenPanels] = React.useState({ electrism: true, ruukki: true });
   const [selectedId, setSelectedId] = React.useState(null);
 
-  const ENTRIES = [
-    { id: "lihtluliti",   label: "Lihtlüliti" },
-    { id: "veksellulit",  label: "Veksellüliti" }
-    // more entries added here later
+  const CATEGORIES = [
+    {
+      id: "electrism",
+      panelId: "control-guider-list",
+      label: "Electrism",
+      entries: [
+        { id: "lihtluliti",   label: "Lihtlüliti" },
+        { id: "veksellulit",  label: "Veksellüliti" }
+      ]
+    },
+    {
+      id: "ruukki",
+      panelId: "control-guider-ruukki",
+      label: "Ruukki",
+      entries: [
+        { id: "vihmaveesusteemid", label: "Vihmaveesüsteemid" },
+        { id: "toru-polv-70",      label: "Toru põlv 70°" }
+      ]
+    }
   ];
+  const ENTRIES = CATEGORIES.flatMap(c => c.entries);
 
   const selected = ENTRIES.find(e => e.id === selectedId) || null;
 
   return (
     <>
       <div id="data-control" className="data-control">
-        <ControlPanel id="control-guider-list" title="Electrism" open={listOpen} setOpen={setListOpen}>
-          <Stack gap={1} className="ctrl-list">
-            {ENTRIES.map(entry => (
-              <button
-                key={entry.id}
-                type="button"
-                className={"ctrl-dir" + (selectedId === entry.id ? " on" : "")}
-                onClick={() => setSelectedId(selectedId === entry.id ? null : entry.id)}
-              >
-                {entry.label}
-              </button>
-            ))}
-          </Stack>
-        </ControlPanel>
+        {CATEGORIES.map(cat => (
+          <ControlPanel
+            key={cat.id}
+            id={cat.panelId}
+            title={cat.label}
+            open={openPanels[cat.id]}
+            setOpen={open => setOpenPanels(prev => ({ ...prev, [cat.id]: open }))}
+          >
+            <Stack gap={1} className="ctrl-list">
+              {cat.entries.length ? cat.entries.map(entry => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  className={"ctrl-dir" + (selectedId === entry.id ? " on" : "")}
+                  onClick={() => setSelectedId(selectedId === entry.id ? null : entry.id)}
+                >
+                  {entry.label}
+                </button>
+              )) : (
+                <div style={{ fontSize: "var(--fs-sm)", color: "var(--text-subtle)" }}>No entries yet</div>
+              )}
+            </Stack>
+          </ControlPanel>
+        ))}
       </div>
       <div id="data-preview" className="data-preview">
         <Stack gap={3}>
@@ -459,6 +486,7 @@ export function SheetGuider() {
           {selected ? (
             selected.id === "lihtluliti"  ? <GuiderLihtluliti /> :
             selected.id === "veksellulit" ? <GuiderVeksellulit /> :
+            selected.id === "toru-polv-70" ? <GuiderToruPolv70 /> :
             (
               <div className="sys-block">
                 <Stack className="section-pad" gap={2}>

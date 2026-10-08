@@ -538,8 +538,13 @@ function cleanNumericInput(raw) {
  * min and max stay props and no longer reach the DOM: they were never browser
  * validation — commitValue clamps with them — and a text input ignores them.
  * step went with the spinner it belonged to.
+ *
+ * `live` also reports every keystroke that already reads as an in-range number
+ * (or as empty), for a two-way calculator where the other field follows the
+ * typing. Blur and Enter still commit, clamp and round as before; a keystroke
+ * never clamps, so an out-of-range entry reports "" until it is committed.
  */
-export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false }) {
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false, live = false }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const inputRef = React.useRef(null);
   /* A message belongs to the value the parent held when it was raised. If the
@@ -550,6 +555,10 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
   const invalidRef = React.useRef(false);
   const generatedId = React.useId();
   const fieldId = id || generatedId;
+  const liveReading = text => {
+    const n = parseMeasurement(text);
+    return Number.isFinite(n) && n >= min && n <= max ? n : "";
+  };
   const shown = value === "" ? "" : String(value);
   const error = notice && notice.value === shown ? notice.message : "";
 
@@ -558,6 +567,9 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
     // throw away the text the message is about.
     if (invalidRef.current && value === "") { invalidRef.current = false; return; }
     invalidRef.current = false;
+    /* A live keystroke comes back as `value`; rewriting the field from it
+       would eat a trailing "." or "0" the user is still typing. */
+    if (live && liveReading(local) === value) return;
     setLocal(value === "" ? "" : String(value));
   }, [value]);
 
@@ -618,6 +630,10 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
             // all rather than jumping the cursor to the end of the value.
             if (cleaned === local && e.target.value !== "") return;
             setLocal(cleaned);
+            if (live) {
+              const reading = liveReading(cleaned);
+              if (reading !== value) onChange(reading);
+            }
           }}
           onKeyDown={e => {
             // Parent handler runs first — can e.preventDefault() to intercept Enter

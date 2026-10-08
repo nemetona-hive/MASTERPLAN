@@ -6,6 +6,7 @@
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
 - `<NumInput id label value onChange min max unit req labelIcon presetsOpen onTogglePresets />` — controlled number input with commit-on-blur and optional icon.
+  `live` also reports each keystroke that already reads as an in-range number (blank otherwise), for two-way calculators such as Guider's Toru põlv 70°; blur and Enter still clamp and round, and the field is not rewritten from its own live value, so a trailing `.` survives.
   It is `type="text"` with `inputMode="decimal"`, not `type="number"`: a number
   input steps its value on ArrowUp/ArrowDown and on a wheel scroll while focused,
   so reaching for the caret rewrote a dimension the layout is drawn from. Non-numeric
