@@ -43,7 +43,7 @@ this repo owns, which is wider than what the build generates. The three are the
 app as much as the bundle is (defaults and the page registry, the layout maths,
 the theme tokens), so hashing only generated files would let a deploy that
 changed any of them pass `deploy:check` as already live. `githooks/pre-commit`
-therefore triggers on all four as well as `src/`, so a commit touching only one
+therefore triggers on all four as well as `src/` and the tooling, so a commit touching only one
 still rebuilds the stamp rather than leaving it for `pre-push` to reject — and
 still runs the tests, which read all three as globals. That hook rebuilds and refuses
 the push if a generated file moved, so a stamp that read the clock would change

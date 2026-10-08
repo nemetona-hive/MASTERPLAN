@@ -66,15 +66,34 @@ fi
 # moving. Both failures would otherwise wait until the push.
 #
 # The manifest and assets/ are hashed too: they are the installable app, and a
-# stale version.js would make deploy:check report a deploy that never happened. The generated files
-# are outputs and never triggers; they are what rebuilding produces.
-if git diff --cached --quiet -- src config.js simulation.js themes.js index.html manifest.webmanifest assets; then
+# stale version.js would make deploy:check report a deploy that never happened.
+#
+# The tooling counts as well. scripts/ produces the build and the gates, tests/
+# and the vitest/eslint config decide what passes, and package*.json decides
+# what is installed; a commit touching only those used to skip every check.
+# The generated files are outputs and never triggers; they are what rebuilding
+# produces.
+if git diff --cached --quiet -- src config.js simulation.js themes.js index.html \
+    manifest.webmanifest assets scripts tests githooks package.json package-lock.json \
+    eslint.config.mjs vitest.config.mjs; then
   exit 0
 fi
 
 # ---- 1. src compiles --------------------------------------------------------
 if ! npm run build >/dev/null 2>&1; then
   echo "✖ pre-commit: build failed. Run 'npm run build' to see the error." >&2
+  exit 1
+fi
+
+# The rebuild above rewrites the working tree, not the index. If it moved a
+# generated file, this commit would carry the previous bundle and only the push
+# gate would notice — so stop here and say what to stage.
+if ! git diff --quiet -- components.js app.css version.js vendor/fontawesome.subset.css vendor/fa-solid-900.subset.woff2; then
+  echo "" >&2
+  echo "✖ pre-commit: rebuilding changed a committed build output." >&2
+  echo "  Stage components.js, app.css, version.js and the vendor/ subsets with" >&2
+  echo "  this change (git add them), then commit again." >&2
+  echo "" >&2
   exit 1
 fi
 

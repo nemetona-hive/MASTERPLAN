@@ -130,8 +130,11 @@ navigation's inactive labels at 4.43:1 on graphite and 4.05:1 on verdant, and
 `--accent` — gated as a 3:1 mark — drawing unit labels as words.
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
-`npm install` sets via `prepare`. `pre-commit` rebuilds, then blocks on a UI
-audit error or a test failure. `pre-push` matters more here than in most repos:
+`npm install` sets via `prepare`. `pre-commit` fires on a staged change to `src/`, the classic scripts,
+`index.html`, the manifest, `assets/`, `scripts/`, `tests/`, `githooks/` or the
+package and lint config. It rebuilds, refuses the commit if the rebuild moved a
+committed output that is not staged (stage it and commit again), then blocks on
+a UI audit error or a test failure. `pre-push` matters more here than in most repos:
 GitHub Pages serves this tree directly, so a push **is** the deploy — the hook
 refuses if the committed `components.js` or `app.css` no longer matches `src/`,
 which is a staleness only visitors would ever see. Bypass either with
@@ -201,6 +204,9 @@ and all eight pages at 320, 360, 390, 768, 844 landscape, 1024 and 1440 pixels.
 Phone result text is checked across every theme. Concrete and multipage cut-list
 PDFs and a phone screenshot are written to the reported temporary artifact folder.
 These are Chromium checks, not physical iOS/Android or screen-reader certification.
+
+`tests/setup.js` makes an unstubbed `fetch` reject with the URL it was called
+with, so a test cannot quietly reach the network; stub it with `vi.stubGlobal`.
 
 Regression tests cover geometry bounds, stock capacity and allocation totals,
 measurement parsing, serialized default saves, and local-server validation,

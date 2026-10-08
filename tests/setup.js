@@ -14,6 +14,12 @@ import { createRoot } from "react-dom/client";
 import { afterEach } from "vitest";
 
 globalThis.window = globalThis.window || {};
+
+// Nothing in the suite should reach the network. An unstubbed fetch rejects
+// with the call that made it, rather than hanging or hitting a real endpoint;
+// a test that needs one stubs it (vi.stubGlobal), as default-save.test.js does.
+globalThis.fetch = (input) => Promise.reject(
+  new Error(`Unstubbed fetch(${typeof input === "string" ? input : input?.url ?? "…"}) — stub it in the test`));
 globalThis.window.React = React;
 globalThis.window.ReactDOM = { ...ReactDOM, createRoot };
 
