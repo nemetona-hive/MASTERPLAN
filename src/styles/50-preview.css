@@ -582,10 +582,6 @@
 	letter-spacing: 0.1em;
 }
 
-.guider-strip-cell:not(.guider-strip-cell--derived)[data-field] .guider-strip-tag {
-	color: var(--brand);
-}
-
 .guider-strip-tag--changed {
 	color: var(--warning);
 }

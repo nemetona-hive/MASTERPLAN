@@ -240,7 +240,6 @@ export function GuiderToruPolv70() {
   const resetParams = () => { setAngle(DEFAULT_ANGLE); setElbowOffset(DEFAULT_ELBOW_OFFSET); };
   const atChartValues = angle === DEFAULT_ANGLE && elbowOffset === DEFAULT_ELBOW_OFFSET;
 
-  const tag = field => (field === source ? "sisestatud" : "arvutatud");
   // α and C are rarely changed, so they stay folded behind a summary.
   const [paramsOpen, setParamsOpen] = React.useState(false);
 
@@ -261,7 +260,6 @@ export function GuiderToruPolv70() {
             className={"guider-strip-cell" + (field === derived ? " guider-strip-cell--derived" : "")}>
             <NumInput id={`input-toru-${field}`} label={`Mõõt ${field} (mm)`} value={shown[field]}
               live onChange={onField(field)} />
-            <span className="guider-strip-tag">{tag(field)}</span>
           </div>
         ))}
         <div className="guider-strip-cell guider-strip-params">
