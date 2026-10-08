@@ -67,11 +67,25 @@ describe("the Toru põlv 70° calculator", () => {
   it("keeps the entered field fixed when α changes", () => {
     render(<GuiderToruPolv70 />);
     type("input-toru-L", 500);
+    fireEvent.click(screen.getByRole("button", { name: "Muuda" }));
     type("input-toru-angle", 60);
     expect(field("input-toru-L").value).toBe("500");
     expect(field("input-toru-B").value).toBe(String(Math.round((500 * Math.sin(Math.PI / 3) + 152) * 10) / 10));
     fireEvent.click(screen.getByText("Taasta tabeli väärtused"));
     expect(field("input-toru-B").value).toBe("621.8");
+  });
+
+  it("keeps α and C folded away, and says when they are no longer the chart's", () => {
+    render(<GuiderToruPolv70 />);
+    expect(field("input-toru-angle")).toBeNull();
+    expect(screen.getByText("α 70° · C 152 mm")).toBeTruthy();
+    expect(screen.getByText("tootja tabel")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Muuda" }));
+    type("input-toru-C", 160);
+    fireEvent.click(screen.getByRole("button", { name: "Peida" }));
+    expect(field("input-toru-C")).toBeNull();
+    expect(screen.getByText("α 70° · C 160 mm")).toBeTruthy();
+    expect(screen.getByText("muudetud")).toBeTruthy();
   });
 
   it("does not swap the fixed field when focus only passes through the other", () => {

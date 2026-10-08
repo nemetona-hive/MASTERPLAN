@@ -240,7 +240,8 @@ export function GuiderToruPolv70() {
   const atChartValues = angle === DEFAULT_ANGLE && elbowOffset === DEFAULT_ELBOW_OFFSET;
 
   const tag = field => (field === source ? "sisestatud" : "arvutatud");
-  const paramTag = (v, chart) => (v === chart ? "tootja tabel" : "muudetud");
+  // α and C are rarely changed, so they stay folded behind a summary.
+  const [paramsOpen, setParamsOpen] = React.useState(false);
 
   return (
     <Stack gap={4} className="guider-sheet">
@@ -249,15 +250,10 @@ export function GuiderToruPolv70() {
           <h2 className="preview-title">Toru põlv 70°</h2>
           <p className="preview-desc">Vihmaveetoru nihe kahe 70° põlvega — sisesta L või B, teine arvutatakse</p>
         </div>
-        <div className="preview-head-actions">
-          <button type="button" className="num-btn ctl-ghost" onClick={resetParams} disabled={atChartValues}>
-            Taasta tabeli väärtused
-          </button>
-        </div>
       </div>
 
-      {/* The four figures, ruled like a datasheet. L and B are the job; α and C
-          are the chart's parameters, editable in place. */}
+      {/* The figures, ruled like a datasheet. L and B are the job; α and C are
+          the chart's parameters, summarised and opened only when needed. */}
       <div className="guider-strip">
         {["L", "B"].map(field => (
           <div key={field} data-field={field}
@@ -267,17 +263,33 @@ export function GuiderToruPolv70() {
             <span className="guider-strip-tag">{tag(field)}</span>
           </div>
         ))}
-        <div className="guider-strip-cell">
-          <NumInput id="input-toru-angle" label="Nurk α (°)" value={angle}
-            min={ANGLE_MIN} max={ANGLE_MAX} live onChange={setAngle} />
-          <span className="guider-strip-tag">{paramTag(angle, DEFAULT_ANGLE)}</span>
-        </div>
-        <div className="guider-strip-cell">
-          <NumInput id="input-toru-C" label="Konstant C (mm)" value={elbowOffset}
-            live onChange={setElbowOffset} />
-          <span className="guider-strip-tag">{paramTag(elbowOffset, DEFAULT_ELBOW_OFFSET)}</span>
+        <div className="guider-strip-cell guider-strip-params">
+          <span className="num-lbl">Parameetrid</span>
+          <div className="guider-params-row">
+            <span className="guider-params-sum">α {angle === "" ? "—" : angle}° · C {elbowOffset === "" ? "—" : elbowOffset} mm</span>
+            <button type="button" className="num-btn ctl-ghost" aria-expanded={paramsOpen}
+              aria-controls="toru-params" onClick={() => setParamsOpen(!paramsOpen)}>
+              {paramsOpen ? "Peida" : "Muuda"}
+            </button>
+          </div>
+          <span className={"guider-strip-tag" + (atChartValues ? "" : " guider-strip-tag--changed")}>
+            {atChartValues ? "tootja tabel" : "muudetud"}
+          </span>
         </div>
       </div>
+
+      {paramsOpen && (
+        <div id="toru-params" className="guider-params">
+          <NumInput id="input-toru-angle" label="Nurk α (°)" value={angle}
+            min={ANGLE_MIN} max={ANGLE_MAX} live onChange={setAngle} />
+          <NumInput id="input-toru-C" label="Konstant C (mm)" value={elbowOffset}
+            live onChange={setElbowOffset} />
+          <button type="button" className="num-btn ctl-ghost guider-params-reset" onClick={resetParams}
+            disabled={atChartValues}>
+            Taasta tabeli väärtused
+          </button>
+        </div>
+      )}
 
       <div aria-live="polite" className="guider-msgs">
         {/* Nothing entered yet is a prompt, not a fault. */}

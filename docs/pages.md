@@ -83,7 +83,8 @@ branch shows a placeholder card.
   L 100–1150 the answer is shown with an extrapolation warning. The drawing is
   the manufacturer's schematic, deliberately not scaled to the input; its B and
   L labels carry the current values. The page is laid out as a datasheet: a
-  ruled strip of L, B, α and C (all four editable), the drawing and the graph
+  ruled strip of L and B with a summary of α and C (their fields open from
+  **Muuda**, since they are rarely changed), the drawing and the graph
   side by side, and a footer with the formula and the chart's limits. Its
   breakpoints are container queries on `.guider-sheet`, since the preview's
   width depends on the sidebar and the control column. Beside the drawing, a
