@@ -72,8 +72,8 @@ branch shows a placeholder card.
   SVG schematics inside `components/Guider.jsx`: square dashed switch boxes
   with open-circle contacts and a floating lever, consistent stroke widths
   (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each diagram.
-- **Ruukki** (`control-guider-ruukki`): `Vihmaveesüsteemid` (placeholder) and
-  `Toru põlv 70°` (`components/guider/ToruPolv70.jsx`), a two-way calculator
+- **Ruukki** (`control-guider-ruukki`): `Vihmaveesüsteemid` opens
+  Toru põlv 70° (`components/guider/ToruPolv70.jsx`), a two-way calculator
   for a downpipe offset made of two 70° elbows: `B = L·sin α + C`. The maths is
   in `utils/downpipe-offset.js` and tested against the manufacturer's chart;
   the field typed last stays fixed and the other follows it as you type

@@ -443,8 +443,7 @@ export function SheetGuider() {
       panelId: "control-guider-ruukki",
       label: "Ruukki",
       entries: [
-        { id: "vihmaveesusteemid", label: "Vihmaveesüsteemid" },
-        { id: "toru-polv-70",      label: "Toru põlv 70°" }
+        { id: "vihmaveesusteemid", label: "Vihmaveesüsteemid" }
       ]
     }
   ];
@@ -486,7 +485,7 @@ export function SheetGuider() {
           {selected ? (
             selected.id === "lihtluliti"  ? <GuiderLihtluliti /> :
             selected.id === "veksellulit" ? <GuiderVeksellulit /> :
-            selected.id === "toru-polv-70" ? <GuiderToruPolv70 /> :
+            selected.id === "vihmaveesusteemid" ? <GuiderToruPolv70 /> :
             (
               <div className="sys-block">
                 <Stack className="section-pad" gap={2}>
