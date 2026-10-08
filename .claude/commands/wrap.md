@@ -25,9 +25,9 @@ add a changelog of what we did.
 The guide is a hub plus topic files — `MASTERPLAN_DEVELOPER_GUIDE.md` holds
 what is true of the whole app, and `docs/*.md` holds one system each. **Put a
 change in the file that owns the system**, not in the hub; the hub grows only
-when something applies everywhere. `CLAUDE.md` is shorter still and holds only
+when something applies everywhere. `AGENTS.md` is shorter still and holds only
 what bites — the build step, the config.js write hazard, and the token systems.
-It should almost never need editing.
+It should almost never need editing, and `CLAUDE.md` only imports it.
 
 If something came up that a future session would get wrong without knowing it —
 and that the repo does not already say — save it to memory.

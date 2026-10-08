@@ -165,7 +165,7 @@ deliberate save.
 Calculator drafts stay in App memory during route navigation. Concrete, pipe wrap
 and timesheet use `useSessionState`; surface and symmetric dimensions already live
 in App. Reloading clears these drafts. This is not browser-storage autosave.
-The home page explains this lifetime. The offline banner tells users to keep the
+The home page says so in a note under the page cards. The offline banner tells users to keep the
 loaded window open: calculations work with loaded assets, but offline reopening
 is not supported and no service worker is installed.
 

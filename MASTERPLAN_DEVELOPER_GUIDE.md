@@ -137,12 +137,10 @@ and answers the endpoint with a no-op.
   **not** committed — it is gitignored, so `pre-push` never looks at it and it
   cannot go stale in a way anyone would see. It is for devtools on this machine.
 
-- Colour comes from a theme token, never a literal. `npm run audit:ui` blocks on
-  a hex or a tinted `rgba()` in `src/`.
 - Three Lighthouse findings need **context before you act on them** — do not
   "fix" any of them without reading this first:
   - *Minify CSS / JavaScript.* Half done, on purpose. `components.js` **is**
-    minified (esbuild, since the mobile brand-mark fix); `app.css` is not, only
+    minified (esbuild); `app.css` is not, only
     comment-stripped, so it stays readable in a public repo that GitHub Pages
     serves directly. `githooks/pre-push` diffs both against a fresh build, which
     works either way because the build is deterministic. Read the sources under
@@ -158,13 +156,11 @@ and answers the endpoint with a no-op.
   width. Check that an audit evaluated something before trusting that it passed.
 - If changing pattern layout visualization, preserve the split between grouped labels and ungrouped physical chart rows. Reusing `rowGroups` for the chart breaks straight layout.
 - Enter key in inputs triggers data commit/blur. The visual "icon flash" (switching to a checkmark) has been removed to maintain UI stability.
-- Interactive means a real `<button>`, and one never nests inside another. The
-  nav header used to be a `<div role="button">` (go home) wrapping a
-  `<span role="button" tabIndex={0}>` (toggle sidebar): two overlapping focus
-  stops that looked like one target. It is now two sibling buttons, with the
-  label taking `flex: 1` so the click area is unchanged and `disabled` — not
-  `tabIndex={-1}` plus an early return — keeping it out of the tab order when
-  collapsed. `.nav-btn`, `.nav-toggle-label` and `.nav-menu-icon` all strip the
+- Interactive means a real `<button>`, and one never nests inside another:
+  nested roles make two overlapping focus stops that look like one target. The
+  nav header is two sibling buttons, the label taking `flex: 1` and `disabled`
+  — not `tabIndex={-1}` plus an early return — keeping it out of the tab order
+  when collapsed. `.nav-btn`, `.nav-toggle-label` and `.nav-menu-icon` all strip the
   default button chrome (`border: none; background: transparent`); do the same
   for any new one rather than reaching for a `<div>`.
 - A `<button>` already fires `onClick` on Enter and Space. Adding an `onKeyDown`
@@ -191,8 +187,9 @@ and answers the endpoint with a no-op.
 - No CSS-in-JS except inline style for dynamic values; use className strings
 - Local persistence uses `saveStaticDefaults` for dev-mode configuration updates.
 - CSS class names follow BEM-ish patterns: block, block-element, modifier
-- `AGENTS.md` and `CLAUDE.md` are two agent entry points for the same project
-  rules. Keep their shared guidance semantically aligned when one changes.
+- `AGENTS.md` holds the shared agent rules and `CLAUDE.md` starts with
+  `@AGENTS.md`, so a rule is edited once. `.claude/rules/*.md` are short
+  path-scoped pointers into the topic files; they never carry a second copy.
 
 ## What does NOT exist yet (possible future work)
 

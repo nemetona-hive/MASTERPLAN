@@ -6,9 +6,9 @@
 
 `npm test` runs the vitest suite (`tests/`), covering the layout maths in
 `simulation.js`, the timesheet parsers, the number coercions, the shared
-primitives and the nav. `npm run verify` runs everything: tests, build, bundle
-budgets, the style contract, theme contrast, the code inventory, and the UI
-audit.
+primitives and the nav. `npm run verify` runs everything, in order: tests, build, bundle budgets, the
+style contract, theme contrast, the code inventory, the UI audit, lint, the
+browser layout gate and the browser journeys.
 
 | Command | What it guards |
 |---|---|
@@ -22,6 +22,8 @@ audit.
 | `npm run icon` | regenerates `masterplan.ico` and the installable app's PNGs — by hand, not part of the build |
 | `npm run style:check` | load-bearing selectors still exist in `app.css` |
 | `npm run analyze:code` | unreachable modules, unreferenced exports, unrouted pages |
+| `npm run test:browser` | whole-app journeys in Chromium: presets, comma decimals, navigation, print stock, all pages at seven widths |
+| `npm run dev` / `npm run watch` | local server on port 3005 / rebuild on save |
 | `npm run deploy:check` | whether the live site is serving the build you have (network; not part of `verify`) |
 
 ### Minimum checks by change
@@ -90,8 +92,8 @@ after, so any layout the simulation could not use — an empty field, a surface
 over the step cap — took the component from six hooks to three and back, and
 React threw over the page. `react-hooks/exhaustive-deps` is a **warning**, not
 an error: some stale deps here are deliberate, and a gate that fails on a
-considered decision gets switched off rather than read. Read the three standing
-warnings before acting on them.
+considered decision gets switched off rather than read. Lint currently reports
+none; keep it that way, and fix the cause rather than silencing a warning.
 
 `npm run layout` (`scripts/layout.mjs`) is the browser gate, and it exists
 because **jsdom has no layout engine**: `getBoundingClientRect` returns zeroes,

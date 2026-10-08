@@ -9,14 +9,19 @@ imports, so adding a file means importing it, nothing else.
 
 ```
 react-globals.js  → React, ReactDOM, useState (re-exported window globals)
-shared.jsx        → Icon, RangeSlider, NumInput, Collapsible, Section, ControlPanel,
-                    DetailSection, Row, Stack, MaterialPresetDropdown, SaveDefaultsButton,
-                    useTimedState, useTimedSet, useClickOutside, useDropdownKeyboard,
+shared.jsx        → Icon, RangeSlider, NumInput, Section, ControlPanel, DetailSection, Row,
+                    Stack, Text, Modal, MaterialPresetDropdown, SaveDefaultsButton,
+                    useTimedState, useTimedSet, useClickOutside, useModeExit,
+                    useDialogFocus, useDropdownKeyboard, useDocHistory,
                     useLinkedCardHighlight, getLinkedCardTone, getLinkedCardMarker,
-                    isMobileViewport, safeSaveStaticDefaults, getBuildId, toNumber, clampNumber
+                    isMobileViewport, canHover, safeSaveStaticDefaults, getBuildId,
+                    toNumber, clampNumber
 Visualization.jsx → PanelSummary, LayoutVisualization, LayoutPanel, PreviewSection
 Controls.jsx      → LAYOUT_REGISTRY
 utils/timesheet.js→ parseTime, parseLunch, fmtHHMM, fmtDecimal
+utils/session-state.js → useSessionState, SessionDraftContext (drafts survive navigation, not reload)
+utils/measurements.cjs → parseMeasurement (blank = null, invalid = NaN, comma decimals)
+utils/cut-list.js, utils/take-off.js → report models for the printed documents
 utils/grid-nav.js → useGridNav, arrowExitsField, nextGridPosition, GRID_NAV_KEYS
 components/*.jsx  → one Sheet* per page (plus PipeWrapCalculator)
 Nav.jsx           → AppNav
@@ -50,7 +55,7 @@ left behind is the half to bring over with the first grid wide enough to need it
 
 Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y in any text field in the app, five steps deep.
 Installed once from `App.jsx` and delegated: **one** listener set on the
-document covers all 25 `NumInput` call sites and the 8 raw inputs, so a new
+document covers every `NumInput` and raw `<input>`, so a new
 field gets undo without knowing this exists. Do not add a per-field hook.
 
 It replaces the browser's own, which half-worked here. Writing `value`
@@ -187,3 +192,19 @@ estimated segments and 2,000 per axis before allocating geometry.
 `utils/measurements.cjs` is the small shared browser/server decimal parser:
 blank is missing, malformed or non-finite is invalid, and comma decimals are
 accepted. Explicit zero remains distinct from an unmeasured concrete corner.
+
+### Units and rounding
+
+Lengths are millimetres throughout; areas are m², volumes m³, mass kg. Rounding
+happens once, in the model, and renderers format without rounding again:
+
+| Figure | Rule | Where |
+|---|---|---|
+| Cut-list piece widths | nearest 0.1 mm | `cut-list.js` |
+| Concrete area, mass, price | 2, 1, 2 decimals; volume 3 | `take-off.js` |
+| Bags to buy | ceiling of the *unrounded* exact count | `take-off.js` |
+| Timesheet decimal hours | nearest quarter hour (7:20 shows 7.25), applied to the summed minutes, not row by row | `fmtDecimal` in `utils/timesheet.js` |
+| Typed dimensions | clamped to the field's range on commit | `NumInput`, page `clamp*` helpers |
+
+Job entries are transient (see
+[Draft lifetime](deploying.md#draft-lifetime-and-offline-behaviour)).

@@ -7,12 +7,16 @@
 Hash-based routing (`#page-id`). Home = no hash.
 Page render is handled in `MainPageContent` in App.jsx — add new pages there.
 Nav items come from `PAGES` global — add new pages in config (outside src/).
-The list is **flat**. Nav.jsx used to carry generic group machinery — nested
-pages via `parentId`/`isParent`, expand/collapse, a chevron, auto-open on
-navigating to a child — kept against a grouped page that was never added. It is
-gone, along with its stylesheet half (`.nav-parent`, `.nav-sub-btn`,
-`.child-active`, `.nav-parent-chevron`). Grouping the nav means writing it
-again, deliberately, against a real requirement.
+The list is **flat**: there is no nested or grouped nav, and none should be
+added without a real grouped page to build it against.
+
+`App.jsx` reads the page from `location.hash` on load (`getHashPage`, which
+falls back to `home` for an unknown id), `setPage` calls `history.pushState`,
+and a `popstate` listener restores the page on back/forward. In
+`MainPageContent` any `PAGES` id without its own branch renders
+`SheetSurfaceLayout` (this is how `pattern-layout` is served), so a new page
+needs its own branch. Hash links need no server support, so deep links work
+under the `/MASTERPLAN/` base path on Pages.
 
 Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`,
 `golden-ratio`, `pipe-wrap`, `guider`, `timesheet`.

@@ -146,3 +146,6 @@ _temp_masterplan/
 # will 404 the `//# sourceMappingURL` comment in components.js, which costs
 # visitors nothing because nothing fetches a map until devtools is open.
 components.js.map
+
+# Personal Claude Code permissions
+.claude/settings.local.json
