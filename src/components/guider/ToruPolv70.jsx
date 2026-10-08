@@ -291,11 +291,9 @@ export function GuiderToruPolv70() {
       )}
 
       <div aria-live="polite" className="guider-msgs">
-        {/* Nothing entered yet is a prompt, not a fault. */}
-        {result.error && (
-          <p className={"guider-msg" + (result.error === MESSAGES.empty ? "" : " guider-msg--error")}>
-            {result.error}
-          </p>
+        {/* Nothing entered yet is not a fault: the empty fields say it already. */}
+        {result.error && result.error !== MESSAGES.empty && (
+          <p className="guider-msg guider-msg--error">{result.error}</p>
         )}
         {result.warning && <p className="guider-msg guider-msg--warning">{result.warning}</p>}
       </div>

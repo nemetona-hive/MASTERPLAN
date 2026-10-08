@@ -109,9 +109,10 @@ describe("the Toru põlv 70° calculator", () => {
     expect(screen.getByText(MESSAGES.extrapolated)).toBeTruthy();
   });
 
-  it("prompts for a value before anything is entered", () => {
+  it("says nothing before anything is entered", () => {
     render(<GuiderToruPolv70 />);
-    expect(screen.getByText(MESSAGES.empty)).toBeTruthy();
+    expect(screen.queryByText(MESSAGES.empty)).toBeNull();
+    expect(document.querySelector(".guider-msg")).toBeNull();
   });
 
   /* jsdom has no layout and no PointerEvent: give the graph a 640px box and
