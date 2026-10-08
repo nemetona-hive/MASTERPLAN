@@ -18,7 +18,7 @@ function PipeDrawing({ L, B }) {
   const lblClass = "guider-pipe-lbl" + (valued ? " guider-pipe-lbl--value" : "");
   return (
     <svg viewBox="160 200 680 1020" className="guider-pipe-svg" role="img"
-      aria-label="Vihmaveetoru nihe kahe 70° põlvega: L on põlvede vaheline kaldtoru, B horisontaalne kaugus seinast ülemise toruni">
+      aria-label="Ühendustoru kahe 70° põlvega: L on põlvede vaheline kaldtoru, B horisontaalne kaugus seinast ülemise toruni">
       <g fill="none" strokeLinejoin="round">
         <path d={PIPE_PATH} stroke="var(--text-muted)" strokeWidth="64" />
         <path d={PIPE_PATH} stroke="var(--surface-2)" strokeWidth="59" />
