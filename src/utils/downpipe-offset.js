@@ -4,10 +4,12 @@
  *
  *   B = L · sin(α) + C        L = (B − C) / sin(α)
  *
- * L is the straight pipe between the elbows, B the horizontal offset between
- * the two vertical pipes, C what the two elbows contribute on their own. C was
- * fitted to the manufacturer's chart and holds to about ±5 mm, so the chart
- * range is the range the answer is trusted over.
+ * L is the straight pipe between the elbows. B is measured from the WALL to
+ * the upper pipe, as the manufacturer's chart measures it, so the lower pipe's
+ * ~30 mm stand-off from the wall is already inside C and is not added again.
+ * C is what the two elbows (and that stand-off) contribute on their own; it was
+ * fitted to the chart and holds to about ±5 mm, so the chart range is the
+ * range the answer is trusted over.
  */
 
 export const DEFAULT_ANGLE = 70;

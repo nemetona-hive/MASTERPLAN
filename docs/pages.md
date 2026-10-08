@@ -74,7 +74,9 @@ branch shows a placeholder card.
   (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each diagram.
 - **Ruukki** (`control-guider-ruukki`): `Vihmaveesüsteemid` opens
   Toru põlv 70° (`components/guider/ToruPolv70.jsx`), a two-way calculator
-  for a downpipe offset made of two 70° elbows: `B = L·sin α + C`. The maths is
+  for a downpipe offset made of two 70° elbows: `B = L·sin α + C`, with B
+  measured from the wall as the chart measures it (the lower pipe's ~30 mm
+  stand-off is inside C, not added on top). The maths is
   in `utils/downpipe-offset.js` and tested against the manufacturer's chart;
   the field typed last stays fixed and the other follows it as you type
   (`NumInput live`). C = 152 mm was fitted to that chart (±5 mm), so outside
