@@ -113,6 +113,11 @@ try {
   await page.reload(); await page.locator("#input-slf-area").waitFor();
   check(await page.locator("#input-slf-area").inputValue() === "", "Reload starts a fresh draft");
 
+  check((await page.title()).startsWith("Concrete"), "The tab title follows the page");
+  const historyBefore = await page.evaluate(() => history.length);
+  await page.locator(".nav-btn", { hasText: "Concrete" }).first().click();
+  check(await page.evaluate(() => history.length) === historyBefore, "Choosing the page already shown adds no history entry");
+
   const routes = ["home", "pattern-layout", "symmetric-layout", "concrete", "timesheet", "golden-ratio", "pipe-wrap", "guider"];
   for (const [width, height] of [[320, 740], [360, 800], [390, 844], [768, 1024], [844, 390], [1024, 768], [1440, 900]]) {
     await page.setViewportSize({ width, height });

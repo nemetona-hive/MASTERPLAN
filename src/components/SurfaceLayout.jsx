@@ -11,7 +11,12 @@ const validDimension = (value, min, max) => {
   const parsed = parseMeasurement(value);
   return Number.isFinite(parsed) && parsed >= min && parsed <= max;
 };
-const clampOptionalDimension = (value, min, max) => value === "" ? "" : clampNumber(value, min, max, min);
+// Blank or unparseable is missing, not the minimum: a layout drawn for a value
+// nobody entered is worse than none.
+const clampOptionalDimension = (value, min, max) => {
+  const n = parseMeasurement(value);
+  return Number.isFinite(n) ? clampNumber(n, min, max, min) : "";
+};
 const dimensionsMatch = (actual, expected) => parseMeasurement(actual) === parseMeasurement(expected);
 const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -705,6 +710,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             value={PLa}
             onChange={setMat("PLa")}
             min={100}
+            max={8000}
             presetsOpen={activePresetDropdown === "wid"}
             presetHoveredIndex={widHovered}
             onTogglePresets={() => setActivePresetDropdown(open => (open === "wid" ? null : "wid"))}
@@ -723,6 +729,7 @@ function MaterialSpecification({ sh, setMat, presets, activePreset, applyPreset,
             value={PPi}
             onChange={setMat("PPi")}
             min={100}
+            max={8000}
             presetsOpen={activePresetDropdown === "len"}
             presetHoveredIndex={lenHovered}
             onTogglePresets={() => setActivePresetDropdown(open => (open === "len" ? null : "len"))}
@@ -837,7 +844,7 @@ function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, f
       <Stack gap={3} className="ctrl-list">
         <div className={fieldFlash ? "num-input-flash" : ""} ref={widthWrapRef} style={{ position: "relative" }}>
           <NumInput id={`${idPrefix}input-W`} label="Width — horizontal (mm)" labelIcon="arrow-h" value={W}
-            onChange={setSurf("W")} req={showRequired && missing.has("W")}
+            onChange={setSurf("W")} min={100} max={50000} req={showRequired && missing.has("W")}
             showActionLabels
             presetsOpen={activeDropdown === "width"} presetHoveredIndex={widthHovered}
             onTogglePresets={() => setActiveDropdown(open => open === "width" ? null : "width")}
@@ -850,7 +857,7 @@ function SurfaceInputs({ sh, setSurf, presets = [], activePreset, applyPreset, f
         </div>
         <div className={fieldFlash ? "num-input-flash" : ""} ref={lengthWrapRef} style={{ position: "relative" }}>
           <NumInput id={`${idPrefix}input-H`} label="Length — vertical (mm)" labelIcon="arrow-v" value={H}
-            onChange={setSurf("H")} req={showRequired && missing.has("H")}
+            onChange={setSurf("H")} min={100} max={50000} req={showRequired && missing.has("H")}
             showActionLabels
             presetsOpen={activeDropdown === "length"} presetHoveredIndex={lengthHovered}
             onTogglePresets={() => setActiveDropdown(open => open === "length" ? null : "length")}

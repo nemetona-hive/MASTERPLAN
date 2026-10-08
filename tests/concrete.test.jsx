@@ -34,6 +34,15 @@ const fillPour = () => {
 beforeEach(() => { vi.restoreAllMocks(); });
 
 describe("the concrete page", () => {
+  it("shows the calculated area to the precision the printed sheet uses", () => {
+    // 1.5 m x 1.3 m is 1.95 m². One decimal showed 1.9, and the sheet 1.95.
+    render(<SheetConcrete />);
+    click("Dimensions");
+    type("input-slf-len", 1500);
+    type("input-slf-wid", 1300);
+    expect(screen.getByText("Calculated area").closest("div").textContent).toContain("1.95");
+  });
+
   it("names the consumption preset and apply actions", () => {
     render(<SheetConcrete />);
     const row = field("input-slf-rate").closest(".num-row");

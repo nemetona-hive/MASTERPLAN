@@ -83,7 +83,10 @@ describe("STYLE_SOURCES", () => {
     const fs = await import("node:fs");
     const path = await import("node:path");
     const dir = path.resolve(import.meta.dirname, "..", "src", "styles");
-    const onDisk = fs.readdirSync(dir).filter(name => name.endsWith(".css")).sort();
+    // audit-ui.test.js writes short-lived probe sheets into this directory while
+    // test files run in parallel; they are not stylesheets of the app.
+    const onDisk = fs.readdirSync(dir)
+      .filter(name => name.endsWith(".css") && !name.includes("audit-probe")).sort();
     const registered = STYLE_SOURCES.map(rel => path.basename(rel)).sort();
     expect(registered).toEqual(onDisk);
   });

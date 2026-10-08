@@ -1,5 +1,6 @@
 import { useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
+import { parseMeasurement } from "../utils/measurements.cjs";
 import { NumInput, RangeSlider, Row, Section, Stack } from "../shared.jsx";
 
 const PRESETS = [100, 125, 160, 200];
@@ -11,14 +12,23 @@ export function PipeWrapCalculator() {
   const [overlap, setOverlap] = useSessionState("PipeWrapCalculator.jsx:overlap", "");
   const [gap, setGap] = useSessionState("PipeWrapCalculator.jsx:gap", "");
 
-  const d = parseFloat(pipeDiam) || 0;
-  const t = parseFloat(matThick) || 0;
-  const o = parseFloat(overlap) || 0;
-  const g = parseFloat(gap) || 0;
+  // The same strict parser as the other pages: blank, malformed and negative
+  // all read as "not entered" rather than being half-parsed by parseFloat.
+  const measure = v => { const n = parseMeasurement(v); return Number.isFinite(n) && n > 0 ? n : 0; };
+  const d = measure(pipeDiam);
+  const t = measure(matThick);
+  const o = measure(overlap);
+  const g = measure(gap);
 
+  /* Without a pipe there is nothing to wrap: overlap alone must not read as a
+     length to cut. */
+  const ready = d > 0;
   const outer = d + 2 * t;
   const base = Math.PI * outer;
-  const total = Math.max(0, base + o - g);
+  const raw = base + o - g;
+  const total = ready ? Math.max(0, raw) : 0;
+  const gapTooLong = ready && raw < 0;
+  const dash = "—";
 
   const [adjOpen, setAdjOpen] = React.useState(false);
 
@@ -165,14 +175,17 @@ export function PipeWrapCalculator() {
               <div className="section-body">
                 <Stack className="section-pad" gap={3}>
                   <div className="pw-res-wrap">
-                    <Row label="Outer diameter" value={outer.toFixed(1)} unit="mm" />
-                    <Row label="Base wrap length" value={base.toFixed(1)} unit="mm" />
-                    <Row label="Calculated total" value={total.toFixed(1)} unit="mm" />
+                    <Row label="Outer diameter" value={ready ? outer.toFixed(1) : dash} unit="mm" />
+                    <Row label="Base wrap length" value={ready ? base.toFixed(1) : dash} unit="mm" />
+                    <Row label="Calculated total" value={ready ? total.toFixed(1) : dash} unit="mm" />
                   </div>
 
                   {/* diagram */}
                   <div className="pw-diag-wrap">
-                    <svg viewBox="0 0 420 180" width="100%" className="pw-diag-svg">
+                    <svg viewBox="0 0 420 180" width="100%" className="pw-diag-svg" role="img"
+                      aria-label={ready
+                        ? `Pipe wrap diagram: pipe ${d} mm, wrap length ${total.toFixed(1)} mm`
+                        : "Pipe wrap diagram: enter a pipe diameter to draw it"}>
                       {/* Outer ring */}
                       <circle cx={cx} cy={cy} r={rO}
                         fill="color-mix(in srgb, var(--color-gray-light) 80%, transparent)"
@@ -253,11 +266,14 @@ export function PipeWrapCalculator() {
             <div className="result-card">
               <div className="result-card-primary">
               <span className="result-card-title">Final length needed</span>
-              <span className="result-card-value">{(total / 10).toFixed(1)} cm</span>
+              <span className="result-card-value">{ready ? `${(total / 10).toFixed(1)} cm` : dash}</span>
               </div>
               <span style={{fontFamily: 'var(--mono)', fontSize: 'var(--fs-sm)', color: 'var(--color-gray-opa80)'}}>
-                {total.toFixed(1)} mm
+                {ready ? `${total.toFixed(1)} mm` : "Enter the pipe outer diameter."}
               </span>
+              {gapTooLong && (
+                <span role="status" className="input-error">The gap is longer than the wrap, so nothing is left to cut.</span>
+              )}
             </div>
           </div>
         </div>

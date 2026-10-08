@@ -7,7 +7,11 @@ const validDimension = (value, min, max) => {
   const parsed = parseMeasurement(value);
   return Number.isFinite(parsed) && parsed >= min && parsed <= max;
 };
-const clampOptionalDimension = (value, min, max) => value === "" ? "" : clampNumber(value, min, max, min);
+// Blank or unparseable is missing, not the minimum.
+const clampOptionalDimension = (value, min, max) => {
+  const n = parseMeasurement(value);
+  return Number.isFinite(n) ? clampNumber(n, min, max, min) : "";
+};
 
 export function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
@@ -91,7 +95,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
             <div ref={areaWrapRef} style={{ position: "relative" }}>
               <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth}
                 onChange={v => setSym(s => ({ ...s, roomWidth: clampOptionalDimension(v, 100, 50000) }))}
-                min={100} req={started && !roomComplete}
+                min={100} max={50000} req={started && !roomComplete}
                 presetsOpen={showAreaDropdown}
                 presetHoveredIndex={areaHoveredIndex}
                 showActionLabels
@@ -111,6 +115,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
                 value={sym.panelWidth}
                 onChange={v => { setSym(s => ({ ...s, panelWidth: clampOptionalDimension(v, 100, 8000) })); setActivePreset(null); }}
                 min={100}
+                max={8000}
                 req={started && !materialComplete}
                 presetsOpen={showWidDropdown}
                 presetHoveredIndex={hoveredIndex}

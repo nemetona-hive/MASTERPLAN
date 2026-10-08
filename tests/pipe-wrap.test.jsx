@@ -24,7 +24,31 @@ const totalMm = () => {
 describe("the pipe wrap calculator", () => {
   it("says nothing until there is a pipe", () => {
     render(<PipeWrapCalculator />);
+    expect(card().textContent).toContain("Enter the pipe outer diameter.");
+    expect(card().textContent).not.toMatch(/\d\s*cm/);
+  });
+
+  it("does not turn an overlap alone into a length to cut", () => {
+    render(<PipeWrapCalculator />);
+    fireEvent.click(screen.getByText("Adjustments"));
+    set("input-overlap-val", 50);
+    expect(card().textContent).toContain("Enter the pipe outer diameter.");
+    expect(card().textContent).not.toMatch(/\d\s*mm/);
+  });
+
+  it("explains a zero result when the gap is longer than the wrap", () => {
+    render(<PipeWrapCalculator />);
+    set("input-pipeDiam", 10);
+    fireEvent.click(screen.getByText("Adjustments"));
+    set("input-gap-val", 200);
     expect(totalMm()).toBe(0);
+    expect(screen.getByRole("status")).toHaveTextContent(/gap is longer/i);
+  });
+
+  it("does not half-parse a malformed diameter", () => {
+    render(<PipeWrapCalculator />);
+    set("input-pipeDiam", "1.2.3");
+    expect(card().textContent).toContain("Enter the pipe outer diameter.");
   });
 
   it("wraps the outer surface, not the pipe", () => {

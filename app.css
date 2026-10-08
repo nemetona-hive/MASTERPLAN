@@ -3652,6 +3652,16 @@ input[type="range"]:focus-visible {
 
 .u-w-full { width: 100%; }
 
+.page-error {
+	padding: var(--sp-5);
+	color: var(--text);
+}
+
+.page-error p {
+	margin: 0 0 var(--sp-3);
+	color: var(--danger);
+}
+
 .concrete-split-wrap {
 	display: grid;
 	grid-template-columns: 1fr auto 1fr;

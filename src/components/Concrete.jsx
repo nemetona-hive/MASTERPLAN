@@ -226,7 +226,7 @@ export function SheetConcrete() {
                             <NumInput id="input-slf-len" label="Length (mm)" value={lenMm} min={1} onChange={setLenMm} req={hasAnyInput && !lenMm} />
                             <NumInput id="input-slf-wid" label="Width (mm)"  value={widMm} min={1} onChange={setWidMm} req={hasAnyInput && !widMm} />
                           </div>
-                          <Row label="Calculated area" value={computedDimsArea.toFixed(1)} unit="m²" />
+                          <Row label="Calculated area" value={computedDimsArea.toFixed(2)} unit="m²" />
                         </Stack>
                       )}
                     </div>

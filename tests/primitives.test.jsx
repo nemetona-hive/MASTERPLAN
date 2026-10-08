@@ -140,6 +140,47 @@ describe("NumInput", () => {
     expect(seen).toEqual([2000]);
   });
 
+  it("says so when it clamps, and keeps saying so while the value is unchanged", async () => {
+    const user = userEvent.setup();
+    function Host() {
+      const [v, setV] = React.useState(1200);
+      return <NumInput value={v} onChange={setV} min={100} max={2000} />;
+    }
+    render(<Host />);
+
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "50");
+    await user.tab();
+    expect(input).toHaveDisplayValue("100");
+    expect(screen.getByRole("alert")).toHaveTextContent("Minimum is 100.");
+
+    await user.clear(input);
+    await user.type(input, "500");
+    await user.tab();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("reports an unparseable entry as blank and keeps the text beside its message", async () => {
+    // The raw string used to go upward, where a page clamped it to its minimum
+    // and drew a layout for a value nobody entered.
+    const user = userEvent.setup();
+    const seen = [];
+    function Host() {
+      const [v, setV] = React.useState(1200);
+      return <NumInput value={v} onChange={x => { seen.push(x); setV(x); }} min={100} max={2000} />;
+    }
+    render(<Host />);
+
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "1.2.3");
+    await user.tab();
+    expect(seen).toEqual([""]);
+    expect(input).toHaveDisplayValue("1.2.3");
+    expect(screen.getByRole("alert")).toHaveTextContent("valid decimal");
+  });
+
   it("keeps an emptied field empty rather than snapping it to the minimum", async () => {
     const user = userEvent.setup();
     const seen = [];

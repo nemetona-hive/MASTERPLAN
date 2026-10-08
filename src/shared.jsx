@@ -528,29 +528,49 @@ function cleanNumericInput(raw) {
 export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const inputRef = React.useRef(null);
-  const [error, setError] = React.useState("");
+  /* A message belongs to the value the parent held when it was raised. If the
+     parent's value moves on for any other reason (a preset, undo, reset) the
+     message is stale and stops showing, with no clearing effect to race the
+     commit that raised it. */
+  const [notice, setNotice] = React.useState(null);
+  const invalidRef = React.useRef(false);
   const generatedId = React.useId();
   const fieldId = id || generatedId;
+  const shown = value === "" ? "" : String(value);
+  const error = notice && notice.value === shown ? notice.message : "";
 
-  React.useEffect(() => { setLocal(value === "" ? "" : String(value)); }, [value]);
+  React.useEffect(() => {
+    // An invalid entry reports "" upward; rewriting the field from that would
+    // throw away the text the message is about.
+    if (invalidRef.current && value === "") { invalidRef.current = false; return; }
+    invalidRef.current = false;
+    setLocal(value === "" ? "" : String(value));
+  }, [value]);
 
   // Commits the numeric value — called on blur and as part of confirm
   const commitValue = () => {
-    setError("");
+    setNotice(null);
     if (local === "") {
       onChange("");
-    } else {
-      const n = parseMeasurement(local);
-      if (Number.isFinite(n)) {
-        const bounded = Math.max(min, Math.min(max, n));
-        const val = Number(bounded.toFixed(2));
-        onChange(val);
-        setLocal(String(val));
-      } else {
-        setError("Enter a valid decimal number.");
-        onChange(local);
-      }
+      return;
     }
+    const n = parseMeasurement(local);
+    if (!Number.isFinite(n)) {
+      /* Not a number, so no number goes upward. Passing the raw text on let
+         pages clamp it to their minimum and draw a result for a value nobody
+         entered. */
+      invalidRef.current = true;
+      setNotice({ value: "", message: "Enter a valid decimal number." });
+      onChange("");
+      return;
+    }
+    const bounded = Math.max(min, Math.min(max, n));
+    const val = Number(bounded.toFixed(2));
+    if (bounded !== n) {
+      setNotice({ value: String(val), message: bounded === min ? `Minimum is ${min}.` : `Maximum is ${max}.` });
+    }
+    onChange(val);
+    setLocal(String(val));
   };
 
 

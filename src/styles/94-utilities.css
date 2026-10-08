@@ -34,3 +34,14 @@
 
 /* A control stretched to its container — the Concrete reset spans its panel. */
 .u-w-full { width: 100%; }
+
+/* Shown by the page error boundary in App.jsx in place of the routed page. */
+.page-error {
+	padding: var(--sp-5);
+	color: var(--text);
+}
+
+.page-error p {
+	margin: 0 0 var(--sp-3);
+	color: var(--danger);
+}

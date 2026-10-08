@@ -9,6 +9,7 @@ import { SheetSurfaceLayout } from "./components/SurfaceLayout.jsx";
 import { SheetSymmetricLayout } from "./components/SymmetricLayout.jsx";
 import { SheetTimesheet } from "./components/Timesheet.jsx";
 import { AppNav } from "./Nav.jsx";
+import { PageErrorBoundary } from "./components/PageErrorBoundary.jsx";
 import { ThemeButton } from "./components/ThemeButton.jsx";
 import { UndoButtons } from "./components/UndoButtons.jsx";
 import { installFieldUndo } from "./utils/field-undo.js";
@@ -136,6 +137,8 @@ function App() {
 
   // Sync page state with URL hash
   const setPage = id => {
+    // Choosing the page already shown is not a new place to go back to.
+    if (id === page) return;
     if (id === "home") {
       history.pushState(null, "", window.location.pathname);
     } else {
@@ -143,6 +146,12 @@ function App() {
     }
     setPageState(id);
   };
+
+  // The tab title follows the page, so history and the tab strip say where you are.
+  React.useEffect(() => {
+    const meta = PAGES.find(p => p.id === page);
+    document.title = page === "home" || !meta ? "Nemetona MASTERPLAN" : `${meta.title} — Nemetona MASTERPLAN`;
+  }, [page]);
 
   // Handle browser back/forward
   React.useEffect(() => {
@@ -293,9 +302,11 @@ function App() {
             is a class and nothing selects on the tag. */}
         <main id="page-main" className="page-main"
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
+        <PageErrorBoundary key={page}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
           panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} />
+        </PageErrorBoundary>
         </main>
       </div>
     </div>
