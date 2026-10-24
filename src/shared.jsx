@@ -544,7 +544,7 @@ function cleanNumericInput(raw) {
  * typing. Blur and Enter still commit, clamp and round as before; a keystroke
  * never clamps, so an out-of-range entry reports "" until it is committed.
  */
-export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false, live = false }) {
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false, live = false, note = "" }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const inputRef = React.useRef(null);
   /* A message belongs to the value the parent held when it was raised. If the
@@ -702,6 +702,7 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
           <Icon name="corner-down-left" />{showActionLabels && <span>Apply</span>}
         </button>
       </div>
+      {note && <span className="num-note"><span className="num-note-lbl">Preset</span>{note}</span>}
       {error && <span id={`${fieldId}-error`} role="alert" className="input-error">{error}</span>}
     </div>
   );

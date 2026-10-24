@@ -120,9 +120,9 @@ export function SheetConcrete() {
     setShowUpdated(true);
   };
 
-  const handleRateChange     = v => { setRate(v);     setActivePreset(null); };
-  const handleBagKgChange    = v => { setBagKg(v);    setActivePreset(null); };
-  const handleBagPriceChange = v => { setBagPrice(v); setActivePreset(null); };
+  const handleRateChange     = v => { if (v !== rate)     setActivePreset(null); setRate(v); };
+  const handleBagKgChange    = v => { if (v !== bagKg)    setActivePreset(null); setBagKg(v); };
+  const handleBagPriceChange = v => { if (v !== bagPrice) setActivePreset(null); setBagPrice(v); };
 
   useClickOutside([rateInputRef], () => setShowRatePresets(false));
 
@@ -289,7 +289,8 @@ export function SheetConcrete() {
                     >
                       <NumInput 
                         id="input-slf-rate" 
-                        label="Consumption (kg/m²·mm)" 
+                        label="Consumption (kg/m²·mm)"
+                        note={activePreset !== null ? presets[activePreset]?.name : ""}
                         value={rate} 
                         min={0.1} 
                         onChange={handleRateChange} 

@@ -1016,6 +1016,25 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	color: var(--color-white);
 }
 
+.num-note {
+	display: flex;
+	align-items: baseline;
+	gap: var(--sp-2);
+	font-family: var(--mono);
+	font-size: var(--fs-md);
+	font-weight: var(--fw-med);
+	color: var(--text);
+	padding-inline-start: var(--sp-2);
+	border-inline-start: 2px solid var(--accent);
+}
+
+.num-note-lbl {
+	font-size: var(--fs-sm);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
 .num-row {
 	display: flex;
 	gap: var(--sp-2);
