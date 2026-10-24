@@ -19,6 +19,13 @@ const nf = (value, places = 0) =>
     minimumFractionDigits: places, maximumFractionDigits: places
   });
 
+/* Millimetres never take a thousands separator (1000, not 1,000); a fraction
+   keeps the app's decimal comma (12,5), and a whole number carries no ",0". */
+const mm = (value, places = 0) =>
+  Number(value).toLocaleString("et-EE", {
+    useGrouping: false, minimumFractionDigits: 0, maximumFractionDigits: places
+  });
+
 /* Euros in the app's own locale, matching the figure the page shows beside the
    button somebody pressed to get here. */
 const eur = value =>
@@ -38,7 +45,7 @@ export function TakeOffSheet({ takeOff }) {
         <div>
           <h1 className="doc-sheet-title">Concrete take-off</h1>
           <p className="doc-sheet-sub">
-            {nf(area.value, 2)} m² · {nf(thickness.average, 1)} mm
+            {nf(area.value, 2)} m² · {mm(thickness.average, 1)} mm
             {thickness.mode === "corners" ? " average" : ""}
             {product.name ? ` · ${product.name}` : ""}
           </p>
@@ -57,22 +64,22 @@ export function TakeOffSheet({ takeOff }) {
             <dd>
               {nf(area.value, 2)} m²
               {area.mode === "dims" && area.length && area.width && (
-                <span className="doc-sheet-from"> from {nf(area.length)} × {nf(area.width)} mm</span>
+                <span className="doc-sheet-from"> from {mm(area.length)} × {mm(area.width)} mm</span>
               )}
             </dd>
           </div>
-          <div><dt>Thickness</dt><dd>{nf(thickness.average, 1)} mm</dd></div>
+          <div><dt>Thickness</dt><dd>{mm(thickness.average, 1)} mm</dd></div>
           {/* The figure the corner mode exists for: an average alone cannot say
               a slab falls 40mm across its length. */}
           {thickness.difference !== null && (
-            <div><dt>Fall</dt><dd>{nf(thickness.difference, 1)} mm</dd></div>
+            <div><dt>Fall</dt><dd>{mm(thickness.difference, 1)} mm</dd></div>
           )}
           <div className="doc-sheet-fact--lead"><dt>Volume</dt><dd>{nf(volume, 3)} m³</dd></div>
         </dl>
 
         {thickness.corners && (
           <p className="doc-sheet-note">
-            Corners: {thickness.corners.map(c => `${nf(c)} mm`).join(" · ")}. The volume uses
+            Corners: {thickness.corners.map(c => `${mm(c)} mm`).join(" · ")}. The volume uses
             their average; the fall is what the average cannot tell you.
           </p>
         )}

@@ -65,7 +65,7 @@ describe("the printed take-off", () => {
 
   it("shows the working behind an area taken off dimensions", () => {
     render(<TakeOffSheet takeOff={sheet()} />);
-    expect(doc().querySelector(".doc-sheet-from").textContent).toMatch(/5,000 × 4,000 mm/);
+    expect(doc().querySelector(".doc-sheet-from").textContent).toMatch(/5000 × 4000 mm/);
   });
 
   it("omits the working when the area was typed straight in", () => {
