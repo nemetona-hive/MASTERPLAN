@@ -5,7 +5,7 @@
 ## UI components (from shared.jsx)
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange min max unit req labelIcon presetsOpen onTogglePresets />` — controlled number input with commit-on-blur and optional icon.
+- `<NumInput id label value onChange min max unit req labelIcon presetsOpen onTogglePresets note />` — controlled number input with commit-on-blur and optional icon. `note` draws a labelled "Preset" line under the row (Concrete uses it for the active preset name); a parent that clears state in `onChange` must compare first, because blur re-commits an unchanged value.
   `live` also reports each keystroke that already reads as an in-range number (blank otherwise), for two-way calculators such as Guider's Toru põlv 70°; blur and Enter still clamp and round, and the field is not rewritten from its own live value, so a trailing `.` survives.
   It is `type="text"` with `inputMode="decimal"`, not `type="number"`: a number
   input steps its value on ArrowUp/ArrowDown and on a wheel scroll while focused,
