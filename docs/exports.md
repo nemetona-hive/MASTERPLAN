@@ -66,6 +66,10 @@ printout showed the other is how somebody buys the wrong amount of concrete. The
 sheet prints both, and prices the one you buy. **A page whose figures a document
 also states should read them from the model, not beside it.**
 
+On the take-off sheet millimetres print through `mm()` in `TakeOffSheet.jsx`:
+no thousands separator (`5000`, not `5,000`), a decimal comma only when there is
+a fraction (`12,5`), and no `,0` on a whole number (`80`).
+
 Three things that are easy to get wrong here:
 
 - **`PPi` is the material LENGTH and is what gets cut; `PLa` is the WIDTH and
