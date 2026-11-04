@@ -94,7 +94,10 @@ has no spare cross space to grow into: the control comes out a squashed
 ~17px sliver instead of the standard 36px, its 8px radius reading as a
 near-full pill. Add `ctrl-list` to the wrapping `Stack` for a vertical list
 of `.ctrl-dir` entries (a `ControlPanel`'s selectable list, a lone button
-stacked with inputs) to get the real height back.
+stacked with inputs) to get the real height back. The rule reaches **direct
+children only** (`.ctrl-list > .ctrl-dir`): a segmented `seg-group` nested
+in the list is a row again, and stretching each of its segments to 100% once
+hid every option but the first on the Gypsum cards.
 
 `.ctrl-dir`/`.ts-btn` icon+label buttons (`<Icon .../> Label`) need a real
 `gap` between the two — both classes already carry `gap: var(--sp-2)` for
@@ -114,7 +117,8 @@ one rounded input aligns with that control's outer edge; it names the control as
 a whole. A column header aligns with the text inset of every cell in its track,
 so headers and values share a reading axis. Keep the header and row on the same
 grid template with no horizontal row inset. Product/material preset managers
-use the shared `.pw-preset-grid--product` or `--dimensions` track contract;
+use the shared `.pw-preset-grid--product` or `--dimensions` track contract
+(Gypsum adds `--gypsum` and `--gyp-filler` on the same contract);
 Timesheet follows the same text-origin rule. Ordinary printed tables retain
 their common table-cell padding.
 

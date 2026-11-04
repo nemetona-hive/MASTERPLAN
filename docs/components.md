@@ -35,7 +35,8 @@
 - `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono
-- `<MaterialPresetDropdown anchorRef presets activePreset onApply field title />` — floating portal dropdown for width/length quick-select; `title` distinguishes material and input libraries.
+- `<MaterialPresetDropdown anchorRef presets activePreset onApply field title describe />` — floating portal dropdown for width/length quick-select; `title` distinguishes material and input libraries. Presets are `{ name, width, length }`; for a library that is not sizes, `describe(preset)` returns `{ meta, value, unit }` for the row instead (Gypsum's fillers and adhesives).
+- `<SelectedPresetDetail preset />` — the applied preset's line in a form card's `headerDetail`. `preset` is `{ name, width, length }` (a trailing size in the name is not repeated) or `{ name, detail }` for a preset that is not a size.
   **It opens from the field's chevron button and nothing else.** It used to
   open on focus or on a click anywhere in the field, so the list covered the
   controls below it whenever somebody went to type a number, and clicking
