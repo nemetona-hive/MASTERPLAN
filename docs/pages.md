@@ -87,8 +87,8 @@ a second layer. All figures, and the diagrams, come from
   wall's left end *as seen from inside*, width, height, and a sill for a
   window. Room walls are A back, then clockwise seen from above (B right, C
   front, D left), the order the 3D view folds them in. Labels (D1, W1…) are
-  the model's (`readOpenings`). Every opening comes off the *area* (screws,
-  joint filler). Position is optional: an unplaced one only does that. A placed
+  the model's (`readOpenings`). Every opening comes off the *area* (screws).
+  Position is optional: an unplaced one only does that. A placed
   one is drawn in 2D, 3D and print, and drops any piece lying **wholly**
   inside it from the drawing and the sheet count; a piece it only crosses is
   hung whole and cut out. One that runs off its wall is left out and named in
@@ -103,7 +103,12 @@ a second layer. All figures, and the diagrams, come from
   tape do not change. Rates: Knauf Perlfix approx. 5 kg/m², 25 kg bag (Knauf
   data sheet); Gyproc DriWall one 25 kg bag per two 1200×2400 boards (British
   Gypsum) ≈ 4.3 kg/m². Both rise on an uneven wall.
-- **Two layers** double sheets, screws and joint filler. Tape is face layer only.
+- **Joint filler is per metre of joint**, as Knauf states Uniflott (0.25 kg/m),
+  not per m² of board: `compound.length` is every board joint on every layer
+  (the layer underneath is filled, not taped) plus the corners, and `kg` is
+  that times the rate. Openings change it only through the joints of the
+  pieces they remove.
+- **Two layers** double sheets and screws, and the board joints filled. Tape is face layer only.
   Tape = board joints from the layout, plus four internal corners and, with a
   ceiling, the ceiling angle.
 - The diagram is `LayoutVisualization`; the model emits rows in the
@@ -137,9 +142,11 @@ a second layer. All figures, and the diagrams, come from
   sheet size and consumption. "Joint filler" on screen and paper is the
   taping and finishing filler, not adhesive (boards are screwed); the data
   keeps the older name `compoundRate` / `compound`, since saved presets and
-  projects carry it. Knauf: 20 screws/m², Uniflott 0.25 kg/m².
-  Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c), 0.34 kg/m²
-  (74 m² per 25 kg). Single layer, makers' figures; sources in `config.js`.
+  projects carry it. Knauf: 20 screws/m², Uniflott 0.25 kg per m of joint.
+  Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c); its joint filler
+  is left blank, since Gyproc publishes it per m² of board (74 m² per 25 kg),
+  not per metre of joint. Only sheet size and screws are needed to apply a
+  preset. Makers' figures; sources in `config.js`.
   Managed as Pattern Layouts manages its own: the inputs are `ControlPanel`
   form cards; the **Board** card names the chosen preset in its header
   (`SelectedPresetDetail`, now in `shared.jsx`); both sheet fields open a

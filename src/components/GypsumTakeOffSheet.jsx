@@ -161,7 +161,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
             {compound.rate !== null && (
               <tr>
                 <td>Joint filler</td>
-                <td>{nf(compound.kg, 1)} kg</td>
+                <td>{nf(compound.length, 1)} m × {nf(compound.rate, 2)} kg/m = {nf(compound.kg, 1)} kg</td>
                 <td className="doc-sheet-strong">{compound.bagKg ? `${compound.bags} × ${nf(compound.bagKg)} kg` : `${nf(compound.kg, 1)} kg`}</td>
                 {sheets.price && <><td /><td /></>}
               </tr>
@@ -176,7 +176,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
         </table>
         <p className="doc-sheet-note">
           Sheets are counted from the layout with offcuts reused, so waste covers breakage rather
-          than cutting. Openings reduce screws and joint filler. A placed opening also removes any
+          than cutting. Openings reduce screws. Joint filler is per metre of joint, corners included. A placed opening also removes any
           piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
           price covers board only.{fixing === "glue" ? " Glued walls are stuck in dabs onto masonry, one layer; an uneven wall takes more adhesive, and a ceiling is screwed." : ""}
         </p>

@@ -119,18 +119,23 @@ describe("the gypsum take-off", () => {
     expect(t.surfaces[0].count).toBe(4);
   });
 
-  it("doubles sheets, screws and compound for two layers, not tape", () => {
+  it("doubles sheets, screws and the board joints filled for two layers, not tape or corners", () => {
     const one = buildGypsumTakeOff(fields());
     const two = buildGypsumTakeOff(fields({ layers: "2" }));
     expect(two.sheets.layout).toBe(one.sheets.layout * 2);
     expect(two.screws.count).toBe(one.screws.count * 2);
-    expect(two.compound.kg).toBeCloseTo(one.compound.kg * 2, 1);
+    expect(two.compound.length).toBeCloseTo(one.tape.joints * 2 + one.tape.corners, 1);
     expect(two.tape.total).toBe(one.tape.total);
   });
 
   it("works out consumables from the boarded area", () => {
     const t = buildGypsumTakeOff(fields());
     expect(t.screws.count).toBe(Math.ceil(36.4 * 20));
+    /* Joint filler per metre of joint (Uniflott 0.25 kg/m): 4000 walls have
+       3 edge joints, 3000 walls 2, all 2.6 m — 26 m — plus 4 corners of
+       2.6 m: 36.4 m × 0.25 = 9.1 kg. */
+    expect(t.tape.joints).toBeCloseTo(26, 1);
+    expect(t.compound.length).toBeCloseTo(36.4, 1);
     expect(t.compound.kg).toBeCloseTo(9.1, 1);
     expect(t.compound.bags).toBe(1);
   });
@@ -147,7 +152,8 @@ describe("the gypsum take-off", () => {
       expect(t.adhesive.kg).toBeCloseTo(net * 5, 1);
       expect(t.adhesive.bags).toBe(Math.ceil(net * 5 / 25));
       // Joint filler and tape do not depend on how the board is held.
-      expect(t.compound.kg).toBeCloseTo(net * 0.25, 1);
+      expect(t.compound.length).toBeCloseTo(t.tape.total, 1);
+      expect(t.compound.kg).toBeCloseTo(t.compound.length * 0.25, 1);
     });
 
     it("still screw a boarded ceiling", () => {
@@ -167,6 +173,13 @@ describe("the gypsum take-off", () => {
     it("carry no adhesive when screwed", () => {
       expect(buildGypsumTakeOff(fields({ adhesiveRate: "5" })).adhesive).toBe(null);
     });
+  });
+
+  it("fills more joint, not more area, when sheets are smaller", () => {
+    const big = buildGypsumTakeOff(fields());
+    const small = buildGypsumTakeOff(fields({ sheetW: "600" }));
+    expect(small.area.net).toBe(big.area.net);
+    expect(small.compound.kg).toBeGreaterThan(big.compound.kg);
   });
 
   it("prices the sheets bought", () => {

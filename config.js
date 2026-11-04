@@ -286,11 +286,13 @@ const DEFAULT_CONCRETE_PRESETS = [
 ];
 
 /* Gypsum board products. Rates are the makers' own published figures, single
-   layer on a stud wall, per m² of board:
+   layer on a stud wall. Screws per m² of board; joint filler per METRE OF
+   JOINT, which is how the makers state it:
    - Knauf: TN screws ~20 pcs/m² (Knauf AT screw datasheet); Uniflott
-     ~0.25 kg/m² on 12.5mm HRAK board (Uniflott datasheet).
+     0.25 kg per m of joint (Knauf SE Uniflott produktdatablad).
    - Gyproc: ~44 screws per 1200×2400 board at 450 studs ≈ 13 pcs/m² (Gyproc
-     SE installation guide); joint filler ~74 m² per 25 kg ≈ 0.34 kg/m².
+     SE installation guide). Joint filler left blank: Gyproc's figure
+     (~74 m² per 25 kg) is per m² of board, not per metre of joint.
    Adhesive, for glued (dot-and-dab) walls on masonry:
    - Knauf Perlfix: approx. 5 kg/m², 25 kg bag (Knauf HR data sheet K465).
    - Gyproc: one 25 kg bag of DriWall adhesive per two 1200×2400 boards
@@ -313,7 +315,7 @@ const DEFAULT_GYPSUM_PRESETS = [
     sheetW: 1200,
     sheetL: 2600,
     screwRate: 13,
-    compoundRate: 0.34,
+    compoundRate: "",
     bagKg: 25,
     sheetPrice: "",
     adhesiveRate: 4.3,

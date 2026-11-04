@@ -14,7 +14,7 @@ import { parseMeasurement } from "./measurements.cjs";
  * offcut is reused when a later piece fits in it. Waste % is then added on top
  * for breakage and mistakes, not for cutting — the cutting is already counted.
  *
- * Openings are deducted from AREA (screws, joint filler). From SHEETS only when
+ * Openings are deducted from AREA (screws). From SHEETS only when
  * placed, and then only the pieces lying wholly inside one: a piece the
  * opening merely crosses is hung whole and cut out, and the piece above a door
  * comes from the same board. Removing an opening's area from the sheet count
@@ -331,16 +331,22 @@ export function buildGypsumTakeOff(fields) {
   const adhesiveKg = glued ? wallNet * num(adhesiveRate) : 0;
   const adhesiveBag = num(adhesiveBagKg);
   const adhesiveBags = adhesiveBag > 0 ? Math.ceil(adhesiveKg / adhesiveBag - EPS) : 0;
-  const compoundKg = boarded * num(compoundRate);
-  const bag = num(bagKg);
-  const bagsExact = bag > 0 ? compoundKg / bag : 0;
-  const bags = Math.ceil(bagsExact - EPS);
-
   /* Tape goes on the face layer only — the layer underneath is filled, not
      taped. Board joints come from the layout; a room adds its four internal
      corners and, with a ceiling, the ceiling-to-wall angle. */
   const boardJoints = laidOut.reduce((t, s) => t + (s.layout ? s.layout.joints * s.count : 0), 0) / 1000;
   const corners = room && dimsReady ? (4 * H + (ceiling ? 2 * (L + W) : 0)) / 1000 : 0;
+
+  /* Joint filler is given per metre of joint, as the makers give it (Knauf
+     Uniflott: 0.25 kg per m of joint), not per m² of board. Filled: every
+     board joint on every layer — the layer underneath is filled though not
+     taped — plus the corners. Openings change it only through the joints the
+     layout loses with the pieces they remove. */
+  const filledLength = boardJoints * layerCount + corners;
+  const compoundKg = filledLength * num(compoundRate);
+  const bag = num(bagKg);
+  const bagsExact = bag > 0 ? compoundKg / bag : 0;
+  const bags = Math.ceil(bagsExact - EPS);
 
   const price = num(sheetPrice);
   const total = toBuy > 0 && price > 0 ? toBuy * price : null;
@@ -413,6 +419,7 @@ export function buildGypsumTakeOff(fields) {
     } : null,
     compound: {
       rate: given(compoundRate) ? num(compoundRate) : null,
+      length: round(filledLength, 1),
       kg: round(compoundKg, 1),
       bagKg: bag || null,
       bagsExact: round(bagsExact, 2),

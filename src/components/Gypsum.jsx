@@ -10,14 +10,15 @@ import { buildGypsumTakeOff, WALLS } from "../utils/gypsum-take-off.js";
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
 const KEY = name => `Gypsum.jsx:${name}`;
-/* The first five are required to apply a preset; price and the adhesive pair
-   are optional (a preset need not cover glued walls). */
+/* Sheet size and screws are required to apply a preset; the rest are
+   optional — a preset need not cover glued walls, and Gyproc publishes no
+   joint-filler figure per metre of joint. */
 const PRODUCT_FIELDS = ["sheetW", "sheetL", "screwRate", "compoundRate", "bagKg", "sheetPrice", "adhesiveRate", "adhesiveBagKg"];
 const PRESET_COLUMNS = [
   ["sheetW", "Width mm", "Sheet width"],
   ["sheetL", "Length mm", "Sheet length"],
   ["screwRate", "Screws/m²", "Screws per m²"],
-  ["compoundRate", "Filler kg/m²", "Joint filler per m²"],
+  ["compoundRate", "Filler kg/m", "Joint filler per metre of joint"],
   ["bagKg", "Filler bag kg", "Filler bag weight"],
   ["sheetPrice", "€ sheet", "Sheet price"],
   ["adhesiveRate", "Glue kg/m²", "Adhesive per m²"],
@@ -108,10 +109,10 @@ export function SheetGypsum() {
 
   const applyPreset = (p, idx) => {
     const values = PRODUCT_FIELDS.map(name => parseMeasurement(p[name]));
-    const required = values.slice(0, 5);
-    const optionalOk = values.slice(5).every(v => v === null || (Number.isFinite(v) && v >= 0));
+    const required = values.slice(0, 3);
+    const optionalOk = values.slice(3).every(v => v === null || (Number.isFinite(v) && v >= 0));
     if (!required.every(v => Number.isFinite(v) && v > 0) || !optionalOk) {
-      setPresetError("Fill in sheet size, screws, joint filler and bag weight before applying this preset.");
+      setPresetError("Fill in sheet size and screws before applying this preset.");
       return;
     }
     setPresetError("");
@@ -309,7 +310,7 @@ export function SheetGypsum() {
               </div>
             )}
             <div className={fieldFlash ? "num-input-flash" : ""}>
-              <NumInput id="input-gyp-compoundRate" label="Joint filler (kg/m²)" value={val("compoundRate")} min={0}
+              <NumInput id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)" value={val("compoundRate")} min={0}
                 onChange={productChange("compoundRate")} />
             </div>
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
@@ -382,13 +383,14 @@ export function SheetGypsum() {
                   {(!glued || screws.area > 0) && <Row label={glued ? "Ceiling screws" : "Screws"} value={screws.count} unit="pcs" />}
                   {takeOff.adhesive && <Row label="Adhesive" value={takeOff.adhesive.kg.toFixed(1)} unit="kg" />}
                   {takeOff.adhesive?.bagKg && <Row label={`Adhesive bags (${takeOff.adhesive.bagKg} kg)`} value={takeOff.adhesive.bags} unit="pcs" />}
+                  <Row label="Joints filled" value={compound.length.toFixed(1)} unit="m" />
                   <Row label="Joint filler" value={compound.kg.toFixed(1)} unit="kg" />
                   {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
                   <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
 
                   <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
                     <span className="pw-formula-text">
-                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and joint filler; a placed one also drops any piece wholly inside it.
+                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners.
                     </span>
                   </div>
                   <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
