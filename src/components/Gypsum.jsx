@@ -1,11 +1,11 @@
-import { useSessionState } from "../utils/session-state.js";
+import { SessionDraftContext, useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
 import { ControlPanel, Icon, NumInput, Row, Stack, useTimedState } from "../shared.jsx";
 import { LIBRARIES, ManagePresetsButton, PresetField, PresetManager, libraryFields, presetHeader, usePresetLibrary } from "./GypsumPresets.jsx";
 import { LayoutVisualization } from "../Visualization.jsx";
-import { GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
+import { GypsumProjectSheet, GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
-import { buildGypsumTakeOff, jointFillerRate, WALLS } from "../utils/gypsum-take-off.js";
+import { buildGypsumProjectTakeOff, buildGypsumTakeOff, jointFillerRate, WALLS } from "../utils/gypsum-take-off.js";
 
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
@@ -35,34 +35,94 @@ function Seg({ value, options, onChange, label, inline = false }) {
   );
 }
 
-export function SheetGypsum() {
-  const [mode, setMode] = useSessionState(KEY("mode"), "room");               // "room" | "wall"
-  const [ceiling, setCeiling] = useSessionState(KEY("ceiling"), false);
-  const [orientation, setOrientation] = useSessionState(KEY("orientation"), "V");
-  const [layers, setLayers] = useSessionState(KEY("layers"), "1");
-  const [fixing, setFixing] = useSessionState(KEY("fixing"), "screw");      // "screw" | "glue"
+/* A room or wall's own settings, beside its `job` of typed fields. */
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw" };
+/* Which preset each library has applied: per room (see usePresetLibrary). */
+const ACTIVE = Object.values(LIBRARIES).map(lib => lib.draftKeys[1]);
+/* The fields that describe the surface itself. A room added from another
+   keeps everything else — board, fixing, filler, waste — and starts these
+   empty, since two rooms are rarely one size but are usually one order. */
+const SURFACE_FIELDS = ["lenMm", "widMm", "heightMm", "wallW", "wallH"];
+
+const blankJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), ...PREFILLED, openings: [] });
+export const newRoom = (id, mode = "room") =>
+  ({ id, name: "", ...SETTINGS, mode, job: blankJob(), ...Object.fromEntries(ACTIVE.map(key => [key, null])) });
+export const roomFrom = (source, id, mode) => ({
+  ...newRoom(id, mode),
+  orientation: source.orientation, layers: source.layers, fixing: source.fixing,
+  ...Object.fromEntries(ACTIVE.map(key => [key, source[key] ?? null])),
+  job: { ...source.job, ...Object.fromEntries(SURFACE_FIELDS.map(name => [name, ""])), openings: [] }
+});
+
+/* An unnamed entry is called by its kind and its place among that kind —
+   "Room 2", "Wall 1" — worked out rather than stored, so switching an entry
+   between room and wall renames it too. */
+export const roomLabel = (room, index, rooms) => room.name.trim() ||
+  `${room.mode === "wall" ? "Wall" : "Room"} ${rooms.slice(0, index + 1).filter(r => r.mode === room.mode).length}`;
+
+/* Before the page held a list it kept one room under these keys. A project
+   saved then opens as a list of one, and the old keys are dropped from the
+   drafts so they are not saved again beside it. */
+const LEGACY = [...Object.keys(SETTINGS), "job", ...ACTIVE];
+function legacyRoom(drafts) {
+  if (!drafts || !LEGACY.some(name => drafts.has(KEY(name)))) return null;
+  const room = newRoom(1);
+  for (const name of [...Object.keys(SETTINGS), ...ACTIVE]) if (drafts.has(KEY(name))) room[name] = drafts.get(KEY(name));
+  if (drafts.has(KEY("job"))) room.job = { ...blankJob(), ...drafts.get(KEY("job")) };
+  return room;
+}
+const validRooms = list => Array.isArray(list) && list.length > 0 && list.every(r => r && r.job);
+
+export function SheetGypsum({ projectName = "" }) {
+  /* Every room and wall of the job. Which one is on screen is `currentId`;
+     the controls below read and write that entry only. */
+  const drafts = React.useContext(SessionDraftContext);
+  const [storedRooms, setRooms] = useSessionState(KEY("rooms"), () => [legacyRoom(drafts) || newRoom(1)]);
+  React.useEffect(() => { if (drafts) for (const name of LEGACY) drafts.delete(KEY(name)); }, [drafts]);
+  const rooms = validRooms(storedRooms) ? storedRooms : [newRoom(1)];
+  const [currentId, setCurrentId] = useSessionState(KEY("room"), null);
+  const room = rooms.find(r => r.id === currentId) || rooms[0];
+  const roomIndex = rooms.indexOf(room);
+
+  const updateRoom = (id, change) => setRooms(current =>
+    (validRooms(current) ? current : rooms).map(r => (r.id === id ? { ...r, ...change(r) } : r)));
+  /* One room field as a [value, setter] pair, so the controls below read as
+     they did when each was its own piece of state. */
+  const roomState = name => [room[name], value =>
+    updateRoom(room.id, r => ({ [name]: typeof value === "function" ? value(r[name]) : value }))];
+
+  const [mode, setMode] = roomState("mode");                 // "room" | "wall"
+  const [ceiling, setCeiling] = roomState("ceiling");
+  const [orientation, setOrientation] = roomState("orientation");
+  const [layers, setLayers] = roomState("layers");
+  const [fixing, setFixing] = roomState("fixing");          // "screw" | "glue"
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
 
   /* Every typed field in one object, so reset and the model call do not repeat
      the list. A setter per field is derived from it. */
-  const initialJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), ...PREFILLED, openings: [] });
-  const [job, setJob] = useSessionState(KEY("job"), initialJob);
+  const [job, setJob] = roomState("job");
   const val = name => job[name];
   const set = name => value => setJob(current => ({ ...current, [name]: value }));
 
-  /* Three preset libraries, each filling its own fields (GypsumPresets.jsx). */
+  /* Three preset libraries, each filling its own fields (GypsumPresets.jsx).
+     The lists are the project's; the applied preset is the room's. */
   const merge = values => setJob(current => ({ ...current, ...values }));
-  const board = usePresetLibrary(LIBRARIES.board, merge);
-  const filler = usePresetLibrary(LIBRARIES.filler, merge);
-  const adhesive = usePresetLibrary(LIBRARIES.adhesive, merge);
+  const [activeBoard, setActiveBoard] = roomState(LIBRARIES.board.draftKeys[1]);
+  const [activeFiller, setActiveFiller] = roomState(LIBRARIES.filler.draftKeys[1]);
+  const [activeAdhesive, setActiveAdhesive] = roomState(LIBRARIES.adhesive.draftKeys[1]);
+  const board = usePresetLibrary(LIBRARIES.board, { onApply: merge, active: activeBoard ?? null, setActive: setActiveBoard });
+  const filler = usePresetLibrary(LIBRARIES.filler, { onApply: merge, active: activeFiller ?? null, setActive: setActiveFiller });
+  const adhesive = usePresetLibrary(LIBRARIES.adhesive, { onApply: merge, active: activeAdhesive ?? null, setActive: setActiveAdhesive });
   const libraries = [board, filler, adhesive];
   const [resetArmed, armReset, disarmReset] = useTimedState(false, 4000);
+  const [deleteArmed, armDelete, disarmDelete] = useTimedState(false, 4000);
 
+  /* Reset clears the room on screen, never the others: with a list, wiping
+     every room behind one button would be the one irreversible thing here. */
   const resetAll = () => {
-    setJob(initialJob());
-    setMode("room"); setCeiling(false); setView3d(false); setOrientation("V"); setLayers("1"); setFixing("screw");
-    libraries.forEach(library => library.setActive(null));
+    updateRoom(room.id, r => ({ ...newRoom(r.id), name: r.name }));
+    setView3d(false);
   };
   const handleReset = () => {
     if (!resetArmed) { armReset(true); return; }
@@ -70,28 +130,63 @@ export function SheetGypsum() {
     resetAll();
   };
 
+  // ── The list: add, duplicate, delete, switch ───────────────────────────────
+  const nextId = () => rooms.reduce((m, r) => Math.max(m, r.id), 0) + 1;
+  const addRoom = kind => {
+    const id = nextId();
+    setRooms([...rooms, roomFrom(room, id, kind)]);
+    setCurrentId(id);
+  };
+  const duplicateRoom = () => {
+    const id = nextId();
+    const copy = { ...JSON.parse(JSON.stringify(room)), id, name: room.name.trim() ? `${room.name.trim()} copy` : "" };
+    setRooms([...rooms.slice(0, roomIndex + 1), copy, ...rooms.slice(roomIndex + 1)]);
+    setCurrentId(id);
+  };
+  const deleteRoom = () => {
+    if (rooms.length < 2) return;
+    if (!deleteArmed) { armDelete(true); return; }
+    disarmDelete();
+    const rest = rooms.filter(r => r.id !== room.id);
+    setRooms(rest);
+    setCurrentId(rest[Math.min(roomIndex, rest.length - 1)].id);
+  };
+
   /* A hand edit of a product field means the values are no longer the
      preset's, so its name stops showing. */
   const productChange = (library, name) => v => { if (v !== val(name)) library.edited(); set(name)(v); };
 
   // ── Derived values: all of it from the model ───────────────────────────────
-  const takeOff = buildGypsumTakeOff({
-    ...job, mode, ceiling, orientation, layers, fixing,
-    product: board.selected?.name || "",
-    fillerProduct: filler.selected?.name || "",
-    adhesiveProduct: adhesive.selected?.name || ""
-  });
+  /* Every room's take-off, so the list and the project total read the same
+     figures as the room's own card. The product names come from the shared
+     lists by each room's own choice. */
+  const nameIn = (library, idx) => (idx !== null && idx !== undefined ? library.presets[idx]?.name || "" : "");
+  const entries = React.useMemo(() => rooms.map((r, i) => ({
+    id: r.id,
+    name: roomLabel(r, i, rooms),
+    takeOff: buildGypsumTakeOff({
+      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing,
+      product: nameIn(board, r.activePreset),
+      fillerProduct: nameIn(filler, r.activeFiller),
+      adhesiveProduct: nameIn(adhesive, r.activeAdhesive)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  })), [rooms, board.presets, filler.presets, adhesive.presets]);
+  const takeOff = entries[roomIndex].takeOff;
+  const project = rooms.length > 1 ? buildGypsumProjectTakeOff(entries) : null;
   const { area, sheets, screws, compound, tape } = takeOff;
   const derivedJoint = jointFillerRate(val("compoundRate"), val("skimRate"));
 
-  const [printTakeOff, setPrintTakeOff] = React.useState(null);
+  /* One document at a time: the room's sheet or the project's. Both are
+     portalled to <body>, and print shows every .doc-sheet it finds. */
+  const [printing, setPrinting] = React.useState(null);
   React.useEffect(() => {
-    if (!printTakeOff) return;
+    if (!printing) return;
     const frame = requestAnimationFrame(() => window.print());
     return () => cancelAnimationFrame(frame);
-  }, [printTakeOff]);
-  const fieldKey = JSON.stringify([job, mode, ceiling, orientation, layers, fixing, ...libraries.map(l => [l.active, l.presets])]);
-  React.useEffect(() => { setPrintTakeOff(null); }, [fieldKey]);
+  }, [printing]);
+  const fieldKey = JSON.stringify([rooms, room.id, ...libraries.map(l => l.presets)]);
+  React.useEffect(() => { setPrinting(null); }, [fieldKey]);
 
   const dimsKeys = mode === "room" ? ["lenMm", "widMm", "heightMm"] : ["wallW", "wallH"];
   const hasAnyInput = [...dimsKeys, ...PRODUCT_FIELDS].some(name => val(name) !== "");
@@ -116,6 +211,47 @@ export function SheetGypsum() {
   return (
     <>
       <Stack id="data-control" className="data-control gyp-control" gap={4}>
+        {/* The job's rooms and walls. The list shows once there is a second
+            entry; until then the card is the name and the ways to add one. */}
+        <ControlPanel id="control-gyp-rooms" title="Rooms" noToggle className="form-section-card">
+          <Stack gap={3} className="ctrl-list">
+            {rooms.length > 1 && (
+              <div className="gyp-room-list" role="group" aria-label="Rooms and walls">
+                {entries.map(e => (
+                  <button key={e.id} type="button" className={"ctrl-dir gyp-room-btn" + (e.id === room.id ? " on" : "")}
+                    aria-pressed={e.id === room.id} onClick={() => { disarmDelete(); setCurrentId(e.id); }}>
+                    <span className="gyp-room-name">{e.name}</span>
+                    <span className="gyp-room-meta">{e.takeOff.ready ? `${e.takeOff.sheets.toBuy} pcs` : "—"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="num-wrap">
+              <label htmlFor="input-gyp-room-name" className="num-lbl">Name</label>
+              <input id="input-gyp-room-name" className="num-input" type="text" autoComplete="off" maxLength={60}
+                placeholder={roomLabel({ ...room, name: "" }, roomIndex, rooms)} value={room.name}
+                onChange={e => updateRoom(room.id, () => ({ name: e.target.value }))} />
+            </div>
+            <div className="gyp-room-actions">
+              <button type="button" className="ctrl-dir" onClick={() => addRoom("room")}><Icon name="plus" /> Room</button>
+              <button type="button" className="ctrl-dir" onClick={() => addRoom("wall")}><Icon name="plus" /> Wall</button>
+              <button type="button" className="ctrl-dir" onClick={duplicateRoom}
+                aria-label={`Duplicate ${entries[roomIndex].name}`}>Duplicate</button>
+              {rooms.length > 1 && (
+                <button type="button" className={"ctrl-dir ctl-danger" + (deleteArmed ? " is-armed" : "")}
+                  onClick={deleteRoom} onBlur={disarmDelete}
+                  aria-label={deleteArmed ? `Confirm delete ${entries[roomIndex].name}` : `Delete ${entries[roomIndex].name}`}>
+                  {deleteArmed ? "Delete?" : "Delete"}
+                </button>
+              )}
+            </div>
+          </Stack>
+        </ControlPanel>
+
+        {/* Keyed by the room, so switching remounts the fields: each reads the
+            new room's values, and field undo cannot carry one room's typing
+            into another. */}
+        <React.Fragment key={room.id}>
         <ControlPanel id="control-gyp-surface" title="Surface" noToggle className="form-section-card">
           <Stack gap={3} className="ctrl-list">
             <Seg label="What to board" value={mode} onChange={setMode}
@@ -259,12 +395,15 @@ export function SheetGypsum() {
           </Stack>
         </ControlPanel>
         {filler.error && !filler.managing && <p role="alert" className="input-error">{filler.error}</p>}
+        </React.Fragment>
 
         <div className="form-action">
           <button onClick={handleReset} onBlur={disarmReset}
             className={"ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : "")}
-            aria-label={resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first"}>
-            <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : "Global Reset"}
+            aria-label={rooms.length > 1
+              ? (resetArmed ? `Confirm reset — clears every field of ${entries[roomIndex].name}` : `Reset ${entries[roomIndex].name} — clears its fields, asks first`)
+              : (resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first")}>
+            <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : rooms.length > 1 ? `Reset ${mode === "wall" ? "Wall" : "Room"}` : "Global Reset"}
           </button>
         </div>
       </Stack>
@@ -345,6 +484,51 @@ export function SheetGypsum() {
                 </Stack>
               </div>
             </div>
+
+            {/* ── Every room, added up (buildGypsumProjectTakeOff) ── */}
+            {project && (
+              <div className="section unboxed">
+                <div className="section-head">
+                  <span>All Rooms</span>
+                  <button type="button" className="ts-btn ctl-ghost ctl-sm" disabled={!project.ready}
+                    onClick={() => setPrinting({ project, entries })}
+                    title={project.ready ? "Take-off for every room — opens the print dialog" : "Finish a room first"}>
+                    <Icon name="print" /> Take-off
+                  </button>
+                </div>
+                <div className="section-body">
+                  <Stack className="section-pad" gap={1}>
+                    {project.rooms.map(r => (
+                      <Row key={r.id} label={r.name} value={r.ready ? r.sheets : "—"} unit={r.ready ? "sheets" : ""} />
+                    ))}
+                    <div className="gyp-total-rule" />
+                    <Row label="Net area" value={project.area.net.toFixed(2)} unit="m²" />
+                    {project.boards.map(b => (
+                      <Row key={`${b.product}|${b.width}|${b.length}|${b.price}`} hi
+                        label={`${b.product || "Board"} ${b.width} × ${b.length}`} value={b.toBuy} unit="sheets" />
+                    ))}
+                    {project.screws.count > 0 && <Row label="Screws" value={project.screws.count} unit="pcs" />}
+                    {project.adhesive.map(a => (
+                      <Row key={`a|${a.product}|${a.bagKg}`} label={`${a.product || "Adhesive"}${a.bagKg ? ` (${a.bagKg} kg bags)` : ""}`}
+                        value={a.bagKg ? a.bags : a.kg.toFixed(1)} unit={a.bagKg ? "bags" : "kg"} />
+                    ))}
+                    {project.filler.map(f => (
+                      <Row key={`f|${f.product}|${f.bagKg}`} label={`${f.product || "Joint filler"}${f.bagKg ? ` (${f.bagKg} kg bags)` : ""}`}
+                        value={f.bagKg ? f.bags : f.kg.toFixed(1)} unit={f.bagKg ? "bags" : "kg"} />
+                    ))}
+                    <Row label="Joint tape" value={project.tape.total.toFixed(1)} unit="m" />
+                    {project.cost && (
+                      <Row label={project.cost.partial ? "Sheet cost (priced boards)" : "Sheet cost"} value={`€${fmtEur(project.cost.total)}`} />
+                    )}
+                    {project.readyCount < project.count && (
+                      <p className="pw-formula-text gyp-total-note">
+                        {project.count - project.readyCount} of {project.count} not finished and left out of the total.
+                      </p>
+                    )}
+                  </Stack>
+                </div>
+              </div>
+            )}
           </Stack>
 
           <div className="gyp-result-wrap">
@@ -364,7 +548,7 @@ export function SheetGypsum() {
                 </span>
               </div>
               <button type="button" className="ts-btn ctl-ghost result-card-print"
-                onClick={() => setPrintTakeOff(takeOff)} disabled={!takeOff.ready}
+                onClick={() => setPrinting({ takeOff })} disabled={!takeOff.ready}
                 title={takeOff.ready ? "Take-off sheet — opens the print dialog, where Save as PDF is" : "Enter the surface and sheet size first"}>
                 <Icon name="print" /> Take-off
               </button>
@@ -373,7 +557,8 @@ export function SheetGypsum() {
         </div>
       </div>
       {libraries.map(library => <PresetManager key={library.lib.id} library={library} />)}
-      <GypsumTakeOffSheet takeOff={printTakeOff} />
+      <GypsumTakeOffSheet takeOff={printing?.takeOff || null} title={rooms.length > 1 ? entries[roomIndex].name : ""} projectName={projectName} />
+      <GypsumProjectSheet project={printing?.project || null} entries={printing?.entries || null} projectName={projectName} />
     </>
   );
 }

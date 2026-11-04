@@ -504,3 +504,85 @@ export function buildGypsumTakeOff(fields) {
     product: given(product) ? product : null
   };
 }
+
+/**
+ * The whole project: every room and wall the Gypsum page holds, added up.
+ *
+ * `entries` are `{ id, name, takeOff }`, each `takeOff` straight from
+ * `buildGypsumTakeOff`, so a room's own figures here are the ones its own
+ * card shows. Only rooms that are `ready` count; the rest are listed with the
+ * reason, so a half-entered room cannot quietly add nothing to an order.
+ *
+ * Materials are grouped by what is bought, not summed blindly: boards by
+ * product, sheet size and price (a bathroom's moisture board is a separate
+ * order line from a bedroom's standard board), filler and adhesive by product
+ * and bag. Sheets add the rooms' exact counts, waste included, and round up
+ * once — a fraction of a sheet left over in each of three rooms is one sheet,
+ * not three. Bags are rounded up from the summed kilograms the same way.
+ * Offcuts are not shared between rooms: each room's layout count is its own.
+ */
+export function buildGypsumProjectTakeOff(entries) {
+  const list = entries || [];
+  const ready = list.filter(e => e.takeOff && e.takeOff.ready);
+  const byKey = (items, keyOf, make, add) => {
+    const groups = new Map();
+    for (const item of items) {
+      const key = JSON.stringify(keyOf(item));
+      if (!groups.has(key)) groups.set(key, make(item));
+      add(groups.get(key), item);
+    }
+    return [...groups.values()];
+  };
+
+  const boards = byKey(ready, ({ takeOff: t }) => [t.product, t.sheet.width, t.sheet.length, t.sheets.price],
+    ({ takeOff: t }) => ({ product: t.product, width: t.sheet.width, length: t.sheet.length, price: t.sheets.price,
+      layout: 0, exact: 0, rooms: [] }),
+    (g, { name, takeOff: t }) => { g.layout += t.sheets.layout; g.exact += t.sheets.exact; g.rooms.push(name); })
+    .map(g => {
+      const toBuy = g.exact > 0 ? Math.ceil(g.exact - EPS) : 0;
+      return { ...g, exact: round(g.exact, 2), toBuy, total: g.price ? round(toBuy * g.price, 2) : null };
+    });
+
+  const bagged = (items, part) => byKey(items, e => [part(e).product, part(e).bagKg],
+    e => ({ product: part(e).product, bagKg: part(e).bagKg, kg: 0, rooms: [] }),
+    (g, e) => { g.kg += part(e).kg; g.rooms.push(e.name); })
+    .map(g => ({ ...g, kg: round(g.kg, 1), bags: g.bagKg ? Math.ceil(g.kg / g.bagKg - EPS) : 0 }));
+
+  const filler = bagged(ready.filter(({ takeOff: t }) => t.compound.rate !== null || t.compound.skim), e => e.takeOff.compound);
+  const adhesive = bagged(ready.filter(({ takeOff: t }) => t.adhesive && t.adhesive.rate !== null), e => e.takeOff.adhesive);
+  const screwed = ready.filter(({ takeOff: t }) => t.screws.rate !== null && t.screws.area > 0);
+  const sum = (items, read) => items.reduce((total, e) => total + read(e.takeOff), 0);
+
+  const priced = boards.filter(b => b.total !== null);
+  return {
+    ready: ready.length > 0,
+    count: list.length,
+    readyCount: ready.length,
+    rooms: list.map(({ id, name, takeOff: t }) => ({
+      id, name,
+      mode: t.mode,
+      ready: t.ready,
+      issue: t.ready ? null : t.issue,
+      net: t.ready ? t.area.net : 0,
+      sheets: t.ready ? t.sheets.toBuy : 0,
+      exact: t.ready ? t.sheets.exact : 0,
+      product: t.product,
+      sheet: t.sheet,
+      total: t.ready ? t.sheets.total : null
+    })),
+    area: {
+      gross: round(sum(ready, t => t.area.gross), 2),
+      openings: round(sum(ready, t => t.area.openings), 2),
+      net: round(sum(ready, t => t.area.net), 2)
+    },
+    boards,
+    sheets: boards.reduce((total, b) => total + b.toBuy, 0),
+    screws: { count: sum(screwed, t => t.screws.count) },
+    adhesive,
+    filler,
+    tape: { total: round(sum(ready, t => t.tape.total), 1) },
+    /* Board only, as on a room's sheet. `partial` when some boards carry no
+       price, so the figure is not read as the whole order. */
+    cost: priced.length ? { total: round(priced.reduce((t, b) => t + b.total, 0), 2), partial: priced.length < boards.length } : null
+  };
+}

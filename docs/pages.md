@@ -73,6 +73,42 @@ a second layer. All figures, and the diagrams, come from
   in a row. The 3D stage measures itself and scales the room (and its
   perspective) to the shorter side, so it fills the larger stage too.
 
+- **Rooms and walls: a list, one on screen.** The page holds every room and
+  single wall of a job (`Gypsum.jsx:rooms`, which one is open in
+  `Gypsum.jsx:room`), so a project carries the whole job rather than the last
+  room typed. Each entry owns everything about itself: mode, dimensions,
+  openings, ceiling, fixing, layers, the job's product fields, and which
+  preset each library has applied (`activePreset` / `activeFiller` /
+  `activeAdhesive`). A bathroom on glued moisture board and a bedroom on
+  screwed standard board are an ordinary job. The preset *lists* stay shared:
+  they are the project's catalogue, so `usePresetLibrary` takes `active` and
+  `setActive` from the page instead of storing them itself.
+  - The Rooms card: the list (once there are two), the name, `+ Room`,
+    `+ Wall`, Duplicate, Delete (two clicks, never the last one). An unnamed
+    entry is called "Room 2" or "Wall 1" (`roomLabel`), worked out, not
+    stored, so switching an entry's mode renames it. An added entry keeps the
+    materials of the one on screen and starts its size and openings empty
+    (`roomFrom`): rooms are rarely one size and usually one order. Duplicate
+    copies everything.
+  - The field cards are keyed by the room, so switching remounts them. Each
+    field reads the new room's value, and field undo cannot carry one room's
+    typing into another.
+  - Reset clears the room on screen only, and says so ("Reset Room") once
+    there is a list. Wiping every room behind one button would be the one
+    irreversible action on the page.
+  - A project saved before the list kept one room under `Gypsum.jsx:mode`,
+    `:job` and so on. It opens as a list of one (`legacyRoom`), and the old
+    keys are dropped from the drafts so they are not saved again beside it.
+  - **All Rooms** (once there are two) is `buildGypsumProjectTakeOff`: each
+    room's sheets, then the order across them. Boards are grouped by product,
+    size and price, filler and adhesive by product and bag. Sheets add the
+    rooms' *exact* counts, waste included, and round up once, so the order
+    can be less than the rooms' own counts added (13 + 4 rooms, 16 to buy).
+    Offcuts are not shared between rooms. An unfinished room is listed and
+    left out of the total, with a line saying so. Its Take-off prints the
+    project sheet: rooms table and order first, then each finished room's own
+    sheet on a page of its own (`GypsumProjectSheet`, `.gyp-print-room`).
+    Both sheets carry the open project's name.
 - **The layout is the count.** Each surface is cut into lanes of board width
   (vertical fixing: columns up the wall; horizontal: rows along it), each lane
   into pieces, and the pieces are packed first-fit-decreasing back into stock

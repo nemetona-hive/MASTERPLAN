@@ -74,7 +74,7 @@ const getHashPage = () => {
   return PAGES.some(p => p.id === hash) ? hash : "home";
 };
 
-function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen, projectOpen }) {
+function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen, projectOpen, projectName }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
@@ -87,7 +87,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
   if (page === "concrete") {
     content = <SheetConcrete />;
   } else if (page === "gypsum") {
-    content = <SheetGypsum />;
+    content = <SheetGypsum projectName={projectName} />;
     wrapperClass = "main-data";
   } else if (page === "timesheet") {
     content = <SheetTimesheet />;
@@ -352,7 +352,8 @@ function App() {
         <PageErrorBoundary key={`${page}:${projects.epoch}`}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
-          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} projectOpen={Boolean(projects.project)} />
+          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} projectOpen={Boolean(projects.project)}
+          projectName={projects.project?.name || ""} />
         </PageErrorBoundary>
         </main>
       </div>

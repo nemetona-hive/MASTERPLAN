@@ -293,6 +293,12 @@
 
 	/* ── Gypsum: one drawing per surface, two to a row ── */
 
+	/* The project sheet: each room's own sheet after the order, on a page of
+	   its own, so a room's sheet can be handed over alone. */
+	.gyp-print-room {
+		break-before: page;
+	}
+
 	.gyp-print-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;

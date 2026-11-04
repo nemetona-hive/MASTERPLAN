@@ -94,12 +94,17 @@ const canManage = () => typeof canSaveStaticDefaults !== "undefined" && canSaveS
 /**
  * One library's presets and which is applied. `onApply(values)` receives the
  * library's fields, parsed, for the page to merge into its job.
+ *
+ * The list is the project's, one per library (`draftKeys[0]`), but which
+ * preset is applied belongs to a room: a bathroom on moisture board and a
+ * bedroom on standard board share the list and differ in the choice. So the
+ * page owns `active` and `setActive`, storing it on the room under
+ * `draftKeys[1]`.
  */
-export function usePresetLibrary(lib, onApply) {
-  const [presetsKey, activeKey] = lib.draftKeys.map(name => `Gypsum.jsx:${name}`);
+export function usePresetLibrary(lib, { onApply, active, setActive }) {
+  const presetsKey = `Gypsum.jsx:${lib.draftKeys[0]}`;
   const [presets, setPresets] = useSessionState(presetsKey, () =>
     (lib.defaults() || [blank(lib)]).map(p => ({ ...blank(lib), ...p })));
-  const [active, setActive] = useSessionState(activeKey, null);
   const [error, setError] = React.useState("");
   const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
   const [fieldFlash, setFieldFlash] = useTimedState(false, 900);

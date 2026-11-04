@@ -4310,6 +4310,34 @@ input[type="range"]:focus-visible {
 .gyp-surface-name { font-weight: var(--fw-semi); color: var(--text); }
 .gyp-surface-meta { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text-muted); }
 
+.gyp-room-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-1);
+}
+
+.gyp-room-btn {
+	flex: none;
+	width: 100%;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+.gyp-room-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.gyp-room-meta { flex: none; font-size: var(--fs-xs); }
+.gyp-room-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+}
+
+.gyp-total-rule {
+	height: 1px;
+	margin: var(--sp-2) 0;
+	background: var(--border);
+}
+.gyp-total-note { margin-top: var(--sp-2); }
+
 .gyp-open-row {
 	display: flex;
 	flex-wrap: wrap;
@@ -5024,6 +5052,10 @@ input[type="range"]:focus-visible {
 		margin: 3mm 0 0;
 		font-size: 7.5pt;
 		color: #555;
+	}
+
+	.gyp-print-room {
+		break-before: page;
 	}
 
 	.gyp-print-grid {

@@ -67,22 +67,22 @@ function SurfaceDrawing({ surface, orientation, widest }) {
   );
 }
 
-export function GypsumTakeOffSheet({ takeOff }) {
-  if (!takeOff || !takeOff.ready) return null;
-
+/* One room's document, without the page around it: the room sheet prints it
+   alone, the project sheet once per finished room. */
+function RoomTakeOff({ takeOff, title, projectName }) {
   const { area, sheet, surfaces, sheets, screws, compound, tape, product, layers, orientation, openings, fixing, adhesive } = takeOff;
   const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
   const build = getBuildId();
   const drawn = surfaces.filter(s => s.layout);
   const widest = Math.max(...drawn.map(s => s.width));
 
-  return ReactDOM.createPortal(
-    <div className="doc-sheet">
+  return (
+    <>
       <header className="doc-sheet-head">
         <div>
-          <h1 className="doc-sheet-title">Gypsum take-off</h1>
+          <h1 className="doc-sheet-title">Gypsum take-off{title ? ` — ${title}` : ""}</h1>
           <p className="doc-sheet-sub">
-            {nf(area.net, 2)} m² net · {mm(sheet.width)} × {mm(sheet.length)} mm
+            {projectName ? `${projectName} · ` : ""}{nf(area.net, 2)} m² net · {mm(sheet.width)} × {mm(sheet.length)} mm
             {product ? ` · ${product}` : ""}
           </p>
         </div>
@@ -195,6 +195,140 @@ export function GypsumTakeOffSheet({ takeOff }) {
           {drawn.map(s => <SurfaceDrawing key={s.id} surface={s} orientation={orientation} widest={widest} />)}
         </div>
       </section>
+    </>
+  );
+}
+
+export function GypsumTakeOffSheet({ takeOff, title = "", projectName = "" }) {
+  if (!takeOff || !takeOff.ready) return null;
+  return ReactDOM.createPortal(
+    <div className="doc-sheet">
+      <RoomTakeOff takeOff={takeOff} title={title} projectName={projectName} />
+    </div>,
+    document.body
+  );
+}
+
+const boardName = b => `${b.product ? `${b.product} ` : "Board "}${mm(b.width)} × ${mm(b.length)}`;
+const baggedNeed = g => g.bagKg ? `${g.bags} × ${nf(g.bagKg)} kg` : `${nf(g.kg, 1)} kg`;
+
+/**
+ * Every room of the job on paper: the order for all of them first — what a
+ * merchant is read — then each finished room's own sheet, one after the
+ * other, each starting on a new page. All of it from
+ * `buildGypsumProjectTakeOff` and the rooms' own take-offs.
+ */
+export function GypsumProjectSheet({ project, entries, projectName = "" }) {
+  if (!project || !project.ready || !entries) return null;
+  const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+  const build = getBuildId();
+  const priced = project.boards.some(b => b.price);
+  const blank = priced ? <><td /><td /></> : null;
+  const left = project.rooms.filter(r => !r.ready);
+
+  return ReactDOM.createPortal(
+    <div className="doc-sheet">
+      <header className="doc-sheet-head">
+        <div>
+          <h1 className="doc-sheet-title">Gypsum take-off{projectName ? ` — ${projectName}` : ""}</h1>
+          <p className="doc-sheet-sub">
+            {project.readyCount} {project.readyCount === 1 ? "surface" : "rooms and walls"} · {nf(project.area.net, 2)} m² net
+          </p>
+        </div>
+        <div className="doc-sheet-stamp">
+          <div>{printed}</div>
+          {build && <div>build {build}</div>}
+        </div>
+      </header>
+
+      <section className="doc-sheet-block">
+        <h2 className="doc-sheet-h2">Rooms</h2>
+        <table className="doc-sheet-table">
+          <thead>
+            <tr><th>Room</th><th>Board</th><th>Net area</th><th>Sheets</th>{priced && <th>Total</th>}</tr>
+          </thead>
+          <tbody>
+            {project.rooms.filter(r => r.ready).map(r => (
+              <tr key={r.id}>
+                <td>{r.name}</td>
+                <td>{r.product ? `${r.product}, ` : ""}{mm(r.sheet.width)} × {mm(r.sheet.length)}</td>
+                <td>{nf(r.net, 2)} m²</td>
+                <td>{r.sheets}</td>
+                {priced && <td>{r.total !== null ? `€${eur(r.total)}` : "—"}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {left.length > 0 && (
+          <p className="doc-sheet-warn">
+            Not included, not finished: {left.map(r => r.name).join(", ")}.
+          </p>
+        )}
+      </section>
+
+      <section className="doc-sheet-block">
+        <h2 className="doc-sheet-h2">Order</h2>
+        <table className="doc-sheet-table doc-sheet-table--order">
+          <thead>
+            <tr><th>Item</th><th>Needs</th><th>To buy</th>{priced && <><th>Price</th><th>Total</th></>}</tr>
+          </thead>
+          <tbody>
+            {project.boards.map(b => (
+              <tr key={`${b.product}|${b.width}|${b.length}|${b.price}`}>
+                <td>{boardName(b)}</td>
+                <td>{nf(b.exact, 1)} with waste, {b.rooms.join(", ")}</td>
+                <td className="doc-sheet-strong">{b.toBuy} sheets</td>
+                {priced && <><td>{b.price ? `€${eur(b.price)}` : "—"}</td><td className="doc-sheet-strong">{b.total !== null ? `€${eur(b.total)}` : "—"}</td></>}
+              </tr>
+            ))}
+            {project.adhesive.map(a => (
+              <tr key={`a|${a.product}|${a.bagKg}`}>
+                <td>Adhesive{a.product ? ` — ${a.product}` : ""}</td>
+                <td>{nf(a.kg, 1)} kg</td>
+                <td className="doc-sheet-strong">{baggedNeed(a)}</td>
+                {blank}
+              </tr>
+            ))}
+            {project.screws.count > 0 && (
+              <tr>
+                <td>Screws</td>
+                <td />
+                <td className="doc-sheet-strong">{nf(project.screws.count)} pcs</td>
+                {blank}
+              </tr>
+            )}
+            {project.filler.map(f => (
+              <tr key={`f|${f.product}|${f.bagKg}`}>
+                <td>Joint filler{f.product ? ` — ${f.product}` : ""}</td>
+                <td>{nf(f.kg, 1)} kg</td>
+                <td className="doc-sheet-strong">{baggedNeed(f)}</td>
+                {blank}
+              </tr>
+            ))}
+            <tr>
+              <td>Joint tape</td>
+              <td />
+              <td className="doc-sheet-strong">{nf(project.tape.total, 1)} m</td>
+              {blank}
+            </tr>
+          </tbody>
+        </table>
+        {project.cost && (
+          <dl className="doc-sheet-facts">
+            <div className="doc-sheet-fact--lead"><dt>Board cost{project.cost.partial ? " (priced boards only)" : ""}</dt><dd>€{eur(project.cost.total)}</dd></div>
+          </dl>
+        )}
+        <p className="doc-sheet-note">
+          Sheets add every room&apos;s count with its waste, then round up once; offcuts are not carried
+          between rooms. Bags are rounded up from the total weight. Each room&apos;s own sheet follows.
+        </p>
+      </section>
+
+      {entries.filter(e => e.takeOff.ready).map(e => (
+        <div key={e.id} className="gyp-print-room">
+          <RoomTakeOff takeOff={e.takeOff} title={e.name} projectName={projectName} />
+        </div>
+      ))}
     </div>,
     document.body
   );

@@ -381,6 +381,37 @@
 .gyp-surface-name { font-weight: var(--fw-semi); color: var(--text); }
 .gyp-surface-meta { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text-muted); }
 
+/* Gypsum rooms: the job's rooms and walls, one selector each (the on one is
+   the room on screen), then the ways to add, copy or drop one. */
+.gyp-room-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-1);
+}
+/* A column of .ctrl-dir: flex: none, or flex: 1 collapses each to a sliver
+   (see .ctrl-list > .ctrl-dir in 40-control.css). */
+.gyp-room-btn {
+	flex: none;
+	width: 100%;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+.gyp-room-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.gyp-room-meta { flex: none; font-size: var(--fs-xs); }
+.gyp-room-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-2);
+}
+/* The line between the rooms' own counts and the project's totals. */
+.gyp-total-rule {
+	height: 1px;
+	margin: var(--sp-2) 0;
+	background: var(--border);
+}
+.gyp-total-note { margin-top: var(--sp-2); }
+
 /* Gypsum openings: one row per door or window. Tag and wall switch, then the
    four sizes, then remove; on a phone the sizes drop to their own 2 × 2 block
    under the tag line, with remove staying on that line. */
