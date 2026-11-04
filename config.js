@@ -24,6 +24,7 @@ const ICONS = {
   "rows-3": "fa-solid fa-table-list",       // Nav: Pattern Layouts
   "columns-2": "fa-solid fa-columns",          // Nav: Symmetric Layout
   "layer-group": "fa-solid fa-layer-group",       // Nav: Concrete
+  "gypsum": "fa-solid fa-border-all",             // Nav: Gypsum
   "golden-phi": "fa-solid fa-dharmachakra",     // Nav: Golden Ratio
   "guider": "fa-solid fa-book-open",             // Nav: Guider
 
@@ -156,6 +157,12 @@ var PAGES = [{
   desc: "Estimate bags, mass and cost from area and layer thickness.",
   icon: "layer-group"
 }, {
+  id: "gypsum",
+  label: "Gypsum",
+  title: "Gypsum",
+  desc: "Lay out plasterboard on walls and ceilings and count sheets, screws, compound and tape.",
+  icon: "gypsum"
+}, {
   id: "pipe-wrap",
   label: "Pipe Wrap",
   title: "Pipe Wrap Calculator",
@@ -274,6 +281,43 @@ const DEFAULT_CONCRETE_PRESETS = [
     rate: 2.2,
     bagKg: 25,
     bagPrice: 3.6
+  }
+];
+
+/* Gypsum board products. Rates are the makers' own published figures, single
+   layer on a stud wall, per m² of board:
+   - Knauf: TN screws ~20 pcs/m² (Knauf AT screw datasheet); Uniflott
+     ~0.25 kg/m² on 12.5mm HRAK board (Uniflott datasheet).
+   - Gyproc: ~44 screws per 1200×2400 board at 450 studs ≈ 13 pcs/m² (Gyproc
+     SE installation guide); joint filler ~74 m² per 25 kg ≈ 0.34 kg/m².
+   Prices are left blank — they are the merchant's, not the maker's. */
+const DEFAULT_GYPSUM_PRESETS = [
+  {
+    name: "Knauf GKB 12.5",
+    sheetW: 1250,
+    sheetL: 2600,
+    screwRate: 20,
+    compoundRate: 0.25,
+    bagKg: 25,
+    sheetPrice: ""
+  },
+  {
+    name: "Gyproc GN 13",
+    sheetW: 1200,
+    sheetL: 2600,
+    screwRate: 13,
+    compoundRate: 0.34,
+    bagKg: 25,
+    sheetPrice: ""
+  },
+  {
+    name: "",
+    sheetW: "",
+    sheetL: "",
+    screwRate: "",
+    compoundRate: "",
+    bagKg: "",
+    sheetPrice: ""
   }
 ];
 

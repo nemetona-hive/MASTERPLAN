@@ -3837,6 +3837,10 @@ input[type="range"]:focus-visible {
 	--pw-preset-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)) var(--pw-preset-action-width);
 }
 
+.pw-preset-grid--gypsum {
+	--pw-preset-columns: minmax(0, 2fr) repeat(6, minmax(0, 1fr)) var(--pw-preset-action-width);
+}
+
 .pw-preset-grid--dimensions {
 	--pw-preset-columns: minmax(0, 2.2fr) repeat(2, minmax(0, 1fr)) var(--pw-preset-action-width);
 }
@@ -4298,6 +4302,16 @@ input[type="range"]:focus-visible {
 
 .result-card-primary { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
 .result-card-print { width: 100%; justify-content: center; }
+
+.gyp-surface-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	flex-wrap: wrap;
+}
+.gyp-surface-name { font-weight: var(--fw-semi); color: var(--text); }
+.gyp-surface-meta { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text-muted); }
 @media (max-width: 1024px) {
 	.layout-split {
 		grid-template-columns: 1fr;

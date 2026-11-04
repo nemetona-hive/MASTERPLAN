@@ -22,7 +22,7 @@ error shows a message with "Try again" and leaves the nav, header and theme
 control working. Hash links need no server support, so deep links work
 under the `/MASTERPLAN/` base path on Pages.
 
-Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`,
+Current pages: `home`, `pattern-layout`, `symmetric-layout`, `concrete`, `gypsum`,
 `golden-ratio`, `pipe-wrap`, `guider`, `timesheet`.
 
 Sidebar interaction (Nav.jsx): Ctrl/Cmd+B toggles collapse globally (App.jsx);
@@ -51,8 +51,41 @@ All calculators and pages are stored as standalone files inside `src/components/
 | `golden-ratio` | `SheetGoldenRatio` | `components/GoldenRatio.jsx` | Calculates Phi sequences |
 | `pipe-wrap` | `PipeWrapCalculator` | `components/PipeWrapCalculator.jsx` | Pipe wrap length calculator with SVG diagram |
 | `concrete` | `SheetConcrete` | `components/Concrete.jsx` | Concrete consumption estimator |
+| `gypsum` | `SheetGypsum` | `components/Gypsum.jsx` | Plasterboard layout and take-off: sheets, screws, compound, tape |
 | `guider` | `SheetGuider` | `components/Guider.jsx` | Reference/guide pages (e.g. electrical wiring diagrams) with an entry list panel |
 | `timesheet` | `SheetTimesheet` | `components/Timesheet.jsx` | Work hours calculator |
+
+## Gypsum tool
+
+Metric plasterboard estimator, modelled on the inputs of layoutdrywall.org
+(room or single wall, ceiling, doors and windows, sheet size, fixing
+direction, waste, price) and extended with a layout diagram per surface and
+a second layer. All figures, and the diagrams, come from
+`utils/gypsum-take-off.js`; the page and `GypsumTakeOffSheet` only render it.
+
+- **The layout is the count.** Each surface is cut into lanes of board width
+  (vertical fixing: columns up the wall; horizontal: rows along it), each lane
+  into pieces, and the pieces are packed first-fit-decreasing back into stock
+  sheets, per lane width — a ripped strip's sheet cannot also supply a full
+  width piece, but two 600 strips come from one 1200 sheet. Waste % goes on
+  top for breakage, not cutting, so it defaults to **5**, not the reference
+  site's 10 (that 10 stood in for cutting it did not model).
+- **End joints** only exist where a lane is longer than a sheet. Alternate
+  lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
+  moves the lane's joint instead of leaving a sliver.
+- **Openings** come off the *area* (screws, compound) and never off sheets:
+  boards are hung whole and cut out. Deliberately conservative.
+- **Two layers** double sheets, screws and compound. Tape is face layer only.
+  Tape = board joints from the layout, plus four internal corners and, with a
+  ceiling, the ceiling angle.
+- Equal-sized surfaces are laid out and drawn once with a count (`×2`, `×4`).
+- The diagram is `LayoutVisualization`; the model emits rows in the
+  `simulation.js` shape with `meta.exactRows`, which draws each lane at its
+  real width so a ripped last lane is narrow.
+- **Board presets** (`DEFAULT_GYPSUM_PRESETS`, save key `gypsumPresets`) carry
+  sheet size and consumption. Knauf: 20 screws/m², Uniflott 0.25 kg/m².
+  Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c), 0.34 kg/m²
+  (74 m² per 25 kg). Single layer, makers' figures; sources in `config.js`.
 
 ## Golden Ratio tool
 

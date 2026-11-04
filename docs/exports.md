@@ -26,9 +26,11 @@ alone is over the 250 KiB budget `components.js` is held to — to reproduce wha
 every platform already does, with worse font handling. MONEYFLOW ships no PDF
 dependency either.
 
-Two documents ship: the **cut list** (`utils/cut-list.js` →
-`components/CutListSheet.jsx`, from the pattern-layout page) and the **concrete
-take-off** (`utils/take-off.js` → `components/TakeOffSheet.jsx`). A "take-off"
+Three documents ship: the **cut list** (`utils/cut-list.js` →
+`components/CutListSheet.jsx`, from the pattern-layout page), the **concrete
+take-off** (`utils/take-off.js` → `components/TakeOffSheet.jsx`) and the
+**gypsum take-off** (`utils/gypsum-take-off.js` →
+`components/GypsumTakeOffSheet.jsx`). A "take-off"
 is the trade term — you take quantities off a drawing and turn them into a list
 of what to buy.
 

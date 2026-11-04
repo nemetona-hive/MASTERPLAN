@@ -128,7 +128,7 @@ export function LayoutEmptyState({ message, steps, visual = "mosaic" }) {
 
 
 function buildLayoutSvgRects(result, orderedRows, rowStart) {
-  const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa, hasJoints } = result.meta;
+  const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa, hasJoints, exactRows } = result.meta;
   const isV = direction === "V";
   const stdRowH = isV ? PPi : PLa;
   // Use simulation dimensions for canvas sizing (swapped in V mode)
@@ -142,7 +142,9 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
   orderedRows.forEach(({ row, idx }) => {
     const rowSize = Number.isFinite(row.h) && row.h > 0 ? row.h : 1;
     // Standard Lane Rule: Each row gets a full panel-width lane for readability/labels.
-    const visualRowSize = hasJoints ? rowSize : (!isV ? stdRowH : rowSize);
+    // `exactRows` (the gypsum page) opts out: a ripped last lane is drawn at
+    // its real width, so the drawing is the wall to scale.
+    const visualRowSize = hasJoints || exactRows ? rowSize : (!isV ? stdRowH : rowSize);
 
     rowRects.push({
       x: isV ? visualCursor : 0,

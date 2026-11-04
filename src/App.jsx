@@ -1,6 +1,7 @@
 import { SessionDraftContext } from "./utils/session-state.js";
 import { React, ReactDOM, useState } from "./react-globals.js";
 import { SheetConcrete } from "./components/Concrete.jsx";
+import { SheetGypsum } from "./components/Gypsum.jsx";
 import { SheetGoldenRatio } from "./components/GoldenRatio.jsx";
 import { SheetGuider } from "./components/Guider.jsx";
 import { SheetHome } from "./components/Home.jsx";
@@ -83,6 +84,8 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
 
   if (page === "concrete") {
     content = <SheetConcrete />;
+  } else if (page === "gypsum") {
+    content = <SheetGypsum />;
   } else if (page === "timesheet") {
     content = <SheetTimesheet />;
   } else if (page === "golden-ratio") {

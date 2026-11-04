@@ -50,6 +50,7 @@ function isLocalRequest(req) {
 // ==========================================
 const DEFAULT_WRITES = {
   concretePresets: "DEFAULT_CONCRETE_PRESETS",
+  gypsumPresets: "DEFAULT_GYPSUM_PRESETS",
   goldenRatioDefaults: "DEFAULT_GR",
   materialPresets: "DEFAULT_MATERIAL_PRESETS",
   surfacePresets: "DEFAULT_SURFACE_PRESETS"
@@ -86,6 +87,28 @@ function validateConcretePresets(value) {
       rate: toNumberOrBlank(preset.rate, 0.01),
       bagKg: toNumberOrBlank(preset.bagKg, 0.01),
       bagPrice: toNumberOrBlank(preset.bagPrice)
+    };
+  });
+}
+
+function validateGypsumPresets(value) {
+  if (!Array.isArray(value) || value.length > 128) {
+    throwValidationError("gypsumPresets must be an array");
+  }
+
+  return value.map((preset, idx) => {
+    if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
+      throwValidationError(`gypsumPresets[${idx}] must be an object`);
+    }
+
+    return {
+      name: toStringField(preset.name),
+      sheetW: toNumberOrBlank(preset.sheetW, 100, 8000),
+      sheetL: toNumberOrBlank(preset.sheetL, 100, 8000),
+      screwRate: toNumberOrBlank(preset.screwRate, 0.01, 1000),
+      compoundRate: toNumberOrBlank(preset.compoundRate, 0.001, 100),
+      bagKg: toNumberOrBlank(preset.bagKg, 0.01),
+      sheetPrice: toNumberOrBlank(preset.sheetPrice)
     };
   });
 }
@@ -159,6 +182,7 @@ function validateSurfacePresets(value) {
 
 const DEFAULT_VALIDATORS = {
   concretePresets: validateConcretePresets,
+  gypsumPresets: validateGypsumPresets,
   goldenRatioDefaults: validateGoldenRatioDefaults,
   materialPresets: validateMaterialPresets,
   surfacePresets: validateSurfacePresets
