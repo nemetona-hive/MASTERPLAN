@@ -39,7 +39,7 @@ function Seg({ value, options, onChange, label, inline = false }) {
 /* A room or wall's own settings, beside its `job` of typed fields. */
 const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw" };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
-const ACTIVE = Object.values(LIBRARIES).map(lib => lib.draftKeys[1]);
+const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
 /* The fields that describe the surface itself. A room added from another
    keeps everything else — board, fixing, filler, waste — and starts these
    empty, since two rooms are rarely one size but are usually one order. */
@@ -109,9 +109,9 @@ export function SheetGypsum({ projectName = "" }) {
   /* Three preset libraries, each filling its own fields (GypsumPresets.jsx).
      The lists are the project's; the applied preset is the room's. */
   const merge = values => setJob(current => ({ ...current, ...values }));
-  const [activeBoard, setActiveBoard] = roomState(LIBRARIES.board.draftKeys[1]);
-  const [activeFiller, setActiveFiller] = roomState(LIBRARIES.filler.draftKeys[1]);
-  const [activeAdhesive, setActiveAdhesive] = roomState(LIBRARIES.adhesive.draftKeys[1]);
+  const [activeBoard, setActiveBoard] = roomState(LIBRARIES.board.activeKey);
+  const [activeFiller, setActiveFiller] = roomState(LIBRARIES.filler.activeKey);
+  const [activeAdhesive, setActiveAdhesive] = roomState(LIBRARIES.adhesive.activeKey);
   const board = usePresetLibrary(LIBRARIES.board, { onApply: merge, active: activeBoard ?? null, setActive: setActiveBoard });
   const filler = usePresetLibrary(LIBRARIES.filler, { onApply: merge, active: activeFiller ?? null, setActive: setActiveFiller });
   const adhesive = usePresetLibrary(LIBRARIES.adhesive, { onApply: merge, active: activeAdhesive ?? null, setActive: setActiveAdhesive });

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { React } from "../src/react-globals.js";
-import { ControlPanel, DetailSection, Icon, NumInput, Row, Section, Stack } from "../src/shared.jsx";
+import { ControlPanel, Icon, NumInput, Row, Section, Stack } from "../src/shared.jsx";
 
 describe("Icon", () => {
   it("resolves a name through the ICONS map from config.js", () => {
@@ -55,20 +55,14 @@ describe("Stack and Row", () => {
   });
 });
 
-// Section, ControlPanel and DetailSection are one Collapsible wearing three
-// variants. Collapsible itself is not exported, so these are the real surface.
-describe("Section / ControlPanel / DetailSection", () => {
-  it("open by default, except the detail variant", () => {
-    // A detail section is the progressive-disclosure one — it has to start shut
-    // or the "primary result first" layout shows everything at once.
+// Section and ControlPanel are one Collapsible wearing two variants. Collapsible itself is not exported, so these are the real surface.
+describe("Section / ControlPanel", () => {
+  it("open by default", () => {
     render(<Section title="Surface"><p>section body</p></Section>);
     expect(screen.getByText("section body")).toBeInTheDocument();
 
     render(<ControlPanel title="Controls"><p>panel body</p></ControlPanel>);
     expect(screen.getByText("panel body")).toBeInTheDocument();
-
-    render(<DetailSection title="Detail"><p>detail body</p></DetailSection>);
-    expect(screen.queryByText("detail body")).not.toBeInTheDocument();
   });
 
   it("toggles on a click of the head", async () => {

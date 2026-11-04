@@ -1016,25 +1016,6 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	color: var(--color-white);
 }
 
-.num-note {
-	display: flex;
-	align-items: baseline;
-	gap: var(--sp-2);
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	font-weight: var(--fw-med);
-	color: var(--text);
-	padding-inline-start: var(--sp-2);
-	border-inline-start: 2px solid var(--accent);
-}
-
-.num-note-lbl {
-	font-size: var(--fs-sm);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--text-muted);
-}
-
 .num-row {
 	display: flex;
 	gap: var(--sp-2);
@@ -2883,8 +2864,7 @@ input[type="range"]:focus-visible {
 }
 
 .data-control .control-panel .panel-head.disclosure,
-.section-head.disclosure,
-.detail-section-head.disclosure {
+.section-head.disclosure {
   height: var(--ctl-h);
   padding-block: 0;
 	padding-inline: var(--sp-3);
@@ -3886,20 +3866,6 @@ input[type="range"]:focus-visible {
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
-.pw-updated-note {
-  font-family: var(--mono);
-  font-size: var(--fs-xs);
-
-  color: var(--success);
-  margin-left: var(--sp-2);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.pw-updated-note.pw-updated-note-visible {
-  opacity: 1;
-}
-
 .pw-preset-lbl-hide {
 	display: none;
 }
@@ -4084,36 +4050,6 @@ input[type="range"]:focus-visible {
 	color: var(--danger);
 }
 
-.detail-section {
-	margin-top: var(--sp-4);
-	border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	padding-top: var(--sp-3);
-}
-
-.detail-section-head {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-gray-opa80);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: var(--sp-2) 14px;
-	transition: color 0.2s ease;
-}
-
-@media (hover: hover) {
-	.detail-section-head:hover {
-		color: var(--color-primary);
-	}
-}
-
-.detail-section-body {
-	padding: var(--sp-3) 14px 0;
-}
-
 .unboxed {
 	border: none !important;
 	background: transparent !important;
@@ -4148,8 +4084,7 @@ input[type="range"]:focus-visible {
 
 @media (hover: hover) {
 	.section-head:hover .sys-head-toggle,
-	.panel-head:hover .sys-head-toggle,
-	.detail-section-head:hover .sys-head-toggle {
+	.panel-head:hover .sys-head-toggle {
 		background: var(--color-primary);
 		color: var(--color-darkblue);
 	}

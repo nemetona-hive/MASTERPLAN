@@ -9,7 +9,7 @@ imports, so adding a file means importing it, nothing else.
 
 ```
 react-globals.js  → React, ReactDOM, useState (re-exported window globals)
-shared.jsx        → Icon, RangeSlider, NumInput, Section, ControlPanel, DetailSection, Row,
+shared.jsx        → Icon, RangeSlider, NumInput, Section, ControlPanel, Row,
                     Stack, Text, Modal, MaterialPresetDropdown, SaveDefaultsButton,
                     useTimedState, useTimedSet, useClickOutside, useModeExit,
                     useDialogFocus, useDropdownKeyboard, useDocHistory,

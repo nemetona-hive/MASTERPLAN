@@ -216,7 +216,8 @@ a second layer. All figures, and the diagrams, come from
   `config.js`.
 
   The libraries are data (`LIBRARIES` in `components/GypsumPresets.jsx`), and
-  one hook and three components serve all of them: `usePresetLibrary`
+  one hook and the components in `components/PresetLibrary.jsx` serve all of
+  them, and Concrete's too (below): `usePresetLibrary`
   (presets, the applied one, apply/save), `PresetField` (a field with the
   shared `MaterialPresetDropdown`, which takes a `describe` for presets that
   are not sizes), `ManagePresetsButton` (local mode only, as on Pattern
@@ -225,6 +226,32 @@ a second layer. All figures, and the diagrams, come from
   `detail` string for the same reason. The server keeps each library to its
   own fields (`gypsumLibraryValidator`), so a board preset saved before the
   split drops the filler and adhesive figures it used to carry.
+
+## Concrete tool
+
+Self-levelling and screed consumption: area (typed, or length × width),
+thickness (an average, or four corners averaged), then kilograms and bags from
+the product's rate. All figures come from `utils/take-off.js`; the page and
+`TakeOffSheet` render it.
+
+- **Product presets are on the shared preset system** (`components/PresetLibrary.jsx`,
+  the one Gypsum's three libraries use), as `CONCRETE_LIBRARY` in
+  `Concrete.jsx`. The consumption field opens the product list; applying one
+  fills consumption, bag weight and bag price, and the product is named above
+  the Consumption & Packaging section, and on the printed take-off. A hand
+  edit of any of the three stops naming it. A preset missing its rate or bag
+  weight is refused with a message, not applied half-way.
+- **Manage Presets** opens the table in a dialog, and shows only where Save
+  Defaults can write (local mode), as on Gypsum and Pattern Layouts. It
+  replaced a collapsible table that sat on the page everywhere, GitHub Pages
+  included, where its Save Defaults could not save.
+- The keys did not change: `DEFAULT_CONCRETE_PRESETS` / `concretePresets`
+  (name, rate, bagKg, bagPrice), and the drafts `Concrete.jsx:presets` and
+  `Concrete.jsx:activePreset`, so saved defaults and projects carry over.
+- Gone with the old system: its own copy of the dropdown, the "updated" tag
+  that flashed in the section head, `NumInput`'s `note` (the preset's name
+  under the field, Concrete's only), and `DetailSection`, which nothing else
+  used.
 
 ## Golden Ratio tool
 

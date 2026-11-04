@@ -1,12 +1,43 @@
 import { useSessionState } from "../utils/session-state.js";
-import { parseMeasurement } from "../utils/measurements.cjs";
 import { React } from "../react-globals.js";
-import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { Icon, NumInput, Row, Stack, useTimedState } from "../shared.jsx";
+import { ManagePresetsButton, PresetField, PresetManager, presetHeader, usePresetLibrary } from "./PresetLibrary.jsx";
 import { TakeOffSheet } from "./TakeOffSheet.jsx";
 import { buildTakeOff } from "../utils/take-off.js";
 import { ProjectSection } from "./ProjectMenu.jsx";
 
 // ── Concrete Calculator ────────────────────────────────────────────────────────
+
+/* The product library, on the shared preset system (PresetLibrary.jsx) that
+   Gypsum's three use: a list on the consumption field, the applied product
+   named above its section, and the table behind Manage Presets where Save
+   Defaults can write. The keys are the ones this page has always used, so
+   saved defaults (`concretePresets`) and projects carry over. */
+export const CONCRETE_LIBRARY = {
+  id: "concrete",
+  title: "Product Presets",
+  saveKey: "concretePresets",
+  draftKey: "Concrete.jsx:presets",
+  idBase: "preset",
+  defaults: () => (typeof DEFAULT_CONCRETE_PRESETS !== "undefined" ? DEFAULT_CONCRETE_PRESETS : [
+    { name: "weber S-100", rate: 2, bagKg: 25, bagPrice: 4 },
+    { name: "weberfloor 200 RAPID", rate: 1.7, bagKg: 20, bagPrice: 15 }
+  ]),
+  columns: [
+    ["rate", "kg/m²·mm", "Consumption"],
+    ["bagKg", "Bag kg", "Bag weight"],
+    ["bagPrice", "Price €", "Bag price"]
+  ],
+  required: ["rate", "bagKg"],
+  requiredText: "a consumption rate and bag weight",
+  grid: "pw-preset-grid--product",
+  detail: p => [`${p.rate} kg/m²·mm`, p.bagKg && `${p.bagKg} kg bag`].filter(Boolean).join(" · "),
+  describe: p => ({
+    meta: [p.bagKg && `${p.bagKg} kg`, p.bagPrice !== "" && p.bagPrice != null && `${p.bagPrice} €`].filter(Boolean).join(" · "),
+    value: p.rate, unit: "kg"
+  }),
+  note: "Consumption is the maker's kg per m² per 1 mm of layer."
+};
 
 export function SheetConcrete() {
   const [areaMode,  setAreaMode]  = useSessionState("Concrete.jsx:areaMode", "direct"); // "direct" | "dims"
@@ -29,46 +60,17 @@ export function SheetConcrete() {
   const [bagKg,    setBagKg]    = useSessionState("Concrete.jsx:bagKg", "");
   const [bagPrice, setBagPrice] = useSessionState("Concrete.jsx:bagPrice", "");
 
-  const [presetError, setPresetError] = React.useState("");
-  const [activePreset, setActivePreset] = useSessionState("Concrete.jsx:activePreset", null);
-  const [flashIdx,     setFlashIdx]     = useTimedState(null, 1200);
-  const [fieldFlash,   setFieldFlash]   = useTimedState(false, 900);
-  const [showUpdated,  setShowUpdated]  = useTimedState(false, 2500);
   /* Reset arms on the first click and fires on the second. useTimedState is
      already how this file holds transient UI state, and it disarms itself, so
      a click made and thought better of expires on its own. */
   const [resetArmed,   armReset, disarmReset] = useTimedState(false, 4000);
-  const rateInputRef   = React.useRef(null);
 
-  const [showRatePresets, setShowRatePresets] = React.useState(false);
+  const [activePreset, setActivePreset] = useSessionState("Concrete.jsx:activePreset", null);
+  const library = usePresetLibrary(CONCRETE_LIBRARY, {
+    active: activePreset, setActive: setActivePreset,
+    onApply: values => { setRate(values.rate); setBagKg(values.bagKg); setBagPrice(values.bagPrice); }
+  });
 
-  // Product presets (quick fill)
-  const [presets, setPresets] = useSessionState("Concrete.jsx:presets", () =>
-    (typeof DEFAULT_CONCRETE_PRESETS !== "undefined"
-      ? DEFAULT_CONCRETE_PRESETS
-      : [
-          { name: "weber S-100", rate: 2, bagKg: 25, bagPrice: 4 },
-          { name: "weberfloor 200 RAPID", rate: 1.7, bagKg: 20, bagPrice: 15 },
-          { name: "", rate: "", bagKg: "", bagPrice: "" }
-        ]
-    ).map(p => ({ ...p }))
-  );
-
-  const [presetSaveStatus, setPresetSaveStatus] = useTimedState("");
-  const [saveError, setSaveError] = React.useState("");
-
-  const saveConcreteDefaults = async () => {
-    setPresetSaveStatus("saving", 0);
-    try {
-      await safeSaveStaticDefaults("concretePresets", presets);
-      setPresetSaveStatus("saved");
-    } catch (err) {
-      console.error(err);
-      setSaveError(err.message || String(err));
-      setPresetSaveStatus("error");
-    }
-  };
-  
   const resetAll = () => {
     setAreaManual("");
     setLenMm("");
@@ -79,9 +81,6 @@ export function SheetConcrete() {
     setBagKg("");
     setBagPrice("");
     setActivePreset(null);
-    setFlashIdx(null);
-    setFieldFlash(false);
-    setShowUpdated(false);
   };
 
   const handleReset = () => {
@@ -93,46 +92,8 @@ export function SheetConcrete() {
     resetAll();
   };
 
-  const updatePreset = (idx, field, val) => {
-    const next = [...presets];
-    next[idx] = { ...next[idx], [field]: val };
-    setPresets(next);
-  };
-
-  const addPreset = () => {
-    setPresets([...presets, { name: "", rate: "", bagKg: "", bagPrice: "" }]);
-  };
-
-  const applyPreset = (p, idx) => {
-    const values = [p.rate, p.bagKg, p.bagPrice].map(parseMeasurement);
-    if (!Number.isFinite(values[0]) || values[0] <= 0 || !Number.isFinite(values[1]) || values[1] <= 0 ||
-        (values[2] !== null && (!Number.isFinite(values[2]) || values[2] < 0))) {
-      setPresetError("Enter a positive consumption rate and bag weight, and a valid price, before applying this preset.");
-      return;
-    }
-    setPresetError("");
-    setRate(values[0]);
-    setBagKg(values[1]);
-    setBagPrice(values[2] ?? "");
-
-    setActivePreset(idx);
-    setFlashIdx(idx);
-    setFieldFlash(true);
-    setShowUpdated(true);
-  };
-
-  const handleRateChange     = v => { if (v !== rate)     setActivePreset(null); setRate(v); };
-  const handleBagKgChange    = v => { if (v !== bagKg)    setActivePreset(null); setBagKg(v); };
-  const handleBagPriceChange = v => { if (v !== bagPrice) setActivePreset(null); setBagPrice(v); };
-
-  useClickOutside([rateInputRef], () => setShowRatePresets(false));
-
-  const validPresets = presets.filter(p => p.name);
-  const { hoveredIndex, onKeyDown } = useDropdownKeyboard(
-    showRatePresets ? validPresets.length : 0,
-    (idx) => applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])),
-    () => setShowRatePresets(false)
-  );
+  /* A hand edit means the values are no longer the preset's. */
+  const productChange = (current, set) => v => { if (v !== current) library.edited(); set(v); };
 
   /* ── Derived values ────────────────────────────────────────────────────────
    *
@@ -147,7 +108,7 @@ export function SheetConcrete() {
     areaMode, areaManual, lenMm, widMm,
     thickMode, avgH, ca, cb, cc, cd,
     rate, bagKg, bagPrice,
-    product: activePreset !== null && presets[activePreset] ? presets[activePreset].name : ""
+    product: library.selected?.name || ""
   });
 
   /* Staged for printing, and printed from an EFFECT rather than the click:
@@ -162,7 +123,7 @@ export function SheetConcrete() {
   }, [printTakeOff]);
 
   React.useEffect(() => { setPrintTakeOff(null); },
-    [areaMode, areaManual, lenMm, widMm, thickMode, avgH, ca, cb, cc, cd, rate, bagKg, bagPrice, activePreset, presets]);
+    [areaMode, areaManual, lenMm, widMm, thickMode, avgH, ca, cb, cc, cd, rate, bagKg, bagPrice, activePreset, library.presets]);
 
   const area = takeOff.area.value;
   const computedDimsArea = takeOff.area.fromDims;
@@ -274,187 +235,35 @@ export function SheetConcrete() {
             {/* ── Consumption & packaging ── */}
             <div className="section unboxed">
               <div className="section-head">
-                <div className="u-flex-row" style={{ flex: 1, alignItems: 'center' }}>
-                  <span>Consumption & Packaging</span>
-                  <span className={"pw-updated-note" + (showUpdated ? " pw-updated-note-visible" : "")}>
-                    <Icon name="check" /> updated
-                  </span>
-                </div>
+                <span>Consumption & Packaging</span>
               </div>
               <div className="section-body">
+                {presetHeader(library)}
                 <div className="concrete-split-wrap section-pad">
-                  {/* Left: Consumption */}
-                  <Stack gap={3}>
-                    <div 
-                      className={"num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : "")}
-                      ref={rateInputRef}
-                    >
-                      <NumInput 
-                        id="input-slf-rate" 
-                        label="Consumption (kg/m²·mm)"
-                        note={activePreset !== null ? presets[activePreset]?.name : ""}
-                        value={rate} 
-                        min={0.1} 
-                        onChange={handleRateChange} 
-                        req={hasAnyInput && !rate}
-                        presetsOpen={showRatePresets}
-                        presetHoveredIndex={hoveredIndex}
-                        showActionLabels
-                        onTogglePresets={() => setShowRatePresets(open => !open)}
-                        onCommit={() => setShowRatePresets(false)}
-                        onKeyDown={onKeyDown}
-                      />
-                      
-                      {showRatePresets && validPresets.length > 0 && (
-                        <div className="rate-presets-dropdown">
-                          <div className="rate-presets-header">Quick Presets</div>
-                          <div id="input-slf-rate-presets" className="rate-presets-list" role="listbox" aria-label="Quick presets">
-                            {validPresets.map((p, idx) => {
-                              const originalIdx = presets.indexOf(p);
-                              const isActive = activePreset === originalIdx;
-                              const isHovered = hoveredIndex === idx;
-                              return (
-                                <div 
-                                  key={idx} 
-                                  id={`input-slf-rate-preset-${idx}`}
-                                  role="option"
-                                  aria-selected={isActive}
-                                  className={"rate-preset-item" + (isActive ? " active" : "") + (isHovered ? " focused" : "")}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    applyPreset(p, originalIdx);
-                                    setShowRatePresets(false);
-                                  }}
-                                >
-                                  <div className="rate-preset-info">
-                                    <span className="rate-preset-name">{p.name}</span>
-                                    <span className="rate-preset-meta">{p.bagKg}kg · {p.bagPrice}€</span>
-                                  </div>
-                                  <span className="rate-preset-val">{p.rate} <small>kg</small></span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  {/* Left: Consumption. ctrl-list keeps Manage Presets at its
+                      height: a .ctrl-dir in a column otherwise collapses. */}
+                  <Stack gap={3} className="ctrl-list">
+                    <PresetField library={library} field="rate" id="input-slf-rate" label="Consumption (kg/m²·mm)"
+                      className="num-input-wrap-relative" value={rate} min={0.1}
+                      onChange={productChange(rate, setRate)} req={hasAnyInput && !rate} />
+                    <ManagePresetsButton library={library} />
                   </Stack>
 
                   <div className="concrete-split-divider" />
 
                   {/* Right: Packaging */}
                   <Stack gap={3}>
-                    <div className={fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-slf-bagkg" label="Bag weight (kg)" value={bagKg} min={1} onChange={handleBagKgChange} req={hasAnyInput && !bagKg} />
+                    <div className={library.fieldFlash ? "num-input-flash" : ""}>
+                      <NumInput id="input-slf-bagkg" label="Bag weight (kg)" value={bagKg} min={1} onChange={productChange(bagKg, setBagKg)} req={hasAnyInput && !bagKg} />
                     </div>
-                    <div className={fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-slf-bagprice" label="Bag price (€)" value={bagPrice} min={0} onChange={handleBagPriceChange} />
+                    <div className={library.fieldFlash ? "num-input-flash" : ""}>
+                      <NumInput id="input-slf-bagprice" label="Bag price (€)" value={bagPrice} min={0} onChange={productChange(bagPrice, setBagPrice)} />
                     </div>
                   </Stack>
                 </div>
               </div>
             </div>
-
-            {presetError && <p role="alert" className="input-error">{presetError}</p>}
-            {/* ── Product Presets ── */}
-            <DetailSection title="Product Presets" open={false}>
-              <Stack gap={4}>
-                <Stack gap={3}>
-                  <div className="pw-preset-header pw-preset-grid--product">
-                    <span>Product Name</span>
-                    <span>kg/m²·mm</span>
-                    <span>Bag kg</span>
-                    <span>Price €</span>
-                    <span>&nbsp;</span>
-                  </div>
-                  {presets.map((p, idx) => (
-                    <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
-                      <div className="pw-preset-fields pw-preset-grid--product">
-                        <div>
-                          <span className="pw-preset-lbl-hide">Product Name</span>
-                          <input
-                            id={`preset-name-${idx}`}
-                            aria-label={`Product name ${idx}`}
-                            name={`preset-name-${idx}`}
-                            type="text"
-                            className="num-input"
-                            value={p.name}
-                            onChange={e => updatePreset(idx, "name", e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <span className="pw-preset-lbl-hide">kg/m²·mm</span>
-                          <input
-                            id={`preset-rate-${idx}`}
-                            aria-label={`Consumption ${idx}`}
-                            name={`preset-rate-${idx}`}
-                            type="text"
-                            inputMode="decimal"
-                            autoComplete="off"
-                            className="num-input"
-                            value={p.rate}
-                            onChange={e => updatePreset(idx, "rate", e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <span className="pw-preset-lbl-hide">Bag kg</span>
-                          <input
-                            id={`preset-bagkg-${idx}`}
-                            aria-label={`Bag weight ${idx}`}
-                            name={`preset-bagkg-${idx}`}
-                            type="text"
-                            inputMode="decimal"
-                            autoComplete="off"
-                            className="num-input"
-                            value={p.bagKg}
-                            onChange={e => updatePreset(idx, "bagKg", e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <span className="pw-preset-lbl-hide">Price €</span>
-                          <input
-                            id={`preset-price-${idx}`}
-                            aria-label={`Bag price ${idx}`}
-                            name={`preset-price-${idx}`}
-                            type="text"
-                            inputMode="decimal"
-                            autoComplete="off"
-                            className="num-input"
-                            value={p.bagPrice}
-                            onChange={e => updatePreset(idx, "bagPrice", e.target.value)}
-                          />
-                        </div>
-                        <div className="num-wrap" style={{ justifyContent: "center" }}>
-                          <span className="pw-preset-lbl-hide">&nbsp;</span>
-                          {activePreset === idx
-                            ? <div className="pw-preset-badge">active</div>
-                            : <button 
-                                className={"ctrl-dir on pw-preset-apply" + (flashIdx === idx ? " pw-preset-flash" : "")} 
-                                onClick={() => applyPreset(p, idx)}
-                                title="Apply these values to the calculator"
-                              >
-                                {flashIdx === idx ? <><Icon name="check" /> Applied</> : <><Icon name="check" /> Apply</>}
-                              </button>
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </Stack>
-
-                <Stack direction="row" gap={2}>
-                  <button className="ctrl-dir" onClick={addPreset}>
-                    <Icon name="plus" /> Add Row
-                  </button>
-                  <SaveDefaultsButton status={presetSaveStatus} errorMessage={saveError} onClick={saveConcreteDefaults} />
-                </Stack>
-
-                <div className="pw-formula-text">
-                  Fill product data above and click "Apply" to update the calculator values.
-                </div>
-              </Stack>
-            </DetailSection>
+            {library.error && !library.managing && <p role="alert" className="input-error">{library.error}</p>}
 
             {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
             {/* ── Calculations & Details ── */}
@@ -562,6 +371,7 @@ export function SheetConcrete() {
         </div>
 
       </Stack>
+      <PresetManager library={library} />
       <TakeOffSheet takeOff={printTakeOff} />
     </div>
   );

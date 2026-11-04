@@ -34,7 +34,7 @@ try {
   await page.locator("#input-slf-rate").press("Enter");
   await page.waitForFunction(() => Number(document.getElementById("input-slf-rate").value) > 0);
   check(Number(await page.locator("#input-slf-rate").inputValue()) > 0, "Full-App Enter applies a preset");
-  const presets = page.getByRole("button", { name: "Product Presets", exact: true });
+  const presets = page.getByRole("button", { name: "Manage product presets", exact: true });
   await presets.focus(); await page.keyboard.press("Enter");
   check(await page.locator("#preset-rate-0").isVisible(), "Keyboard opens product presets");
   await enter("preset-rate-0", "1,7");
@@ -178,9 +178,10 @@ try {
 
   await touchPage.setViewportSize({ width: 390, height: 500 });
   await touchPage.goto(`${base}/#concrete`);
-  await touchPage.getByRole("button", { name: "Product Presets", exact: true }).tap();
-  check(await touchPage.locator("#preset-rate-0").isVisible(), "Touch opens a disclosure");
-  await touchPage.getByRole("button", { name: "Product Presets", exact: true }).tap();
+  await touchPage.getByRole("button", { name: "Manage product presets", exact: true }).tap();
+  check(await touchPage.locator("#preset-rate-0").isVisible(), "Touch opens the product presets dialog");
+  await touchPage.getByRole("button", { name: "Close", exact: true }).tap();
+  check(await touchPage.locator("#preset-rate-0").count() === 0, "Touch closes the product presets dialog");
   for (const [id, value] of [["input-slf-area", "20"], ["input-slf-havg", "100"], ["input-slf-rate", "2"], ["input-slf-bagkg", "25"]]) {
     await touchPage.locator(`#${id}`).fill(value);
     await touchPage.locator(`#${id}`).press("Tab");

@@ -5,7 +5,7 @@
 ## UI components (from shared.jsx)
 
 - `<Icon name="..." />` — renders FontAwesome icon via ICONS map
-- `<NumInput id label value onChange min max unit req labelIcon presetsOpen onTogglePresets note />` — controlled number input with commit-on-blur and optional icon. `note` draws a labelled "Preset" line under the row (Concrete uses it for the active preset name); a parent that clears state in `onChange` must compare first, because blur re-commits an unchanged value.
+- `<NumInput id label value onChange min max unit req labelIcon presetsOpen onTogglePresets />` — controlled number input with commit-on-blur and optional icon. A parent that clears state in `onChange` must compare first, because blur re-commits an unchanged value.
   `live` also reports each keystroke that already reads as an in-range number (blank otherwise), for two-way calculators such as Guider's Toru põlv 70°; blur and Enter still clamp and round, and the field is not rewritten from its own live value, so a trailing `.` survives.
   It is `type="text"` with `inputMode="decimal"`, not `type="number"`: a number
   input steps its value on ArrowUp/ArrowDown and on a wheel scroll while focused,
@@ -24,14 +24,14 @@
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
 - `<ControlPanel id title headerDetail open setOpen>` — collapsible panel for controls sidebar;
   `headerDetail` renders optional contextual metadata directly below the panel heading.
-  (`Section`, `ControlPanel` and `DetailSection` are one internal `Collapsible`
-  wearing three variants; the base is not exported). Pass **both** `open` and
+  (`Section` and `ControlPanel` are one internal `Collapsible`
+  wearing two variants; the base is not exported). Pass **both** `open` and
   `setOpen` to control it. `open` on its own is read once as the initial state
   and never again — every such call site passes a literal, and the effect that
   used to copy it on change only bought a second render and a way to clobber a
   user's toggle mid-interaction.
 - `<Section title bg>` — collapsible section for preview area
-- `<DetailSection title open>` — collapsible section for secondary information or management UI
+- **Preset libraries** (`components/PresetLibrary.jsx`): one hook and four pieces for every page with a product list — Concrete's one library and Gypsum's three. `usePresetLibrary(lib, { onApply, active, setActive })` holds the list (as a draft under `lib.draftKey`) and applies or saves it; the page keeps which one is applied, since Gypsum keeps that per room. `PresetField` is a field with the shared `MaterialPresetDropdown`, `presetHeader(library)` names the applied preset through `SelectedPresetDetail`, `ManagePresetsButton` shows only where Save Defaults can write, and `PresetManager` is the table, in a `Modal`. A library is data; its fields are listed in the file's header.
 - `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<Stack gap direction className as>` — flex layout primitive; gap uses spacing scale (0.5–7); direction = "column"|"row"
 - `<Text size weight variant color as>` — typography primitive; size = xs–xxl, weight = reg–black, variant = sans|mono

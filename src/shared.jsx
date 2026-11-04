@@ -544,7 +544,7 @@ function cleanNumericInput(raw) {
  * typing. Blur and Enter still commit, clamp and round as before; a keystroke
  * never clamps, so an out-of-range entry reports "" until it is committed.
  */
-export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false, live = false, note = "" }) {
+export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, unit, req = false, labelIcon, onKeyDown, onCommit, presetsOpen = false, onTogglePresets, presetHoveredIndex = -1, showActionLabels = false, live = false }) {
   const [local, setLocal] = React.useState(value === "" ? "" : String(value));
   const inputRef = React.useRef(null);
   /* A message belongs to the value the parent held when it was raised. If the
@@ -702,22 +702,20 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
           <Icon name="corner-down-left" />{showActionLabels && <span>Apply</span>}
         </button>
       </div>
-      {note && <span className="num-note"><span className="num-note-lbl">Preset</span>{note}</span>}
       {error && <span id={`${fieldId}-error`} role="alert" className="input-error">{error}</span>}
     </div>
   );
 }
 
-// Single collapsible replaces both Section and ControlPanel
+// One collapsible behind both Section and ControlPanel
 function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "", noToggle = false }) {
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
-  const defaultOpen = variant === "detail" ? false : true;
   // Uncontrolled: `open` seeds the initial state and nothing more. Every
   // uncontrolled call site passes a literal (open={false}, open={true}
   // noToggle), so the effect that used to copy openProp into local state on
   // every change never had a value to copy — it only cost a second render and
   // stood ready to clobber a user's toggle mid-interaction.
-  const [openLocal, setOpenLocal] = React.useState(openProp !== undefined ? openProp : defaultOpen);
+  const [openLocal, setOpenLocal] = React.useState(openProp !== undefined ? openProp : true);
 
   const open = noToggle ? true : (isControlled ? openProp : openLocal);
   const setOpen = isControlled ? setOpenProp : setOpenLocal;
@@ -726,9 +724,7 @@ function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOp
   const contentId = `${id || generatedId}-content`;
   const classes = variant === "panel"
     ? ["control-panel", "panel-head", "panel-data"]
-    : variant === "detail"
-      ? ["detail-section", "detail-section-head", "detail-section-body"]
-      : ["section", "section-head", "section-body"];
+    : ["section", "section-head", "section-body"];
   const titleContent = <><span>{title}</span>{!noToggle && <span className="sys-head-toggle">
     <Icon name={open ? "minus" : "plus"} /></span>}</>;
   return (
@@ -748,7 +744,6 @@ function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOp
 // Convenience aliases for readability at call sites
 export const Section = (props) => <Collapsible {...props} />;
 export const ControlPanel = (props) => <Collapsible {...props} variant="panel" />;
-export const DetailSection = (props) => <Collapsible {...props} variant="detail" />;
 
 /* Handlers for an element that highlights its linked counterparts elsewhere —
    a summary row lighting up the matching segments, and the reverse.

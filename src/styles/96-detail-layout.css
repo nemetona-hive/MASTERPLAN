@@ -148,37 +148,6 @@
 	color: var(--danger);
 }
 
-/* Secondary Collapsible Section styling */
-.detail-section {
-	margin-top: var(--sp-4);
-	border-top: 1px solid color-mix(in srgb, var(--color-gray-light) 40%, transparent);
-	padding-top: var(--sp-3);
-}
-
-.detail-section-head {
-	font-family: var(--mono);
-	font-size: var(--fs-md);
-	color: var(--color-gray-opa80);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: var(--sp-2) 14px;
-	transition: color 0.2s ease;
-}
-
-@media (hover: hover) {
-	.detail-section-head:hover {
-		color: var(--color-primary);
-	}
-}
-
-.detail-section-body {
-	padding: var(--sp-3) 14px 0;
-}
-
 /* Clean up containers - removing borders for unboxed secondary content */
 .unboxed {
 	border: none !important;
@@ -214,8 +183,7 @@
 
 @media (hover: hover) {
 	.section-head:hover .sys-head-toggle,
-	.panel-head:hover .sys-head-toggle,
-	.detail-section-head:hover .sys-head-toggle {
+	.panel-head:hover .sys-head-toggle {
 		background: var(--color-primary);
 		color: var(--color-darkblue);
 	}

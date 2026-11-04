@@ -148,8 +148,7 @@ input[type="range"]:focus-visible {
 }
 
 .data-control .control-panel .panel-head.disclosure,
-.section-head.disclosure,
-.detail-section-head.disclosure {
+.section-head.disclosure {
   height: var(--ctl-h);
   padding-block: 0;
 	padding-inline: var(--sp-3);
