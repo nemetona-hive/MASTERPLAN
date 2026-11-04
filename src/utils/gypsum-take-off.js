@@ -233,7 +233,7 @@ export function buildGypsumTakeOff(fields) {
     openings: openingList,
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
-    fixing, adhesiveRate, adhesiveBagKg
+    fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct
   } = fields;
 
   const room = mode !== "wall";
@@ -415,11 +415,13 @@ export function buildGypsumTakeOff(fields) {
       area: round(wallNet, 2),
       kg: round(adhesiveKg, 1),
       bagKg: adhesiveBag || null,
-      bags: adhesiveBags
+      bags: adhesiveBags,
+      product: given(adhesiveProduct) ? adhesiveProduct : null
     } : null,
     compound: {
       rate: given(compoundRate) ? num(compoundRate) : null,
       length: round(filledLength, 1),
+      product: given(fillerProduct) ? fillerProduct : null,
       kg: round(compoundKg, 1),
       bagKg: bag || null,
       bagsExact: round(bagsExact, 2),

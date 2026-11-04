@@ -65,22 +65,56 @@ describe("the gypsum page", () => {
     render(<SheetGypsum />);
     fireEvent.click(screen.getAllByTitle("Presets")[0]);
     fireEvent.pointerDown(screen.getByText("Knauf GKB 12.5"));
+    expect(document.getElementById("control-gyp-adhesive")).toBe(null);
     fireEvent.click(screen.getByText("Glued"));
     expect(screen.queryByText("2 layers")).toBe(null);
     expect(document.getElementById("input-gyp-screwRate")).toBe(null);
-    expect(document.getElementById("input-gyp-adhesiveRate").value).toBe("5");
+    expect(document.getElementById("control-gyp-adhesive")).toBeTruthy();
     fireEvent.click(screen.getByText("Walls + ceiling"));
     expect(document.getElementById("input-gyp-screwRate").value).toBe("20");
     expect(screen.getByText("Ceiling screws (pcs/m²)")).toBeTruthy();
   });
 
-    it("manages presets in a dialog, as Pattern Layouts does", () => {
+  /* Three libraries: a board preset fills only the board's fields, and the
+     filler and adhesive each come from their own. */
+  it("keeps board, filler and adhesive presets apart", () => {
     render(<SheetGypsum />);
-    fireEvent.click(screen.getByText("Manage Presets"));
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.textContent).toContain("Manage Board Presets");
+    fireEvent.click(screen.getByText("Glued"));
+    const list = id => document.getElementById(id).closest("[style]").querySelector("[title='Presets']");
+    fireEvent.click(list("input-gyp-sheetW"));
+    fireEvent.pointerDown(screen.getByText("Gyproc GN 13"));
+    expect(document.getElementById("input-gyp-compoundRate").value).toBe("");
+    expect(document.getElementById("input-gyp-adhesiveRate").value).toBe("");
+
+    fireEvent.click(list("input-gyp-compoundRate"));
+    fireEvent.pointerDown(screen.getByText("Knauf Uniflott"));
+    expect(document.getElementById("input-gyp-compoundRate").value).toBe("0.25");
+    expect(document.getElementById("input-gyp-bagKg").value).toBe("25");
+
+    fireEvent.click(list("input-gyp-adhesiveRate"));
+    fireEvent.pointerDown(screen.getByText("Gyproc DriWall"));
+    expect(document.getElementById("input-gyp-adhesiveRate").value).toBe("4.3");
+
+    // A Gyproc board with Knauf filler and Gyproc adhesive, each named.
+    expect(document.querySelector("#control-gyp-board .panel-preset-meta").textContent).toContain("Gyproc GN 13");
+    expect(document.querySelector("#control-gyp-filler .panel-preset-meta").textContent).toContain("Knauf Uniflott");
+    expect(document.querySelector("#control-gyp-adhesive .panel-preset-meta").textContent).toContain("Gyproc DriWall");
+    // The sheet's preset stays chosen when the filler changes.
+    expect(document.getElementById("input-gyp-sheetW").value).toBe("1200");
+  });
+
+  it("manages each library in its own dialog", () => {
+    render(<SheetGypsum />);
+    fireEvent.click(screen.getByLabelText("Manage board presets"));
+    expect(screen.getByRole("dialog").textContent).toContain("Manage Board Presets");
     fireEvent.click(screen.getAllByTitle("Apply these values to the calculator")[0]);
     expect(document.getElementById("input-gyp-sheetW").value).toBe("1250");
+    fireEvent.click(screen.getByLabelText("Close"));
+
+    fireEvent.click(screen.getByLabelText("Manage joint filler presets"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).toContain("Manage Joint Filler Presets");
+    expect(dialog.querySelectorAll(".pw-preset-row")).toHaveLength(2);
   });
 
   it("keeps printing disabled until there is a job", () => {

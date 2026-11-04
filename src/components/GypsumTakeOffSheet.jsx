@@ -144,7 +144,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
             </tr>
             {adhesive && adhesive.rate !== null && (
               <tr>
-                <td>Adhesive</td>
+                <td>Adhesive{adhesive.product ? ` — ${adhesive.product}` : ""}</td>
                 <td>{nf(adhesive.kg, 1)} kg</td>
                 <td className="doc-sheet-strong">{adhesive.bagKg ? `${adhesive.bags} × ${nf(adhesive.bagKg)} kg` : `${nf(adhesive.kg, 1)} kg`}</td>
                 {sheets.price && <><td /><td /></>}
@@ -160,7 +160,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
             )}
             {compound.rate !== null && (
               <tr>
-                <td>Joint filler</td>
+                <td>Joint filler{compound.product ? ` — ${compound.product}` : ""}</td>
                 <td>{nf(compound.length, 1)} m × {nf(compound.rate, 2)} kg/m = {nf(compound.kg, 1)} kg</td>
                 <td className="doc-sheet-strong">{compound.bagKg ? `${compound.bags} × ${nf(compound.bagKg)} kg` : `${nf(compound.kg, 1)} kg`}</td>
                 {sheets.price && <><td /><td /></>}

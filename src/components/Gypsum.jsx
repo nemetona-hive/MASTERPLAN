@@ -1,7 +1,7 @@
 import { useSessionState } from "../utils/session-state.js";
-import { parseMeasurement } from "../utils/measurements.cjs";
 import { React } from "../react-globals.js";
-import { ControlPanel, Icon, MaterialPresetDropdown, Modal, NumInput, Row, SaveDefaultsButton, SelectedPresetDetail, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, NumInput, Row, Stack, useTimedState } from "../shared.jsx";
+import { LIBRARIES, ManagePresetsButton, PresetField, PresetManager, libraryFields, presetHeader, usePresetLibrary } from "./GypsumPresets.jsx";
 import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
@@ -10,21 +10,8 @@ import { buildGypsumTakeOff, WALLS } from "../utils/gypsum-take-off.js";
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
 const KEY = name => `Gypsum.jsx:${name}`;
-/* Sheet size and screws are required to apply a preset; the rest are
-   optional — a preset need not cover glued walls, and Gyproc publishes no
-   joint-filler figure per metre of joint. */
-const PRODUCT_FIELDS = ["sheetW", "sheetL", "screwRate", "compoundRate", "bagKg", "sheetPrice", "adhesiveRate", "adhesiveBagKg"];
-const PRESET_COLUMNS = [
-  ["sheetW", "Width mm", "Sheet width"],
-  ["sheetL", "Length mm", "Sheet length"],
-  ["screwRate", "Screws/m²", "Screws per m²"],
-  ["compoundRate", "Filler kg/m", "Joint filler per metre of joint"],
-  ["bagKg", "Filler bag kg", "Filler bag weight"],
-  ["sheetPrice", "€ sheet", "Sheet price"],
-  ["adhesiveRate", "Glue kg/m²", "Adhesive per m²"],
-  ["adhesiveBagKg", "Glue bag kg", "Adhesive bag weight"]
-];
-const BLANK_PRESET = { name: "", sheetW: "", sheetL: "", screwRate: "", compoundRate: "", bagKg: "", sheetPrice: "", adhesiveRate: "", adhesiveBagKg: "" };
+/* Every product field, across the board, filler and adhesive libraries. */
+const PRODUCT_FIELDS = Object.values(LIBRARIES).flatMap(libraryFields);
 
 /* Fields that begin empty, and those that begin at a sensible value. Opening
    sizes are standard enough to prefill; job dimensions never are. */
@@ -64,36 +51,18 @@ export function SheetGypsum() {
   const val = name => job[name];
   const set = name => value => setJob(current => ({ ...current, [name]: value }));
 
-  const [presets, setPresets] = useSessionState(KEY("presets"), () =>
-    (typeof DEFAULT_GYPSUM_PRESETS !== "undefined" ? DEFAULT_GYPSUM_PRESETS : [BLANK_PRESET]).map(p => ({ ...p })));
-  const [activePreset, setActivePreset] = useSessionState(KEY("activePreset"), null);
-  const [presetError, setPresetError] = React.useState("");
-  const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
-  const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
+  /* Three preset libraries, each filling its own fields (GypsumPresets.jsx). */
+  const merge = values => setJob(current => ({ ...current, ...values }));
+  const board = usePresetLibrary(LIBRARIES.board, merge);
+  const filler = usePresetLibrary(LIBRARIES.filler, merge);
+  const adhesive = usePresetLibrary(LIBRARIES.adhesive, merge);
+  const libraries = [board, filler, adhesive];
   const [resetArmed, armReset, disarmReset] = useTimedState(false, 4000);
-  const [saveStatus, setSaveStatus] = useTimedState("");
-  const [saveError, setSaveError] = React.useState("");
-  const [showModal, setShowModal] = React.useState(false);
-  const [dropdown, setDropdown] = React.useState(null);   // "sheetW" | "sheetL" | null
-  const widthRef = React.useRef(null);
-  const lengthRef = React.useRef(null);
-
-  const saveDefaults = async () => {
-    setSaveStatus("saving", 0);
-    try {
-      await safeSaveStaticDefaults("gypsumPresets", presets);
-      setSaveStatus("saved");
-    } catch (err) {
-      console.error(err);
-      setSaveError(err.message || String(err));
-      setSaveStatus("error");
-    }
-  };
 
   const resetAll = () => {
     setJob(initialJob());
     setMode("room"); setCeiling(false); setView3d(false); setOrientation("V"); setLayers("1"); setFixing("screw");
-    setActivePreset(null);
+    libraries.forEach(library => library.setActive(null));
   };
   const handleReset = () => {
     if (!resetArmed) { armReset(true); return; }
@@ -101,53 +70,16 @@ export function SheetGypsum() {
     resetAll();
   };
 
-  const updatePreset = (idx, field, value) => {
-    const next = [...presets];
-    next[idx] = { ...next[idx], [field]: value };
-    setPresets(next);
-  };
-
-  const applyPreset = (p, idx) => {
-    const values = PRODUCT_FIELDS.map(name => parseMeasurement(p[name]));
-    const required = values.slice(0, 3);
-    const optionalOk = values.slice(3).every(v => v === null || (Number.isFinite(v) && v >= 0));
-    if (!required.every(v => Number.isFinite(v) && v > 0) || !optionalOk) {
-      setPresetError("Fill in sheet size and screws before applying this preset.");
-      return;
-    }
-    setPresetError("");
-    setJob(current => ({ ...current, ...Object.fromEntries(PRODUCT_FIELDS.map((name, i) => [name, values[i] ?? ""])) }));
-    setActivePreset(idx);
-    setFlashIdx(idx);
-    setFieldFlash(true);
-  };
-
   /* A hand edit of a product field means the values are no longer the
      preset's, so its name stops showing. */
-  const productChange = name => v => { if (v !== val(name)) setActivePreset(null); set(name)(v); };
-
-  /* The dropdowns list only named presets, as Pattern Layouts' do, in the
-     { name, width, length } shape MaterialPresetDropdown reads. */
-  const validPresets = presets.filter(p => p.name);
-  const dropdownPresets = validPresets.map(p => ({ name: p.name, width: p.sheetW, length: p.sheetL }));
-  const selectedPreset = activePreset !== null && presets[activePreset]?.name ? presets[activePreset] : null;
-  const activeValid = selectedPreset ? validPresets.indexOf(selectedPreset) : null;
-  const pickPreset = idx => {
-    const p = validPresets[idx];
-    if (p) applyPreset(p, presets.indexOf(p));
-    setDropdown(null);
-  };
-  useClickOutside([widthRef, lengthRef], () => setDropdown(null), dropdown !== null);
-  const keyboard = {
-    sheetW: useDropdownKeyboard(dropdown === "sheetW" ? validPresets.length : 0, pickPreset, () => setDropdown(null)),
-    sheetL: useDropdownKeyboard(dropdown === "sheetL" ? validPresets.length : 0, pickPreset, () => setDropdown(null))
-  };
-
+  const productChange = (library, name) => v => { if (v !== val(name)) library.edited(); set(name)(v); };
 
   // ── Derived values: all of it from the model ───────────────────────────────
   const takeOff = buildGypsumTakeOff({
     ...job, mode, ceiling, orientation, layers, fixing,
-    product: activePreset !== null && presets[activePreset] ? presets[activePreset].name : ""
+    product: board.selected?.name || "",
+    fillerProduct: filler.selected?.name || "",
+    adhesiveProduct: adhesive.selected?.name || ""
   });
   const { area, sheets, screws, compound, tape } = takeOff;
 
@@ -157,7 +89,7 @@ export function SheetGypsum() {
     const frame = requestAnimationFrame(() => window.print());
     return () => cancelAnimationFrame(frame);
   }, [printTakeOff]);
-  const fieldKey = JSON.stringify([job, mode, ceiling, orientation, layers, fixing, activePreset, presets]);
+  const fieldKey = JSON.stringify([job, mode, ceiling, orientation, layers, fixing, ...libraries.map(l => [l.active, l.presets])]);
   React.useEffect(() => { setPrintTakeOff(null); }, [fieldKey]);
 
   const dimsKeys = mode === "room" ? ["lenMm", "widMm", "heightMm"] : ["wallW", "wallH"];
@@ -249,27 +181,13 @@ export function SheetGypsum() {
           </Stack>
         </ControlPanel>
 
-        {/* Pattern Layouts' preset system: the chosen preset named in the card's
-            header, a preset list on both sheet fields, and the table behind
-            Manage Presets — which, as there, only appears where Save Defaults
-            can write (the local dev server). */}
         <ControlPanel id="control-gyp-board" title="Board" noToggle className="form-section-card"
-          headerDetail={selectedPreset && <SelectedPresetDetail preset={{ name: selectedPreset.name, width: selectedPreset.sheetW, length: selectedPreset.sheetL }} />}>
+          headerDetail={presetHeader(board)}>
           <Stack gap={3} className="ctrl-list">
-            {[["sheetW", "Sheet width (mm)", "arrow-h", widthRef], ["sheetL", "Sheet length (mm)", "arrow-v", lengthRef]].map(([name, label, icon, ref]) => (
-              <div key={name} className={fieldFlash ? "num-input-flash" : ""} ref={ref} style={{ position: "relative" }}>
-                <NumInput id={`input-gyp-${name}`} label={label} labelIcon={icon} value={val(name)} min={100}
-                  onChange={productChange(name)} req={req(name)} showActionLabels
-                  presetsOpen={dropdown === name} presetHoveredIndex={keyboard[name].hoveredIndex}
-                  onTogglePresets={() => setDropdown(open => (open === name ? null : name))}
-                  onCommit={() => setDropdown(null)} onKeyDown={keyboard[name].onKeyDown} />
-                {dropdown === name && dropdownPresets.length > 0 && (
-                  <MaterialPresetDropdown anchorRef={ref} presets={dropdownPresets} activePreset={activeValid}
-                    onApply={(_, idx) => pickPreset(idx)} field={name === "sheetW" ? "width" : "length"}
-                    inputId={`input-gyp-${name}`} hoveredIndex={keyboard[name].hoveredIndex} title="Board Presets" />
-                )}
-              </div>
-            ))}
+            <PresetField library={board} field="sheetW" id="input-gyp-sheetW" label="Sheet width (mm)" labelIcon="arrow-h"
+              value={val("sheetW")} min={100} onChange={productChange(board, "sheetW")} req={req("sheetW")} />
+            <PresetField library={board} field="sheetL" id="input-gyp-sheetL" label="Sheet length (mm)" labelIcon="arrow-v"
+              value={val("sheetL")} min={100} onChange={productChange(board, "sheetL")} req={req("sheetL")} />
             <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
               options={[["V", "Vertical"], ["H", "Horizontal"]]} />
             {/* Glued is one layer on walls; the model enforces it, so the choice
@@ -280,52 +198,52 @@ export function SheetGypsum() {
               <Seg label="Layers" value={layers} onChange={setLayers}
                 options={[["1", "1 layer"], ["2", "2 layers"]]} />
             )}
-            {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
-              <button className="ctrl-dir form-section-action" onClick={() => setShowModal(true)}>
-                <Icon name="plus" /> Manage Presets
-              </button>
-            )}
-          </Stack>
-        </ControlPanel>
-
-        <ControlPanel id="control-gyp-fixing" title="Fixing & Price" noToggle className="form-section-card">
-          <Stack gap={3} className="ctrl-list">
             {/* Glued walls take no screws; a boarded ceiling still does. */}
             {(!glued || (mode === "room" && ceiling)) && (
-              <div className={fieldFlash ? "num-input-flash" : ""}>
+              <div className={board.fieldFlash ? "num-input-flash" : ""}>
                 <NumInput id="input-gyp-screwRate" label={glued ? "Ceiling screws (pcs/m²)" : "Screws (pcs/m²)"}
-                  value={val("screwRate")} min={0} onChange={productChange("screwRate")} />
+                  value={val("screwRate")} min={0} onChange={productChange(board, "screwRate")} />
               </div>
             )}
-            {glued && (
-              <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                <div className={fieldFlash ? "num-input-flash" : ""}>
-                  <NumInput id="input-gyp-adhesiveRate" label="Adhesive (kg/m²)" value={val("adhesiveRate")} min={0}
-                    onChange={productChange("adhesiveRate")} />
-                </div>
-                <div className={fieldFlash ? "num-input-flash" : ""}>
-                  <NumInput id="input-gyp-adhesiveBagKg" label="Adhesive bag (kg)" value={val("adhesiveBagKg")} min={0.1}
-                    onChange={productChange("adhesiveBagKg")} />
-                </div>
-              </div>
-            )}
-            <div className={fieldFlash ? "num-input-flash" : ""}>
-              <NumInput id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)" value={val("compoundRate")} min={0}
-                onChange={productChange("compoundRate")} />
-            </div>
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-              <div className={fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
+              <div className={board.fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange(board, "sheetPrice")} />
               </div>
-              <div className={fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange("sheetPrice")} />
-              </div>
+              {num("waste", "Waste (%)", { max: 100 })}
             </div>
-            {num("waste", "Waste (%)", { max: 100 })}
+            <ManagePresetsButton library={board} />
           </Stack>
         </ControlPanel>
+        {board.error && !board.managing && <p role="alert" className="input-error">{board.error}</p>}
 
-        {presetError && !showModal && <p role="alert" className="input-error">{presetError}</p>}
+        {glued && (
+          <ControlPanel id="control-gyp-adhesive" title="Adhesive" noToggle className="form-section-card"
+            headerDetail={presetHeader(adhesive)}>
+            <Stack gap={3} className="ctrl-list">
+              <PresetField library={adhesive} field="adhesiveRate" id="input-gyp-adhesiveRate" label="Adhesive (kg/m²)"
+                value={val("adhesiveRate")} onChange={productChange(adhesive, "adhesiveRate")} />
+              <div className={adhesive.fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-adhesiveBagKg" label="Adhesive bag (kg)" value={val("adhesiveBagKg")} min={0.1}
+                  onChange={productChange(adhesive, "adhesiveBagKg")} />
+              </div>
+              <ManagePresetsButton library={adhesive} />
+            </Stack>
+          </ControlPanel>
+        )}
+        {glued && adhesive.error && !adhesive.managing && <p role="alert" className="input-error">{adhesive.error}</p>}
+
+        <ControlPanel id="control-gyp-filler" title="Joint Filler" noToggle className="form-section-card"
+          headerDetail={presetHeader(filler)}>
+          <Stack gap={3} className="ctrl-list">
+            <PresetField library={filler} field="compoundRate" id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)"
+              value={val("compoundRate")} onChange={productChange(filler, "compoundRate")} />
+            <div className={filler.fieldFlash ? "num-input-flash" : ""}>
+              <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange(filler, "bagKg")} />
+            </div>
+            <ManagePresetsButton library={filler} />
+          </Stack>
+        </ControlPanel>
+        {filler.error && !filler.managing && <p role="alert" className="input-error">{filler.error}</p>}
 
         <div className="form-action">
           <button onClick={handleReset} onBlur={disarmReset}
@@ -435,58 +353,7 @@ export function SheetGypsum() {
           </div>
         </div>
       </div>
-      {showModal && (
-        <Modal title="Manage Board Presets" onClose={() => setShowModal(false)} className="gyp-preset-modal">
-          <Stack gap={4}>
-            <Stack gap={3}>
-              <div className="pw-preset-header pw-preset-grid--gypsum">
-                <span>Product Name</span>
-                {PRESET_COLUMNS.map(([key, head]) => <span key={key}>{head}</span>)}
-                <span>&nbsp;</span>
-              </div>
-              {presets.map((p, idx) => (
-                <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
-                  <div className="pw-preset-fields pw-preset-grid--gypsum">
-                    <div>
-                      <span className="pw-preset-lbl-hide">Product Name</span>
-                      <input id={`gyp-preset-name-${idx}`} aria-label={`Product name ${idx}`} type="text"
-                        className="num-input" value={p.name} onChange={e => updatePreset(idx, "name", e.target.value)} />
-                    </div>
-                    {PRESET_COLUMNS.map(([key, head, aria]) => (
-                      <div key={key}>
-                        <span className="pw-preset-lbl-hide">{head}</span>
-                        <input id={`gyp-preset-${key}-${idx}`} aria-label={`${aria} ${idx}`} type="text"
-                          inputMode="decimal" autoComplete="off" className="num-input"
-                          value={p[key]} onChange={e => updatePreset(idx, key, e.target.value)} />
-                      </div>
-                    ))}
-                    <div className="num-wrap" style={{ justifyContent: "center" }}>
-                      <span className="pw-preset-lbl-hide">&nbsp;</span>
-                      {activePreset === idx
-                        ? <div className="pw-preset-badge">active</div>
-                        : <button className={"ctrl-dir on pw-preset-apply" + (flashIdx === idx ? " pw-preset-flash" : "")}
-                            onClick={() => applyPreset(p, idx)} title="Apply these values to the calculator">
-                            <Icon name="check" /> {flashIdx === idx ? "Applied" : "Apply"}
-                          </button>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </Stack>
-            <Stack direction="row" gap={2}>
-              <button className="ctrl-dir" onClick={() => setPresets([...presets, { ...BLANK_PRESET }])}>
-                <Icon name="plus" /> Add Row
-              </button>
-              <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveDefaults} />
-            </Stack>
-            <div className="pw-formula-text">
-              Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.
-              Knauf and Gyproc rates are the makers' published single-layer figures. Check them against the system you are building.
-            </div>
-          </Stack>
-          {presetError && <p role="alert" className="input-error">{presetError}</p>}
-        </Modal>
-      )}
+      {libraries.map(library => <PresetManager key={library.lib.id} library={library} />)}
       <GypsumTakeOffSheet takeOff={printTakeOff} />
     </>
   );

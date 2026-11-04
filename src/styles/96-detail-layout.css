@@ -639,8 +639,9 @@
 }
 
 /* ── Projects dialog (components/ProjectMenu.jsx) ── */
-/* The board table has nine columns; the default 680px squeezes them. */
-.mp-modal.gyp-preset-modal { max-width: min(1120px, 100%); }
+/* The board table has five columns; the default 680px squeezes them. The
+   filler and adhesive tables have two and fit it. */
+.mp-modal.gyp-preset-modal--board { max-width: min(860px, 100%); }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;

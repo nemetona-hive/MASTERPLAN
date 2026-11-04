@@ -52,6 +52,8 @@ function isLocalRequest(req) {
 const DEFAULT_WRITES = {
   concretePresets: "DEFAULT_CONCRETE_PRESETS",
   gypsumPresets: "DEFAULT_GYPSUM_PRESETS",
+  gypsumFillerPresets: "DEFAULT_GYPSUM_FILLER_PRESETS",
+  gypsumAdhesivePresets: "DEFAULT_GYPSUM_ADHESIVE_PRESETS",
   goldenRatioDefaults: "DEFAULT_GR",
   materialPresets: "DEFAULT_MATERIAL_PRESETS",
   surfacePresets: "DEFAULT_SURFACE_PRESETS"
@@ -92,29 +94,32 @@ function validateConcretePresets(value) {
   });
 }
 
-function validateGypsumPresets(value) {
-  if (!Array.isArray(value) || value.length > 128) {
-    throwValidationError("gypsumPresets must be an array");
-  }
-
-  return value.map((preset, idx) => {
-    if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
-      throwValidationError(`gypsumPresets[${idx}] must be an object`);
-    }
-
-    return {
-      name: toStringField(preset.name),
-      sheetW: toNumberOrBlank(preset.sheetW, 100, 8000),
-      sheetL: toNumberOrBlank(preset.sheetL, 100, 8000),
-      screwRate: toNumberOrBlank(preset.screwRate, 0.01, 1000),
-      compoundRate: toNumberOrBlank(preset.compoundRate, 0.001, 100),
-      bagKg: toNumberOrBlank(preset.bagKg, 0.01),
-      sheetPrice: toNumberOrBlank(preset.sheetPrice),
-      adhesiveRate: toNumberOrBlank(preset.adhesiveRate, 0.01, 100),
-      adhesiveBagKg: toNumberOrBlank(preset.adhesiveBagKg, 0.01)
-    };
-  });
+/* The Gypsum page's three libraries share one shape: a name and a few
+   numbers. Each keeps only its own fields, so a board preset saved from
+   before the split drops the filler and adhesive figures it used to carry. */
+function gypsumLibraryValidator(key, fields) {
+  return value => {
+    if (!Array.isArray(value) || value.length > 128) throwValidationError(`${key} must be an array`);
+    return value.map((preset, idx) => {
+      if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
+        throwValidationError(`${key}[${idx}] must be an object`);
+      }
+      return {
+        name: toStringField(preset.name),
+        ...Object.fromEntries(Object.entries(fields).map(([field, [min, max]]) => [field, toNumberOrBlank(preset[field], min, max)]))
+      };
+    });
+  };
 }
+const validateGypsumPresets = gypsumLibraryValidator("gypsumPresets", {
+  sheetW: [100, 8000], sheetL: [100, 8000], screwRate: [0.01, 1000], sheetPrice: [0, Number.MAX_SAFE_INTEGER]
+});
+const validateGypsumFillerPresets = gypsumLibraryValidator("gypsumFillerPresets", {
+  compoundRate: [0.001, 100], bagKg: [0.01, Number.MAX_SAFE_INTEGER]
+});
+const validateGypsumAdhesivePresets = gypsumLibraryValidator("gypsumAdhesivePresets", {
+  adhesiveRate: [0.01, 100], adhesiveBagKg: [0.01, Number.MAX_SAFE_INTEGER]
+});
 
 function validateGoldenRatioDefaults(value) {
   if (!Array.isArray(value) || value.length > 128) {
@@ -186,6 +191,8 @@ function validateSurfacePresets(value) {
 const DEFAULT_VALIDATORS = {
   concretePresets: validateConcretePresets,
   gypsumPresets: validateGypsumPresets,
+  gypsumFillerPresets: validateGypsumFillerPresets,
+  gypsumAdhesivePresets: validateGypsumAdhesivePresets,
   goldenRatioDefaults: validateGoldenRatioDefaults,
   materialPresets: validateMaterialPresets,
   surfacePresets: validateSurfacePresets

@@ -934,16 +934,18 @@ export function SaveDefaultsButton({ status, onClick, disabled = false, errorMes
 
 const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/* The chosen preset, in a form card's header: its name and size. Shared by
-   Pattern Layouts and Gypsum. `preset` is { name, width, length }. */
+/* The chosen preset, in a form card's header: its name and what it sets.
+   Shared by Pattern Layouts and Gypsum. `preset` is { name, width, length },
+   or { name, detail } for a preset that is not a size (a filler's kg/m). */
 export function SelectedPresetDetail({ preset }) {
   if (!preset) return null;
-  const dimensions = `${preset.width} × ${preset.length} mm`;
-  const dimensionSuffix = new RegExp(
-    `\\s*${escapeRegExp(preset.width)}\\s*[×x]\\s*${escapeRegExp(preset.length)}(?:\\s*mm)?\\s*$`,
-    "i"
-  );
-  const displayName = String(preset.name).replace(dimensionSuffix, "").trim();
+  const sized = preset.detail === undefined;
+  const dimensions = sized ? `${preset.width} × ${preset.length} mm` : preset.detail;
+  // A size preset's name often ends in its size; that is not said twice.
+  const displayName = sized
+    ? String(preset.name).replace(new RegExp(
+        `\\s*${escapeRegExp(preset.width)}\\s*[×x]\\s*${escapeRegExp(preset.length)}(?:\\s*mm)?\\s*$`, "i"), "").trim()
+    : String(preset.name).trim();
   const fullTitle = displayName ? `${displayName} — ${dimensions}` : dimensions;
   return (
     <div className="panel-preset-meta" role="status" aria-live="polite">
@@ -956,7 +958,9 @@ export function SelectedPresetDetail({ preset }) {
   );
 }
 
-export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1, title = "Material Presets" }) {
+/* `describe(preset)` → { meta, value, unit } for a list whose presets are not
+   { width, length } sizes (Gypsum's fillers and adhesives). */
+export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1, title = "Material Presets", describe }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
   React.useLayoutEffect(() => {
@@ -972,8 +976,8 @@ export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApp
       <div id={`${inputId}-presets`} className="rate-presets-list" role="listbox" aria-label={title}>
         {presets.map((p, idx) => {
           if (!p.name) return null;
-          const displayVal = field === "width" ? p.width : p.length;
-          const displayUnit = field === "width" ? "w" : "l";
+          const shown = describe ? describe(p)
+            : { meta: `${p.width} × ${p.length} mm`, value: field === "width" ? p.width : p.length, unit: field === "width" ? "w" : "l" };
           const isActive = activePreset === idx;
           const isHovered = hoveredIndex === idx;
           return (
@@ -987,9 +991,9 @@ export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApp
             >
               <div className="rate-preset-info">
                 <span className="rate-preset-name">{p.name}</span>
-                <span className="rate-preset-meta">{p.width} × {p.length} mm</span>
+                {shown.meta && <span className="rate-preset-meta">{shown.meta}</span>}
               </div>
-              <span className="rate-preset-val">{displayVal}<small>{displayUnit}</small></span>
+              <span className="rate-preset-val">{shown.value}<small>{shown.unit}</small></span>
             </div>
           );
         })}

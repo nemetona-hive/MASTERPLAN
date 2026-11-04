@@ -138,21 +138,33 @@ a second layer. All figures, and the diagrams, come from
   sheet places nothing itself. All drawings share the widest surface's scale,
   so a short wall prints short. A drawing never splits: one that does not fit
   moves to the next page whole. Colours live in `99-print.css`.
-- **Board presets** (`DEFAULT_GYPSUM_PRESETS`, save key `gypsumPresets`) carry
-  sheet size and consumption. "Joint filler" on screen and paper is the
-  taping and finishing filler, not adhesive (boards are screwed); the data
-  keeps the older name `compoundRate` / `compound`, since saved presets and
-  projects carry it. Knauf: 20 screws/m², Uniflott 0.25 kg per m of joint.
-  Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c); its joint filler
-  is left blank, since Gyproc publishes it per m² of board (74 m² per 25 kg),
-  not per metre of joint. Only sheet size and screws are needed to apply a
-  preset. Makers' figures; sources in `config.js`.
-  Managed as Pattern Layouts manages its own: the inputs are `ControlPanel`
-  form cards; the **Board** card names the chosen preset in its header
-  (`SelectedPresetDetail`, now in `shared.jsx`); both sheet fields open a
-  `MaterialPresetDropdown`; and the table sits behind **Manage Presets**, a
-  modal shown only where `canSaveStaticDefaults()` holds. On GitHub Pages
-  presets can be picked but not edited, as on Pattern Layouts.
+- **Three preset libraries**, because a board, a joint filler and an
+  adhesive are bought separately and mixed freely (a Gyproc board with Knauf
+  filler is an ordinary job), and one table carrying all three got too wide
+  to manage. Each has its own card, list and Manage dialog:
+
+  | Library | Constant / save key | Fields | Defaults |
+  |---|---|---|---|
+  | Board | `DEFAULT_GYPSUM_PRESETS` / `gypsumPresets` | sheet W, L, screws/m², € per sheet | Knauf GKB 12.5 (20/m²), Gyproc GN 13 (13/m²) |
+  | Joint filler | `DEFAULT_GYPSUM_FILLER_PRESETS` / `gypsumFillerPresets` | kg per m of joint, bag kg | Knauf Uniflott 0.25 kg/m |
+  | Adhesive | `DEFAULT_GYPSUM_ADHESIVE_PRESETS` / `gypsumAdhesivePresets` | kg/m², bag kg | Knauf Perlfix 5, Gyproc DriWall 4.3 |
+
+  Gyproc has no filler entry: it publishes its filler per m² of board, not
+  per metre of joint, and a converted figure would be a guess. "Joint filler"
+  is the taping filler, not adhesive; the data keeps the older name
+  `compoundRate` / `compound`, since saved projects carry it. Sources are in
+  `config.js`.
+
+  The libraries are data (`LIBRARIES` in `components/GypsumPresets.jsx`), and
+  one hook and three components serve all of them: `usePresetLibrary`
+  (presets, the applied one, apply/save), `PresetField` (a field with the
+  shared `MaterialPresetDropdown`, which takes a `describe` for presets that
+  are not sizes), `ManagePresetsButton` (local mode only, as on Pattern
+  Layouts) and `PresetManager` (the table, in a `Modal`). A card header names
+  the applied preset through the shared `SelectedPresetDetail`, which takes a
+  `detail` string for the same reason. The server keeps each library to its
+  own fields (`gypsumLibraryValidator`), so a board preset saved before the
+  split drops the filler and adhesive figures it used to carry.
 
 ## Golden Ratio tool
 
