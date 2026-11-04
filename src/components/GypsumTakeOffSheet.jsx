@@ -17,12 +17,51 @@ const mm = value =>
 const eur = value =>
   Number(value).toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+/* One surface as drawn on paper: the model's piece rectangles in surface
+   millimetres, scaled by the viewBox. Ink and stroke come from 99-print.css,
+   because this is never seen on screen. Labels are the model's cut lengths,
+   shown only where they fit inside their piece. */
+function SurfaceDrawing({ surface, orientation, widest }) {
+  const { width: w, height: h, layout, label, count } = surface;
+  /* Text height in surface mm, one size for every drawing so they read alike;
+     the widest surface sets it, since every drawing shares its scale. */
+  const fs = widest / 32;
+  return (
+    <figure className="gyp-print-figure">
+      <figcaption className="gyp-print-caption">
+        <strong>{label}{count > 1 ? ` ×${count}` : ""}</strong>
+        {" "}{mm(w)} × {mm(h)} mm · {layout.full} full, {layout.cut} cut{count > 1 ? " each" : ""}
+      </figcaption>
+      {/* Every surface on one scale: the widest fills its column and the rest
+          are drawn in proportion, so a short wall looks short. */}
+      <svg className="gyp-print-svg" style={{ width: `${(w / widest) * 100}%` }} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMinYMin meet"
+        role="img" aria-label={`${label}: ${layout.full} full and ${layout.cut} cut pieces, ${orientation === "V" ? "vertical" : "horizontal"} fixing`}>
+        {layout.pieces.map((p, i) => {
+          // Horizontal text: needs about four digits of width, one line of height.
+          const fits = p.w > fs * 2.6 && p.h > fs * 1.3;
+          return (
+            <g key={i}>
+              <rect x={p.x} y={p.y} width={p.w} height={p.h} className={`gyp-print-piece gyp-print-piece--${p.type}`} />
+              {fits && (
+                <text x={p.x + p.w / 2} y={p.y + p.h / 2} fontSize={fs} textAnchor="middle"
+                  dominantBaseline="central" className="gyp-print-label">{mm(p.len)}</text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </figure>
+  );
+}
+
 export function GypsumTakeOffSheet({ takeOff }) {
   if (!takeOff || !takeOff.ready) return null;
 
   const { area, sheet, surfaces, sheets, screws, compound, tape, product, layers, orientation, openings } = takeOff;
   const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
   const build = getBuildId();
+  const drawn = surfaces.filter(s => s.layout);
+  const widest = Math.max(...drawn.map(s => s.width));
 
   return ReactDOM.createPortal(
     <div className="doc-sheet">
@@ -119,6 +158,16 @@ export function GypsumTakeOffSheet({ takeOff }) {
           than cutting. Openings reduce screws and compound but not sheets: boards are hung whole
           and cut out. The price covers board only.
         </p>
+      </section>
+      <section className="doc-sheet-block doc-sheet-block--table">
+        <h2 className="doc-sheet-h2">Layout</h2>
+        <p className="doc-sheet-legend">
+          <span><span className="gyp-print-key gyp-print-key--full" /> full sheet</span>
+          <span><span className="gyp-print-key gyp-print-key--cut" /> cut piece — figure is its cut length, mm</span>
+        </p>
+        <div className="gyp-print-grid">
+          {drawn.map(s => <SurfaceDrawing key={s.id} surface={s} orientation={orientation} widest={widest} />)}
+        </div>
       </section>
     </div>,
     document.body

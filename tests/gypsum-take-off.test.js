@@ -40,6 +40,19 @@ describe("one surface", () => {
     expect(l.joints).toBe(2 * 2600);
   });
 
+  it("places every piece on the surface for the printed drawing", () => {
+    const v = layoutSurface({ w: 3000, h: 2700, sheetW: 1200, sheetL: 2600, orientation: "V" });
+    // Columns from the left, first piece at the top; the 600 rip is last.
+    expect(v.pieces[0]).toMatchObject({ x: 0, y: 0, w: 1200, h: 2400 });
+    expect(v.pieces.at(-1)).toMatchObject({ x: 2400, w: 600 });
+    const h = layoutSurface({ w: 3000, h: 2700, sheetW: 1200, sheetL: 2600, orientation: "H" });
+    expect(h.pieces[0]).toMatchObject({ x: 0, y: 0, h: 1200 });
+    // The pieces tile the surface exactly.
+    for (const l of [v, h]) {
+      expect(l.pieces.reduce((a, p) => a + p.w * p.h, 0)).toBeCloseTo(3000 * 2700, 3);
+    }
+  });
+
   it("swaps axes for horizontal fixing", () => {
     const l = layoutSurface({ w: 4000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H" });
     expect(l.lanes).toBe(3);

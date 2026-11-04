@@ -102,8 +102,23 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation }) {
   const edgeJoints = Math.max(0, lanes.length - 1) * laneLength;
   const endJoints = rows.reduce((total, row) => total + (row.segs.length - 1) * row.h, 0);
 
+  /* Every piece as a rectangle on the surface, x right and y down from the
+     top-left corner, in mm. The printed sheet draws these as they are — the
+     geometry is worked out here so no renderer re-derives where a lane sits.
+     Lanes are placed the way the screen draws them: vertical columns from the
+     left with the first piece at the top, horizontal rows from the top. */
+  const pieces = [];
+  let laneStart = 0;
+  rows.forEach((row, lane) => {
+    row.segs.forEach(seg => pieces.push(vertical
+      ? { x: laneStart, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane }
+      : { x: seg.x, y: laneStart, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane }));
+    laneStart += row.h;
+  });
+
   return {
     rows,
+    pieces,
     laneLength,
     lanes: lanes.length,
     joints: edgeJoints + endJoints,

@@ -4841,4 +4841,49 @@ input[type="range"]:focus-visible {
 		font-size: 7.5pt;
 		color: #555;
 	}
+
+	.gyp-print-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 5mm 6mm;
+		margin-top: 3mm;
+	}
+	.gyp-print-figure {
+		margin: 0;
+		break-inside: avoid;
+	}
+	.gyp-print-caption {
+		font-size: 8pt;
+		color: #111;
+		margin-bottom: 1.5mm;
+	}
+	.gyp-print-svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		max-height: 75mm;
+
+		overflow: visible;
+	}
+	.gyp-print-piece {
+		stroke: #111;
+		stroke-width: 0.6pt;
+		vector-effect: non-scaling-stroke;
+	}
+	.gyp-print-piece--full { fill: #ddd; }
+	.gyp-print-piece--cut { fill: #fff; }
+	.gyp-print-label {
+		fill: #111;
+		font-family: inherit;
+	}
+	.gyp-print-key {
+		display: inline-block;
+		width: 3mm;
+		height: 3mm;
+		margin-right: 1mm;
+		vertical-align: -0.5mm;
+		border: 0.6pt solid #111;
+	}
+	.gyp-print-key--full { background: #ddd; }
+	.gyp-print-key--cut { background: #fff; }
 }

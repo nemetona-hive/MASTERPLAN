@@ -82,6 +82,12 @@ a second layer. All figures, and the diagrams, come from
 - The diagram is `LayoutVisualization`; the model emits rows in the
   `simulation.js` shape with `meta.exactRows`, which draws each lane at its
   real width so a ripped last lane is narrow.
+- **Printed take-off** = surfaces table, order, then one ink drawing per
+  surface (`GypsumTakeOffSheet`). It draws `layout.pieces` — rectangles the
+  model places in surface mm — and labels each with the model's `len`, so the
+  sheet places nothing itself. All drawings share the widest surface's scale,
+  so a short wall prints short. A drawing never splits: one that does not fit
+  moves to the next page whole. Colours live in `99-print.css`.
 - **Board presets** (`DEFAULT_GYPSUM_PRESETS`, save key `gypsumPresets`) carry
   sheet size and consumption. Knauf: 20 screws/m², Uniflott 0.25 kg/m².
   Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c), 0.34 kg/m²
