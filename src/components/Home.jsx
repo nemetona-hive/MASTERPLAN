@@ -1,7 +1,10 @@
 import { Icon, Stack, getBuildId } from "../shared.jsx";
 
-export function SheetHome({ page, setPage, projectsAvailable = false }) {
+/* The page cards. Home is only ever shown as itself and has no card of its
+   own, so no card is "the page you are on": there is no active state here. */
+export function SheetHome({ setPage, projectsAvailable = false }) {
   const items = PAGES.filter(pg => !pg.noNav);
+  const build = getBuildId();
 
   return (
     <div className="home-scroll">
@@ -15,26 +18,17 @@ export function SheetHome({ page, setPage, projectsAvailable = false }) {
         <div className="home-divider" />
 
         <div className="home-cards">
-          {items.map(pg => {
-            const isActive = page === pg.id;
-            return (
-              <Stack
-                key={pg.id}
-                as="button"
-                className={"home-card" + (isActive ? " home-card-active" : "")}
-                gap={3}
-                onClick={() => setPage(pg.id)}
-              >
-                <span className="home-card-icon">
-                  <Icon name={pg.icon} />
-                </span>
-                <span className="home-card-title">{pg.title}</span>
-                <span className="home-card-arrow">
-                  <Icon name="chevron-right" />
-                </span>
-              </Stack>
-            );
-          })}
+          {items.map(pg => (
+            <Stack key={pg.id} as="button" type="button" className="home-card" gap={3} onClick={() => setPage(pg.id)}>
+              <span className="home-card-icon">
+                <Icon name={pg.icon} />
+              </span>
+              <span className="home-card-title">{pg.title}</span>
+              <span className="home-card-arrow">
+                <Icon name="chevron-right" />
+              </span>
+            </Stack>
+          ))}
         </div>
 
         {/* With projects (local mode) a page's values are kept while it has
@@ -53,7 +47,7 @@ export function SheetHome({ page, setPage, projectsAvailable = false }) {
             rather than a prop: the rail's copy is hidden below the same
             breakpoint, so exactly one is ever on screen, and CSS re-evaluates
             on resize without this component tracking the viewport. */}
-        {getBuildId() && <div className="home-build">build {getBuildId()}</div>}
+        {build && <div className="home-build">build {build}</div>}
 
       </Stack>
     </div>

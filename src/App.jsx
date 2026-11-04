@@ -94,7 +94,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
-    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} projectsAvailable={projectsAvailable} /></div>;
+    return <div id="page-home" className="page-main-full"><SheetHome setPage={setPage} projectsAvailable={projectsAvailable} /></div>;
   }
 
   let content = null;

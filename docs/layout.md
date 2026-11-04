@@ -177,7 +177,7 @@ is what makes the identity key sound — keep it that way.
 - Hover is treated as a capability, not an assumption. Every `:hover` rule sits
   inside `@media (hover: hover)`, so a tap does not leave a button stuck in its
   hover state. Where a selector list mixed `:hover` with a real state
-  (`.active`, `.focused`, `.hovered`, `.home-card-active`) the two were split —
+  (`.active`, `.focused`, `.hovered`) the two were split —
   the state half stays unconditional, or touch would lose it
 - Collapsed-nav tooltips are gated the same way: `canHover()` for the pointer,
   `isKeyboardFocus()` (i.e. `:focus-visible`) for the keyboard. A tap fires

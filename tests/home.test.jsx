@@ -9,20 +9,20 @@ import { SheetHome } from "../src/components/Home.jsx";
 
 describe("SheetHome", () => {
   it("renders a card per navigable page, and not the home page itself", () => {
-    const { container } = render(<SheetHome page="home" setPage={vi.fn()} />);
+    const { container } = render(<SheetHome setPage={vi.fn()} />);
     const cards = container.querySelectorAll(".home-card");
     expect(cards).toHaveLength(PAGES.filter(pg => !pg.noNav).length);
     expect(container.textContent).not.toMatch(/^Home$/m);
   });
 
   it("says that entries do not survive a reload", () => {
-    const { container } = render(<SheetHome page="home" setPage={vi.fn()} />);
+    const { container } = render(<SheetHome setPage={vi.fn()} />);
     expect(container.querySelector(".home-note").textContent).toMatch(/reloading/i);
   });
 
   it("navigates on click", async () => {
     const setPage = vi.fn();
-    render(<SheetHome page="home" setPage={setPage} />);
+    render(<SheetHome setPage={setPage} />);
     await userEvent.click(screen.getByText("Concrete").closest(".home-card"));
     expect(setPage).toHaveBeenCalledWith("concrete");
   });
@@ -32,7 +32,7 @@ describe("SheetHome", () => {
     // breakpoint, and the drawer it would live in is shut by default. A media
     // query in 70-home.css does the showing, so it is in the DOM either way.
     it("renders the build id from version.js", () => {
-      const { container } = render(<SheetHome page="home" setPage={vi.fn()} />);
+      const { container } = render(<SheetHome setPage={vi.fn()} />);
       const stamp = container.querySelector(".home-build");
       expect(stamp).not.toBeNull();
       expect(stamp.textContent).toContain(BUILD.id);
@@ -59,7 +59,7 @@ describe("SheetHome", () => {
       const original = globalThis.BUILD;
       delete globalThis.BUILD;
       try {
-        const { container } = render(<SheetHome page="home" setPage={vi.fn()} />);
+        const { container } = render(<SheetHome setPage={vi.fn()} />);
         expect(container.querySelector(".home-build")).toBeNull();
         expect(container.querySelectorAll(".home-card").length).toBeGreaterThan(0);
       } finally {
