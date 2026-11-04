@@ -197,8 +197,9 @@ and answers the endpoint with a no-op.
   top-level `aria-label`, but the individual lines and connection paths convey
   nothing — a real gap in a technical reference drawing
 - A Content Security Policy. `index.html` has none. Weighed and deferred rather
-  than missed: the app leans on inline `style` attributes throughout and a
-  data-URI favicon, so any workable policy would still need `unsafe-inline` and
-  would buy close to nothing. One of the three blockers is gone — the logo SVG
-  no longer carries an inline `<style>` — but attributes are the bulk of it,
+  than missed: the app leans on inline `style` attributes throughout, so
+  any workable policy would still need `unsafe-inline` and would buy close to
+  nothing. Two of the three blockers are gone — the logo SVG no longer carries
+  an inline `<style>`, and the favicon is now `assets/icon-192.png` rather than
+  a data URI — but attributes are the bulk of it,
   and the wordmark itself now writes one per cloned shape (`--i`)
