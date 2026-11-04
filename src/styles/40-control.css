@@ -337,6 +337,13 @@
 	text-align: center;
 }
 
+/* Golden Ratio's Save Defaults, at the head of the Base Number panel. */
+.gr-defaults-row {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 var(--sp-4) var(--sp-4);
+}
+
 .data-control .gr-label-input {
 	color: var(--color-white);
 }
@@ -444,10 +451,7 @@
 .data-preview .gr-preview-card-c::before { background: var(--color-gray); }
 .data-preview .gr-preview-card-d::before { background: var(--color-gray); }
 
-.data-control .gr-control-card.gr-card-saved::before,
-.data-preview .gr-preview-card.gr-card-saved::before {
-	background: var(--color-primary);
-}.data-preview .gr-preview-card.linked-preview-active {
+.data-preview .gr-preview-card.linked-preview-active {
 	border-color: color-mix(in srgb, var(--color-primary) 65%, var(--color-gray));
 	box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 8px 16px color-mix(in srgb, var(--color-primary) 12%, transparent);
 	transform: translateY(-1px);

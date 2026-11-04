@@ -1,101 +1,41 @@
 import { React } from "../react-globals.js";
-import { ControlPanel, Icon, SaveDefaultsButton, Stack, getLinkedCardMarker, getLinkedCardTone, safeSaveStaticDefaults, useDocHistory, useLinkedCardHighlight, useTimedSet, useTimedState } from "../shared.jsx";
+import { ControlPanel, NumInput, SaveDefaultsButton, Stack, getLinkedCardMarker, getLinkedCardTone, safeSaveStaticDefaults, useDocHistory, useLinkedCardHighlight, useTimedState } from "../shared.jsx";
+import { buildSeries, MIN_BASE, PHI } from "../utils/golden-ratio.js";
 import { ProjectSection } from "./ProjectMenu.jsx";
+
+/* What Save Defaults writes: each entry's id, value and label, nothing else.
+   The server keeps the same three (validateGoldenRatioDefaults). */
+const toDefaults = items => items.map(({ id, value, suffix }) => ({ id, value, suffix }));
+/* Steps are marked out in whole millimetres; the base is shown as entered. */
+const wholeMm = v => Math.round(v).toString();
 
 export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
   const [baseOpen, setBaseOpen] = React.useState(true);
   const link = useLinkedCardHighlight("golden-ratio");
-  const PHI = 1.6180339887499;
 
-  /* Enter and the apply button share the same short confirmation already used
-     by the other calculator fields. useTimedSet owns its timer cleanup. */
-  const [committedIds, addCommittedId] = useTimedSet(600);
-
-  const flashCommit = id => {
-    addCommittedId(id);
-  };
-
-  /* Undo for the two buttons on each card. The items live in App's state and
-     are handed down, so the snapshot reads the prop and `apply` calls the
-     setter that came with it. Typing in a card is field-undo's, and
-     `commitBaseValue` is the blur that finishes it — neither takes a step. */
+  /* Undo for each card's Reset. The items live in App's state and are handed
+     down, so the snapshot reads the prop and `apply` calls the setter that
+     came with it. Typing in a card is field-undo's, and takes no step. */
   const markStep = useDocHistory({
     key: "golden-ratio",
     snapshot: () => baseItems,
     apply: setBaseItems
   });
 
-  // Ids whose last committed value was refused, so the field does not just empty itself.
-  const [refused, setRefused] = React.useState({});
-
-  const setItemField = (id, key, value) => {
-    if (key === "value") setRefused(r => (r[id] ? { ...r, [id]: false } : r));
+  const setItemField = (id, key, value) =>
     setBaseItems(items => items.map(item => (item.id === id ? { ...item, [key]: value } : item)));
-  };
-
-  const saveItem = id => {
-    markStep("Save entry");
-    setBaseItems(items => items.map(item => (
-      item.id === id ? { ...item, saved: { value: item.value, suffix: item.suffix }, savedCommitted: true } : item
-    )));
-  };
 
   const resetItem = id => {
     markStep("Reset entry");
-    setBaseItems(items => items.map(item => (
-      item.id === id
-        ? { ...item, value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }
-        : item
-    )));
+    setBaseItems(items => items.map(item => (item.id === id ? { ...item, value: "", suffix: "" } : item)));
   };
-
-  const commitBaseValue = (id, flash = false) => {
-    const current = baseItems.find(item => item.id === id);
-    const text = String(current?.value ?? "").trim().replace(",", ".");
-    const n = Number(text);
-    setRefused(r => ({ ...r, [id]: text !== "" && (!Number.isFinite(n) || n < 1) }));
-    setBaseItems(items => items.map(item => {
-      if (item.id !== id) return item;
-      const raw = String(item.value ?? "").trim().replace(",", ".");
-      if (raw === "") return { ...item, value: "" };
-      const n = Number(raw);
-      if (!Number.isFinite(n) || n < 1) return { ...item, value: "" };
-      const rounded = Math.max(1, Math.round(n * 100) / 100);
-      return { ...item, value: String(rounded) };
-    }));
-    if (flash) flashCommit(id);
-  };
-
-  const buildSteps = base => {
-    const rows = [];
-    let value = base / PHI;
-    for (let i = 1; i <= 7; i++) {
-      rows.push({ step: i, value });
-      value = value / PHI;
-    }
-    return rows;
-  };
-  const fmtInt = v => Math.round(v).toString();
-
-  const normalizeGoldenRatioDefaults = items => items.map(item => ({
-    id: item.id,
-    value: item.value,
-    suffix: item.suffix,
-    saved: {
-      value: item.value,
-      suffix: item.suffix
-    },
-    savedCommitted: String(item.value).trim() !== ""
-  }));
 
   const [saveStatus, setSaveStatus] = useTimedState("");
   const [saveError, setSaveError] = React.useState("");
-  
   const saveGoldenRatioDefaults = async () => {
     setSaveStatus("saving", 0);
     try {
-      const nextDefaults = normalizeGoldenRatioDefaults(baseItems);
-      await safeSaveStaticDefaults("goldenRatioDefaults", nextDefaults);
+      await safeSaveStaticDefaults("goldenRatioDefaults", toDefaults(baseItems));
       setSaveStatus("saved");
     } catch (err) {
       console.error(err);
@@ -109,97 +49,38 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
       <div id="data-control" className="data-control">
         <ProjectSection />
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
-          <div style={{ padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" }}>
+          <div className="gr-defaults-row">
             <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveGoldenRatioDefaults} />
           </div>
           <Stack gap={2}>
             {baseItems.map(item => {
+              const marker = getLinkedCardMarker(item.id);
               const tone = getLinkedCardTone(item.id);
-              const trimmedSuffix = item.suffix.trim();
-              const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
-              const valueInputLabel = trimmedSuffix
-                ? <>Value (mm) <span className="num-lbl-raw">{trimmedSuffix}</span></>
-                : "Value (mm)";
-
+              const series = buildSeries(item.value);
+              const labelId = `input-base-label-suffix-${item.id}`;
               return (
-                <div
-                  key={item.id}
-                  id={`control-base-number-${item.id}`}
-                  className={`control-panel gr-control-card gr-control-card-${tone}${isStored ? " gr-card-saved" : ""}`}
-                  {...link.bindControl(item.id)}
-                >
-                  <Stack className="panel-data" gap={3}>
-                    <Stack gap={1} className="num-wrap">
-                      <span className="num-lbl">{valueInputLabel}</span>
-                      <div className={"num-row" + (committedIds.has(item.id) ? " num-input-flash" : "")}>
-                        <input
-                          id={`input-base-number-field-${item.id}`}
-                            aria-label={`Base value ${item.id}`}
-                          name={`input-base-number-field-${item.id}`}
-                          className="num-input"
-                          type="text"
-                          inputMode="decimal"
-                          autoComplete="off"
-                          value={item.value}
-                          onChange={e => setItemField(item.id, "value", e.target.value)}
-                          onBlur={() => commitBaseValue(item.id, false)}
-                          onKeyDown={e => e.key === "Enter" && commitBaseValue(item.id, true)}
-                        />
-                        <button
-                          type="button"
-                          className="num-btn"
-                          aria-label={`Apply entry ${item.id}` }
-                          onClick={() => commitBaseValue(item.id, true)}>
-                          <Icon name="corner-down-left" />
-                        </button>
-                      </div>
-                      {refused[item.id] && <span role="alert" className="input-error">Enter a number of 1 or more.</span>}
+                <div key={item.id} id={`control-base-number-${item.id}`}
+                  className={`control-panel gr-control-card gr-control-card-${tone}`}
+                  {...link.bindControl(item.id)}>
+                  <Stack className="panel-data ctrl-list" gap={3}>
+                    {/* Below 1 is refused, not clamped up to 1: the field keeps
+                        what was typed and says why, rather than drawing a series
+                        for a number nobody entered. */}
+                    <Stack gap={1}>
+                      <NumInput id={`input-base-number-field-${item.id}`} label={`Value ${marker} (mm)`}
+                        value={item.value} min={0} onChange={v => setItemField(item.id, "value", v === "" ? "" : String(v))} />
+                      {series.refused && <span role="alert" className="input-error">Enter a number of {MIN_BASE} or more.</span>}
                     </Stack>
-                    <Stack gap={1} className="ctrl-lbl">
-                      <span className="ctrl-sublbl">Custom label</span>
-                      <div className="num-row">
-                        <input
-                          id={`input-base-label-suffix-${item.id}`}
-                            aria-label={`Entry label ${item.id}`}
-                          name={`input-base-label-suffix-${item.id}`}
-                          className="num-input gr-label-input"
-                          type="text"
-                          value={item.suffix}
-                          onChange={e => setItemField(item.id, "suffix", e.target.value)}
-                          placeholder="e.g. A, L, Start"
-                        />
-                        <button
-                          type="button"
-                          className="num-btn"
-                          aria-label={`Apply entry ${item.id}` }
-                          onClick={() => {
-                            const input = document.getElementById(`input-base-label-suffix-${item.id}`);
-                            if (input instanceof HTMLInputElement) input.blur();
-                          }}
-                        >
-                          <Icon name="corner-down-left" />
-                        </button>
-                      </div>
-                    </Stack>
-                    <Stack gap={1} className="ctrl-lbl">
-                      <span className="ctrl-sublbl">Entry</span>
-                      <Stack direction="row" gap={1} className="ctrl-btns">
-                        <button
-                          type="button"
-                          className="ctrl-dir"
-                          onClick={() => saveItem(item.id)}
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          className="ctrl-dir"
-                          onClick={() => resetItem(item.id)}
-                        >
-                          Reset
-                        </button>
-                      </Stack>
-                    </Stack>
+                    <div className="num-wrap">
+                      <label htmlFor={labelId} className="num-lbl">Custom label {marker}</label>
+                      <input id={labelId} name={labelId} className="num-input gr-label-input" type="text" autoComplete="off"
+                        value={item.suffix} onChange={e => setItemField(item.id, "suffix", e.target.value)}
+                        placeholder="e.g. A, L, Start" />
+                    </div>
+                    <button type="button" className="ctrl-dir" onClick={() => resetItem(item.id)}
+                      aria-label={`Reset entry ${marker}`}>
+                      Reset
+                    </button>
                   </Stack>
                 </div>
               );
@@ -212,39 +93,29 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
           <div className="preview-head">
             <div className="preview-head-main">
               <h2 className="preview-title">Golden Ratio phi</h2>
-              <p className="preview-desc">Build proportion series from saved base values using φ = 1.6180339887499.</p>
+              <p className="preview-desc">Build proportion series from each base value using φ = {PHI.toFixed(13)}.</p>
             </div>
           </div>
-          {baseItems.map((item, idx) => {
+          {baseItems.map(item => {
+            const suffix = item.suffix.trim();
             const tone = getLinkedCardTone(item.id);
-            const trimmedSuffix = item.suffix.trim();
-            const isStored = item.savedCommitted && item.value === item.saved.value && item.suffix === item.saved.suffix;
-            const numericValue = Number(item.value);
-            const hasValidValue = String(item.value).trim() !== "" && Number.isFinite(numericValue) && numericValue >= 1;
-            const valueRowLabel = trimmedSuffix
-              ? <>Value <span className="num-lbl-raw">{trimmedSuffix}</span></>
-              : "Value";
-            const steps = hasValidValue ? buildSteps(numericValue) : [];
-
+            const series = buildSeries(item.value);
             return (
-              <div
-                key={item.id}
-                id={`panel-golden-ratio-${item.id}`}
-                className={`sys-block gr-preview-card gr-preview-card-${tone}${isStored ? " gr-card-saved" : ""}${link.isActive(item.id) ? " linked-preview-active" : ""}`}
-              >
+              <div key={item.id} id={`panel-golden-ratio-${item.id}`}
+                className={`sys-block gr-preview-card gr-preview-card-${tone}${link.isActive(item.id) ? " linked-preview-active" : ""}`}>
                 <Stack className="section-pad gr-section-pad" gap={3}>
                   <div className="data-row">
-                    <span className="data-row-lbl">{valueRowLabel}</span>
-                    <span className="data-row-val hi">{hasValidValue ? fmtInt(numericValue) : "-"}</span>
+                    <span className="data-row-lbl">Value{suffix && <> <span className="num-lbl-raw">{suffix}</span></>}</span>
+                    <span className="data-row-val hi">{series.valid ? String(series.base) : "-"}</span>
                     <span className="data-row-unit">mm</span>
                     <span className="gr-row-marker">{getLinkedCardMarker(item.id)}</span>
                   </div>
-                  {hasValidValue && (
+                  {series.valid && (
                     <div className="gr-steps-wrap">
-                      {steps.map((stepItem, stepIdx) => (
-                        <div key={stepItem.step} className={"gr-step-row" + (stepIdx === 0 ? " gr-step-row-first" : "")}>
-                          <div className="data-row gr-step-cell gr-step-cell-index"><span className="data-row-val">{stepItem.step}</span></div>
-                          <div className="data-row gr-step-cell"><span className="data-row-val">{fmtInt(stepItem.value)}</span></div>
+                      {series.steps.map((s, i) => (
+                        <div key={s.step} className={"gr-step-row" + (i === 0 ? " gr-step-row-first" : "")}>
+                          <div className="data-row gr-step-cell gr-step-cell-index"><span className="data-row-val">{s.step}</span></div>
+                          <div className="data-row gr-step-cell"><span className="data-row-val">{wholeMm(s.value)}</span></div>
                         </div>
                       ))}
                     </div>

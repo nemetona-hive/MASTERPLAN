@@ -11,8 +11,8 @@ const PHI = 1.6180339887499;
    answerable rather than a claim about local state. */
 function Page({ initial }) {
   const [items, setItems] = React.useState(initial ?? [
-    { id: "a", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false },
-    { id: "b", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }
+    { id: "a", value: "", suffix: "" },
+    { id: "b", value: "", suffix: "" }
   ]);
   return <SheetGoldenRatio grItems={items} setGrItems={setItems} />;
 }
@@ -32,7 +32,7 @@ describe("the golden ratio page", () => {
   it("shows nothing until a base value is worth dividing", () => {
     render(<Page />);
     expect(stepsIn("a")).toEqual([]);
-    // Below 1 there is no series to build — commitBaseValue rejects it.
+    // Below 1 there is no series to build, so the page refuses it.
     setValue("a", "0.5");
     expect(stepsIn("a")).toEqual([]);
   });
@@ -59,28 +59,38 @@ describe("the golden ratio page", () => {
     expect(Number(stepsIn("b")[0])).toBe(Math.round(500 / PHI));
   });
 
-  it("says why a value below 1 was emptied, and stops saying it once retyped", () => {
+  it("refuses a value below 1, keeps what was typed and says why", () => {
     render(<Page />);
     setValue("a", "0.5");
     expect(screen.getByRole("alert")).toHaveTextContent("1 or more");
-    fireEvent.change(valueField("a"), { target: { value: "5" } });
+    expect(valueField("a").value).toBe("0.5");
+    setValue("a", "5");
     expect(screen.queryByRole("alert")).toBeNull();
+    expect(stepsIn("a")).toHaveLength(7);
   });
 
   it("rounds a typed base to the value it will actually use", () => {
-    // commitBaseValue rounds on blur, so the series and the field agree.
+    // The field rounds on commit, so the series and the field agree.
     render(<Page />);
     setValue("a", "1000.456");
     expect(valueField("a").value).toBe("1000.46");
   });
 
-  it("confirms an explicit apply on the edited field", () => {
+  it("shows the base as entered, and the steps in whole millimetres", () => {
+    // 12.5 showed as 13 while its series was worked from 12.5.
     render(<Page />);
-    fireEvent.change(valueField("a"), { target: { value: "1000" } });
-    fireEvent.click(screen.getAllByLabelText("Apply entry a")[0]);
+    setValue("a", "12.5");
+    expect(cardFor("a").querySelector(".data-row-val.hi").textContent).toBe("12.5");
+    expect(stepsIn("a")[0]).toBe(String(Math.round(12.5 / PHI)));
+  });
 
-    expect(valueField("a").closest(".num-row").className).toContain("num-input-flash");
-    expect(valueField("b").closest(".num-row").className).not.toContain("num-input-flash");
+  it("names every field and button by its visible label, one per card", () => {
+    render(<Page />);
+    expect(screen.getByLabelText("Value A (mm)")).toBe(valueField("a"));
+    expect(screen.getByLabelText("Custom label B")).toBe(suffixField("b"));
+    expect(screen.getByRole("button", { name: "Apply Value A (mm)" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Reset entry B" })).toBeTruthy();
+    expect(screen.queryByText("Save")).toBeNull();
   });
 
   it("carries a custom label into the value row", () => {
@@ -90,36 +100,22 @@ describe("the golden ratio page", () => {
     expect(cardFor("a").textContent).toContain("Start");
   });
 
-  describe("saving an entry", () => {
-    it("marks the card as stored only while it still matches", () => {
+  describe("resetting an entry", () => {
+    it("clears its value and label", () => {
       render(<Page />);
       setValue("a", 1000);
-      expect(cardFor("a").className).not.toContain("gr-card-saved");
-
-      fireEvent.click(screen.getAllByText("Save")[0]);
-      expect(cardFor("a").className).toContain("gr-card-saved");
-
-      // Editing it again makes it no longer what was stored.
-      setValue("a", 1200);
-      expect(cardFor("a").className).not.toContain("gr-card-saved");
-    });
-
-    it("reset clears the entry and its stored copy", () => {
-      render(<Page />);
-      setValue("a", 1000);
-      fireEvent.click(screen.getAllByText("Save")[0]);
-      fireEvent.click(screen.getAllByText("Reset")[0]);
-
+      fireEvent.change(suffixField("a"), { target: { value: "Start" } });
+      fireEvent.click(screen.getByRole("button", { name: "Reset entry A" }));
       expect(valueField("a").value).toBe("");
+      expect(suffixField("a").value).toBe("");
       expect(stepsIn("a")).toEqual([]);
-      expect(cardFor("a").className).not.toContain("gr-card-saved");
     });
 
     it("resets one card without touching the other", () => {
       render(<Page />);
       setValue("a", 1000);
       setValue("b", 500);
-      fireEvent.click(screen.getAllByText("Reset")[0]);
+      fireEvent.click(screen.getByRole("button", { name: "Reset entry A" }));
 
       expect(valueField("a").value).toBe("");
       expect(valueField("b").value).toBe("500");

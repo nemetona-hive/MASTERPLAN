@@ -302,9 +302,27 @@ text or numbers alike, and the page stores numbers only (the sliders included).
 
 ## Golden Ratio tool
 
-PHI = 1.6180339887499. Builds 7 descending steps: `base / PHI^n`.
-Cards use tone system (a/b/c/d) for visual identity.
-`useLinkedCardHighlight` hook links control cards to preview cards on click.
+Seven descending steps, `base / φ^n`, from `utils/golden-ratio.js`
+(`buildSeries`; `PHI` is (1 + √5) / 2, shown as 1.6180339887499). The page
+reads every figure from it.
+
+- **Entries** are `{ id, value, suffix }` in App's `grItems`, one card each
+  (A, B, C: the tone system, `getLinkedCardTone` / `getLinkedCardMarker`).
+  The value is a shared `NumInput` labelled "Value A (mm)", so each field and
+  its apply button carry the card's letter; the label is "Custom label A".
+- **A base under 1 is refused**, not clamped up to 1: the field keeps what was
+  typed and says why, and no series is drawn for a number nobody entered.
+- **The base shows as entered** (12.5), the steps in whole millimetres, since
+  they are marked out. The base used to show rounded (13) while its series was
+  worked from 12.5.
+- **No per-entry Save (2026-11-04).** Each card had a Save that only painted
+  a stripe while the entry matched its saved copy; the series always came from
+  the typed value, and Save Defaults ignored the copy. With per-page projects
+  keeping the values, the user had it removed, and with it the `saved` and
+  `savedCommitted` fields (`DEFAULT_GR`, and the server's validator, which
+  drops them from a list saved with them). Reset clears a card's value and
+  label, and is an undo step.
+- `useLinkedCardHighlight` links control cards to preview cards on click.
 
 ## Guider tool
 

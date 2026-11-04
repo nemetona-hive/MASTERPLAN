@@ -136,19 +136,10 @@ function validateGoldenRatioDefaults(value) {
       throwValidationError(`goldenRatioDefaults[${idx}].id must be a short id string`);
     }
 
-    const valueText = toStringField(item.value);
-    const suffixText = toStringField(item.suffix);
-
-    return {
-      id,
-      value: valueText,
-      suffix: suffixText,
-      saved: {
-        value: valueText,
-        suffix: suffixText
-      },
-      savedCommitted: valueText.trim() !== ""
-    };
+    /* An entry is its id, value and label. The per-entry "saved" copy it
+       used to carry is gone (projects keep the values), so a list saved
+       with one drops it here. */
+    return { id, value: toStringField(item.value), suffix: toStringField(item.suffix) };
   });
 }
 

@@ -222,9 +222,9 @@ const DEFAULT_SYM = {
 };
 
 const DEFAULT_GR = [
-  { id: "a", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false },
-  { id: "b", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false },
-  { id: "c", value: "", suffix: "", saved: { value: "", suffix: "" }, savedCommitted: false }
+  { id: "a", value: "", suffix: "" },
+  { id: "b", value: "", suffix: "" },
+  { id: "c", value: "", suffix: "" }
 ];
 
 const DEFAULT_MATERIAL_PRESETS = [
