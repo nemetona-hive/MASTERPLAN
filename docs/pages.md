@@ -374,3 +374,27 @@ its category's `entries`, and there is no routing branch to forget.
     sets the value through the entered field. It is drawn at its measured pixel
     width (ResizeObserver), not a scaled viewBox, so tick labels stay legible on
     a phone.
+
+## Timesheet tool
+
+Rows of start, end and lunch, each worked out by `rowResult` in
+`utils/timesheet.js` beside the parsers it uses (`parseTime`, `parseLunch`):
+H:MM, a quarter-hour decimal, and a status (`empty`, `partial`, `ok`, `warn`,
+`error`). Only `ok` rows count toward the total, and the total is the summed
+minutes, rounded to a quarter hour once.
+
+- **Rounding is the user's open question, and stays as it is until they
+  decide.** Each row rounds its own decimal, and the total rounds the summed
+  minutes, so two 8:07 days read 8.00 + 8.00 against a 16.25 total (and Copy
+  decimal copies 16.25). The other choice is to add the rounded rows.
+- **Tab** walks Start, End and Lunch and rolls into the next row; off a
+  filled last row it adds one. Off an empty last row it carries on to the
+  row's remove button and the presets: adding a row on every Tab was a trap a
+  keyboard could never leave. Arrow keys move across the grid
+  (`utils/grid-nav.js`).
+- **Labels follow the row's place on screen** ("Start time, row 1", "Remove
+  row 1"), not its id, which never renumbers after a removal.
+- **Clear all** is one click and an undo step, unlike the other pages' two-click
+  resets: kept as it is.
+- Copy decimal is a `.ts-copy` on the control scale, laid out across the card
+  by `.result-card-print`, like the other pages' Take-off buttons.

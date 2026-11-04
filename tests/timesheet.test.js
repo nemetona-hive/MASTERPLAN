@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../src/utils/timesheet.js";
+import { fmtDecimal, fmtHHMM, parseLunch, parseTime, rowResult } from "../src/utils/timesheet.js";
 
 // These two parsers exist so a day can be typed the way it is said out loud —
 // "half eight", "eight thirty", "0830" — and every one of those shapes has to
@@ -142,5 +142,26 @@ describe("fmtDecimal", () => {
     for (const mins of [0, 15, 60, 480, 1000]) {
       expect(fmtDecimal(mins)).toMatch(/^\d+\.\d{2}$/);
     }
+  });
+});
+
+describe("a row of the sheet", () => {
+  const row = (start, end, lunch = "") => rowResult({ start, end, lunch });
+
+  it("works out the time, less lunch, and its quarter-hour decimal", () => {
+    expect(row("8:00", "16:30", ".30")).toMatchObject({ status: "ok", dur: "8:00", dec: "8.00", mins: 480 });
+  });
+
+  it("goes past midnight", () => {
+    expect(row("22:00", "6:00").mins).toBe(480);
+  });
+
+  it("tells empty, part-filled and mistaken rows apart, and counts none of them", () => {
+    expect(row("", "")).toMatchObject({ status: "empty", mins: 0 });
+    expect(row("8:00", "")).toMatchObject({ status: "partial", mins: 0 });
+    expect(row("8:00", "8:00")).toMatchObject({ status: "warn", dur: "start = end" });
+    expect(row("8:00", "9:00", "2:00")).toMatchObject({ status: "warn", dur: "lunch > work" });
+    expect(row("8:70", "16:00")).toMatchObject({ status: "error", dur: "invalid" });
+    expect(row("8:00", "16:00", "abc")).toMatchObject({ status: "error", dur: "invalid lunch" });
   });
 });

@@ -1,7 +1,7 @@
 import { useSessionState } from "../utils/session-state.js";
 import { React, useState } from "../react-globals.js";
 import { Icon, Stack, useDocHistory, useTimedState } from "../shared.jsx";
-import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
+import { fmtDecimal, fmtHHMM, parseTime, rowResult } from "../utils/timesheet.js";
 import { useGridNav } from "../utils/grid-nav.js";
 import { ProjectSection } from "./ProjectMenu.jsx";
 
@@ -26,31 +26,6 @@ const TS_COLUMNS = ['start', 'end', 'lunch'];
 
 function makeCalcRows() {
   return [1, 2, 3].map(id => ({ id, start: '', end: '', lunch: '' }));
-}
-
-function calcRowResult(row) {
-  const s     = parseTime(row.start);
-  const e     = parseTime(row.end);
-  const lunch = parseLunch(row.lunch);
-  const hasInput = row.start.trim() || row.end.trim() || row.lunch.trim();
-
-  if (!hasInput) return { dur: '', dec: '', status: 'empty', mins: 0 };
-
-  if (s !== null && e !== null) {
-    if (lunch === null) return { dur: 'invalid lunch', dec: '', status: 'error', mins: 0 };
-    let diff = e - s;
-    // Equal times are ambiguous (no time, or a full day), so neither is assumed.
-    if (diff === 0) return { dur: 'start = end', dec: '', status: 'warn', mins: 0 };
-    if (diff < 0) diff += 24 * 60;        // overnight support
-    if (lunch > diff) return { dur: 'lunch > work', dec: '', status: 'warn', mins: 0 };
-    diff -= lunch;
-    return { dur: fmtHHMM(diff), dec: fmtDecimal(diff), status: 'ok', mins: diff };
-  }
-
-  const badStart = row.start.trim() && s === null;
-  const badEnd   = row.end.trim()   && e === null;
-  if (badStart || badEnd) return { dur: 'invalid', dec: '', status: 'error', mins: 0 };
-  return { dur: '', dec: '', status: 'partial', mins: 0 };
 }
 
 export function SheetTimesheet() {
@@ -80,7 +55,7 @@ export function SheetTimesheet() {
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
-  const calcResults   = calcRows.map(r => calcRowResult(r));
+  const calcResults   = calcRows.map(rowResult);
   const calcTotalMins = calcResults.reduce((s, r) => s + r.mins, 0);
   const incomplete = calcResults.some(r => ['partial', 'error', 'warn'].includes(r.status));
   const hasCalcTotal = !incomplete && calcResults.some(r => r.status === 'ok');
@@ -154,11 +129,15 @@ export function SheetTimesheet() {
     };
   };
 
-  // Tab from Lunch → next row Start; auto-adds row if on last
+  /* Tab from Lunch goes to the next row's Start, and from the last row adds a
+     row — but only when that row has something in it. From an empty last row
+     Tab carries on to the presets and buttons as normal: adding a row every
+     time was a trap a keyboard could never leave. */
   const handleLunchTab = (e, rowIdx) => {
     if (e.key !== 'Tab' || e.shiftKey) return;
-    e.preventDefault();
     const nextRow = calcRows[rowIdx + 1];
+    if (!nextRow && calcResults[rowIdx].status === 'empty') return;
+    e.preventDefault();
     if (nextRow) {
       startRefs.current[nextRow.id]?.focus();
     } else {
@@ -231,7 +210,7 @@ export function SheetTimesheet() {
                   
                   {/* Entries */}
                   <Stack gap={1}>
-                    <div className="ts-grid-hd" style={{marginTop: 'var(--sp-2)'}}>
+                    <div className="ts-grid-hd">
                       <span className="ts-col-lbl">Start</span>
                       <span className="ts-col-lbl">End</span>
                       <span className="ts-col-lbl">Lunch</span>
@@ -249,7 +228,7 @@ export function SheetTimesheet() {
                               <span className="pw-preset-lbl-hide">Start</span>
                               <input 
                                 id={`ts-start-${row.id}`}
-                            aria-label={`Start time ${row.id}`}
+                                aria-label={`Start time, row ${idx + 1}`}
                                 name={`ts-start-${row.id}`}
                                 className="num-input ts-input" type="text"
                                 value={row.start}
@@ -263,7 +242,7 @@ export function SheetTimesheet() {
                               <span className="pw-preset-lbl-hide">End</span>
                               <input 
                                 id={`ts-end-${row.id}`}
-                            aria-label={`End time ${row.id}`}
+                                aria-label={`End time, row ${idx + 1}`}
                                 name={`ts-end-${row.id}`}
                                 className="num-input ts-input" type="text"
                                 value={row.end}
@@ -276,7 +255,7 @@ export function SheetTimesheet() {
                               <span className="pw-preset-lbl-hide">Lunch</span>
                               <input 
                                 id={`ts-lunch-${row.id}`}
-                            aria-label={`Lunch duration ${row.id}`}
+                                aria-label={`Lunch duration, row ${idx + 1}`}
                                 name={`ts-lunch-${row.id}`}
                                 placeholder=".30" title="Minutes as .30, hours as 1:00"
                                 className="num-input ts-input" type="text"
@@ -300,7 +279,7 @@ export function SheetTimesheet() {
                             <div className="ts-remove-wrap">
                               <span className="pw-preset-lbl-hide">&nbsp;</span>
                               <button className="num-btn ts-remove ctl-ghost ctl-sm ctl-icon ctl-danger"
-                                aria-label="Remove row"
+                                aria-label={`Remove row ${idx + 1}`}
                                 onClick={() => removeCalcRow(row.id)}><Icon name="close" /></button>
                             </div>
                         </div>
@@ -308,7 +287,7 @@ export function SheetTimesheet() {
                     })}
                   </Stack>
 
-                  <div style={{height: '1px', background: 'var(--divider-subtle)', margin: 'calc(var(--sp-2) * -1) 0 var(--sp-2)'}} />
+                  <div className="ts-divider" aria-hidden="true" />
 
                   {/* Controls */}
                   <Stack gap={4}>
@@ -341,7 +320,7 @@ export function SheetTimesheet() {
               <div className="result-card-primary">
               <span className="result-card-title">Total Hours</span>
               <span className="result-card-value">
-                {fmtHHMM(calcTotalMins) || "0:00"}<span className="result-card-unit">h</span>
+                {fmtHHMM(calcTotalMins)}<span className="result-card-unit">h</span>
               </span>
               
               </div>
@@ -349,17 +328,17 @@ export function SheetTimesheet() {
               <div className="result-card-footer">
                 <div className="result-card-footer-item">
                   <span className="result-card-footer-lbl">Decimal time</span>
-                  <span className="result-card-footer-val">{fmtDecimal(calcTotalMins) || "0.00"}</span>
+                  <span className="result-card-footer-val">{fmtDecimal(calcTotalMins)}</span>
                 </div>
                 <p className="result-card-note">Decimal time is rounded to the nearest quarter hour.</p>
                 
-                <div style={{marginTop: 'var(--sp-4)'}}>
-                  <button 
-                    className={"ts-copy" + (copied ? " ts-copy--done" : "") + (copyError ? " ts-copy--error" : "")}
+                <div className="ts-copy-wrap">
+                  <button
+                    type="button"
+                    className={"ts-copy result-card-print" + (copied ? " ts-copy--done" : "") + (copyError ? " ts-copy--error" : "")}
                     onClick={handleCopy}
                     title="Copies the decimal total, rounded to the nearest quarter hour"
                     disabled={!hasCalcTotal}
-                    style={{width: '100%', padding: '12px', fontSize: 'var(--fs-md)', borderRadius: '6px', textAlign: 'center'}}
                   >
                     {copied ? 'Copied!' : copyError ? 'Error' : 'Copy decimal'}
                   </button>

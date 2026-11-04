@@ -213,6 +213,16 @@
 	}
 }
 
+/* The line between the rows and the lunch presets: drawn into the Stack's gap
+   above it, so it sits nearer the rows it closes. */
+.ts-divider {
+	height: 1px;
+	margin: calc(var(--sp-2) * -1) 0 var(--sp-2);
+	background: var(--divider-subtle);
+}
+.ts-grid-hd { margin-top: var(--sp-2); }
+.ts-copy-wrap { margin-top: var(--sp-4); }
+
 .ts-copy {
 	font-family: var(--mono);
 	font-size: var(--fs-sm);
@@ -239,14 +249,12 @@
 
 .ts-copy--done {
 	color: var(--success);
-	border-color: color-mix(in srgb, var(--success) 50%, transparent);
 	background: color-mix(in srgb, var(--success) 8%, transparent);
 	box-shadow: 0 0 8px color-mix(in srgb, var(--success) 25%, transparent);
 }
 
 .ts-copy--error {
 	color: var(--danger);
-	border-color: color-mix(in srgb, var(--danger) 50%, transparent);
 	background: color-mix(in srgb, var(--danger) 8%, transparent);
 	box-shadow: 0 0 8px color-mix(in srgb, var(--danger) 25%, transparent);
 }

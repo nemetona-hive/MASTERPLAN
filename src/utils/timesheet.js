@@ -50,3 +50,35 @@ export function parseLunch(raw) {
 export function fmtHHMM(mins) { return Math.floor(mins / 60) + ':' + String(mins % 60).padStart(2, '0'); }
 // Rounds to nearest quarter hour: .00 / .25 / .50 / .75
 export function fmtDecimal(mins) { return (Math.round((mins / 60) * 4) / 4).toFixed(2); }
+
+/**
+ * One row of the sheet: its worked time, as H:MM and as quarter-hour decimal,
+ * and a status the page colours by — "empty" (nothing typed), "partial" (one
+ * of start and end), "ok", "warn" (a figure that reads as a mistake: equal
+ * times, a break longer than the day) or "error" (a field that is not a time).
+ * `mins` is what the total adds, and is 0 for anything but "ok".
+ */
+export function rowResult(row) {
+  const s     = parseTime(row.start);
+  const e     = parseTime(row.end);
+  const lunch = parseLunch(row.lunch);
+  const hasInput = row.start.trim() || row.end.trim() || row.lunch.trim();
+
+  if (!hasInput) return { dur: '', dec: '', status: 'empty', mins: 0 };
+
+  if (s !== null && e !== null) {
+    if (lunch === null) return { dur: 'invalid lunch', dec: '', status: 'error', mins: 0 };
+    let diff = e - s;
+    // Equal times are ambiguous (no time, or a full day), so neither is assumed.
+    if (diff === 0) return { dur: 'start = end', dec: '', status: 'warn', mins: 0 };
+    if (diff < 0) diff += 24 * 60;        // overnight support
+    if (lunch > diff) return { dur: 'lunch > work', dec: '', status: 'warn', mins: 0 };
+    diff -= lunch;
+    return { dur: fmtHHMM(diff), dec: fmtDecimal(diff), status: 'ok', mins: diff };
+  }
+
+  const badStart = row.start.trim() && s === null;
+  const badEnd   = row.end.trim()   && e === null;
+  if (badStart || badEnd) return { dur: 'invalid', dec: '', status: 'error', mins: 0 };
+  return { dur: '', dec: '', status: 'partial', mins: 0 };
+}

@@ -83,8 +83,8 @@ describe("timesheet arrow-key navigation", () => {
 
   it("leaves the Tab chain alone", async () => {
     /* The reason the roving tabindex was not ported. Tab still walks the three
-       columns and rolls into the next row, and off the last row it adds one —
-       which a grid that is one tab stop could not do. */
+       columns and rolls into the next row, and off a filled last row it adds
+       one — which a grid that is one tab stop could not do. */
     const user = userEvent.setup();
     render(<SheetTimesheet />);
 
@@ -96,11 +96,39 @@ describe("timesheet arrow-key navigation", () => {
     await user.tab();
     expect(document.activeElement).toBe(cell("start", 2));
 
+    await user.click(cell("start", 3));
+    await user.keyboard("8:00");
     await user.click(cell("lunch", 3));
     await user.tab();
     // The new row's field is focused from a timeout, once React has rendered it.
     await waitFor(() => expect(cell("start", 4)).not.toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(cell("start", 4)));
+  });
+
+  it("lets Tab leave the grid from an empty last row instead of adding another", async () => {
+    // Adding a row on every Tab was a trap: a keyboard could never reach the
+    // presets, Add row or Copy past the grid.
+    const user = userEvent.setup();
+    render(<SheetTimesheet />);
+    await user.click(cell("lunch", 3));
+    await user.tab();
+    expect(cell("start", 4)).toBeNull();
+    // On to the row's own remove button, the next thing in the page's order.
+    expect(document.activeElement.getAttribute("aria-label")).toBe("Remove row 3");
+    await user.tab();
+    expect(document.activeElement.textContent).toBe("15 min");
+  });
+
+  it("names each row's fields and remove button by its place on screen", async () => {
+    // By position, not the row's hidden id: after removing row 1 the first
+    // row is row 1 again, not "Start time 2".
+    const user = userEvent.setup();
+    render(<SheetTimesheet />);
+    await user.click(screen.getByLabelText("Remove row 1"));
+    expect(screen.getByLabelText("Start time, row 1")).toBe(cell("start", 2));
+    expect(screen.getByLabelText("Lunch duration, row 2")).toBe(cell("lunch", 3));
+    expect(screen.getAllByRole("button", { name: /^Remove row \d$/ }).map(b => b.getAttribute("aria-label")))
+      .toEqual(["Remove row 1", "Remove row 2"]);
   });
 
   it("still moves after a row is added or removed", async () => {
@@ -114,7 +142,7 @@ describe("timesheet arrow-key navigation", () => {
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(cell("start", 4));
 
-    await user.click(screen.getAllByLabelText("Remove row")[3]);
+    await user.click(screen.getByLabelText("Remove row 4"));
     await user.click(cell("start", 3));
     await user.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(cell("start", 3));
