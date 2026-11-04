@@ -268,6 +268,12 @@ export function buildGypsumTakeOff(fields) {
     warning: openingsTooBig ? "Openings are larger than the wall area; they are capped at it." : null,
 
     mode: room ? "room" : "wall",
+    /* The box the 3D view folds the surfaces into, in mm. A single wall has
+       no depth and no ceiling. */
+    room: dimsReady
+      ? (room ? { length: L, width: W, height: H, ceiling: Boolean(ceiling) }
+              : { length: num(wallW), width: 0, height: num(wallH), ceiling: false })
+      : null,
     orientation: fix,
     layers: layerCount,
     sheet: { width: SW || null, length: SL || null, area: round(SW * SL / 1e6, 2) },

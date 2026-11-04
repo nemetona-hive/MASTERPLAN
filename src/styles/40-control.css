@@ -178,6 +178,11 @@
  * Resets the individual button border/radius so only the
  * wrapper reads as the control boundary. */
 
+/* A track that sizes to its segments rather than its row — for a small
+   switch sitting beside something else (a section title, a Reset button). */
+.seg-group--inline { width: auto; flex: 0 0 auto; }
+.seg-group--inline .ctrl-dir { flex: 0 0 auto; min-width: 4.5em; }
+
 .seg-group .ctrl-dir {
   flex: 1;
   padding: 0 var(--sp-2);

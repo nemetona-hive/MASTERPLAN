@@ -60,7 +60,9 @@ Compose `.ctl-ghost`, `.ctl-danger` (destructive hover), `.ctl-sm` and
 `.ctl-icon` in the markup rather than writing a bespoke recipe — Timesheet's
 remove is `num-btn ctl-ghost ctl-sm ctl-icon ctl-danger` and owns no CSS of its
 own. `.seg-group` is neither tier: it is a recessed track, and its segments
-carry no ring because the track supplies the edge.
+carry no ring because the track supplies the edge. It fills its row; add
+`.seg-group--inline` for a small switch beside something else (a section
+title, a Reset button), which sizes the track to its segments.
 
 **A control picks a step off the scale; it does not invent a height — and not
 stating one is the same mistake**, because the box then comes out as padding

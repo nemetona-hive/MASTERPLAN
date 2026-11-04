@@ -4,6 +4,7 @@ import { React } from "../react-globals.js";
 import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
+import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
 import { buildGypsumTakeOff } from "../utils/gypsum-take-off.js";
 
 // ── Gypsum board estimator ────────────────────────────────────────────────────
@@ -25,9 +26,9 @@ const BLANK_PRESET = { name: "", sheetW: "", sheetL: "", screwRate: "", compound
 const EMPTY = ["lenMm", "widMm", "heightMm", "wallW", "wallH", "doors", "windows", ...PRODUCT_FIELDS];
 const PREFILLED = { doorW: "900", doorH: "2100", winW: "1200", winH: "1200", waste: "5" };
 
-function Seg({ value, options, onChange, label }) {
+function Seg({ value, options, onChange, label, inline = false }) {
   return (
-    <div className="seg-group" role="group" aria-label={label}>
+    <div className={"seg-group" + (inline ? " seg-group--inline" : "")} role="group" aria-label={label}>
       {options.map(([id, text]) => (
         <button key={id} type="button" className={"ctrl-dir" + (value === id ? " on" : "")}
           aria-pressed={value === id} onClick={() => onChange(id)}>{text}</button>
@@ -41,6 +42,7 @@ export function SheetGypsum() {
   const [ceiling, setCeiling] = useSessionState(KEY("ceiling"), false);
   const [orientation, setOrientation] = useSessionState(KEY("orientation"), "V");
   const [layers, setLayers] = useSessionState(KEY("layers"), "1");
+  const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
 
   /* Every typed field in one object, so reset and the model call do not repeat
      the list. A setter per field is derived from it. */
@@ -77,7 +79,7 @@ export function SheetGypsum() {
 
   const resetAll = () => {
     setJob(initialJob());
-    setMode("room"); setCeiling(false); setOrientation("V"); setLayers("1");
+    setMode("room"); setCeiling(false); setView3d(false); setOrientation("V"); setLayers("1");
     setActivePreset(null);
   };
   const handleReset = () => {
@@ -350,10 +352,15 @@ export function SheetGypsum() {
             {/* ── Layout ── */}
             {takeOff.surfaces.some(s => s.layout) && (
               <div className="section unboxed">
-                <div className="section-head"><span>Layout</span></div>
+                <div className="section-head">
+                  <span>Layout</span>
+                  <Seg inline label="Layout view" value={view3d ? "3d" : "2d"} onChange={v => setView3d(v === "3d")}
+                    options={[["2d", "2D"], ["3d", "3D"]]} />
+                </div>
                 <div className="section-body">
                   <Stack className="section-pad" gap={4}>
-                    {takeOff.surfaces.filter(s => s.layout).map(s => (
+                    {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
+                    {!view3d && takeOff.surfaces.filter(s => s.layout).map(s => (
                       <Stack key={s.id} gap={2} className="gyp-surface">
                         <div className="gyp-surface-head">
                           <span className="gyp-surface-name">{s.label}{s.count > 1 ? ` ×${s.count}` : ""}</span>

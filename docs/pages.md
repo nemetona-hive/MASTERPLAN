@@ -82,6 +82,22 @@ a second layer. All figures, and the diagrams, come from
 - The diagram is `LayoutVisualization`; the model emits rows in the
   `simulation.js` shape with `meta.exactRows`, which draws each lane at its
   real width so a ripped last lane is narrow.
+- **3D view** (`components/GypsumRoom3D.jsx`, the 2D/3D switch in the Layout
+  header). CSS 3D transforms, no library: each boarded surface is a flat
+  panel folded around the room's centre, drawing the model's `layout.pieces`
+  in the 2D diagram's classes. Every wall panel faces *into* the room and
+  `backface-visibility: hidden` culls the ones facing away, so the near walls
+  drop out with no code deciding which. `roomFaces()` is the pure placement
+  function the tests read; the model supplies `room` (L, W, H, ceiling).
+  - The ceiling is drawn **lifted** (exploded, 0.55 × H) and double-sided,
+    seen from above like a reflected ceiling plan. A camera below the floor
+    looking up was tried at several angles and always read as a box seen from
+    outside — do not bring a "Below" view back.
+  - Drag turns it (horizontal on touch: `touch-action: pan-y` keeps vertical
+    swipes scrolling the page); arrow keys turn it; Above / Level / Reset ease
+    there, a drag does not. End walls and ceiling are shaded with
+    `filter: brightness`, not a colour, so depth reads in every theme.
+  - Openings are not drawn — they have no position along their wall yet.
 - **Printed take-off** = surfaces table, order, then one ink drawing per
   surface (`GypsumTakeOffSheet`). It draws `layout.pieces` — rectangles the
   model places in surface mm — and labels each with the model's `len`, so the
