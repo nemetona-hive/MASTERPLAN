@@ -191,8 +191,8 @@ export function SheetGypsum() {
               value={val("sheetL")} min={100} onChange={productChange(board, "sheetL")} req={req("sheetL")} />
             <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
               options={[["V", "Vertical"], ["H", "Horizontal"]]} />
-            {/* Board edges land on studs only when fixed vertically. */}
-            {orientation === "V" && num("firstOffset", "First panel offset (mm)", { max: 10000 })}
+            {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
+            {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
             {/* Glued is one layer on walls; the model enforces it, so the choice
                 is not offered rather than offered and ignored. */}
             <Seg label="Fixing method" value={fixing} onChange={setFixing}

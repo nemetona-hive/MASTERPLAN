@@ -52,10 +52,17 @@ const round = (value, places) => {
 /**
  * Cuts one lane of length `span` into pieces from sheets of length `sheetL`.
  * Returns piece lengths, in order from the lane's start.
+ *
+ * `start` (mm) makes the lane's first piece that long, so the first full board
+ * begins on a stud rather than at the corner; alternate lanes still begin half
+ * a sheet further on, counted from there, which keeps the end joints apart.
  */
-export function lanePieces(span, sheetL, laneIndex) {
+export function lanePieces(span, sheetL, laneIndex, start = 0) {
   if (span <= sheetL + EPS) return [span];
-  let first = laneIndex % 2 === 1 ? sheetL * STAGGER : sheetL;
+  const stagger = laneIndex % 2 === 1 ? sheetL * STAGGER : 0;
+  let first = start > EPS ? start + stagger : (stagger || sheetL);
+  if (first > sheetL + EPS) first -= sheetL;
+  if (first >= span - EPS) return [span];
   const rest = span - first;
   const full = Math.floor((rest + EPS) / sheetL);
   let last = rest - full * sheetL;
@@ -82,10 +89,11 @@ export function lanePieces(span, sheetL, laneIndex) {
  * and from the sheet count. A piece the opening only overlaps stays: it is
  * hung and cut around.
  *
- * `firstLane` (mm) starts the surface with a strip that wide instead of a full
- * board, so the first full board's edge lands on a stud rather than at the
- * corner: with studs at 600 centres, a 600 strip puts it on the first stud
- * after the corner stud. Ignored unless it is narrower than a board.
+ * `firstLane` (mm) keeps the first full board off the corner so its edge lands
+ * on a stud: with studs at 600 centres, 600 puts it on the first stud after
+ * the corner stud. Fixed vertically, the surface starts with a strip that
+ * wide; fixed horizontally, every lane's first piece is that long (see
+ * `lanePieces`). Ignored unless it is shorter than the board's side it cuts.
  */
 export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0 }) {
   const vertical = orientation === "V";
@@ -93,7 +101,7 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
   const across = vertical ? w : h;
   const lanes = [];
   let pos = 0;
-  if (firstLane > EPS && firstLane < sheetW - EPS) {
+  if (vertical && firstLane > EPS && firstLane < sheetW - EPS) {
     lanes.push(Math.min(firstLane, across));
     pos = firstLane;
   }
@@ -103,7 +111,8 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
   }
   const fullRows = lanes.map((laneW, laneIndex) => {
     let x = 0;
-    const segs = lanePieces(laneLength, sheetL, laneIndex).map(len => {
+    const start = !vertical && firstLane > EPS && firstLane < sheetL - EPS ? firstLane : 0;
+    const segs = lanePieces(laneLength, sheetL, laneIndex, start).map(len => {
       const whole = Math.abs(len - sheetL) < EPS && Math.abs(laneW - sheetW) < EPS;
       // `pid` picks the palette swatch for a full sheet in the diagram.
       const seg = { x, w: len, type: whole ? "full" : "cut", laneW, ...(whole ? { pid: 0 } : {}) };
@@ -323,11 +332,12 @@ export function buildGypsumTakeOff(fields) {
   }
 
   /* First-panel offset: walls only (a ceiling's joists are another grid),
-     vertical fixing only (it is board edges that must land on studs), and
-     narrower than a board, or it would be a board. */
+     and shorter than the board side it cuts — the width fixed vertically,
+     the length fixed horizontally — or it would be a whole board. */
   const offsetAsked = given(firstOffset) ? num(firstOffset) : 0;
-  const offsetFits = offsetAsked > 0 && SW > 0 && offsetAsked < SW;
-  const offset = fix === "V" && offsetFits ? offsetAsked : 0;
+  const offsetLimit = fix === "V" ? SW : SL;
+  const offsetFits = offsetAsked > 0 && offsetLimit > 0 && offsetAsked < offsetLimit;
+  const offset = offsetFits ? offsetAsked : 0;
 
   const tooLarge = sheetReady && surfaces.some(s => {
     const vertical = fix === "V";
@@ -416,7 +426,8 @@ export function buildGypsumTakeOff(fields) {
       : invalid.length ? `${invalid.map(o => o.label).join(", ")}: enter a width and height.`
       : openingsTooBig ? "Openings are larger than the wall area; they are capped at it."
       : skimThickness > 0 && !skimPerMm ? "Enter the filler's kg/m² per 1 mm to count the surface skim."
-      : offsetAsked > 0 && SW > 0 && !offsetFits ? "First panel offset must be less than the sheet width; it is left out." : null,
+      : offsetAsked > 0 && offsetLimit > 0 && !offsetFits
+        ? `First panel offset must be less than the sheet ${fix === "V" ? "width" : "length"}; it is left out.` : null,
 
     mode: room ? "room" : "wall",
     /* The box the 3D view folds the surfaces into, in mm. A single wall has

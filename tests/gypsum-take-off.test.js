@@ -224,15 +224,30 @@ describe("the gypsum take-off", () => {
       expect(firstFull.x).toBe(600);
     });
 
-    it("applies to walls, not the ceiling, and only when fixing vertically", () => {
+    it("applies to walls, not the ceiling", () => {
       const t = buildGypsumTakeOff(fields({ ceiling: true, firstOffset: "600" }));
       const wall = t.surfaces.find(s => s.id === "wall-ac");
       const ceiling = t.surfaces.find(s => s.id === "ceiling");
       expect(wall.layout.rows[0].h).toBe(600);
       expect(ceiling.layout.rows[0].h).toBe(1200);
       expect(t.firstOffset).toBe(600);
-      const h = buildGypsumTakeOff(fields({ orientation: "H", firstOffset: "600" }));
-      expect(h.firstOffset).toBe(null);
+    });
+
+    it("fixed horizontally, starts every row's first piece at the offset, still staggered", () => {
+      // 5000 wall, 2600 boards: row 1 = 600 + 2600 + 1800; row 2 starts half a
+      // board further on, 600 + 1300 = 1900, then 2600 and 500.
+      expect(lanePieces(5000, 2600, 0, 600)).toEqual([600, 2600, 1800]);
+      expect(lanePieces(5000, 2600, 1, 600)).toEqual([1900, 2600, 500]);
+      const lay = layoutSurface({ w: 5000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H", firstLane: 600 });
+      const firstFull = lay.pieces.find(p => p.type === "full" && p.lane === 0);
+      expect(firstFull.x).toBe(600);
+      // A wall one board covers needs no joint, so no offset either.
+      expect(lanePieces(2400, 2600, 0, 600)).toEqual([2400]);
+    });
+
+    it("keeps the sliver rule with an offset", () => {
+      // 600 + 2600 leaves 100 on a 3300 run; the first piece gives up 200.
+      expect(lanePieces(3300, 2600, 0, 600)).toEqual([400, 2600, 300]);
     });
 
     it("packs the corner strips two to a board", () => {
@@ -246,10 +261,13 @@ describe("the gypsum take-off", () => {
       expect(offset.sheets.layout).toBe(plain.sheets.layout);
     });
 
-    it("leaves out an offset as wide as a board, and says so", () => {
-      const t = buildGypsumTakeOff(fields({ firstOffset: "1200" }));
-      expect(t.firstOffset).toBe(null);
-      expect(t.warning).toMatch(/less than the sheet width/);
+    it("leaves out an offset as long as the board side it cuts, and says so", () => {
+      const v = buildGypsumTakeOff(fields({ firstOffset: "1200" }));
+      expect(v.firstOffset).toBe(null);
+      expect(v.warning).toMatch(/less than the sheet width/);
+      const h = buildGypsumTakeOff(fields({ orientation: "H", firstOffset: "1200" }));
+      expect(h.firstOffset).toBe(1200);
+      expect(buildGypsumTakeOff(fields({ orientation: "H", firstOffset: "2600" })).warning).toMatch(/less than the sheet length/);
     });
   });
 
