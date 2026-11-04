@@ -154,8 +154,17 @@ manage its own: a Gypsum job and a concrete pour are different jobs, with
 different names, opened and closed apart. Each page lists only its own
 projects, has its own open one (remembered per page in `localStorage`, as
 `masterplan.project.<page>`), and opening one replaces only that page's values.
-The header no longer has a project control. The sidebar was saved in a project
-when a project was the whole app; it belongs to no page, so it is not saved.
+The header no longer has a project control.
+
+**The sidebar is a browser preference, not project data.** It was saved in the
+project while a project was the whole app, and per-page projects lost it for a
+moment (the user noticed the same day). It belongs to no page, so it now lives
+where the theme does: `localStorage` `masterplan.nav`, `open` or `closed`,
+kept with or without a project. Only the user's own choice is stored (the
+button, or Ctrl+B, on a desktop): a collapse the viewport makes on its own at
+≤ 1280px is not a choice, and the phone's drawer is a different control. The
+stored choice is applied wherever the screen has room for the full sidebar.
+`scripts/journeys.mjs` checks both directions survive a reload.
 
 **Which page owns what** is `src/utils/project-pages.js`. Drafts are told apart
 by key prefix, since every key starts with the file that owns it

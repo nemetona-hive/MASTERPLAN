@@ -68,6 +68,22 @@ function LogoLayer({ className, filter }) {
 
 const getIsMobile = isMobileViewport;
 
+/* The sidebar as the user last set it (button or Ctrl+B): true, false, or null
+   until they do. A preference of this browser, like the theme, so it lives in
+   localStorage and is kept with or without a project — it belongs to no page,
+   so per-page projects cannot hold it. Only the user's choice is stored, never
+   a collapse the viewport made on its own. */
+const NAV_KEY = "masterplan.nav";
+const readNavPref = () => {
+  try {
+    const saved = localStorage.getItem(NAV_KEY);
+    return saved === "open" ? true : saved === "closed" ? false : null;
+  } catch { return null; }
+};
+const writeNavPref = open => {
+  try { localStorage.setItem(NAV_KEY, open ? "open" : "closed"); } catch { /* private mode */ }
+};
+
 // Read page id from URL hash, fallback to "home"
 const getHashPage = () => {
   const hash = window.location.hash.replace("#", "");
@@ -130,8 +146,16 @@ function App() {
   const [isMobile, setIsMobile]            = React.useState(getIsMobile);
   /* Expanded only when there is room for it: mobile has its own drawer, and a
      tablet cannot afford 260px of sidebar next to a 384px control column. */
-  const [navOpen, setNavOpen]               = React.useState(() => !getIsMobile() && !isCompactNavViewport());
-  const setNavOpenByUser = value => setNavOpen(typeof value === "function" ? value(navOpen) : value);
+  /* Where the screen has room, the sidebar is as the user last left it. */
+  const navPref = React.useRef(readNavPref());
+  const roomyNav = () => !getIsMobile() && !isCompactNavViewport() && navPref.current !== false;
+  const [navOpen, setNavOpen]               = React.useState(roomyNav);
+  const setNavOpenByUser = value => {
+    const next = typeof value === "function" ? value(navOpen) : value;
+    setNavOpen(next);
+    // A phone's drawer is its own thing; the choice is the desktop sidebar's.
+    if (!getIsMobile()) { navPref.current = next; writeNavPref(next); }
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [theme, setTheme]                   = useState(() => {
     try {
@@ -182,7 +206,7 @@ function App() {
       setMobileMenuOpen(false);
       // Leaving mobile does not automatically mean there is room for the full
       // sidebar — 800px is desktop layout on a tablet-width screen.
-      if (!e.matches) setNavOpen(!isCompactNavViewport());
+      if (!e.matches) setNavOpen(roomyNav());
     };
     // Rotating usually stays on the same side of the query, so it arrives as no
     // change event — but every button has moved out from under the thumb that
@@ -197,7 +221,7 @@ function App() {
       : null;
     const onCompact = e => {
       if (isMobileViewport()) return;
-      setNavOpen(!e.matches);
+      setNavOpen(!e.matches && navPref.current !== false);
     };
 
     mq.addEventListener("change", onCross);

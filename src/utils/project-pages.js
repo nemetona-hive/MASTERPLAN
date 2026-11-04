@@ -10,7 +10,7 @@
  *
  * `app` names the App.jsx state a page is handed as props rather than holding
  * itself: Pattern Layouts' `sh`, Axial Alignment's `sym`, Golden Ratio's
- * `grItems`. The sidebar is not any page's, and is no longer saved.
+ * `grItems`. The sidebar is no page's: App keeps it in localStorage, like the theme.
  */
 export const PROJECT_PAGES = {
   "pattern-layout": { drafts: ["SurfaceLayout.jsx:"], app: ["sh"] },
