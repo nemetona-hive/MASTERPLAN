@@ -29,7 +29,7 @@ const VERSION = 1;
 const ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const MAX_NAME = 80;
 const MAX_DRAFT_KEYS = 500;
-const APP_KEYS = ["sh", "sym", "grItems"];
+const APP_KEYS = ["sh", "sym", "grItems", "nav"];
 
 class ProjectError extends Error {
   constructor(statusCode, message) {

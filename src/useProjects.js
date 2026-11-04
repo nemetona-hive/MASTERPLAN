@@ -8,7 +8,7 @@ import {
  * Projects for App.jsx: which one is open, the list, and the autosave.
  *
  * `drafts` is the DraftStore every page writes to; `appState` is what App
- * holds itself ({ sh, sym, grItems }) and `applyAppState` puts a project's back.
+ * holds itself ({ sh, sym, grItems, nav }) and `applyAppState` puts a project's back.
  * Opening a project bumps `epoch`, which App adds to the routed page's key so
  * the page remounts and reads the new drafts. A remount also clears undo: the
  * page's history unregisters on unmount, and field undo belongs to DOM nodes
@@ -73,7 +73,7 @@ export function useProjects({ drafts, appState, applyAppState }) {
   React.useEffect(() => drafts.subscribe(() => saver.schedule()), [drafts, saver]);
   React.useEffect(() => { if (project) saver.schedule(); },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appState.sh, appState.sym, appState.grItems, project]);
+    [appState.sh, appState.sym, appState.grItems, appState.nav, project]);
 
   /* Leaving the page: save what the debounce was still holding. `keepalive`
      lets the request outlive the page; it is capped at 64 KiB, which a

@@ -88,6 +88,11 @@ describe("projects on the local server", () => {
     expect(fs.readdirSync(path.join(dir(), ".trash"))).toHaveLength(1);
   });
 
+  it("keeps the sidebar choice with the App state", () => {
+    request({ method: "POST", body: project({ app: { sh: {}, nav: false } }) });
+    expect(request({ url: "/api/projects/kitchen" }).json.app).toEqual({ sh: {}, nav: false });
+  });
+
   it("keeps only the App state it restores", () => {
     request({ method: "POST", body: project({ app: { sh: {}, theme: "x", evil: 1 } }) });
     expect(Object.keys(request({ url: "/api/projects/kitchen" }).json.app)).toEqual(["sh"]);

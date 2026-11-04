@@ -142,9 +142,13 @@ was built.
 
 **What a project is.** One JSON file in `_personal/projects/<id>.json`, holding
 `drafts` (every page's `useSessionState` values, by key — the `DraftStore` in
-`src/utils/session-state.js`) and `app` (`sh`, `sym`, `grItems`, the state App
+`src/utils/session-state.js`) and `app` (`sh`, `sym`, `grItems`, `nav`, the state App
 holds itself). So a project is *every page at once*: open it and each calculator
-is as you left it. `_personal/` is gitignored and is not in the static server's
+is as you left it. `nav` is the sidebar as the user last set it (button or
+Ctrl+B), not as the viewport left it: App keeps it apart from `navOpen`, since
+a narrow window collapses the sidebar on its own and that is not a choice. It
+is applied only where the screen has room for it (not on a phone, not in the
+compact band). `_personal/` is gitignored and is not in the static server's
 public file set, so a project is never committed, never pushed, never served.
 
 | Piece | File |
@@ -163,7 +167,7 @@ in every screenshot.
 
 **Autosave.** 800 ms after the last change, never two writes in flight (a change
 during a save is saved after it), and an unchanged body is not resent. It
-watches the *state* — a draft written, or `sh`/`sym`/`grItems` changing — not
+watches the *state* — a draft written, or `sh`/`sym`/`grItems`/`nav` changing — not
 the actions, so undo, a preset, a reset are all saved without a list of
 triggers to keep up to date. Leaving the page sends what the debounce was
 holding with `keepalive`. A failed save turns the header control to `--danger`

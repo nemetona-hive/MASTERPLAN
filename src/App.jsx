@@ -131,6 +131,15 @@ function App() {
   /* Expanded only when there is room for it: mobile has its own drawer, and a
      tablet cannot afford 260px of sidebar next to a 384px control column. */
   const [navOpen, setNavOpen]               = React.useState(() => !getIsMobile() && !isCompactNavViewport());
+  /* The sidebar as the user last set it (button or Ctrl+B), null until they
+     do. Kept apart from navOpen because the viewport also collapses the
+     sidebar, and that must not be saved into a project as a choice. */
+  const [navPref, setNavPref]               = React.useState(null);
+  const setNavOpenByUser = value => {
+    const next = typeof value === "function" ? value(navOpen) : value;
+    setNavOpen(next);
+    setNavPref(next);
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [theme, setTheme]                   = useState(() => {
     try {
@@ -249,11 +258,12 @@ function App() {
       if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "b") return;
       e.preventDefault();
       if (isMobile) setMobileMenuOpen(o => !o);
-      else setNavOpen(o => !o);
+      else setNavOpenByUser(!navOpen);
     };
     window.addEventListener("keydown", onToggleShortcut, true);
     return () => window.removeEventListener("keydown", onToggleShortcut, true);
-  }, [isMobile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, navOpen]);
 
   React.useEffect(() => {
     try { localStorage.setItem("theme", theme); } catch {}
@@ -265,14 +275,19 @@ function App() {
   const [grItems, setGrItems] = useState(DEFAULT_GR);
   const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
-  /* Projects, local mode only: every page's drafts plus the three pieces of
-     state App holds itself. A project's values are merged over the defaults,
+  /* Projects, local mode only: every page's drafts plus the state App holds
+     itself — three calculators' values and the sidebar the user chose. A project's values are merged over the defaults,
      so a project saved before a field existed opens with that field at its
      default rather than missing. */
   const projects = useProjects({
     drafts: drafts.current,
-    appState: { sh, sym, grItems },
+    appState: { sh, sym, grItems, nav: navPref },
     applyAppState: app => {
+      /* The saved sidebar, where the screen has room for it: a phone owns its
+         own drawer, and a narrow window keeps its icon strip. */
+      const nav = typeof app.nav === "boolean" ? app.nav : null;
+      setNavPref(nav);
+      if (nav !== null && !isMobileViewport() && !isCompactNavViewport()) setNavOpen(nav);
       setSh(app.sh && typeof app.sh === "object" ? { ...DEFAULT_SH, ...app.sh } : DEFAULT_SH);
       setSym(app.sym && typeof app.sym === "object" ? { ...DEFAULT_SYM, ...app.sym } : DEFAULT_SYM);
       setGrItems(Array.isArray(app.grItems) ? app.grItems : DEFAULT_GR);
@@ -325,7 +340,7 @@ function App() {
       </div>
       {offline && <p role="status" className="app-status">You’re offline. Open calculators still work; keep this window open.</p>}
       <div id="app-page" className={"app-page" + (mobileMenuOpen ? " nav-open" : "")}>
-        <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpen}
+        <AppNav page={page} setPage={setPage} navOpen={navOpen} setNavOpen={setNavOpenByUser}
           mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} isMobile={isMobile} />
         {/* <main>, not a div: every page needs exactly one main landmark for a
             screen reader to skip the nav with. Styling is unchanged — .page-main
