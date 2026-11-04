@@ -118,6 +118,12 @@ try {
   await page.locator(".nav-btn", { hasText: "Concrete" }).first().click();
   check(await page.evaluate(() => history.length) === historyBefore, "Choosing the page already shown adds no history entry");
 
+  // The wordmark is the way home, as in MONEYFLOW.
+  await page.getByRole("button", { name: "Go to home", exact: true }).click();
+  await page.locator(".home-cards").waitFor();
+  check(new URL(page.url()).hash === "", "The header wordmark goes to the home page");
+  await go("concrete");
+
   // The sidebar stays as the user left it, across a reload, with no project.
   await page.keyboard.press("Control+b");
   check(await page.locator(".nav.nav-collapsed").count() === 1, "Ctrl+B collapses the sidebar");

@@ -362,6 +362,7 @@
     gap: var(--sp-3);
     padding: var(--sp-2) var(--sp-3);
   }
+  .header-logo-button { min-width: 0; }
   .header-logo { width: 100%; max-width: 13rem; height: auto; min-width: 0; }
   .header-actions { position: static; translate: none; }
   .disclosure, .result-card-print { --ctl-h: var(--ctl-h-touch); min-height: var(--ctl-h-touch); }
@@ -379,7 +380,7 @@
 	 * pulled out of its absolute pin into a normal right-aligned row, because
 	 * there is no longer a centred logo for it to avoid pushing off centre.
 	 */
-	.header-logo {
+	.header-logo-button {
 		display: none;
 	}
 

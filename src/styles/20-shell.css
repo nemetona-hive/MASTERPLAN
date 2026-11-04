@@ -44,6 +44,25 @@
  * inline <style> inside the SVG and again in 10-nav.css — two copies of one
  * rule, in a stylesheet about the nav, for a mark in the header.
  * ------------------------------------------------------------------------- */
+/* The wordmark is the Home route (ported from MONEYFLOW), but keeps its
+   non-control look, so it stays the centre of the header. The md control
+   height gives it a steady keyboard target without changing the 32px logo. */
+.header-logo-button {
+	display: block;
+	min-height: var(--ctl-h-md);
+	padding: 0;
+	border: none;
+	border-radius: var(--btn-radius);
+	background: transparent;
+	line-height: 0;
+	cursor: pointer;
+}
+
+.header-logo-button:focus-visible {
+	outline: 2px solid var(--brand);
+	outline-offset: 4px;
+}
+
 .header-logo {
 	--logo-emit:    var(--brand);
 	--logo-peak:    color-mix(in srgb, var(--brand) 70%, var(--text));

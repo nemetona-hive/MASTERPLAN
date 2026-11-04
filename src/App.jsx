@@ -317,8 +317,11 @@ function App() {
     <SessionDraftContext.Provider value={drafts.current}>
     <div id="app" className="app">
       <div id="app-head" className="app-head">
+        {/* The wordmark is the way home, as in MONEYFLOW: a button that keeps
+            the mark's own look, named for what it does. */}
+        <button type="button" className="header-logo-button" aria-label="Go to home" onClick={() => setPage("home")}>
         <svg className="header-logo" viewBox="0 0 410.86 63.9" xmlns="http://www.w3.org/2000/svg"
-          role="img" aria-label="NEMETONA">
+          aria-hidden="true" focusable="false">
           <defs>
             {LOGO_GEOMETRY}
             <filter id="logo-drop" x="-25%" y="-60%" width="150%" height="220%">
@@ -332,6 +335,7 @@ function App() {
           <LogoLayer className="logo-glow" filter="url(#logo-glow)" />
           <LogoLayer className="logo-core" />
         </svg>
+        </button>
         {/* One cluster, pinned right, grouped by REACH: undo acts on the page
             or the field you were in, the theme on the whole app. Ordering them
             that way puts the narrowest action furthest from the app-wide one.
