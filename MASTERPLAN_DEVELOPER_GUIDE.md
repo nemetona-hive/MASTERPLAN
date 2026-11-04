@@ -19,7 +19,7 @@ Read this page, then the topic file your change touches.
 | [Shared components](docs/components.md) | reaching for a primitive, a modal, an icon, or the SVG |
 | [Pages and routing](docs/pages.md) | adding a page or changing the nav |
 | [Documents the app produces](docs/exports.md) | changing a printed sheet, a report model, or the manifest |
-| [Deploying, and what is kept](docs/deploying.md) | pushing, or wondering where state goes |
+| [Deploying, and what is kept](docs/deploying.md) | pushing, wondering where state goes, or touching projects (local mode) |
 
 ## Architecture
 

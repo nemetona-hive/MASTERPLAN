@@ -1,4 +1,6 @@
-import { SessionDraftContext } from "./utils/session-state.js";
+import { DraftStore, SessionDraftContext } from "./utils/session-state.js";
+import { useProjects } from "./useProjects.js";
+import { ProjectMenu } from "./components/ProjectMenu.jsx";
 import { React, ReactDOM, useState } from "./react-globals.js";
 import { SheetConcrete } from "./components/Concrete.jsx";
 import { SheetGypsum } from "./components/Gypsum.jsx";
@@ -72,11 +74,11 @@ const getHashPage = () => {
   return PAGES.some(p => p.id === hash) ? hash : "home";
 };
 
-function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen }) {
+function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen, projectOpen }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
-    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} /></div>;
+    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} projectOpen={projectOpen} /></div>;
   }
 
   let content = null;
@@ -113,7 +115,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
 }
 
 function App() {
-  const drafts = React.useRef(new Map());
+  const drafts = React.useRef(new DraftStore());
   const [offline, setOffline] = React.useState(() => !navigator.onLine);
   React.useEffect(() => {
     const update = () => setOffline(!navigator.onLine);
@@ -260,6 +262,20 @@ function App() {
   const [grItems, setGrItems] = useState(DEFAULT_GR);
   const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
+  /* Projects, local mode only: every page's drafts plus the three pieces of
+     state App holds itself. A project's values are merged over the defaults,
+     so a project saved before a field existed opens with that field at its
+     default rather than missing. */
+  const projects = useProjects({
+    drafts: drafts.current,
+    appState: { sh, sym, grItems },
+    applyAppState: app => {
+      setSh(app.sh && typeof app.sh === "object" ? { ...DEFAULT_SH, ...app.sh } : DEFAULT_SH);
+      setSym(app.sym && typeof app.sym === "object" ? { ...DEFAULT_SYM, ...app.sym } : DEFAULT_SYM);
+      setGrItems(Array.isArray(app.grItems) ? app.grItems : DEFAULT_GR);
+    }
+  });
+
   return (
     <SessionDraftContext.Provider value={drafts.current}>
     <div id="app" className="app">
@@ -290,6 +306,14 @@ function App() {
           <div className="hdr-group">
             <UndoButtons />
           </div>
+          {projects.available && <>
+            <span className="hdr-sep" aria-hidden="true" />
+            <div className="hdr-group">
+              <ProjectMenu projects={projects.projects} project={projects.project} saveError={projects.saveError}
+                scratchHasValues={projects.scratchHasValues} onRefresh={projects.refresh}
+                onCreate={projects.create} onOpen={projects.open} onCloseProject={projects.close} onDelete={projects.remove} />
+            </div>
+          </>}
           <span className="hdr-sep" aria-hidden="true" />
           <div className="hdr-group">
             <ThemeButton theme={theme} setTheme={setTheme} />
@@ -305,10 +329,12 @@ function App() {
             is a class and nothing selects on the tag. */}
         <main id="page-main" className="page-main"
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
-        <PageErrorBoundary key={page}>
+        {/* The epoch remounts the page when a project is opened, so it reads
+            the project's drafts — and drops the old page's undo history. */}
+        <PageErrorBoundary key={`${page}:${projects.epoch}`}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
-          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} />
+          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} projectOpen={Boolean(projects.project)} />
         </PageErrorBoundary>
         </main>
       </div>

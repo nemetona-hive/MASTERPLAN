@@ -4,6 +4,7 @@ const path = require('path');
 const vm = require('node:vm');
 const { randomUUID } = require('node:crypto');
 const { parseMeasurement } = require('../src/utils/measurements.cjs');
+const { createProjectStore } = require('./project-store.js');
 
 const PORT = 3005;
 // Bind loopback only. /api/save-defaults writes straight to config.js and has
@@ -281,12 +282,57 @@ function writeFileAtomic(file, contents, io = fs) {
   if (failure) throw failure;
 }
 
-function createRequestHandler({ rootDir = ROOT_DIR, io = fs } = {}) {
+function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
   const root = io.realpathSync(rootDir);
+  const projects = createProjectStore({ rootDir: root, io, ...(now ? { now } : {}) });
   const reply = (res, code, payload) => {
-    res.writeHead(code, { "Content-Type": "application/json", "X-Content-Type-Options": "nosniff" });
+    res.writeHead(code, { "Content-Type": "application/json", "X-Content-Type-Options": "nosniff",
+      "Cache-Control": "no-store" });
     res.end(JSON.stringify(payload));
   };
+
+  /* A JSON body, capped, then `done(payload)`; replies itself on any failure. */
+  const readJson = (req, res, done) => {
+    if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") {
+      reply(res, 415, { error: "Send application/json" }); return;
+    }
+    let size = 0, ended = false;
+    const chunks = [];
+    req.on("aborted", () => { ended = true; });
+    req.on("error", () => { if (!ended) { ended = true; reply(res, 400, { error: "Incomplete request" }); } });
+    req.on("data", chunk => {
+      if (ended) return;
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) { ended = true; reply(res, 413, { error: "Over the 256 KiB request limit" }); return; }
+      chunks.push(Buffer.from(chunk));
+    });
+    req.on("end", () => {
+      if (ended) return;
+      ended = true;
+      let payload;
+      try { payload = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
+      catch { reply(res, 400, { error: "Invalid JSON" }); return; }
+      done(payload);
+    });
+  };
+
+  /* Projects (scripts/project-store.js). Every route is behind the same
+     loopback-and-Origin check as the defaults save, reads included: a project
+     is private data, and a rebinding page could otherwise read it. */
+  const projectReply = (res, run) => {
+    try { reply(res, 200, run()); }
+    catch (err) {
+      reply(res, err.statusCode || 500, { error: err.statusCode ? err.message : "Could not reach the project file. The previous file is kept." });
+    }
+  };
+  function handleProjects(req, res, id) {
+    if (!id && req.method === "GET") { projectReply(res, () => projects.list()); return; }
+    if (!id && req.method === "POST") { readJson(req, res, body => projectReply(res, () => projects.create(body))); return; }
+    if (id && req.method === "GET") { projectReply(res, () => projects.read(id)); return; }
+    if (id && req.method === "PUT") { readJson(req, res, body => projectReply(res, () => projects.save(id, body))); return; }
+    if (id && req.method === "DELETE") { projectReply(res, () => projects.remove(id)); return; }
+    reply(res, 405, { error: "Method not allowed" });
+  }
   return (req, res) => {
     if (!isLocalRequest(req)) { reply(res, 403, { error: "Local requests only" }); return; }
     if (req.method === "POST" && req.url === "/api/save-defaults") {
@@ -329,6 +375,11 @@ function createRequestHandler({ rootDir = ROOT_DIR, io = fs } = {}) {
           reply(res, err.statusCode || 500, { error: err.statusCode ? err.message : "Could not save defaults. The previous file is retained if replacement did not complete." });
         }
       });
+      return;
+    }
+    const route = req.url.split("?")[0];
+    if (route === "/api/projects" || route.startsWith("/api/projects/")) {
+      handleProjects(req, res, route.slice("/api/projects".length).replace(/^\//, ""));
       return;
     }
     if (!["GET", "HEAD"].includes(req.method)) { reply(res, 405, { error: "Method not allowed" }); return; }

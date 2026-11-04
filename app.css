@@ -842,6 +842,10 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	white-space: nowrap;
 }
 
+.hdr-project { max-width: 14rem; }
+.hdr-project-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.hdr-project.is-error { color: var(--danger); }
+
 .hdr-btn:disabled {
 	opacity: 0.5;
 	cursor: default;
@@ -4531,6 +4535,40 @@ input[type="range"]:focus-visible {
 		display: none;
 	}
 }
+
+.project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
+.project-lbl {
+	display: block;
+	margin-bottom: var(--sp-1);
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	color: var(--text-muted);
+	text-transform: uppercase;
+}
+.project-new-row { display: flex; gap: var(--sp-2); }
+.project-new-row .num-input { flex: 1; min-width: 0; }
+.project-current {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-2);
+	flex-wrap: wrap;
+	color: var(--text);
+}
+.project-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.project-row {
+	display: flex;
+	align-items: center;
+	gap: var(--sp-2) var(--sp-3);
+	flex-wrap: wrap;
+	padding: var(--sp-2);
+	border-radius: 8px;
+	box-shadow: var(--ring-soft);
+}
+.project-row.is-current { box-shadow: inset 3px 0 0 var(--brand), var(--ring-soft); }
+.project-name { flex: 1 1 10rem; min-width: 0; color: var(--text); overflow-wrap: anywhere; }
+.project-when { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text-muted); }
+.project-actions { display: flex; gap: var(--sp-1); }
 
 .viz-expand-btn {
 

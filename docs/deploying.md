@@ -130,42 +130,71 @@ code (`config.js`). Job dimensions are not accepted by this endpoint.
   - **Surface Layout Inputs**: To persist reusable surface-size presets.
   - **Golden Ratio Tool**: To persist saved value series.
 
-## What this app deliberately does not keep
+## Projects (local mode only)
 
-**MASTERPLAN persists nothing but the theme, and that is a decision.** It is
-worth stating, because MONEYFLOW's whole shape argues the other way and porting
-from it makes the absence look like an oversight.
+**MASTERPLAN used to persist nothing but the theme, on purpose.** The argument
+was that it is a calculator, not a ledger: its state is a handful of numbers off
+a tape measure, and re-entering them costs less than the machinery to keep them.
+That held while each job was a few fields. It stopped holding once a page could
+carry a whole room — dimensions, a dozen placed openings, a board choice — and
+the user asked for projects (2026-11-04). The decision was theirs; this is what
+was built.
 
-This is a calculator, not a ledger. Its state is a handful of numbers somebody
-has in front of them — a tape measure reading, a panel spec off a label — and
-re-entering them costs less than the machinery to keep them would: a serialiser
-per page, a schema version, a migration path for the day a shape changes, and a
-whole class of bug where what is on screen and what was restored disagree. The
-two things actually worth keeping already have homes:
+**What a project is.** One JSON file in `_personal/projects/<id>.json`, holding
+`drafts` (every page's `useSessionState` values, by key — the `DraftStore` in
+`src/utils/session-state.js`) and `app` (`sh`, `sym`, `grItems`, the state App
+holds itself). So a project is *every page at once*: open it and each calculator
+is as you left it. `_personal/` is gitignored and is not in the static server's
+public file set, so a project is never committed, never pushed, never served.
 
-| Worth keeping | Where it goes |
+| Piece | File |
 |---|---|
-| Preset definitions reused across jobs | `saveStaticDefaults` → `config.js`, dev only |
-| The output of a calculation | The printed cut list |
+| Store: atomic write (temp, fsync, rename, fsync dir), `0600`, symlinks refused, delete → `.trash/` | `scripts/project-store.js` |
+| Routes: `GET/POST /api/projects`, `GET/PUT/DELETE /api/projects/:id`, all behind `isLocalRequest()` — reads too, since a project is private | `scripts/local-dev-server.js` |
+| Client API, `probeProjects()`, the autosaver | `src/utils/projects.js` |
+| Open / create / close / delete, autosave wiring, reopen-on-load | `src/useProjects.js` |
+| Header control and dialog | `src/components/ProjectMenu.jsx` |
 
-So there is no `useAutoSave`, no `_personal/`, no restore points, and no
-`markDirty` in the undo history. MONEYFLOW has all four because it owns files
-nobody can re-derive; nothing here is in that category.
+**Local mode is asked of the server, not guessed.** The control appears only
+when `GET /api/projects` answers. GitHub Pages has no server, and the browser
+checks (`npm run layout`, `test:browser`) run on `127.0.0.1` against a static
+server with no project routes — a hostname check would have put a dead control
+in every screenshot.
 
-**Two consequences worth carrying.** Undo is the only way back from a
-destructive action — there is nothing behind it, which is why `doc-undo` covers
-every button that can lose work. And the dev server's `saveStaticDefaults` is
-the one thing that writes to a tracked file: an explicit preset save changes
-`config.js`, while typing job dimensions does not. Inspect that diff after a
-deliberate save.
+**Autosave.** 800 ms after the last change, never two writes in flight (a change
+during a save is saved after it), and an unchanged body is not resent. It
+watches the *state* — a draft written, or `sh`/`sym`/`grItems` changing — not
+the actions, so undo, a preset, a reset are all saved without a list of
+triggers to keep up to date. Leaving the page sends what the debounce was
+holding with `keepalive`. A failed save turns the header control to `--danger`
+with the reason in its tooltip and in the dialog; a successful one shows
+nothing (no "Saved" tag, per the quiet-UI preference).
+
+**Opening a project** flushes the open one, replaces the draft store, applies
+`app` (merged over the defaults, so a project from before a field existed opens
+with that field at its default), and bumps an epoch in the routed page's key.
+The remount is what makes the page read the new drafts, and it also drops undo:
+the page's doc history unregisters on unmount and field undo belongs to DOM
+nodes that are gone, so Ctrl+Z cannot carry one project's values into another.
+With no project open, opening one would replace unsaved work, so it asks
+(two clicks). The last project open is remembered in `localStorage` and reopened
+on load.
+
+**Not built:** rename, restore points (MONEYFLOW's `.backups/`), and import /
+export. The trash is the only undo for a delete: move a file back out of
+`_personal/projects/.trash/` to restore it.
+
+**Still true:** the dev server's `saveStaticDefaults` is the one thing that
+writes to a *tracked* file. Projects write only under `_personal/`.
 
 
 ## Draft lifetime and offline behaviour
 
 Calculator drafts stay in App memory during route navigation. Concrete, pipe wrap
 and timesheet use `useSessionState`; surface and symmetric dimensions already live
-in App. Reloading clears these drafts. This is not browser-storage autosave.
-The home page says so in a note under the page cards. The offline banner tells users to keep the
+in App. Reloading clears these drafts unless a project is open (local mode,
+above). The home page says so in a note under the page cards, hidden while a
+project is open. The offline banner tells users to keep the
 loaded window open: calculations work with loaded assets, but offline reopening
 is not supported and no service worker is installed.
 

@@ -149,3 +149,7 @@ components.js.map
 
 # Personal Claude Code permissions
 .claude/settings.local.json
+
+# Projects and any other private runtime data the local dev server writes
+# (scripts/project-store.js). Never committed, never served, never on Pages.
+_personal/

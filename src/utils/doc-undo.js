@@ -4,7 +4,7 @@
  * `field-undo.js` covers text you typed and nothing else, which left every
  * structural action on every page with no step back at all. The worst of them
  * are on the timesheet: "Clear all" wipes a filled sheet with no confirm, and
- * the × on a row deletes it the same way. There is no persistence in this app
+ * the × on a row deletes it the same way. Outside a project nothing is saved
  * either, so there was no restore point to fall back to — the work was simply
  * gone. Applying a material preset over dimensions you had just typed is the
  * same shape of loss, quieter.
@@ -29,21 +29,18 @@
  *
  * ── Ported from MONEYFLOW as a documented subset ───────────────────────────
  *
- * One thing in its copy has no counterpart here and is not going to get one:
- * `markDirty`. There, a history entry carries the page's autosave hook and
- * every step calls it, because an undo has to be written to disk like any other
- * change or the file keeps the action you just took back.
+ * One thing in its copy has no counterpart here: `markDirty`. There, a history
+ * entry carries the page's autosave hook and every step calls it, because an
+ * undo has to be written to disk like any other change.
  *
- * MASTERPLAN persists nothing but the theme, and that is a decision rather than
- * a gap. This is a calculator, not a ledger: its state is a handful of numbers
- * somebody has in front of them — a tape measure reading, a panel spec — and
- * re-entering them costs less than the machinery to keep them would. The two
- * things actually worth keeping already have homes: `saveStaticDefaults` for
- * the values you reuse, and the printed cut list for the output.
+ * MASTERPLAN does save now — projects, in local mode (src/useProjects.js) —
+ * and still needs no `markDirty`, because its autosave does not hang off the
+ * actions. It watches the state itself: an undo writes the page's state back,
+ * the page's drafts change, and that change is saved like any other. Undo
+ * cannot be missed, because there is no list of things that trigger a save.
  *
- * That raises what this module is for rather than lowering it. With no file to
- * restore from, undo is the ONLY way back from a destructive action — there is
- * nothing behind it.
+ * Undo remains the only way back from a destructive action on GitHub Pages,
+ * and with no project open, where nothing is kept at all.
  *
  * The subscribe/announce pair below was absent for a while too, because the
  * header was a logo and there was nowhere to put a control that reads it. There

@@ -13,6 +13,14 @@ export function startBrowserServer() {
   const server = http.createServer((req, res) => {
     try {
       const url = decodeURIComponent(req.url.split("?")[0]);
+      /* The project probe (src/utils/projects.js) asks whether a project
+         server is here. 204 says no without a 404 in the console, which the
+         layout check fails on: no list comes back, so the control stays
+         hidden and every screenshot is the app as GitHub Pages shows it. */
+      if (url === "/api/projects" || url.startsWith("/api/projects/")) {
+        req.resume();
+        res.writeHead(204); res.end(); return;
+      }
       if (url === "/api/save-defaults") {
         req.resume();
         res.writeHead(200, { "Content-Type": "application/json" });
