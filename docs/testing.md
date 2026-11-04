@@ -129,6 +129,17 @@ measures *that*. On its first run it found `--text-subtle` painting the
 navigation's inactive labels at 4.43:1 on graphite and 4.05:1 on verdant, and
 `--accent` — gated as a 3:1 mark — drawing unit labels as words.
 
+Its blind spot is **SVG text**. It reads a text node's CSS `color`, and SVG
+text is painted by `fill`, so a diagram's words (Pipe Wrap's sum, the Guider
+schematics, the layout labels) are sampled at a colour they are not drawn in.
+Their contrast is unmeasured, before and after any change; keep their fills on
+text tokens (`--text`, `--text-muted`) and check a new one by eye in both themes.
+
+Test files run in parallel, so **no test may write a tracked file**, even to put
+it back afterwards. `version.test.js` once rewrote the real `app.css` to prove
+the build hash moves, and `css-integrity.test.js`, reading it at the same moment,
+failed at random. `buildId(root)` takes a root for exactly this: probe a copy.
+
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` fires on a staged change to `src/`, the classic scripts,
 `index.html`, the manifest, `assets/`, `scripts/`, `tests/`, `githooks/` or the
