@@ -327,15 +327,27 @@ reads every figure from it.
 ## Guider tool
 
 Reference/guide page. The left column holds one `ControlPanel` per category,
-built from the `CATEGORIES` array in `SheetGuider` (each with its own `panelId`
-and open state); the right column shows the selected entry. Add an entry to a
-category's `entries` and route its id in the preview branch. An entry with no
-branch shows a placeholder card.
+built from the module-level `CATEGORIES` in `components/Guider.jsx` (each with
+its own `panelId` and open state); the right column shows the selected entry.
+An entry names the component it opens (`View`), so adding one is one line in
+its category's `entries`, and there is no routing branch to forget.
 
+- **The open entry is a draft** (`Guider.page:selected`), so leaving the page
+  and coming back, or opening a project, shows the guide its values belong to.
+  It used to be plain state: a Guider project opened on "No entry selected",
+  its pipe values hidden behind an entry. The entry buttons carry
+  `aria-pressed`.
 - **Electrism** (`control-guider-list`): `Lihtlüliti`, `Veksellüliti` — inline
-  SVG schematics inside `components/Guider.jsx`: square dashed switch boxes
-  with open-circle contacts and a floating lever, consistent stroke widths
-  (`r=4.5`, `strokeWidth=2`), and a legend/Ühendused list below each diagram.
+  SVG schematics: square dashed switch boxes with open-circle contacts and a
+  floating lever, consistent stroke widths (`r=4.5`, `strokeWidth=2`). Both are
+  a `WiringGuide`: the page head, the diagram in a "Skeem" card and the
+  numbered "Ühendused" list, with the card head the pipe calculator uses
+  (`.guider-card-head`). A connection names its `wire` (`phase`, `neutral`,
+  `traveller`), which picks its dot's colour, the one the diagram draws it in.
+  Diagram text and the list are classes (`.guider-wire-*`, `.guider-conn-*`
+  in `50-preview.css`); each SVG is a named `role="img"`.
+- The page's frame (title, empty state, the "Electrism" heading) is in
+  English and the guides in Estonian: the user's choice, kept as it is.
 - **Ruukki** (`control-guider-ruukki`): `Vihmaveesüsteemid` opens
   Toru põlv 70° (`components/guider/ToruPolv70.jsx`), a two-way calculator
   for a pipe offset made of two 70° elbows: `B = L·sin α + C`. B is measured
