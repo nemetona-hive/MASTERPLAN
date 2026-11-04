@@ -115,14 +115,12 @@ print("Built assets/icon-192.png, icon-512.png, icon-maskable-512.png")
 execFileSync("python3", ["-c", py], { stdio: "inherit" });
 
 /*
- * THE TASKBAR ICON IS THE FAVICON, AND IT IS A VECTOR. run.sh opens an
- * `msedge --app` window, and Chromium gives that window the page's favicon,
- * drawn at whatever size the taskbar and the display scale ask for. A bitmap
- * favicon is resampled to get there, and looked soft: first the 192 px PNG,
- * then a PNG per size, which Chromium still rescaled. An SVG is drawn at the
- * size asked for, which is why MONEYFLOW's taskbar icon was the sharper one.
- * So the favicon is this glyph's own outline, from the vendored font, in the
- * same gold, with nothing to resample.
+ * THE FAVICON. A plain `msedge --app` window (run.sh's fallback) takes its
+ * taskbar icon from the favicon, so it is this glyph's own outline, from the
+ * vendored font, in the same gold. Being a vector does NOT make that taskbar
+ * icon sharp: Chromium rasterises the favicon at 16 px and Windows stretches
+ * it. The sharp taskbar icon comes from installing the app, whose window uses
+ * the manifest's PNGs above; run.sh launches the installed app when it can.
  */
 async function writeSvg() {
   const fs = require("node:fs");

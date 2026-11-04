@@ -11,8 +11,9 @@
        desktop shortcut's masterplan.ico. An `msedge --app` window (run.sh)
        takes its taskbar icon from this favicon, so a different mark here is a
        taskbar that disagrees with the shortcut that opened it. It is the only
-       favicon, and a vector, so it is drawn at the taskbar's size rather than
-       resampled to it: a PNG here, at any size, came out soft. -->
+       favicon. Chromium rasterises it at 16 px for a plain --app window, so
+       that taskbar icon is soft whatever the format; the sharp one comes from
+       installing the app, which uses the manifest's PNGs instead. -->
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
   <!-- Installable as a real app: its own window, its own taskbar and
        home-screen icon, its own identity rather than a tab grouped under the
