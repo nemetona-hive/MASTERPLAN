@@ -1,5 +1,5 @@
 import { React } from "../react-globals.js";
-import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
+import { ControlPanel, MaterialPresetDropdown, NumInput, SegGroup, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
 import { LayoutEmptyState, LayoutPanel, PreviewSection } from "../Visualization.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { ProjectSection } from "./ProjectMenu.jsx";
@@ -138,12 +138,12 @@ export function SheetSymmetricLayout({ sym, setSym }) {
               onChange={v => setSym(s => ({ ...s, gap: clampNumber(v, 0, 50000, 0) }))} min={0} />
             <Stack gap={1} className="ctrl-lbl">
               <span className="ctrl-sublbl">Layout style</span>
-              <div className="seg-group">
-                <button aria-pressed={sym.oneFullEdge} className={"ctrl-dir " + (sym.oneFullEdge ? "on" : "")}
-                  onClick={() => { markStep("Asymmetric"); setSym(s => ({ ...s, oneFullEdge: true })); }}>Asymmetric</button>
-                <button aria-pressed={!sym.oneFullEdge} className={"ctrl-dir " + (!sym.oneFullEdge ? "on" : "")}
-                  onClick={() => { markStep("Symmetric"); setSym(s => ({ ...s, oneFullEdge: false })); }}>Symmetric</button>
-              </div>
+              <SegGroup label="Layout" value={sym.oneFullEdge ? "asym" : "sym"}
+                options={[["asym", "Asymmetric"], ["sym", "Symmetric"]]}
+                onChange={v => {
+                  markStep(v === "asym" ? "Asymmetric" : "Symmetric");
+                  setSym(s => ({ ...s, oneFullEdge: v === "asym" }));
+                }} />
             </Stack>
             {sym.oneFullEdge && (
               <NumInput id="input-sym-custom-first" label="First piece width (mm)" value={sym.customFirstPieceWidth ?? ""} onChange={v => setSym(s => ({ ...s, customFirstPieceWidth: clampNumber(v, 0, 50000, 0) }))} min={0} />

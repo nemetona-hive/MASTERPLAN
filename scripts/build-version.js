@@ -56,14 +56,15 @@ const HASHED_FILES = [
   "vendor/fa-solid-900.subset.woff2"
 ];
 
-/** Content hash of the served tree. Byte-for-byte, so binaries count too. */
-function buildId() {
+/** Content hash of the served tree. Byte-for-byte, so binaries count too.
+    `root` is for the tests, which probe a copy rather than the real tree. */
+function buildId(root = ROOT) {
   const hash = crypto.createHash("sha256");
   for (const rel of HASHED_FILES) {
     // The path goes in as well as the bytes: without it, two files swapping
     // contents would hash the same.
     hash.update(rel);
-    hash.update(fs.readFileSync(path.join(ROOT, rel)));
+    hash.update(fs.readFileSync(path.join(root, rel)));
   }
   return hash.digest("hex").slice(0, 8);
 }

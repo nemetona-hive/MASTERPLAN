@@ -157,7 +157,9 @@ exemption honest) and a BEM anchor. Anything else goes in
 an exemption whose reason lives somewhere else is one nobody re-reads, and one
 nobody re-reads just hides the check. A baselined name that later gets styled
 or deleted is reported as `stale-baseline`, so the list cannot outlive what it
-excused.
+excused. Its *reason* can, though: nothing checks that a rule a reason cites
+still exists (`result-card-val-sub` was excused by a selector long gone), so
+read the reasons when touching what they describe.
 
 Two of the audit's checks exist because **`theme:check` structurally cannot
 make them**. It compares the token pairs somebody thought to list, and neither

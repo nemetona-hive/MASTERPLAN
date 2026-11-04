@@ -294,14 +294,14 @@ function ResultCard({ takeOff, onPrint }) {
           <span className="result-card-title">Sheets Needed</span>
           <span className="result-card-value">
             {sheets.toBuy}
-            <span style={{ fontSize: "var(--fs-md)", fontWeight: "var(--fw-reg)", marginLeft: "4px" }}>pcs</span>
+            <span className="result-card-unit">pcs</span>
           </span>
           <span className="result-card-note">layout: {sheets.layout} · +{sheets.waste}% waste</span>
         </div>
         <div className="result-card-split">
           <span className="result-card-title">Sheet Cost</span>
           <span className="result-card-value">
-            {sheets.total !== null ? (<><span style={{ fontSize: "var(--fs-lg)" }}>€</span><span>{eur(sheets.total)}</span></>) : "—"}
+            {sheets.total !== null ? (<><span className="result-card-currency">€</span><span>{eur(sheets.total)}</span></>) : "—"}
           </span>
         </div>
         <button type="button" className="ts-btn ctl-ghost result-card-print" onClick={onPrint} disabled={!ready}

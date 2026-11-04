@@ -341,7 +341,7 @@ export function SheetTimesheet() {
               <div className="result-card-primary">
               <span className="result-card-title">Total Hours</span>
               <span className="result-card-value">
-                {fmtHHMM(calcTotalMins) || "0:00"} <span className="result-card-val-sub">h</span>
+                {fmtHHMM(calcTotalMins) || "0:00"}<span className="result-card-unit">h</span>
               </span>
               
               </div>

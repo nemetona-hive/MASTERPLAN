@@ -4019,6 +4019,13 @@ input[type="range"]:focus-visible {
 	color: var(--color-white);
 }
 
+.result-card-unit {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-reg);
+	margin-left: var(--sp-1);
+}
+.result-card-currency { font-size: var(--fs-lg); }
+
 .result-card-note {
 	font-family: var(--mono);
 	font-size: var(--fs-md);

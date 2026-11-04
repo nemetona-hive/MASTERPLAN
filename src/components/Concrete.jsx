@@ -1,6 +1,6 @@
 import { useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
-import { Icon, NumInput, Row, Stack, useTimedState } from "../shared.jsx";
+import { Icon, NumInput, Row, SegGroup, Stack, useTimedState } from "../shared.jsx";
 import { ManagePresetsButton, PresetField, PresetManager, presetHeader, usePresetLibrary } from "./PresetLibrary.jsx";
 import { TakeOffSheet } from "./TakeOffSheet.jsx";
 import { buildTakeOff } from "../utils/take-off.js";
@@ -162,14 +162,8 @@ export function SheetConcrete() {
                   
                   {/* Left Column: Floor Area */}
                   <Stack gap={3}>
-                    <div className="seg-group">
-                      <button
-                        className={"ctrl-dir" + (areaMode === "direct" ? " on" : "")} aria-pressed={areaMode === "direct"}
-                        onClick={() => setAreaMode("direct")}>Enter area</button>
-                      <button
-                        className={"ctrl-dir" + (areaMode === "dims" ? " on" : "")} aria-pressed={areaMode === "dims"}
-                        onClick={() => setAreaMode("dims")}>Dimensions</button>
-                    </div>
+                    <SegGroup label="Floor area" value={areaMode} onChange={setAreaMode}
+                      options={[["direct", "Enter area"], ["dims", "Dimensions"]]} />
 
                     <div className="concrete-split-content">
                       {areaMode === "direct" && (
@@ -199,14 +193,8 @@ export function SheetConcrete() {
 
                   {/* Right Column: Layer Thickness */}
                   <Stack gap={3}>
-                    <div className="seg-group">
-                      <button
-                        className={"ctrl-dir" + (thickMode === "avg" ? " on" : "")} aria-pressed={thickMode === "avg"}
-                        onClick={() => setThickMode("avg")}>Avg thickness</button>
-                      <button
-                        className={"ctrl-dir" + (thickMode === "corners" ? " on" : "")} aria-pressed={thickMode === "corners"}
-                        onClick={() => setThickMode("corners")}>4 corners</button>
-                    </div>
+                    <SegGroup label="Layer thickness" value={thickMode} onChange={setThickMode}
+                      options={[["avg", "Avg thickness"], ["corners", "4 corners"]]} />
 
                     <div className="concrete-split-content">
                       {thickMode === "avg" && (
@@ -330,7 +318,7 @@ export function SheetConcrete() {
               <span className="result-card-title">Bags Needed</span>
               <span className="result-card-value">
                 {bags > 0 ? bags : "0"} 
-                <span style={{fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-reg)', marginLeft: '4px'}}>pcs</span>
+                <span className="result-card-unit">pcs</span>
               </span>
               <span className="result-card-note">
                 exact: {bagsExact > 0 ? bagsExact.toFixed(2) : "0.00"} pcs
@@ -344,7 +332,7 @@ export function SheetConcrete() {
                 <span className="result-card-value">
                   {totalPrice !== null ? (
                     <>
-                      <span style={{ fontSize: 'var(--fs-lg)' }}>€</span>
+                      <span className="result-card-currency">€</span>
                       <span>{eur(totalPrice)}</span>
                     </>
                   ) : "—"}

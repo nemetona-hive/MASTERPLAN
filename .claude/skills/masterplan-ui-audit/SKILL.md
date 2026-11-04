@@ -74,11 +74,12 @@ check.
   against. `tests/manifest.test.js` keeps it in step with `themes.js` instead.
 - **`scripts/undefined-class-baseline.json`** is an object of *name → reason*,
   not a bare list — MONEYFLOW keeps a flat array with the reasoning in prose,
-  which works while the list is empty and theirs is. Four names are in it today:
-  one grid child placed by its parent's tracks, and three `result-card` spans
-  styled positionally through a `:not()` chain their names keep them out of. A
-  test asserts every entry carries a reason, and `stale-baseline` fires when a
-  name in it stops being undefined, so the list cannot outlive what it excused.
+  which works while the list is empty and theirs is. One name is in it today:
+  a grid child placed by its parent's tracks. A test asserts every entry carries
+  a reason, and `stale-baseline` fires when a name in it stops being undefined,
+  so the list cannot outlive what it excused. What it cannot catch is a reason
+  going stale: `result-card-val-sub` sat in it for months excused by a `:not()`
+  selector that no longer existed. When a reason cites a rule, grep for it.
 - **`audit-ui: decorative` / `audit-ui: contrast-ok`** are written at the site,
   in a comment that has to give a reason — `decorative` means it paints no
   words, `contrast-ok` has to carry the **measured ratio**. The marker must sit

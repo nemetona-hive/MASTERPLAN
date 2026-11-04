@@ -157,7 +157,7 @@
 }
 
 /* ── Segmented control wrapper ────────────────────────────────
- * Applied to the 5 mode-switch groups via .seg-group class.
+ * Every segmented choice is a SegGroup (shared.jsx), which renders this track.
  * The outer border lives here — individual buttons have none. */
 
 .seg-group {

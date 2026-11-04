@@ -108,6 +108,16 @@
 	color: var(--color-white);
 }
 
+/* The unit after a headline figure (pcs, h) and the € before a price: a step
+   down from the figure. Classes rather than the inline styles they were, so
+   the phone's result bar can size them and the audit can see them. */
+.result-card-unit {
+	font-size: var(--fs-md);
+	font-weight: var(--fw-reg);
+	margin-left: var(--sp-1);
+}
+.result-card-currency { font-size: var(--fs-lg); }
+
 /* Concrete's result card carries a second stat and a note under the headline
    figure. These were inline styles; they are classes so the mobile bar can
    override them, which a rule cannot do against a style attribute. */

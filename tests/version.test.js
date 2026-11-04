@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import os from "node:os";
 import { buildId, render, HASHED_FILES } from "../scripts/build-version.js";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -26,17 +27,23 @@ describe("build-version", () => {
     expect(code).not.toMatch(/execFile|execSync|spawn|rev-parse/);
   });
 
+  /* On a copy of the tree, never the real one: test files run in parallel,
+     and rewriting the real app.css here once let css-integrity.test.js read
+     it half-written and fail at random. */
   it("changes when any hashed file changes", () => {
-    const before = buildId();
-    const target = path.join(ROOT, "app.css");
-    const original = fs.readFileSync(target);
+    const copy = fs.mkdtempSync(path.join(os.tmpdir(), "masterplan-version-"));
     try {
-      fs.writeFileSync(target, Buffer.concat([original, Buffer.from("\n/* probe */\n")]));
-      expect(buildId()).not.toBe(before);
+      for (const rel of HASHED_FILES) {
+        fs.mkdirSync(path.dirname(path.join(copy, rel)), { recursive: true });
+        fs.copyFileSync(path.join(ROOT, rel), path.join(copy, rel));
+      }
+      const before = buildId(copy);
+      expect(before).toBe(buildId());
+      fs.appendFileSync(path.join(copy, "app.css"), "\n/* probe */\n");
+      expect(buildId(copy)).not.toBe(before);
     } finally {
-      fs.writeFileSync(target, original);
+      fs.rmSync(copy, { recursive: true, force: true });
     }
-    expect(buildId()).toBe(before);
   });
 
   it("covers every file the deploy serves, generated or hand-written", () => {

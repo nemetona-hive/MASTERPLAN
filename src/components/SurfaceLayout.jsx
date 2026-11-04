@@ -1,6 +1,6 @@
 import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
-import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, SelectedPresetDetail, Stack, clampNumber, isMobileViewport, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, SegGroup, SelectedPresetDetail, Stack, clampNumber, isMobileViewport, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
 import { LayoutEmptyState, LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 import { CutListSheet } from "./CutListSheet.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
@@ -538,10 +538,9 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
             <span className="ctrl-sublbl">Direction</span>
             <span className="layout-setting-help">Primary layout axis for the pattern preview.</span>
           </Stack>
-          <div id={`${idPrefix}ctrl-direction`} className="seg-group">
-          {["V", "H"].map(s => (
-            <button key={s} aria-label={s === "V" ? "Vertical" : "Horizontal"} aria-pressed={direction === s} className={"ctrl-dir " + (direction === s ? "on" : "")}
-              onClick={() => { markStep("Switch direction"); setSh(st => {
+          <SegGroup id={`${idPrefix}ctrl-direction`} label="Direction" value={direction}
+            options={[["V", "V", "Vertical"], ["H", "H", "Horizontal"]]}
+            onChange={s => { markStep("Switch direction"); setSh(st => {
                 const curDir = st.direction;
                 const rsKey  = curDir === "V" ? "rowStartV"     : "rowStartH";
                 const psKey  = curDir === "V" ? "patternStartV" : "patternStartH";
@@ -555,45 +554,26 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
                   rowStart:     st[trsKey] || (s === "V" ? "top"    : "bottom"),
                   patternStart: st[tpsKey] || (s === "V" ? "bottom" : "left")
                 };
-              }); }}>{s}</button>
-          ))}
-          </div>
+              }); }} />
         </Stack>
       </div>
       <div className="layout-setting-card">
         <Stack gap={3}>
           <Stack gap={1} className="ctrl-lbl">
             <span className="ctrl-sublbl">{direction === "V" ? "Column order" : "Row order"}</span>
-            <div id={`${idPrefix}ctrl-row-order`} className="seg-group">
-            <button className={"ctrl-dir " + (rowStart === "top" ? "on" : "")}
-              onClick={() => setSh(st => ({ ...st, rowStart: "top" }))}>
-              {direction === "V" ? "R1 Left" : "R1 top"}
-            </button>
-            <button className={"ctrl-dir " + (rowStart === "bottom" ? "on" : "")}
-              onClick={() => setSh(st => ({ ...st, rowStart: "bottom" }))}>
-              {direction === "V" ? "R1 Right" : "R1 bottom"}
-            </button>
-            </div>
+            <SegGroup id={`${idPrefix}ctrl-row-order`} label={direction === "V" ? "Column order" : "Row order"}
+              value={rowStart} onChange={v => setSh(st => ({ ...st, rowStart: v }))}
+              options={direction === "V"
+                ? [["top", "R1 Left"], ["bottom", "R1 Right"]]
+                : [["top", "R1 top"], ["bottom", "R1 bottom"]]} />
           </Stack>
           <Stack gap={1} className="ctrl-lbl">
             <span className="ctrl-sublbl">Layout Start</span>
-            <div id={`${idPrefix}ctrl-pattern-start`} className="seg-group">
-            {direction === "V" ? (
-              <>
-                <button className={"ctrl-dir " + (patternStart === "bottom" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, patternStart: "bottom" }))}>bottom</button>
-                <button className={"ctrl-dir " + (patternStart === "top" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, patternStart: "top" }))}>top</button>
-              </>
-            ) : (
-              <>
-                <button className={"ctrl-dir " + (patternStart === "left" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, patternStart: "left" }))}>left</button>
-                <button className={"ctrl-dir " + (patternStart === "right" ? "on" : "")}
-                  onClick={() => setSh(st => ({ ...st, patternStart: "right" }))}>right</button>
-              </>
-            )}
-            </div>
+            <SegGroup id={`${idPrefix}ctrl-pattern-start`} label="Layout start"
+              value={patternStart} onChange={v => setSh(st => ({ ...st, patternStart: v }))}
+              options={direction === "V"
+                ? [["bottom", "bottom"], ["top", "top"]]
+                : [["left", "left"], ["right", "right"]]} />
           </Stack>
         </Stack>
       </div>
@@ -602,16 +582,12 @@ function LayoutSettings({ sh, setField, setSh, markStep, idPrefix = "" }) {
           <NumInput id={`${idPrefix}input-gap`} label="Gap (mm)" value={gap} onChange={set("gap")} min={0} />
           <Stack gap={1} className="ctrl-lbl">
             <span className="ctrl-sublbl">Gap direction</span>
-            <div id={`${idPrefix}ctrl-gap-direction`} className="seg-group">
-              <button aria-pressed={!separateGaps} className={'ctrl-dir ' + (!separateGaps ? 'on' : '')}
-                onClick={() => { markStep("Use shared gap"); setSh(st => ({ ...st, separateGaps: false })); }}>
-                Shared
-              </button>
-              <button aria-pressed={separateGaps} className={'ctrl-dir ' + (separateGaps ? 'on' : '')}
-                onClick={() => { markStep("Use separate gaps"); setSh(st => ({ ...st, separateGaps: true })); }}>
-                Separate
-              </button>
-            </div>
+            <SegGroup id={`${idPrefix}ctrl-gap-direction`} label="Gap direction"
+              value={separateGaps ? "separate" : "shared"} options={[["shared", "Shared"], ["separate", "Separate"]]}
+              onChange={v => {
+                markStep(v === "separate" ? "Use separate gaps" : "Use shared gap");
+                setSh(st => ({ ...st, separateGaps: v === "separate" }));
+              }} />
           </Stack>
           {separateGaps && (
             <Stack gap={2}>

@@ -786,15 +786,19 @@ export function Row({ label, value, unit, hi, danger, hoverType, hoveredType, se
 
 /**
  * A segmented choice: one `.ctrl-dir` per option in a `.seg-group` track, the
- * chosen one `.on` and `aria-pressed`. `options` are [id, text] pairs.
- * `inline` sizes the segments to their text, for a switch in a heading.
+ * chosen one `.on` and `aria-pressed`. `options` are [id, text] pairs, or
+ * [id, text, name] where the text is too short to name the option on its own
+ * (Pattern Layouts' "V" is "Vertical"). `inline` sizes the segments to their
+ * text, for a switch in a heading. `onChange` hears only a change: picking the
+ * option already chosen does nothing, so a caller's undo step is not spent on it.
  */
-export function SegGroup({ value, options, onChange, label, inline = false }) {
+export function SegGroup({ id, value, options, onChange, label, inline = false }) {
   return (
-    <div className={"seg-group" + (inline ? " seg-group--inline" : "")} role="group" aria-label={label}>
-      {options.map(([id, text]) => (
-        <button key={id} type="button" className={"ctrl-dir" + (value === id ? " on" : "")}
-          aria-pressed={value === id} onClick={() => onChange(id)}>{text}</button>
+    <div id={id} className={"seg-group" + (inline ? " seg-group--inline" : "")} role="group" aria-label={label}>
+      {options.map(([option, text, name]) => (
+        <button key={option} type="button" className={"ctrl-dir" + (value === option ? " on" : "")}
+          aria-pressed={value === option} aria-label={name}
+          onClick={() => { if (value !== option) onChange(option); }}>{text}</button>
       ))}
     </div>
   );
