@@ -140,26 +140,51 @@ carry a whole room — dimensions, a dozen placed openings, a board choice — a
 the user asked for projects (2026-11-04). The decision was theirs; this is what
 was built.
 
-**What a project is.** One JSON file in `_personal/projects/<id>.json`, holding
-`drafts` (every page's `useSessionState` values, by key — the `DraftStore` in
-`src/utils/session-state.js`) and `app` (`sh`, `sym`, `grItems`, `nav`, the state App
-holds itself). So a project is *every page at once*: open it and each calculator
-is as you left it. On the Gypsum page that is the whole job: its drafts hold a
-list of rooms and single walls, not one, each with its own size, openings and
-materials, and a total across them (see [Gypsum](pages.md#gypsum-tool)). `nav` is the sidebar as the user last set it (button or
-Ctrl+B), not as the viewport left it: App keeps it apart from `navOpen`, since
-a narrow window collapses the sidebar on its own and that is not a choice. It
-is applied only where the screen has room for it (not on a phone, not in the
-compact band). `_personal/` is gitignored and is not in the static server's
-public file set, so a project is never committed, never pushed, never served.
+**What a project is.** One JSON file in `_personal/projects/<id>.json`
+holding **one page's** values: `page` (the page id), `drafts` (that page's
+`useSessionState` values, by key — the `DraftStore` in
+`src/utils/session-state.js`) and `app` (whichever of App's own state the page
+owns: `sh` for Pattern Layouts, `sym` for Axial Alignment, `grItems` for Golden
+Ratio). `_personal/` is gitignored and is not in the static server's public file
+set, so a project is never committed, never pushed, never served.
+
+**Every page has its own projects (2026-11-04).** It began as one control in
+the header that saved every page at once, and the user asked for each page to
+manage its own: a Gypsum job and a concrete pour are different jobs, with
+different names, opened and closed apart. Each page lists only its own
+projects, has its own open one (remembered per page in `localStorage`, as
+`masterplan.project.<page>`), and opening one replaces only that page's values.
+The header no longer has a project control. The sidebar was saved in a project
+when a project was the whole app; it belongs to no page, so it is not saved.
+
+**Which page owns what** is `src/utils/project-pages.js`. Drafts are told apart
+by key prefix, since every key starts with the file that owns it
+(`Gypsum.jsx:rooms`, `Guider.ToruPolv70:angle`). `tests/project-pages.test.jsx`
+reads every `useSessionState` key in `src/components/` against that table, so a
+new page's values cannot go unsaved because nobody added the page there.
+
+**A project from before** has no `page` and holds every page. The first time the
+browser lists one, it splits it into one project per page that has something of
+its own in it (any draft, or App state that differs from its default), under the
+same name, then moves the original to `.trash/`. If the browser had it open,
+each part opens on its own page. Splitting is the browser's job, not the
+store's: which key belongs to which page is the app's business.
 
 | Piece | File |
 |---|---|
-| Store: atomic write (temp, fsync, rename, fsync dir), `0600`, symlinks refused, delete → `.trash/` | `scripts/project-store.js` |
+| Store: atomic write (temp, fsync, rename, fsync dir), `0600`, symlinks refused, delete → `.trash/`, `page` kept | `scripts/project-store.js` |
 | Routes: `GET/POST /api/projects`, `GET/PUT/PATCH/DELETE /api/projects/:id` (PATCH renames), all behind `isLocalRequest()` — reads too, since a project is private | `scripts/local-dev-server.js` |
-| Client API, `probeProjects()`, the autosaver | `src/utils/projects.js` |
-| Open / create / close / delete, autosave wiring, reopen-on-load | `src/useProjects.js` |
-| Header control and dialog | `src/components/ProjectMenu.jsx` |
+| Which page owns which draft and App key; splitting an old project | `src/utils/project-pages.js` |
+| Client API, `probeProjects()`, the autosaver, last-open per page | `src/utils/projects.js` |
+| Per page: open / create / close / delete, one autosaver each, reopen-on-load, the split | `src/useProjects.js` |
+| The page's section and its dialog; `ProjectContext` | `src/components/ProjectMenu.jsx` |
+
+**Where the section sits.** App hands the routed page its own controls through
+`ProjectContext`, and each page places `<ProjectSection />` where its layout
+puts a card: first in the control column on the Pattern Layouts, Axial
+Alignment, Gypsum, Golden Ratio and Guider pages, and as the first section
+(`variant="section"`) on Concrete, Pipe Wrap and Timesheet. Without a provider,
+in the page tests and on GitHub Pages, it renders nothing. Home has none.
 
 **Local mode is asked of the server, not guessed.** The control appears only
 when `GET /api/projects` answers. GitHub Pages has no server, and the browser
@@ -167,24 +192,26 @@ checks (`npm run layout`, `test:browser`) run on `127.0.0.1` against a static
 server with no project routes — a hostname check would have put a dead control
 in every screenshot.
 
-**Autosave.** 800 ms after the last change, never two writes in flight (a change
+**Autosave.** One autosaver per page, and a change saves only the page it
+belongs to. 800 ms after the last change, never two writes in flight (a change
 during a save is saved after it), and an unchanged body is not resent. It
-watches the *state* — a draft written, or `sh`/`sym`/`grItems`/`nav` changing — not
+watches the *state* — a draft written, or `sh`/`sym`/`grItems` changing — not
 the actions, so undo, a preset, a reset are all saved without a list of
 triggers to keep up to date. Leaving the page sends what the debounce was
-holding with `keepalive`. A failed save turns the header control to `--danger`
-with the reason in its tooltip and in the dialog; a successful one shows
+holding with `keepalive`. A failed save turns the section's project name to `--danger`
+with the reason under it and in the dialog; a successful one shows
 nothing (no "Saved" tag, per the quiet-UI preference).
 
-**Opening a project** flushes the open one, replaces the draft store, applies
+**Opening a project** flushes that page's open one, replaces that page's drafts
+(`DraftStore.replaceWhere`, every other page's left alone), applies its share of
 `app` (merged over the defaults, so a project from before a field existed opens
-with that field at its default), and bumps an epoch in the routed page's key.
+with that field at its default), and bumps that page's epoch in the routed
+page's key.
 The remount is what makes the page read the new drafts, and it also drops undo:
 the page's doc history unregisters on unmount and field undo belongs to DOM
 nodes that are gone, so Ctrl+Z cannot carry one project's values into another.
-With no project open, opening one would replace unsaved work, so it asks
-(two clicks). The last project open is remembered in `localStorage` and reopened
-on load.
+With no project open on the page, opening one would replace unsaved work there,
+so it asks (two clicks). Each page's last project is reopened on load.
 
 **Renaming** changes the name, never the id: the file keeps the slug it was
 created with, so `kitchen.json` can hold "Kitchen floor 2". That keeps an open
@@ -193,7 +220,7 @@ open project is renamed *through its own autosave* (the PUT carries the new
 name) rather than by PATCH, because a separate request could race a save still
 in flight with the old name and lose; any other project is renamed by PATCH,
 which rewrites the name and keeps the values. A failed rename of the open
-project puts the old name back in the header.
+project puts the old name back in the section.
 
 The dialog's two fields sit in `<form>`s so Enter submits them. App's global
 "Enter blurs the field" handler skips any input with a `.form`, because its
@@ -211,9 +238,10 @@ writes to a *tracked* file. Projects write only under `_personal/`.
 
 Calculator drafts stay in App memory during route navigation. Concrete, pipe wrap
 and timesheet use `useSessionState`; surface and symmetric dimensions already live
-in App. Reloading clears these drafts unless a project is open (local mode,
-above). The home page says so in a note under the page cards, hidden while a
-project is open. The offline banner tells users to keep the
+in App. Reloading clears a page's drafts unless that page has a project open
+(local mode, above). The home page says so in a note under the page cards: on
+GitHub Pages that reloading clears them, in local mode that only a page with a
+project open keeps them. The offline banner tells users to keep the
 loaded window open: calculations work with loaded assets, but offline reopening
 is not supported and no service worker is installed.
 

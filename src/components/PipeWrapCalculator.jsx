@@ -2,6 +2,7 @@ import { useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { NumInput, RangeSlider, Row, Section, Stack } from "../shared.jsx";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 const PRESETS = [100, 125, 160, 200];
 const THICKNESS_PRESETS = [20, 30, 50, 100];
@@ -63,6 +64,7 @@ export function PipeWrapCalculator() {
 
         <div className="layout-split">
           <Stack className="calc-main-stack" gap={4}>
+            <ProjectSection variant="section" />
             {/* ── Inputs ── */}
             <div className="section unboxed">
               <div className="section-head">

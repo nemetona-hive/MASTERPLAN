@@ -14,9 +14,11 @@
  * whole. Not ported: its restore points. A delete moves the file into
  * `.trash/` instead, which is the one loss autosave cannot cause on its own.
  *
- * THE SHAPE IS THE APP'S, NOT THIS FILE'S. A project carries `drafts` (every
- * page's useSessionState values, by key) and `app` (the state App itself
- * holds). The store checks it is the right kind of thing and the right size;
+ * THE SHAPE IS THE APP'S, NOT THIS FILE'S. A project belongs to one page
+ * (`page`, a page id) and carries that page's `drafts` (its useSessionState
+ * values, by key) and `app` (the part of App's own state that page owns). A
+ * file from before projects were per page has no `page`; the browser splits
+ * it into one project per page the first time it sees it. The store checks it is the right kind of thing and the right size;
  * what the keys mean is the pages' business, and a page reading a key it does
  * not recognise falls back to its default.
  */
@@ -48,10 +50,19 @@ function cleanName(name) {
   return text;
 }
 
-/** The body of a save: the name and the two state maps. */
+/* A page id, as config.js's PAGES spells them. Which pages exist is the app's
+   business; the store only keeps it the shape of one. */
+function cleanPage(page) {
+  if (page === undefined || page === null) return null;
+  if (typeof page !== "string" || !ID_RE.test(page)) throw new ProjectError(400, "Invalid page");
+  return page;
+}
+
+/** The body of a save: the name, its page and the two state maps. */
 function validateProject(body) {
   if (!isRecord(body)) throw new ProjectError(400, "Expected a project object");
   const name = cleanName(body.name);
+  const page = cleanPage(body.page);
   const drafts = body.drafts ?? {};
   if (!isRecord(drafts)) throw new ProjectError(400, "drafts must be an object");
   const keys = Object.keys(drafts);
@@ -61,7 +72,7 @@ function validateProject(body) {
   if (!isRecord(app)) throw new ProjectError(400, "app must be an object");
   // Only the keys App restores. Anything else would be kept and never read.
   const keptApp = Object.fromEntries(APP_KEYS.filter(key => Object.hasOwn(app, key)).map(key => [key, app[key]]));
-  return { name, drafts, app: keptApp };
+  return { name, page, drafts, app: keptApp };
 }
 
 /* A filename from a name: lower-case letters, digits and dashes. Uniqueness
@@ -125,8 +136,8 @@ function createProjectStore({ rootDir, io = fs, now = () => new Date() }) {
   }
 
   function write(id, project) {
-    const doc = { version: VERSION, id, name: project.name, savedAt: now().toISOString(),
-      drafts: project.drafts, app: project.app };
+    const doc = { version: VERSION, id, name: project.name, page: project.page ?? null,
+      savedAt: now().toISOString(), drafts: project.drafts, app: project.app };
     writeAtomic(fileOf(id), JSON.stringify(doc, null, 2) + "\n");
     return doc;
   }
@@ -144,9 +155,10 @@ function createProjectStore({ rootDir, io = fs, now = () => new Date() }) {
           const id = f.slice(0, -5);
           try {
             const doc = readFile(id);
-            return { id, name: typeof doc.name === "string" ? doc.name : id, savedAt: doc.savedAt || null };
+            return { id, name: typeof doc.name === "string" ? doc.name : id,
+              page: typeof doc.page === "string" ? doc.page : null, savedAt: doc.savedAt || null };
           } catch {
-            return { id, name: id, savedAt: null, unreadable: true };
+            return { id, name: id, page: null, savedAt: null, unreadable: true };
           }
         })
         .sort((a, b) => String(b.savedAt || "").localeCompare(String(a.savedAt || "")));
@@ -176,7 +188,8 @@ function createProjectStore({ rootDir, io = fs, now = () => new Date() }) {
     rename(id, body) {
       const name = cleanName(isRecord(body) ? body.name : undefined);
       const doc = readFile(id);
-      return write(id, { name, drafts: isRecord(doc.drafts) ? doc.drafts : {}, app: isRecord(doc.app) ? doc.app : {} });
+      return write(id, { name, page: typeof doc.page === "string" ? doc.page : null,
+        drafts: isRecord(doc.drafts) ? doc.drafts : {}, app: isRecord(doc.app) ? doc.app : {} });
     },
 
     /** Moves the file to `.trash/`, stamped, rather than deleting it. */

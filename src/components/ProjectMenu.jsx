@@ -1,13 +1,20 @@
 import { React, ReactDOM } from "../react-globals.js";
-import { Icon, Modal, Stack, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, Modal, Stack, useTimedState } from "../shared.jsx";
 
 /**
- * The header's project control, local mode only (see src/utils/projects.js).
+ * A page's own project section, local mode only (see src/utils/projects.js).
  *
- * The button names the open project, or says there is none. It shows no
+ * Every page has its own projects (src/useProjects.js), so the control lives
+ * on the page, not in the header: App provides this page's controls through
+ * `ProjectContext`, and each page places `<ProjectSection />` where its own
+ * layout puts a card — the top of the control column, or the first section of
+ * a calculator page (`variant="section"`). Rendered without a provider, as in
+ * the page tests and on GitHub Pages, it is nothing.
+ *
+ * The section names the open project, or says there is none. It shows no
  * "Saved" tag: saving is automatic and a status that says so on every
- * keystroke is noise. It does turn to the danger colour, and say why in its
- * tooltip, when a save has failed — that is the one state you need to see.
+ * keystroke is noise. A failed save is the one state you need to see, so it
+ * turns the name to the danger colour and says why under it.
  *
  * The dialog does five things: start a project from what is on screen, open
  * one, close the open one (its values stay on screen and stop saving), rename
@@ -22,7 +29,17 @@ const when = iso => {
     { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 };
 
-export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, onCloseProject, onDelete, onRename, onRefresh, scratchHasValues }) {
+export const ProjectContext = React.createContext(null);
+
+export function ProjectSection({ variant = "card" }) {
+  const api = React.useContext(ProjectContext);
+  if (!api || !api.available) return null;
+  return <ProjectMenu key={api.page} variant={variant} pageTitle={api.title} projects={api.projects} project={api.project} saveError={api.saveError}
+    scratchHasValues={api.scratchHasValues} onRefresh={api.refresh} onCreate={api.create} onOpen={api.open}
+    onCloseProject={api.close} onDelete={api.remove} onRename={api.rename} />;
+}
+
+function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreate, onOpen, onCloseProject, onDelete, onRename, onRefresh, scratchHasValues }) {
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
   const [error, setError] = React.useState("");
@@ -63,23 +80,37 @@ export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, on
     await run(() => onDelete(id));
   };
 
-  const label = project ? project.name : "No project";
-  const title = saveError ? `Not saved: ${saveError}` : project ? `Project: ${project.name}` : "Projects";
+  const bar = (
+    <Stack gap={2}>
+      <div className="project-bar">
+        <span className={"project-bar-name" + (project ? "" : " is-none") + (saveError ? " is-error" : "")}
+          title={project ? project.name : undefined}>
+          {project ? project.name : "No project"}
+        </span>
+        <button type="button" className="ts-btn ctl-ghost" onClick={show} aria-haspopup="dialog"
+          aria-label={project ? `Projects — ${project.name} is open` : "Projects — save or open one"}>
+          <Icon name="folder" /> Projects
+        </button>
+      </div>
+      {saveError && <p role="alert" className="input-error">Not saved: {saveError}</p>}
+    </Stack>
+  );
 
   return (
     <>
-      <button type="button" className={"hdr-btn is-wide ctl-ghost hdr-project" + (saveError ? " is-error" : "")}
-        onClick={show} title={title} aria-label={title} aria-haspopup="dialog">
-        <Icon name="folder" />
-        <span className="hdr-project-label">{label}</span>
-      </button>
+      {variant === "section" ? (
+        <div className="section unboxed">
+          <div className="section-head"><span>Project</span></div>
+          <div className="section-body"><div className="section-pad">{bar}</div></div>
+        </div>
+      ) : (
+        <ControlPanel id="control-project" title="Project" noToggle className="form-section-card">{bar}</ControlPanel>
+      )}
 
-      {/* Portalled to <body>: the header cluster is centred with `translate`,
-          which makes it the containing block for anything position: fixed
-          inside it, so an overlay rendered here would be the size of the
-          cluster rather than the screen. */}
+      {/* Portalled to <body>, so a page's own stacking and overflow cannot
+          clip the overlay or make it the size of the column it sits in. */}
       {open && ReactDOM.createPortal(
-        <Modal title="Projects" onClose={() => setOpen(false)} className="project-modal">
+        <Modal title={pageTitle ? `${pageTitle} projects` : "Projects"} onClose={() => setOpen(false)} className="project-modal">
           <Stack gap={4}>
             {saveError && <p role="alert" className="input-error">Not saved: {saveError}</p>}
 

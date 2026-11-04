@@ -682,6 +682,25 @@
 /* The board table has five columns; the default 680px squeezes them. The
    filler and adhesive tables have two and fit it. */
 .mp-modal.gyp-preset-modal--board { max-width: min(860px, 100%); }
+/* A page's project section: the open project's name, and the dialog's button. */
+.project-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sp-3);
+	min-width: 0;
+}
+.project-bar-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text);
+	font-weight: var(--fw-semi);
+}
+.project-bar-name.is-none { color: var(--text-muted); font-weight: var(--fw-reg); }
+.project-bar-name.is-error { color: var(--danger); }
+.project-bar .ts-btn { flex: none; }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;

@@ -4,7 +4,7 @@ import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
 import { DraftStore } from "../src/utils/session-state.js";
 import { createAutosaver, probeProjects } from "../src/utils/projects.js";
-import { ProjectMenu } from "../src/components/ProjectMenu.jsx";
+import { ProjectContext, ProjectSection } from "../src/components/ProjectMenu.jsx";
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
@@ -99,7 +99,16 @@ describe("local mode", () => {
   });
 });
 
-describe("the project control", () => {
+/* A page's section, as App provides it: this page's controls through the context. */
+const ProjectMenu = ({ variant, ...p }) => (
+  <ProjectContext.Provider value={{ available: true, page: "gypsum", title: "Gypsum", projects: p.projects, project: p.project,
+    saveError: p.saveError, scratchHasValues: p.scratchHasValues, create: p.onCreate, open: p.onOpen,
+    close: p.onCloseProject, remove: p.onDelete, rename: p.onRename, refresh: p.onRefresh }}>
+    <ProjectSection variant={variant} />
+  </ProjectContext.Provider>
+);
+
+describe("a page's project section", () => {
   const props = over => ({
     projects: [{ id: "kitchen", name: "Kitchen", savedAt: "2026-11-04T10:00:00Z" }],
     project: null, saveError: "", scratchHasValues: false,
@@ -115,7 +124,7 @@ describe("the project control", () => {
   it("creates a project from what is on screen", async () => {
     const p = props();
     render(<ProjectMenu {...p} />);
-    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByText("Projects"));
     fireEvent.change(screen.getByPlaceholderText("Name"), { target: { value: "Bathroom" } });
     fireEvent.click(screen.getByText("Create"));
     await waitFor(() => expect(p.onCreate).toHaveBeenCalledWith("Bathroom"));
@@ -124,7 +133,7 @@ describe("the project control", () => {
   it("asks before opening over unsaved values", async () => {
     const p = props({ scratchHasValues: true });
     render(<ProjectMenu {...p} />);
-    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByText("Projects"));
     fireEvent.click(screen.getByLabelText("Open Kitchen"));
     expect(p.onOpen).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText("Replace screen?"));
@@ -134,7 +143,7 @@ describe("the project control", () => {
   it("deletes on the second click only", async () => {
     const p = props();
     render(<ProjectMenu {...p} />);
-    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByText("Projects"));
     fireEvent.click(screen.getByLabelText("Delete Kitchen"));
     expect(p.onDelete).not.toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText("Confirm delete Kitchen"));
@@ -144,7 +153,7 @@ describe("the project control", () => {
   it("renames in place: Enter saves, Escape cancels", async () => {
     const p = props();
     render(<ProjectMenu {...p} />);
-    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByText("Projects"));
     fireEvent.click(screen.getByLabelText("Rename Kitchen"));
     const field = screen.getByLabelText("New name for Kitchen");
     fireEvent.keyDown(field, { key: "Escape" });
@@ -160,7 +169,7 @@ describe("the project control", () => {
   it("keeps the field open and says why when a rename fails", async () => {
     const p = props({ onRename: vi.fn(async () => { throw new Error("disk full"); }) });
     render(<ProjectMenu {...p} />);
-    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByText("Projects"));
     fireEvent.click(screen.getByLabelText("Rename Kitchen"));
     fireEvent.submit(screen.getByLabelText("New name for Kitchen").closest("form"));
     await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("disk full"));
@@ -169,8 +178,19 @@ describe("the project control", () => {
 
   it("names the open project and turns to an error when a save fails", () => {
     render(<ProjectMenu {...props({ project: { id: "kitchen", name: "Kitchen" }, saveError: "disk full" })} />);
-    const button = screen.getByText("Kitchen").closest("button");
-    expect(button.className).toContain("is-error");
-    expect(button.getAttribute("title")).toBe("Not saved: disk full");
+    expect(screen.getByText("Kitchen").className).toContain("is-error");
+    expect(screen.getByRole("alert").textContent).toBe("Not saved: disk full");
+  });
+
+  it("titles the dialog with its page, and is a section on a calculator page", () => {
+    render(<ProjectMenu variant="section" {...props()} />);
+    expect(document.querySelector(".section .section-head").textContent).toBe("Project");
+    fireEvent.click(screen.getByText("Projects"));
+    expect(screen.getByRole("dialog").textContent).toContain("Gypsum projects");
+  });
+
+  it("is nothing without a project server", () => {
+    const { container } = render(<ProjectSection />);
+    expect(container.innerHTML).toBe("");
   });
 });

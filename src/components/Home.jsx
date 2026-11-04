@@ -1,6 +1,6 @@
 import { Icon, Stack, getBuildId } from "../shared.jsx";
 
-export function SheetHome({ page, setPage, projectOpen = false }) {
+export function SheetHome({ page, setPage, projectsAvailable = false }) {
   const items = PAGES.filter(pg => !pg.noNav);
 
   return (
@@ -37,13 +37,13 @@ export function SheetHome({ page, setPage, projectOpen = false }) {
           })}
         </div>
 
-        {/* Not shown with a project open (local mode): then entries are saved,
-            and a warning that they are not would be wrong. */}
-        {!projectOpen && (
-          <p className="home-note">
-            Entries are kept only while this window stays open. Reloading or closing it clears them.
-          </p>
-        )}
+        {/* With projects (local mode) a page's values are kept while it has
+            a project open, so the warning says which are not. */}
+        <p className="home-note">
+          {projectsAvailable
+            ? "A page keeps its entries across a reload only while it has a project open."
+            : "Entries are kept only while this window stays open. Reloading or closing it clears them."}
+        </p>
 
         <div className="home-divider" />
 

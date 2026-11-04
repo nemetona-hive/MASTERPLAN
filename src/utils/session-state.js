@@ -30,6 +30,13 @@ export class DraftStore extends Map {
     if (this.listeners) for (const listener of this.listeners) listener(null);
   }
 
+  /** Swap one page's values: drop the keys `owns` claims, then set these.
+      Every other page's drafts are left as they are. */
+  replaceWhere(owns, values) {
+    for (const key of [...this.keys()]) if (owns(key)) super.delete(key);
+    for (const [key, value] of Object.entries(values || {})) super.set(key, value);
+  }
+
   toJSON() {
     return Object.fromEntries(this);
   }

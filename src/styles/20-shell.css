@@ -204,11 +204,6 @@
 	white-space: nowrap;
 }
 
-/* The project control (local mode): the open project's name, cut short
-   rather than pushing the header wider; the danger colour when a save failed. */
-.hdr-project { max-width: 14rem; }
-.hdr-project-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.hdr-project.is-error { color: var(--danger); }
 
 .hdr-btn:disabled {
 	opacity: 0.5;

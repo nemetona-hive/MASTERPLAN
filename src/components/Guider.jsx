@@ -1,6 +1,7 @@
 import { React } from "../react-globals.js";
 import { ControlPanel, Stack } from "../shared.jsx";
 import { GuiderToruPolv70 } from "./guider/ToruPolv70.jsx";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 function GuiderLihtluliti() {
   return (
@@ -454,6 +455,7 @@ export function SheetGuider() {
   return (
     <>
       <div id="data-control" className="data-control">
+        <ProjectSection />
         {CATEGORIES.map(cat => (
           <ControlPanel
             key={cat.id}

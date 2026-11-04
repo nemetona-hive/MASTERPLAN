@@ -8,9 +8,9 @@
  * checks under `npm run layout` also run on 127.0.0.1, against a static server
  * that has no project routes.
  *
- * A project is { name, drafts, app }: `drafts` is every page's
- * useSessionState values (the DraftStore), `app` the state App.jsx holds
- * itself. See docs/deploying.md.
+ * A project is { name, page, drafts, app }, and belongs to that one page:
+ * `drafts` are the page's useSessionState values, `app` the part of App.jsx's
+ * own state the page owns (src/utils/project-pages.js). See docs/deploying.md.
  */
 
 const TIMEOUT_MS = 10_000;
@@ -60,14 +60,27 @@ export async function probeProjects() {
   }
 }
 
-/* The last project open in this browser, reopened on load. A convenience, so
-   it lives in localStorage and every read and write is allowed to fail. */
+/* The last project open on each page in this browser, reopened on load. A
+   convenience, so it lives in localStorage and every read and write is
+   allowed to fail. The bare key is the one from before projects were per
+   page; it is read once, to carry it over to the pages the old project split
+   into, and then removed. */
 const LAST_KEY = "masterplan.project";
-export function rememberProject(id) {
-  try { if (id) localStorage.setItem(LAST_KEY, id); else localStorage.removeItem(LAST_KEY); } catch { /* private mode */ }
+export function rememberProject(page, id) {
+  try {
+    const key = `${LAST_KEY}.${page}`;
+    if (id) localStorage.setItem(key, id); else localStorage.removeItem(key);
+  } catch { /* private mode */ }
 }
-export function lastProject() {
-  try { return localStorage.getItem(LAST_KEY); } catch { return null; }
+export function lastProject(page) {
+  try { return localStorage.getItem(`${LAST_KEY}.${page}`); } catch { return null; }
+}
+export function takeLegacyLastProject() {
+  try {
+    const id = localStorage.getItem(LAST_KEY);
+    localStorage.removeItem(LAST_KEY);
+    return id;
+  } catch { return null; }
 }
 
 /**

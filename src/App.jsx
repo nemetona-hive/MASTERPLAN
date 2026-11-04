@@ -1,6 +1,6 @@
 import { DraftStore, SessionDraftContext } from "./utils/session-state.js";
 import { useProjects } from "./useProjects.js";
-import { ProjectMenu } from "./components/ProjectMenu.jsx";
+import { ProjectContext } from "./components/ProjectMenu.jsx";
 import { React, ReactDOM, useState } from "./react-globals.js";
 import { SheetConcrete } from "./components/Concrete.jsx";
 import { SheetGypsum } from "./components/Gypsum.jsx";
@@ -74,11 +74,11 @@ const getHashPage = () => {
   return PAGES.some(p => p.id === hash) ? hash : "home";
 };
 
-function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen, projectOpen, projectName }) {
+function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen, projectsAvailable, projectName }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
-    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} projectOpen={projectOpen} /></div>;
+    return <div id="page-home" className="page-main-full"><SheetHome page={page} setPage={setPage} projectsAvailable={projectsAvailable} /></div>;
   }
 
   let content = null;
@@ -131,15 +131,7 @@ function App() {
   /* Expanded only when there is room for it: mobile has its own drawer, and a
      tablet cannot afford 260px of sidebar next to a 384px control column. */
   const [navOpen, setNavOpen]               = React.useState(() => !getIsMobile() && !isCompactNavViewport());
-  /* The sidebar as the user last set it (button or Ctrl+B), null until they
-     do. Kept apart from navOpen because the viewport also collapses the
-     sidebar, and that must not be saved into a project as a choice. */
-  const [navPref, setNavPref]               = React.useState(null);
-  const setNavOpenByUser = value => {
-    const next = typeof value === "function" ? value(navOpen) : value;
-    setNavOpen(next);
-    setNavPref(next);
-  };
+  const setNavOpenByUser = value => setNavOpen(typeof value === "function" ? value(navOpen) : value);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [theme, setTheme]                   = useState(() => {
     try {
@@ -275,24 +267,27 @@ function App() {
   const [grItems, setGrItems] = useState(DEFAULT_GR);
   const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
-  /* Projects, local mode only: every page's drafts plus the state App holds
-     itself — three calculators' values and the sidebar the user chose. A project's values are merged over the defaults,
-     so a project saved before a field existed opens with that field at its
+  /* Projects, local mode only, one set per page (src/useProjects.js): a
+     page's drafts plus whichever of App's own state that page owns. Opening
+     one sets only its own page's share, merged over the defaults, so a
+     project saved before a field existed opens with that field at its
      default rather than missing. */
   const projects = useProjects({
     drafts: drafts.current,
-    appState: { sh, sym, grItems, nav: navPref },
-    applyAppState: app => {
-      /* The saved sidebar, where the screen has room for it: a phone owns its
-         own drawer, and a narrow window keeps its icon strip. */
-      const nav = typeof app.nav === "boolean" ? app.nav : null;
-      setNavPref(nav);
-      if (nav !== null && !isMobileViewport() && !isCompactNavViewport()) setNavOpen(nav);
-      setSh(app.sh && typeof app.sh === "object" ? { ...DEFAULT_SH, ...app.sh } : DEFAULT_SH);
-      setSym(app.sym && typeof app.sym === "object" ? { ...DEFAULT_SYM, ...app.sym } : DEFAULT_SYM);
-      setGrItems(Array.isArray(app.grItems) ? app.grItems : DEFAULT_GR);
+    appState: { sh, sym, grItems },
+    appDefaults: { sh: DEFAULT_SH, sym: DEFAULT_SYM, grItems: DEFAULT_GR },
+    applyAppState: (owner, app) => {
+      if (owner === "pattern-layout") setSh(app.sh && typeof app.sh === "object" ? { ...DEFAULT_SH, ...app.sh } : DEFAULT_SH);
+      if (owner === "symmetric-layout") setSym(app.sym && typeof app.sym === "object" ? { ...DEFAULT_SYM, ...app.sym } : DEFAULT_SYM);
+      if (owner === "golden-ratio") setGrItems(Array.isArray(app.grItems) ? app.grItems : DEFAULT_GR);
     }
   });
+  /* The routed page's own project controls, for its <ProjectSection />.
+     Pattern Layouts is served by the fallback route, so an unknown id is it. */
+  const projectPage = page === "home" ? null : PAGES.some(p => p.id === page) ? page : "pattern-layout";
+  const pageProjects = projectPage
+    ? { ...projects.forPage(projectPage), title: PAGES.find(p => p.id === projectPage)?.title || "" }
+    : null;
 
   return (
     <SessionDraftContext.Provider value={drafts.current}>
@@ -324,14 +319,6 @@ function App() {
           <div className="hdr-group">
             <UndoButtons />
           </div>
-          {projects.available && <>
-            <span className="hdr-sep" aria-hidden="true" />
-            <div className="hdr-group">
-              <ProjectMenu projects={projects.projects} project={projects.project} saveError={projects.saveError}
-                scratchHasValues={projects.scratchHasValues} onRefresh={projects.refresh}
-                onCreate={projects.create} onOpen={projects.open} onCloseProject={projects.close} onDelete={projects.remove} onRename={projects.rename} />
-            </div>
-          </>}
           <span className="hdr-sep" aria-hidden="true" />
           <div className="hdr-group">
             <ThemeButton theme={theme} setTheme={setTheme} />
@@ -349,12 +336,14 @@ function App() {
           onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}>
         {/* The epoch remounts the page when a project is opened, so it reads
             the project's drafts — and drops the old page's undo history. */}
-        <PageErrorBoundary key={`${page}:${projects.epoch}`}>
+        <ProjectContext.Provider value={pageProjects}>
+        <PageErrorBoundary key={`${page}:${projects.epochs[projectPage] || 0}`}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
-          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} projectOpen={Boolean(projects.project)}
-          projectName={projects.project?.name || ""} />
+          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} projectsAvailable={projects.available}
+          projectName={pageProjects?.project?.name || ""} />
         </PageErrorBoundary>
+        </ProjectContext.Provider>
         </main>
       </div>
     </div>

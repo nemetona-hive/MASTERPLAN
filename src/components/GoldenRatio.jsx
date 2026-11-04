@@ -1,5 +1,6 @@
 import { React } from "../react-globals.js";
 import { ControlPanel, Icon, SaveDefaultsButton, Stack, getLinkedCardMarker, getLinkedCardTone, safeSaveStaticDefaults, useDocHistory, useLinkedCardHighlight, useTimedSet, useTimedState } from "../shared.jsx";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems }) {
   const [baseOpen, setBaseOpen] = React.useState(true);
@@ -106,6 +107,7 @@ export function SheetGoldenRatio({ grItems: baseItems, setGrItems: setBaseItems 
   return (
     <>
       <div id="data-control" className="data-control">
+        <ProjectSection />
         <ControlPanel id="control-base-number" title="Base Number" open={baseOpen} setOpen={setBaseOpen}>
           <div style={{ padding: "0 var(--sp-4) var(--sp-4) var(--sp-4)", display: "flex", justifyContent: "flex-end" }}>
             <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveGoldenRatioDefaults} />

@@ -2,6 +2,7 @@ import { React } from "../react-globals.js";
 import { ControlPanel, MaterialPresetDropdown, NumInput, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
 import { LayoutEmptyState, LayoutPanel, PreviewSection } from "../Visualization.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 const validDimension = (value, min, max) => {
   const parsed = parseMeasurement(value);
@@ -90,6 +91,7 @@ export function SheetSymmetricLayout({ sym, setSym }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={4}>
+        <ProjectSection />
         <ControlPanel id="control-sym-surface" title="Inputs" noToggle className="form-section-card">
           <Stack gap={3}>
             <div ref={areaWrapRef} style={{ position: "relative" }}>

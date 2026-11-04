@@ -4,6 +4,7 @@ import { React } from "../react-globals.js";
 import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 import { TakeOffSheet } from "./TakeOffSheet.jsx";
 import { buildTakeOff } from "../utils/take-off.js";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 // ── Concrete Calculator ────────────────────────────────────────────────────────
 
@@ -189,6 +190,7 @@ export function SheetConcrete() {
 
         <div className="layout-split">
           <Stack className="calc-main-stack" gap={4}>
+            <ProjectSection variant="section" />
             {/* ── Area & Thickness ── */}
             <div className="section unboxed">
               <div className="section-head">

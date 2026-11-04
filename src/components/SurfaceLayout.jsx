@@ -5,6 +5,7 @@ import { LayoutEmptyState, LayoutPanel, LayoutVisualization, PanelSummary, Previ
 import { CutListSheet } from "./CutListSheet.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { buildCutList } from "../utils/cut-list.js";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 const hasValue = value => value !== "" && value !== null && value !== undefined;
 const validDimension = (value, min, max) => {
@@ -261,6 +262,7 @@ export function SheetSurfaceLayout({ sh, setSh, panelOpen, setPanelOpen }) {
   return (
     <>
       <Stack id="data-control" className="data-control" gap={4}>
+        <ProjectSection />
         <MaterialSpecification 
           sh={sh} setSh={setSh} setMat={setMat} 
           presets={presets} activePreset={activePreset} applyPreset={applyPreset} 

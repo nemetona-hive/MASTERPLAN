@@ -3,6 +3,7 @@ import { React, useState } from "../react-globals.js";
 import { Icon, Stack, useDocHistory, useTimedState } from "../shared.jsx";
 import { fmtDecimal, fmtHHMM, parseLunch, parseTime } from "../utils/timesheet.js";
 import { useGridNav } from "../utils/grid-nav.js";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 // ── SheetTimesheet ────────────────────────────────────────────────────────────
 
@@ -219,6 +220,7 @@ export function SheetTimesheet() {
         <div className="layout-split">
           
           <Stack className="ts-section" gap={3}>
+            <ProjectSection variant="section" />
             {/* ── Calculate tab ────────────────────────────────────────────────── */}
             <div className="section unboxed">
               <div className="section-head">

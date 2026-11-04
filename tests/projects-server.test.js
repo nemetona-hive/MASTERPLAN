@@ -115,10 +115,23 @@ describe("projects on the local server", () => {
     expect(request({ url: "/api/projects/kitchen", headers: { host: "evil.test" } }).code).toBe(403);
   });
 
+  it("keeps the page a project belongs to, through a save and a rename", () => {
+    request({ method: "POST", body: project({ page: "gypsum" }) });
+    request({ method: "PUT", url: "/api/projects/kitchen", body: project({ page: "gypsum" }) });
+    request({ method: "PATCH", url: "/api/projects/kitchen", body: { name: "Kitchen 2" } });
+    expect(request().json[0]).toMatchObject({ id: "kitchen", name: "Kitchen 2", page: "gypsum" });
+    expect(request({ url: "/api/projects/kitchen" }).json.page).toBe("gypsum");
+  });
+
+  it("refuses a page that is not a page id", () => {
+    expect(request({ method: "POST", body: project({ page: "../x" }) }).code).toBe(400);
+    expect(request({ method: "POST", body: project({ page: 3 }) }).code).toBe(400);
+  });
+
   it("lists a damaged file instead of hiding it", () => {
     fs.mkdirSync(dir(), { recursive: true });
     fs.writeFileSync(path.join(dir(), "broken.json"), "{ not json");
-    expect(request().json).toEqual([{ id: "broken", name: "broken", savedAt: null, unreadable: true }]);
+    expect(request().json).toEqual([{ id: "broken", name: "broken", page: null, savedAt: null, unreadable: true }]);
     expect(request({ url: "/api/projects/broken" }).code).toBe(422);
   });
 

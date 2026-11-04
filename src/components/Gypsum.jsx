@@ -6,6 +6,7 @@ import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumProjectSheet, GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
 import { buildGypsumProjectTakeOff, buildGypsumTakeOff, jointFillerRate, WALLS } from "../utils/gypsum-take-off.js";
+import { ProjectSection } from "./ProjectMenu.jsx";
 
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
@@ -211,6 +212,7 @@ export function SheetGypsum({ projectName = "" }) {
   return (
     <>
       <Stack id="data-control" className="data-control gyp-control" gap={4}>
+        <ProjectSection />
         {/* The job's rooms and walls. The list shows once there is a second
             entry; until then the card is the name and the ways to add one. */}
         <ControlPanel id="control-gyp-rooms" title="Rooms" noToggle className="form-section-card">
