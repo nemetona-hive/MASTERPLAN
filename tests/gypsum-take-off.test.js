@@ -216,6 +216,14 @@ describe("the gypsum take-off", () => {
     });
   });
 
+  it("labels each piece with its width across the wall", () => {
+    const v = layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V" });
+    expect(v.pieces.map(p => p.label)).toEqual(["1200", "1200", "600"]);
+    expect(v.pieces[2].size).toBe("600 × 2600 mm");
+    const h = layoutSurface({ w: 3000, h: 2400, sheetW: 1200, sheetL: 2600, orientation: "H" });
+    expect(h.pieces[0].label).toBe(String(h.pieces[0].len));
+  });
+
   describe("first panel offset", () => {
     it("starts each wall with a strip, so the first full board lands on the first stud", () => {
       const lay = layoutSurface({ w: 4000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", firstLane: 600 });

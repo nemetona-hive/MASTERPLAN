@@ -50,7 +50,7 @@ function SurfaceDrawing({ surface, orientation, widest }) {
               <rect x={p.x} y={p.y} width={p.w} height={p.h} className={`gyp-print-piece gyp-print-piece--${p.type}`} />
               {fits && (
                 <text x={p.x + p.w / 2} y={p.y + p.h / 2} fontSize={fs} textAnchor="middle"
-                  dominantBaseline="central" className="gyp-print-label">{mm(p.len)}</text>
+                  dominantBaseline="central" className="gyp-print-label">{p.label ?? mm(p.len)}</text>
               )}
             </g>
           );

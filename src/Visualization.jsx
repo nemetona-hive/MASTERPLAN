@@ -464,12 +464,14 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                     style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
                     {...linkedHighlightProps(rect.type, hoveredType, setHoveredType, { toggleOnTap: false })}
                   >
-                    <title>{`${Math.round(rect.seg.w)}mm - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`}</title>
+                    <title>{`${rect.seg.size || `${Math.round(rect.seg.w)}mm`} - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`}</title>
                   </rect>
                   {showLabel && (
                     <text x={rect.x + chartX + rect.w / 2} y={rect.y + chartY + rect.h / 2}
                       textAnchor="middle" dominantBaseline="middle" className="layout-svg-label">
-                      {rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : Math.round(rect.seg.w)}
+                      {/* A segment may carry its own label (Gypsum: the piece's width);
+                          otherwise its length along the row. */}
+                      {rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : (rect.seg.label ?? Math.round(rect.seg.w))}
                     </text>
                   )}
                 </g>

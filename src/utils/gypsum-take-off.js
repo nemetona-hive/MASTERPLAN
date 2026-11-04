@@ -114,8 +114,13 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     const start = !vertical && firstLane > EPS && firstLane < sheetL - EPS ? firstLane : 0;
     const segs = lanePieces(laneLength, sheetL, laneIndex, start).map(len => {
       const whole = Math.abs(len - sheetL) < EPS && Math.abs(laneW - sheetW) < EPS;
-      // `pid` picks the palette swatch for a full sheet in the diagram.
-      const seg = { x, w: len, type: whole ? "full" : "cut", laneW, ...(whole ? { pid: 0 } : {}) };
+      /* `label` is what the diagrams print on the piece: its width across the
+         wall — the lane's width fixed vertically, its own length fixed
+         horizontally. `size` is both sides, for a tooltip. `pid` picks the
+         palette swatch for a full sheet in the diagram. */
+      const label = String(Math.round(vertical ? laneW : len));
+      const size = `${Math.round(laneW)} × ${Math.round(len)} mm`;
+      const seg = { x, w: len, type: whole ? "full" : "cut", laneW, label, size, ...(whole ? { pid: 0 } : {}) };
       x += len;
       return seg;
     });
@@ -142,8 +147,8 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
   const rows = fullRows.map((row, lane) => {
     const segs = row.segs.filter(seg => {
       const rect = vertical
-        ? { x: laneStart, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane }
-        : { x: seg.x, y: laneStart, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane };
+        ? { x: laneStart, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size }
+        : { x: seg.x, y: laneStart, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size };
       if (inside(rect)) return false;
       pieces.push(rect);
       return true;
