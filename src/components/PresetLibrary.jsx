@@ -12,7 +12,9 @@ import { Icon, MaterialPresetDropdown, Modal, NumInput, SaveDefaultsButton, Sele
  * A library is data:
  *   id, title          — the dialog's and the dropdown's heading
  *   saveKey            — the config.js constant Save Defaults rewrites
- *   draftKey           — the useSessionState key the list is kept under
+ *   draftKey           — the useSessionState key the list is kept under; null
+ *                        for a list the page cannot edit (no Manage dialog),
+ *                        which is read from `defaults()` and kept by nobody
  *   defaults()         — the shipped list, from config.js
  *   columns            — [field, table heading, accessible name]
  *   required / requiredAny / requiredText — what a preset must fill in to apply
@@ -43,7 +45,7 @@ const canManage = () => typeof canSaveStaticDefaults !== "undefined" && canSaveS
  * So the page passes `active` and `setActive`.
  */
 export function usePresetLibrary(lib, { onApply, active, setActive }) {
-  const presetsKey = lib.draftKey;
+  const presetsKey = lib.draftKey ?? null;
   const [presets, setPresets] = useSessionState(presetsKey, () =>
     (lib.defaults() || [blank(lib)]).map(p => ({ ...blank(lib), ...p })));
   const [error, setError] = React.useState("");

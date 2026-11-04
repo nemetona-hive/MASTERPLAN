@@ -48,10 +48,14 @@ export class DraftStore extends Map {
 }
 
 export const SessionDraftContext = React.createContext(null);
+/* A null key is plain state: kept by nobody, for a caller that only sometimes
+   has something worth keeping (a preset list with no Manage dialog to change
+   it), so the hook can still be called the same way every render. */
 export function useSessionState(key, initialValue) {
   const drafts = React.useContext(SessionDraftContext);
-  const [value, setValue] = React.useState(() => drafts?.has(key) ? drafts.get(key)
+  const keep = drafts && key !== null && key !== undefined;
+  const [value, setValue] = React.useState(() => keep && drafts.has(key) ? drafts.get(key)
     : typeof initialValue === "function" ? initialValue() : initialValue);
-  React.useEffect(() => { if (drafts) drafts.set(key, value); }, [drafts, key, value]);
+  React.useEffect(() => { if (keep) drafts.set(key, value); }, [drafts, key, value, keep]);
   return [value, setValue];
 }

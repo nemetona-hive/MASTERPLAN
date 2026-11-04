@@ -83,6 +83,24 @@ four panels' open state (`layoutPanelsOpen`).
 - An applied preset stays named while the fields still hold its sizes
   (`dimensionsMatch`), and an apply is an undo step.
 
+## Axial Alignment tool
+
+`symmetric-layout`: full panels on an axis, edge pieces resolved
+(`computeS0` in `simulation.js`). App holds the page's values (`sym`).
+
+- **Two preset lists, on the shared preset system** (`AXIAL_PRODUCT_LIBRARY`,
+  `AXIAL_AREA_LIBRARY` in `SymmetricLayout.jsx`): products for the panel
+  width, inputs for the area width. Only a preset's width is used.
+- **Kept apart from Pattern Layouts' lists, by the user's choice (2026-11-04).**
+  Both start from the same `config.js` defaults, but an edit made on Pattern
+  Layouts stays there, so each page stands on its own. With no Manage dialog
+  here, a list is read from its defaults and not kept (`draftKey: null`);
+  which preset is applied is kept, with the page's values.
+- An applied preset stays named, above the Inputs card, while its field holds
+  its width. The page used to clear the product preset on every commit, so a
+  blur that re-committed the same value dropped it, and never cleared the area
+  preset at all. A preset without a usable width is refused with a message.
+
 ## Gypsum tool
 
 Metric plasterboard estimator, modelled on the inputs of layoutdrywall.org

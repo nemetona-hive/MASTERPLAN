@@ -1,5 +1,7 @@
 import { React } from "../react-globals.js";
-import { ControlPanel, MaterialPresetDropdown, NumInput, SegGroup, Stack, clampNumber, useClickOutside, useDocHistory, useDropdownKeyboard } from "../shared.jsx";
+import { ControlPanel, NumInput, SegGroup, SelectedPresetDetail, Stack, clampNumber, useDocHistory } from "../shared.jsx";
+import { PresetField, usePresetLibrary } from "./PresetLibrary.jsx";
+import { useSessionState } from "../utils/session-state.js";
 import { LayoutEmptyState, LayoutPanel, PreviewSection } from "../Visualization.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { ProjectSection } from "./ProjectMenu.jsx";
@@ -14,6 +16,42 @@ const clampOptionalDimension = (value, min, max) => {
   return Number.isFinite(n) ? clampNumber(n, min, max, min) : "";
 };
 
+/* The page's two preset lists, on the shared preset system (PresetLibrary.jsx):
+   products for the panel width, and inputs for the area width. Both are the
+   defaults config.js ships, the same ones Pattern Layouts starts from, but
+   kept apart from that page's edited lists, by the user's choice: each page
+   stands on its own. There is no Manage dialog here, so a list is read from
+   its defaults and not kept (`draftKey: null`); which preset is applied is
+   kept, with the page's values. Only the width of either is used: this
+   calculation has one dimension. */
+const widthLibrary = ({ max, message, ...lib }) => ({
+  ...lib,
+  draftKey: null,
+  columns: [["width", "Width mm", "Width"], ["length", "Length mm", "Length"]],
+  required: ["width"],
+  requiredText: "a width",
+  validate: v => (Number.isFinite(v.width) && v.width >= 100 && v.width <= max ? null : message)
+});
+export const AXIAL_PRODUCT_LIBRARY = widthLibrary({
+  id: "axial-product", title: "Material Presets", max: 8000,
+  message: "A product preset's width must be between 100 and 8000 mm.",
+  defaults: () => (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : [])
+});
+export const AXIAL_AREA_LIBRARY = widthLibrary({
+  id: "axial-area", title: "Input Presets", max: 50000,
+  message: "An input preset's width must be between 100 and 50000 mm.",
+  defaults: () => (typeof DEFAULT_SURFACE_PRESETS !== "undefined" ? DEFAULT_SURFACE_PRESETS : [])
+});
+
+/* An applied preset stays named while its field still holds its width. A
+   blur re-commits the value unchanged, so clearing on every commit lost the
+   name the moment the field was left. */
+const keepWhileMatching = (active, setActive, list, width) => () => {
+  if (active === null) return;
+  const preset = list[active];
+  if (!preset || parseMeasurement(preset.width) !== parseMeasurement(width)) setActive(null);
+};
+
 export function SheetSymmetricLayout({ sym, setSym }) {
   const [hoveredType, setHoveredType] = React.useState(null);
   const roomComplete = validDimension(sym.roomWidth, 100, 50000);
@@ -21,117 +59,59 @@ export function SheetSymmetricLayout({ sym, setSym }) {
   const started = [sym.roomWidth, sym.panelWidth].some(value => value !== "" && value !== null && value !== undefined);
   const ready = roomComplete && materialComplete;
 
-  // ── Material presets (shared with pattern layouts) ─────────────────────────
-  const presets = React.useMemo(() =>
-    (typeof DEFAULT_MATERIAL_PRESETS !== "undefined" ? DEFAULT_MATERIAL_PRESETS : []).filter(p => p.name),
-  []);
-  const areaPresets = React.useMemo(() =>
-    (typeof DEFAULT_SURFACE_PRESETS !== "undefined" ? DEFAULT_SURFACE_PRESETS : []).filter(p => p.name),
-  []);
-  const [activePreset,     setActivePreset]     = React.useState(null);
-  const [activeAreaPreset, setActiveAreaPreset] = React.useState(null);
-  const [showWidDropdown,  setShowWidDropdown]  = React.useState(false);
-  const [showAreaDropdown, setShowAreaDropdown] = React.useState(false);
-  const widWrapRef = React.useRef(null);
-  const areaWrapRef = React.useRef(null);
+  const [activeProduct, setActiveProduct] = useSessionState("SymmetricLayout.jsx:activeProduct", null);
+  const [activeArea, setActiveArea] = useSessionState("SymmetricLayout.jsx:activeArea", null);
 
-  useClickOutside([widWrapRef, areaWrapRef], () => {
-    setShowWidDropdown(false);
-    setShowAreaDropdown(false);
-  });
-
-  /* `sym` is this page's whole document and lives in App's state. The active
-     preset and the open dropdown are view state and stay out. */
+  /* `sym` is this page's whole document and lives in App's state. The applied
+     presets and the open lists are not the document and stay out. */
   const markStep = useDocHistory({
     key: "symmetric-layout",
     snapshot: () => sym,
     apply: setSym
   });
 
-  const applyPreset = (p, idx) => {
-    markStep("Apply preset");
-    setSym(s => ({ ...s, panelWidth: p.width }));
-    setActivePreset(idx);
-    setShowWidDropdown(false);
-  };
-
-  // Axial Alignment consumes only the width axis of an input preset: the
-  // surface length has no meaning in its one-dimensional calculation.
-  const applyAreaPreset = (p, idx) => {
-    const width = parseMeasurement(p.width);
-    if (!Number.isFinite(width) || width < 100 || width > 50000) return;
-    markStep("Apply input preset width");
-    setSym(s => ({ ...s, roomWidth: width }));
-    setActiveAreaPreset(idx);
-    setShowAreaDropdown(false);
-  };
-
-  const { hoveredIndex, onKeyDown } = useDropdownKeyboard(
-    showWidDropdown ? presets.length : 0,
-    (idx) => applyPreset(presets[idx], idx),
-    () => setShowWidDropdown(false)
-  );
-  const { hoveredIndex: areaHoveredIndex, onKeyDown: onAreaKeyDown } = useDropdownKeyboard(
-    showAreaDropdown ? areaPresets.length : 0,
-    (idx) => applyAreaPreset(areaPresets[idx], idx),
-    () => setShowAreaDropdown(false)
-  );
+  const product = usePresetLibrary(AXIAL_PRODUCT_LIBRARY, {
+    active: activeProduct, setActive: setActiveProduct,
+    onApply: v => { markStep("Apply preset"); setSym(s => ({ ...s, panelWidth: v.width })); }
+  });
+  const area = usePresetLibrary(AXIAL_AREA_LIBRARY, {
+    active: activeArea, setActive: setActiveArea,
+    onApply: v => { markStep("Apply input preset width"); setSym(s => ({ ...s, roomWidth: v.width })); }
+  });
+  /* eslint-disable react-hooks/exhaustive-deps */
+  React.useEffect(keepWhileMatching(activeProduct, setActiveProduct, product.presets, sym.panelWidth),
+    [activeProduct, product.presets, sym.panelWidth]);
+  React.useEffect(keepWhileMatching(activeArea, setActiveArea, area.presets, sym.roomWidth),
+    [activeArea, area.presets, sym.roomWidth]);
+  /* eslint-enable react-hooks/exhaustive-deps */
+  const presetError = product.error || area.error;
 
   const layout = {
     id: "s0",
     title: sym.oneFullEdge ? "Asymmetric layout" : "Symmetric layout",
     description: sym.oneFullEdge ? "One full edge piece, then repeated pieces" : "Equal edge pieces, full pieces in center",
-    defaultOpen: true, renderControls: null, icon: "s0",
-    summaryGroupTitles: ["Pieces", "Totals"],
-    getState: () => ({}), setState: () => {},
-    compute: () => computeS0(sym),
-    includeInBest: false
+    summaryGroupTitles: ["Pieces", "Totals"]
   };
-  const result = ready ? layout.compute() : null;
+  const result = ready ? computeS0(sym) : null;
   return (
     <>
       <Stack id="data-control" className="data-control" gap={4}>
         <ProjectSection />
-        <ControlPanel id="control-sym-surface" title="Inputs" noToggle className="form-section-card">
-          <Stack gap={3}>
-            <div ref={areaWrapRef} style={{ position: "relative" }}>
-              <NumInput id="input-sym-room-width" label="Area width (mm)" value={sym.roomWidth}
-                onChange={v => setSym(s => ({ ...s, roomWidth: clampOptionalDimension(v, 100, 50000) }))}
-                min={100} max={50000} req={started && !roomComplete}
-                presetsOpen={showAreaDropdown}
-                presetHoveredIndex={areaHoveredIndex}
-                showActionLabels
-                onTogglePresets={() => setShowAreaDropdown(open => !open)}
-                onCommit={() => setShowAreaDropdown(false)}
-                onKeyDown={onAreaKeyDown} />
-              {showAreaDropdown && areaPresets.length > 0 && (
-                <MaterialPresetDropdown anchorRef={areaWrapRef} presets={areaPresets} activePreset={activeAreaPreset}
-                  onApply={applyAreaPreset} field="width" inputId="input-sym-room-width"
-                  hoveredIndex={areaHoveredIndex} title="Input Presets" />
-              )}
-            </div>
-            <div ref={widWrapRef} style={{ position: "relative" }}>
-              <NumInput
-                id="input-sym-panel-width"
-                label="Product width (mm)"
-                value={sym.panelWidth}
-                onChange={v => { setSym(s => ({ ...s, panelWidth: clampOptionalDimension(v, 100, 8000) })); setActivePreset(null); }}
-                min={100}
-                max={8000}
-                req={started && !materialComplete}
-                presetsOpen={showWidDropdown}
-                presetHoveredIndex={hoveredIndex}
-                showActionLabels
-                onTogglePresets={() => setShowWidDropdown(open => !open)}
-                onCommit={() => setShowWidDropdown(false)}
-                onKeyDown={onKeyDown}
-              />
-              {showWidDropdown && presets.length > 0 && (
-                <MaterialPresetDropdown anchorRef={widWrapRef} presets={presets} activePreset={activePreset} onApply={applyPreset} field="width" inputId="input-sym-panel-width" hoveredIndex={hoveredIndex} />
-              )}
-            </div>
+        <ControlPanel id="control-sym-surface" title="Inputs" noToggle className="form-section-card"
+          headerDetail={(area.selected || product.selected) && <>
+            {area.selected && <SelectedPresetDetail preset={area.selected} />}
+            {product.selected && <SelectedPresetDetail preset={product.selected} />}
+          </>}>
+          <Stack gap={3} className="ctrl-list">
+            <PresetField library={area} field="width" id="input-sym-room-width" label="Area width (mm)"
+              value={sym.roomWidth} min={100} max={50000} req={started && !roomComplete}
+              onChange={v => setSym(s => ({ ...s, roomWidth: clampOptionalDimension(v, 100, 50000) }))} />
+            <PresetField library={product} field="width" id="input-sym-panel-width" label="Product width (mm)"
+              value={sym.panelWidth} min={100} max={8000} req={started && !materialComplete}
+              onChange={v => setSym(s => ({ ...s, panelWidth: clampOptionalDimension(v, 100, 8000) }))} />
           </Stack>
         </ControlPanel>
+        {presetError && <p role="alert" className="input-error">{presetError}</p>}
         <ControlPanel id="control-sym-settings" title="Settings" noToggle className="form-section-card">
           <Stack gap={3}>
             <NumInput id="input-sym-gap" label="Gap (mm)" value={sym.gap ?? 0}
