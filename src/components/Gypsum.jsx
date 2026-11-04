@@ -5,7 +5,7 @@ import { LIBRARIES, ManagePresetsButton, PresetField, PresetManager, libraryFiel
 import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
-import { buildGypsumTakeOff, WALLS } from "../utils/gypsum-take-off.js";
+import { buildGypsumTakeOff, jointFillerRate, WALLS } from "../utils/gypsum-take-off.js";
 
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@ const PRODUCT_FIELDS = Object.values(LIBRARIES).flatMap(libraryFields);
 
 /* Fields that begin empty, and those that begin at a sensible value. Opening
    sizes are standard enough to prefill; job dimensions never are. */
-const EMPTY = ["lenMm", "widMm", "heightMm", "wallW", "wallH", ...PRODUCT_FIELDS];
+const EMPTY = ["lenMm", "widMm", "heightMm", "wallW", "wallH", "skimMm", ...PRODUCT_FIELDS];
 const PREFILLED = { waste: "5" };
 /* A new opening starts at a common size; its position starts empty, and an
    opening with no position still comes off the area — it is just not drawn. */
@@ -82,6 +82,7 @@ export function SheetGypsum() {
     adhesiveProduct: adhesive.selected?.name || ""
   });
   const { area, sheets, screws, compound, tape } = takeOff;
+  const derivedJoint = jointFillerRate(val("compoundRate"), val("skimRate"));
 
   const [printTakeOff, setPrintTakeOff] = React.useState(null);
   React.useEffect(() => {
@@ -237,9 +238,21 @@ export function SheetGypsum() {
           <Stack gap={3} className="ctrl-list">
             <PresetField library={filler} field="compoundRate" id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)"
               value={val("compoundRate")} onChange={productChange(filler, "compoundRate")} />
-            <div className={filler.fieldFlash ? "num-input-flash" : ""}>
-              <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange(filler, "bagKg")} />
+            <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+              <div className={filler.fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-skimRate" label="Per 1 mm (kg/m²)" value={val("skimRate")} min={0} onChange={productChange(filler, "skimRate")} />
+              </div>
+              <div className={filler.fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange(filler, "bagKg")} />
+              </div>
             </div>
+            {/* Worked out, not typed: said once, under the field it stands in for. */}
+            {derivedJoint.derived && (
+              <p className="gyp-derived" role="status">
+                ≈ {derivedJoint.rate} kg per m of joint, from {val("skimRate")} kg/m² per 1 mm
+              </p>
+            )}
+            {num("skimMm", "Surface skim (mm)", { max: 10 })}
             <ManagePresetsButton library={filler} />
           </Stack>
         </ControlPanel>
@@ -302,13 +315,17 @@ export function SheetGypsum() {
                   {takeOff.adhesive && <Row label="Adhesive" value={takeOff.adhesive.kg.toFixed(1)} unit="kg" />}
                   {takeOff.adhesive?.bagKg && <Row label={`Adhesive bags (${takeOff.adhesive.bagKg} kg)`} value={takeOff.adhesive.bags} unit="pcs" />}
                   <Row label="Joints filled" value={compound.length.toFixed(1)} unit="m" />
-                  <Row label="Joint filler" value={compound.kg.toFixed(1)} unit="kg" />
+                  {compound.skim && <>
+                    <Row label={`Filler for joints${compound.rate !== null ? ` (${compound.rate} kg/m)` : ""}`} value={compound.jointKg.toFixed(1)} unit="kg" />
+                    <Row label={`Surface skim ${compound.skim.mm} mm (${compound.skim.area.toFixed(2)} m²)`} value={compound.skim.kg.toFixed(1)} unit="kg" />
+                  </>}
+                  <Row label={compound.skim ? "Joint filler, total" : `Joint filler${compound.rate !== null ? ` (${compound.rate} kg/m)` : ""}`} value={compound.kg.toFixed(1)} unit="kg" />
                   {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
                   <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
 
                   <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
                     <span className="pw-formula-text">
-                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners.
+                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness.
                     </span>
                   </div>
                   <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>

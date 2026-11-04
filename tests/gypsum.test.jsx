@@ -1,11 +1,35 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { render, fireEvent, screen } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
 import { SheetGypsum } from "../src/components/Gypsum.jsx";
 
 /* The page's wiring: modes, presets, the diagram and the result card. The
    arithmetic is `tests/gypsum-take-off.test.js`. */
+
+/* The page's preset libraries start from config.js, which Save Defaults
+   rewrites with whatever the user keeps. These tests use the shipped
+   presets, fixed here, so a saved library cannot fail them. */
+const FIXTURES = {
+  DEFAULT_GYPSUM_PRESETS: [
+    { name: "Knauf GKB 12.5", sheetW: 1250, sheetL: 2600, screwRate: 20, sheetPrice: "" },
+    { name: "Gyproc GN 13", sheetW: 1200, sheetL: 2600, screwRate: 13, sheetPrice: "" },
+    { name: "", sheetW: "", sheetL: "", screwRate: "", sheetPrice: "" }
+  ],
+  DEFAULT_GYPSUM_FILLER_PRESETS: [
+    { name: "Knauf Uniflott", compoundRate: 0.25, skimRate: "", bagKg: 25 },
+    { name: "Knauf Fill & Finish Light", compoundRate: "", skimRate: 1.1, bagKg: 20 },
+    { name: "", compoundRate: "", skimRate: "", bagKg: "" }
+  ],
+  DEFAULT_GYPSUM_ADHESIVE_PRESETS: [
+    { name: "Knauf Perlfix", adhesiveRate: 5, adhesiveBagKg: 25 },
+    { name: "Gyproc DriWall", adhesiveRate: 4.3, adhesiveBagKg: 25 },
+    { name: "", adhesiveRate: "", adhesiveBagKg: "" }
+  ]
+};
+const saved = {};
+beforeAll(() => { for (const [name, value] of Object.entries(FIXTURES)) { saved[name] = globalThis[name]; globalThis[name] = value; } });
+afterAll(() => Object.assign(globalThis, saved));
 
 const type = (id, value) => {
   const el = document.getElementById(id);
@@ -103,6 +127,21 @@ describe("the gypsum page", () => {
     expect(document.getElementById("input-gyp-sheetW").value).toBe("1200");
   });
 
+  it("shows the per-metre rate it worked out for a filler given per 1 mm", () => {
+    render(<SheetGypsum />);
+    const list = document.getElementById("input-gyp-compoundRate").closest("[style]").querySelector("[title='Presets']");
+    fireEvent.click(list);
+    fireEvent.pointerDown(screen.getByText("Knauf Fill & Finish Light"));
+    expect(document.getElementById("input-gyp-compoundRate").value).toBe("");
+    expect(document.getElementById("input-gyp-skimRate").value).toBe("1.1");
+    expect(document.querySelector(".gyp-derived").textContent).toContain("0.374 kg per m of joint");
+    // Typed by hand, as for a filler with no preset:
+    type("input-gyp-skimRate", 1.3);
+    expect(document.querySelector(".gyp-derived").textContent).toContain(`${Math.round(1.3 * 0.34 * 1000) / 1000} kg per m of joint`);
+    type("input-gyp-compoundRate", 0.3);
+    expect(document.querySelector(".gyp-derived")).toBe(null);
+  });
+
   it("manages each library in its own dialog", () => {
     render(<SheetGypsum />);
     fireEvent.click(screen.getByLabelText("Manage board presets"));
@@ -114,7 +153,7 @@ describe("the gypsum page", () => {
     fireEvent.click(screen.getByLabelText("Manage joint filler presets"));
     const dialog = screen.getByRole("dialog");
     expect(dialog.textContent).toContain("Manage Joint Filler Presets");
-    expect(dialog.querySelectorAll(".pw-preset-row")).toHaveLength(2);
+    expect(dialog.querySelectorAll(".pw-preset-row")).toHaveLength(3);
   });
 
   it("keeps printing disabled until there is a job", () => {

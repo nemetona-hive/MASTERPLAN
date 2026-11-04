@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildGypsumTakeOff, lanePieces, layoutSurface, packSheets, readOpenings, MIN_END_PIECE } from "../src/utils/gypsum-take-off.js";
+import { buildGypsumTakeOff, jointFillerRate, JOINT_FILL_MM_M, lanePieces, layoutSurface, packSheets, readOpenings, MIN_END_PIECE } from "../src/utils/gypsum-take-off.js";
 
 /* A 4 × 3 m room, 2.6 m high, boarded vertically with 1200 × 2600 sheets —
    one sheet spans the height, so every lane is one piece. */
@@ -180,6 +180,40 @@ describe("the gypsum take-off", () => {
     const small = buildGypsumTakeOff(fields({ sheetW: "600" }));
     expect(small.area.net).toBe(big.area.net);
     expect(small.compound.kg).toBeGreaterThan(big.compound.kg);
+  });
+
+  describe("a filler given per 1 mm", () => {
+    /* Knauf Fill & Finish Light: 0.2 + 0.1 kg/m² on the joints of 1250 mm
+       boards (about 0.8 m of joint per m²) is 0.375 kg per m of joint, and
+       its skim rate is 1.1 kg/m² per mm. */
+    it("works its rate per metre of joint out from the per-mm rate", () => {
+      expect(JOINT_FILL_MM_M).toBeCloseTo(0.3 / 0.8 / 1.1, 2);
+      expect(jointFillerRate("", "1.1")).toEqual({ rate: 0.374, derived: true });
+    });
+
+    it("uses the stated per-metre rate when there is one", () => {
+      expect(jointFillerRate("0.25", "1.1")).toEqual({ rate: 0.25, derived: false });
+      expect(jointFillerRate("", "")).toEqual({ rate: null, derived: false });
+    });
+
+    it("counts the joints at the worked-out rate", () => {
+      const t = buildGypsumTakeOff(fields({ compoundRate: "", skimRate: "1.1" }));
+      expect(t.compound.rateDerived).toBe(true);
+      expect(t.compound.kg).toBeCloseTo(36.4 * 0.374, 1);
+    });
+
+    it("adds a full-surface skim over the net area", () => {
+      const t = buildGypsumTakeOff(fields({ compoundRate: "", skimRate: "1.1", skimMm: "1" }));
+      expect(t.compound.skim).toEqual({ mm: 1, area: 36.4, kg: 40 });
+      expect(t.compound.kg).toBeCloseTo(36.4 * 0.374 + 36.4 * 1.1, 1);
+      expect(t.compound.bags).toBe(Math.ceil(t.compound.kg / 25));
+    });
+
+    it("asks for the per-mm rate before it can count a skim", () => {
+      const t = buildGypsumTakeOff(fields({ skimMm: "1" }));
+      expect(t.compound.skim.kg).toBe(0);
+      expect(t.warning).toMatch(/kg\/m² per 1 mm/);
+    });
   });
 
   it("prices the sheets bought", () => {

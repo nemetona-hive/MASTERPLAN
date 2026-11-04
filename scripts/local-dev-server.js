@@ -115,7 +115,7 @@ const validateGypsumPresets = gypsumLibraryValidator("gypsumPresets", {
   sheetW: [100, 8000], sheetL: [100, 8000], screwRate: [0.01, 1000], sheetPrice: [0, Number.MAX_SAFE_INTEGER]
 });
 const validateGypsumFillerPresets = gypsumLibraryValidator("gypsumFillerPresets", {
-  compoundRate: [0.001, 100], bagKg: [0.01, Number.MAX_SAFE_INTEGER]
+  compoundRate: [0.001, 100], skimRate: [0.001, 100], bagKg: [0.01, Number.MAX_SAFE_INTEGER]
 });
 const validateGypsumAdhesivePresets = gypsumLibraryValidator("gypsumAdhesivePresets", {
   adhesiveRate: [0.01, 100], adhesiveBagKg: [0.01, Number.MAX_SAFE_INTEGER]

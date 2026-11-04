@@ -103,6 +103,18 @@ a second layer. All figures, and the diagrams, come from
   tape do not change. Rates: Knauf Perlfix approx. 5 kg/m², 25 kg bag (Knauf
   data sheet); Gyproc DriWall one 25 kg bag per two 1200×2400 boards (British
   Gypsum) ≈ 4.3 kg/m². Both rise on an uneven wall.
+- **A filler given per 1 mm.** Knauf states Fill & Finish Light, Super Finish
+  and the like as kg/m² per mm of skim, with no per-metre figure. The filler
+  library carries that as `skimRate`; with `compoundRate` blank, the rate per
+  metre of joint is worked out as `skimRate × JOINT_FILL_MM_M` (0.34 mm·m:
+  a joint filled and finished is worth 1 mm over a 340 mm strip). The 0.34 is
+  Knauf's own figure for Fill & Finish Light on the joints of 1250 mm board,
+  0.2 + 0.1 kg/m² over about 0.8 m of joint per m² = 0.375 kg/m, divided by
+  its 1.1 kg/m² per mm. The page says the worked-out rate under the field.
+  A stated per-metre rate always wins (`jointFillerRate`).
+- **Surface skim (mm)** is a job field: a full-surface skim (Knauf's Q4, at
+  least 1 mm) over the face layer's net area at `skimRate`. It adds to the
+  joint filler, in the same bags. Knauf's quality levels stop at Q4.
 - **Joint filler is per metre of joint**, as Knauf states Uniflott (0.25 kg/m),
   not per m² of board: `compound.length` is every board joint on every layer
   (the layer underneath is filled, not taped) plus the corners, and `kg` is

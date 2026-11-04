@@ -1,6 +1,7 @@
 import { React } from "../react-globals.js";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { useSessionState } from "../utils/session-state.js";
+import { jointFillerRate } from "../utils/gypsum-take-off.js";
 import { Icon, MaterialPresetDropdown, Modal, NumInput, SaveDefaultsButton, SelectedPresetDetail, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 
 /*
@@ -43,16 +44,29 @@ export const LIBRARIES = {
     saveKey: "gypsumFillerPresets",
     draftKeys: ["fillerPresets", "activeFiller"],
     defaults: () => (typeof DEFAULT_GYPSUM_FILLER_PRESETS !== "undefined" ? DEFAULT_GYPSUM_FILLER_PRESETS : null),
+    /* Per metre of joint where the maker says so (Uniflott), per m² per 1 mm
+       where it gives a skim rate instead (Fill & Finish, Super Finish); one
+       of the two is enough, and the per-metre rate is worked out from the
+       per-mm one when it is left blank. */
     columns: [
       ["compoundRate", "kg/m joint", "Joint filler per metre of joint"],
+      ["skimRate", "kg/m² 1 mm", "Filler per m² per 1 mm"],
       ["bagKg", "Bag kg", "Filler bag weight"]
     ],
-    required: ["compoundRate"],
-    requiredText: "the filler rate",
-    grid: "pw-preset-grid--dimensions",
-    detail: p => `${p.compoundRate} kg/m${p.bagKg ? ` · ${p.bagKg} kg bag` : ""}`,
-    describe: p => ({ meta: p.bagKg ? `${p.bagKg} kg bag` : "", value: p.compoundRate, unit: "kg/m" }),
-    note: "Rates are per metre of joint, as the makers give them: Knauf Uniflott 0.25 kg/m."
+    required: [],
+    requiredAny: ["compoundRate", "skimRate"],
+    requiredText: "kg per metre of joint or kg/m² per 1 mm",
+    grid: "pw-preset-grid--gyp-filler",
+    detail: p => {
+      const { rate, derived } = jointFillerRate(p.compoundRate, p.skimRate);
+      return [rate !== null && `${derived ? "≈ " : ""}${rate} kg/m`, p.skimRate !== "" && p.skimRate != null && `${p.skimRate} kg/m² per mm`, p.bagKg && `${p.bagKg} kg bag`].filter(Boolean).join(" · ");
+    },
+    describe: p => {
+      const { rate, derived } = jointFillerRate(p.compoundRate, p.skimRate);
+      return { meta: [p.skimRate !== "" && p.skimRate != null && `${p.skimRate} kg/m² per mm`, p.bagKg && `${p.bagKg} kg bag`].filter(Boolean).join(" · "),
+        value: rate === null ? "—" : `${derived ? "≈" : ""}${rate}`, unit: "kg/m" };
+    },
+    note: "Give kg per metre of joint where the maker does (Knauf Uniflott 0.25 kg/m), or kg/m² per 1 mm (Knauf Fill & Finish Light 1.1): the per-metre rate is then worked out, as 1 mm over a 340 mm strip of joint."
   },
   adhesive: {
     id: "adhesive",
@@ -96,7 +110,8 @@ export function usePresetLibrary(lib, onApply) {
 
   const apply = (preset, idx) => {
     const values = Object.fromEntries(fields.map(field => [field, parseMeasurement(preset[field])]));
-    const requiredOk = lib.required.every(field => Number.isFinite(values[field]) && values[field] > 0);
+    const positive = field => Number.isFinite(values[field]) && values[field] > 0;
+    const requiredOk = lib.required.every(positive) && (!lib.requiredAny || lib.requiredAny.some(positive));
     const restOk = fields.every(field => values[field] === null || (Number.isFinite(values[field]) && values[field] >= 0));
     if (!requiredOk || !restOk) {
       setError(`Fill in ${lib.requiredText} before applying this preset.`);

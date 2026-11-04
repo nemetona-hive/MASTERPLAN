@@ -300,13 +300,20 @@ const DEFAULT_GYPSUM_PRESETS = [
   { name: "", sheetW: "", sheetL: "", screwRate: "", sheetPrice: "" }
 ];
 
-/* Joint fillers, per METRE OF JOINT, which is how the makers state it:
+/* Joint fillers. compoundRate is kg per METRE OF JOINT, where the maker
+   states one; skimRate is kg/m² per 1 mm, for a full-surface skim and, when
+   compoundRate is blank, to work the per-metre rate out (JOINT_FILL_MM_M in
+   utils/gypsum-take-off.js).
    - Knauf Uniflott: 0.25 kg per m of joint (Knauf SE Uniflott produktdatablad).
-   Gyproc publishes its filler per m² of board (~74 m² per 25 kg), not per
-   metre of joint, so it has no entry here rather than a converted guess. */
+     A joint filler, not a skim, so no per-mm rate.
+   - Knauf Fill & Finish Light: 1.1 kg/m² per mm (Knauf DE data sheet K495);
+     20 kg bucket. No per-metre figure published: it is worked out.
+   Gyproc publishes its filler per m² of board (~74 m² per 25 kg), neither per
+   metre of joint nor per mm, so it has no entry rather than a guess. */
 const DEFAULT_GYPSUM_FILLER_PRESETS = [
-  { name: "Knauf Uniflott", compoundRate: 0.25, bagKg: 25 },
-  { name: "", compoundRate: "", bagKg: "" }
+  { name: "Knauf Uniflott", compoundRate: 0.25, skimRate: "", bagKg: 25 },
+  { name: "Knauf Fill & Finish Light", compoundRate: "", skimRate: 1.1, bagKg: 20 },
+  { name: "", compoundRate: "", skimRate: "", bagKg: "" }
 ];
 
 /* Adhesives, for glued (dot-and-dab) walls on masonry, per m² of wall:

@@ -189,6 +189,27 @@ export function packSheets(pieces, sheetW, sheetL) {
 
 export const WALLS = ["A", "B", "C", "D"];
 
+/* How much filler a metre of joint holds, as a skim-equivalent: millimetres
+   of thickness times metres of width. Knauf states Fill & Finish Light per m²
+   of board — 0.2 kg/m² filling plus 0.1 kg/m² finishing the joints, and
+   1.1 kg/m² per mm as a skim (Knauf DE data sheet K495). On 1250 mm boards a
+   m² carries about 0.8 m of joint, so a metre of joint takes 0.3 / 0.8 =
+   0.375 kg, which is 1.1 kg/m²·mm × 0.34: a joint filled and finished is
+   worth 1 mm over a 340 mm strip. It turns any filler's per-mm figure into a
+   per-metre one when the maker gives no per-metre figure. */
+export const JOINT_FILL_MM_M = 0.34;
+
+/**
+ * A filler's rate per metre of joint: the stated one when there is one
+ * (Uniflott: 0.25 kg/m), else derived from its kg/m² per mm. `derived` says
+ * which, so the page can show the figure it worked out.
+ */
+export function jointFillerRate(perMetre, perMm) {
+  if (given(perMetre)) return { rate: num(perMetre), derived: false };
+  if (given(perMm) && num(perMm) > 0) return { rate: round(num(perMm) * JOINT_FILL_MM_M, 3), derived: true };
+  return { rate: null, derived: false };
+}
+
 /**
  * Reads the openings list into numbers and checks each against its wall.
  *
@@ -233,7 +254,8 @@ export function buildGypsumTakeOff(fields) {
     openings: openingList,
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
-    fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct
+    fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
+    skimRate, skimMm
   } = fields;
 
   const room = mode !== "wall";
@@ -343,7 +365,14 @@ export function buildGypsumTakeOff(fields) {
      taped — plus the corners. Openings change it only through the joints the
      layout loses with the pieces they remove. */
   const filledLength = boardJoints * layerCount + corners;
-  const compoundKg = filledLength * num(compoundRate);
+  const jointRate = jointFillerRate(compoundRate, skimRate);
+  const jointKg = filledLength * (jointRate.rate || 0);
+  /* A full-surface skim (Knauf's Q4, at least 1 mm) goes over the face
+     layer's net area at the filler's per-mm rate. */
+  const skimThickness = given(skimMm) ? num(skimMm) : 0;
+  const skimPerMm = given(skimRate) ? num(skimRate) : 0;
+  const skimKg = skimThickness > 0 ? net * skimThickness * skimPerMm : 0;
+  const compoundKg = jointKg + skimKg;
   const bag = num(bagKg);
   const bagsExact = bag > 0 ? compoundKg / bag : 0;
   const bags = Math.ceil(bagsExact - EPS);
@@ -368,7 +397,8 @@ export function buildGypsumTakeOff(fields) {
     warning: misfits.length
       ? `${misfits.map(o => room ? `${o.label} (wall ${o.wall})` : o.label).join(", ")} ${misfits.length === 1 ? "does" : "do"} not fit on ${misfits.length === 1 ? "its" : "their"} wall and ${misfits.length === 1 ? "is" : "are"} left out.`
       : invalid.length ? `${invalid.map(o => o.label).join(", ")}: enter a width and height.`
-      : openingsTooBig ? "Openings are larger than the wall area; they are capped at it." : null,
+      : openingsTooBig ? "Openings are larger than the wall area; they are capped at it."
+      : skimThickness > 0 && !skimPerMm ? "Enter the filler's kg/m² per 1 mm to count the surface skim." : null,
 
     mode: room ? "room" : "wall",
     /* The box the 3D view folds the surfaces into, in mm. A single wall has
@@ -419,8 +449,12 @@ export function buildGypsumTakeOff(fields) {
       product: given(adhesiveProduct) ? adhesiveProduct : null
     } : null,
     compound: {
-      rate: given(compoundRate) ? num(compoundRate) : null,
+      rate: jointRate.rate,
+      rateDerived: jointRate.derived,
+      perMm: skimPerMm || null,
       length: round(filledLength, 1),
+      jointKg: round(jointKg, 1),
+      skim: skimThickness > 0 ? { mm: skimThickness, area: round(net, 2), kg: round(skimKg, 1) } : null,
       product: given(fillerProduct) ? fillerProduct : null,
       kg: round(compoundKg, 1),
       bagKg: bag || null,

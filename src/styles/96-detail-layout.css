@@ -639,6 +639,15 @@
 }
 
 /* ── Projects dialog (components/ProjectMenu.jsx) ── */
+/* A filler rate the page worked out (per-mm × joint section), under the
+   field it stands in for. */
+.gyp-derived {
+	margin: 0;
+	font-family: var(--mono);
+	font-size: var(--fs-xs);
+	color: var(--text-muted);
+}
+
 /* The board table has five columns; the default 680px squeezes them. The
    filler and adhesive tables have two and fit it. */
 .mp-modal.gyp-preset-modal--board { max-width: min(860px, 100%); }

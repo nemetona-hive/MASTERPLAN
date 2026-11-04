@@ -158,10 +158,14 @@ export function GypsumTakeOffSheet({ takeOff }) {
                 {sheets.price && <><td /><td /></>}
               </tr>
             )}
-            {compound.rate !== null && (
+            {(compound.rate !== null || compound.skim) && (
               <tr>
                 <td>Joint filler{compound.product ? ` — ${compound.product}` : ""}</td>
-                <td>{nf(compound.length, 1)} m × {nf(compound.rate, 2)} kg/m = {nf(compound.kg, 1)} kg</td>
+                <td>
+                  {compound.rate !== null && <>{nf(compound.length, 1)} m joint × {nf(compound.rate, 2)} kg/m{compound.rateDerived ? " (from per-mm rate)" : ""}</>}
+                  {compound.skim && <>{compound.rate !== null ? " + " : ""}{nf(compound.skim.mm, 1)} mm skim on {nf(compound.skim.area, 2)} m² × {nf(compound.perMm, 2)} kg/m²·mm</>}
+                  {" "}= {nf(compound.kg, 1)} kg
+                </td>
                 <td className="doc-sheet-strong">{compound.bagKg ? `${compound.bags} × ${nf(compound.bagKg)} kg` : `${nf(compound.kg, 1)} kg`}</td>
                 {sheets.price && <><td /><td /></>}
               </tr>
