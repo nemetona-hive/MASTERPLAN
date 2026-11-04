@@ -295,9 +295,27 @@ const DEFAULT_CONCRETE_PRESETS = [
    - Gyproc: ~44 screws per 1200×2400 board at 450 studs ≈ 13 pcs/m² (Gyproc
      SE installation guide). */
 const DEFAULT_GYPSUM_PRESETS = [
-  { name: "Knauf GKB 12.5", sheetW: 1250, sheetL: 2600, screwRate: 20, sheetPrice: "" },
-  { name: "Gyproc GN 13", sheetW: 1200, sheetL: 2600, screwRate: 13, sheetPrice: "" },
-  { name: "", sheetW: "", sheetL: "", screwRate: "", sheetPrice: "" }
+  {
+    "name": "Knauf GKB 12.5",
+    "sheetW": 1200,
+    "sheetL": 2600,
+    "screwRate": 20,
+    "sheetPrice": 10
+  },
+  {
+    "name": "",
+    "sheetW": "",
+    "sheetL": "",
+    "screwRate": "",
+    "sheetPrice": ""
+  },
+  {
+    "name": "",
+    "sheetW": "",
+    "sheetL": "",
+    "screwRate": "",
+    "sheetPrice": ""
+  }
 ];
 
 /* Joint fillers. compoundRate is kg per METRE OF JOINT, where the maker
@@ -311,9 +329,24 @@ const DEFAULT_GYPSUM_PRESETS = [
    Gyproc publishes its filler per m² of board (~74 m² per 25 kg), neither per
    metre of joint nor per mm, so it has no entry rather than a guess. */
 const DEFAULT_GYPSUM_FILLER_PRESETS = [
-  { name: "Knauf Uniflott", compoundRate: 0.25, skimRate: "", bagKg: 25 },
-  { name: "Knauf Fill & Finish Light", compoundRate: "", skimRate: 1.1, bagKg: 20 },
-  { name: "", compoundRate: "", skimRate: "", bagKg: "" }
+  {
+    "name": "KNAUF Uniflott",
+    "compoundRate": 0.25,
+    "skimRate": "",
+    "bagKg": 25
+  },
+  {
+    "name": "KNAUF Fill & Finish Light",
+    "compoundRate": "",
+    "skimRate": 1.1,
+    "bagKg": 20
+  },
+  {
+    "name": "KNAUF Super Finish",
+    "compoundRate": "",
+    "skimRate": 1.6,
+    "bagKg": 28
+  }
 ];
 
 /* Adhesives, for glued (dot-and-dab) walls on masonry, per m² of wall:
