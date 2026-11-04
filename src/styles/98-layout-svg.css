@@ -214,3 +214,19 @@
   gap: var(--sp-6);
   align-items: start;
 }
+
+/* A door or window: a hole in the board, so it takes the page ground and an
+   accent outline rather than a piece's fill. */
+.layout-svg-opening {
+  fill: var(--bg);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
+.layout-svg-opening-label {
+  fill: var(--text);
+  font-family: var(--mono);
+  font-weight: var(--fw-semi);
+  pointer-events: none;
+}

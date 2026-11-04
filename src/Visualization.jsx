@@ -447,7 +447,13 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
             {rects.map(rect => {
               const isHighlighted = hoveredType && rect.type === hoveredType;
               const isSelected = selectedKey === rect.key || (selectedSourceId && rect.sourceId === selectedSourceId);
-              const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035;
+              /* A piece whose middle is inside an opening keeps its label to
+                 itself: the opening's own label sits there, over it. */
+              const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+              const hw = Math.max(vW, vH) * 0.03, hh = Math.max(vW, vH) * 0.015;
+              const underOpening = (result.meta.openings || []).some(o =>
+                cx + hw > o.x && cx - hw < o.x + o.w && cy + hh > o.y && cy - hh < o.y + o.h);
+              const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035 && !underOpening;
               return (
                 <g key={rect.key} style={{ cursor: rect.sourceId ? "pointer" : "default" }}
                   onClick={e => { e.stopPropagation(); handleSegClick(rect); }}
@@ -476,6 +482,17 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                 x2={cl.x2 + chartX} y2={cl.y + chartY}
                 className="layout-svg-carry-line"
               />
+            ))}
+            {/* Doors and windows (the gypsum page): cut-outs drawn over the
+                pieces, in the same surface millimetres as the pieces. */}
+            {(result.meta.openings || []).map(o => (
+              <g key={`opening-${o.label}`}>
+                <rect x={o.x + chartX} y={o.y + chartY} width={o.w} height={o.h} className="layout-svg-opening">
+                  <title>{`${o.label}: ${o.kind}, ${Math.round(o.w)} × ${Math.round(o.h)} mm`}</title>
+                </rect>
+                <text x={o.x + chartX + o.w / 2} y={o.y + chartY + o.h / 2} textAnchor="middle" dominantBaseline="middle"
+                  fontSize={Math.max(vW, vH) * 0.035} className="layout-svg-opening-label">{o.label}</text>
+              </g>
             ))}
             {groupBands.map(band => (
               <text key={band.label}

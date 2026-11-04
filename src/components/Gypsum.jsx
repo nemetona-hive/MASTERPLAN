@@ -5,7 +5,7 @@ import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSave
 import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
-import { buildGypsumTakeOff } from "../utils/gypsum-take-off.js";
+import { buildGypsumTakeOff, WALLS } from "../utils/gypsum-take-off.js";
 
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
@@ -23,8 +23,14 @@ const BLANK_PRESET = { name: "", sheetW: "", sheetL: "", screwRate: "", compound
 
 /* Fields that begin empty, and those that begin at a sensible value. Opening
    sizes are standard enough to prefill; job dimensions never are. */
-const EMPTY = ["lenMm", "widMm", "heightMm", "wallW", "wallH", "doors", "windows", ...PRODUCT_FIELDS];
-const PREFILLED = { doorW: "900", doorH: "2100", winW: "1200", winH: "1200", waste: "5" };
+const EMPTY = ["lenMm", "widMm", "heightMm", "wallW", "wallH", ...PRODUCT_FIELDS];
+const PREFILLED = { waste: "5" };
+/* A new opening starts at a common size; its position starts empty, and an
+   opening with no position still comes off the area — it is just not drawn. */
+const NEW_OPENING = {
+  door: { kind: "door", wall: "A", x: "", w: "900", h: "2100" },
+  window: { kind: "window", wall: "A", x: "", w: "1200", h: "1200", sill: "900" }
+};
 
 function Seg({ value, options, onChange, label, inline = false }) {
   return (
@@ -46,7 +52,7 @@ export function SheetGypsum() {
 
   /* Every typed field in one object, so reset and the model call do not repeat
      the list. A setter per field is derived from it. */
-  const initialJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), ...PREFILLED });
+  const initialJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), ...PREFILLED, openings: [] });
   const [job, setJob] = useSessionState(KEY("job"), initialJob);
   const val = name => job[name];
   const set = name => value => setJob(current => ({ ...current, [name]: value }));
@@ -62,7 +68,6 @@ export function SheetGypsum() {
   const [saveStatus, setSaveStatus] = useTimedState("");
   const [saveError, setSaveError] = React.useState("");
   const [showPresets, setShowPresets] = React.useState(false);
-  const [showOpenings, setShowOpenings] = React.useState(false);
   const presetAnchorRef = React.useRef(null);
 
   const saveDefaults = async () => {
@@ -142,7 +147,12 @@ export function SheetGypsum() {
   const hasAnyInput = [...dimsKeys, ...PRODUCT_FIELDS].some(name => val(name) !== "");
   const req = name => hasAnyInput && val(name) === "";
   const fmtEur = n => n.toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const openingCount = (parseMeasurement(val("doors")) || 0) + (parseMeasurement(val("windows")) || 0);
+  const openingRows = job.openings || [];
+  const setOpenings = update => setJob(current => ({ ...current, openings: update(current.openings || []) }));
+  const addOpening = kind => setOpenings(list =>
+    [...list, { ...NEW_OPENING[kind], id: list.reduce((m, o) => Math.max(m, o.id), 0) + 1 }]);
+  const updateOpening = (id, key, value) => setOpenings(list => list.map(o => (o.id === id ? { ...o, [key]: value } : o)));
+  const removeOpening = id => setOpenings(list => list.filter(o => o.id !== id));
 
   const num = (name, label, extra = {}) => (
     <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={0} onChange={set(name)} req={extra.req ?? false} {...extra} />
@@ -162,49 +172,76 @@ export function SheetGypsum() {
                   <Stack gap={3}>
                     <Seg label="What to board" value={mode} onChange={setMode}
                       options={[["room", "Room"], ["wall", "Single wall"]]} />
-                    {mode === "room" ? (
-                      <Stack gap={3}>
-                        <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                          {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
-                          {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
-                        </div>
-                        {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
-                        <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
-                          options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
-                      </Stack>
-                    ) : (
-                      <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+                    <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+                      {mode === "room" ? <>
+                        {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
+                        {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
+                      </> : <>
                         {num("wallW", "Width (mm)", { min: 1, req: req("wallW") })}
                         {num("wallH", "Height (mm)", { min: 1, req: req("wallH") })}
-                      </div>
-                    )}
+                      </>}
+                    </div>
                   </Stack>
 
                   <div className="concrete-split-divider" />
 
                   <Stack gap={3}>
-                    <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                      {num("doors", "Doors (pcs)")}
-                      {num("windows", "Windows (pcs)")}
-                    </div>
-                    <button type="button" className="ts-btn ctl-ghost" style={{ alignSelf: "flex-start" }} aria-expanded={showOpenings}
-                      onClick={() => setShowOpenings(o => !o)}>
-                      <Icon name={showOpenings ? "chevron-down" : "chevron-right"} /> Opening sizes
-                    </button>
-                    {showOpenings && (
-                      <Stack gap={3}>
-                        <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                          {num("doorW", "Door width (mm)")}
-                          {num("doorH", "Door height (mm)")}
-                        </div>
-                        <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                          {num("winW", "Window width (mm)")}
-                          {num("winH", "Window height (mm)")}
-                        </div>
-                      </Stack>
-                    )}
+                    {mode === "room" && <>
+                      <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
+                        options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
+                      {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
+                    </>}
                   </Stack>
                 </div>
+              </div>
+            </div>
+
+            {/* ── Openings ── */}
+            <div className="section unboxed">
+              <div className="section-head"><span>Openings (mm)</span></div>
+              <div className="section-body">
+                <Stack className="section-pad" gap={3}>
+                  {openingRows.map((o, i) => {
+                    const read = takeOff.openings.list[i];
+                    const field = (key, label) => (
+                      <div className="gyp-open-field">
+                        <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{label}</label>
+                        <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
+                          className="num-input" value={o[key] ?? ""}
+                          aria-invalid={read?.status === "misfit" || read?.status === "invalid" ? true : undefined}
+                          onChange={e => updateOpening(o.id, key, e.target.value)} />
+                      </div>
+                    );
+                    return (
+                      <div key={o.id} className="gyp-open-row">
+                        <span className="gyp-open-tag">{read?.label}</span>
+                        {mode === "room" && (
+                          <Seg inline label={`${read?.label} wall`} value={o.wall} onChange={v => updateOpening(o.id, "wall", v)}
+                            options={WALLS.map(w => [w, w])} />
+                        )}
+                        <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
+                          aria-label={`Remove ${read?.label}`} title={`Remove ${read?.label}`}
+                          onClick={() => removeOpening(o.id)}>
+                          <Icon name="close" />
+                        </button>
+                        <div className="gyp-open-fields">
+                          {field("x", "From left")}
+                          {field("w", "Width")}
+                          {field("h", "Height")}
+                          {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Stack direction="row" gap={2}>
+                    <button type="button" className="ctrl-dir" onClick={() => addOpening("door")}>
+                      <Icon name="plus" /> Door
+                    </button>
+                    <button type="button" className="ctrl-dir" onClick={() => addOpening("window")}>
+                      <Icon name="plus" /> Window
+                    </button>
+                  </Stack>
+                </Stack>
               </div>
             </div>
 
@@ -363,7 +400,7 @@ export function SheetGypsum() {
                     {!view3d && takeOff.surfaces.filter(s => s.layout).map(s => (
                       <Stack key={s.id} gap={2} className="gyp-surface">
                         <div className="gyp-surface-head">
-                          <span className="gyp-surface-name">{s.label}{s.count > 1 ? ` ×${s.count}` : ""}</span>
+                          <span className="gyp-surface-name">{s.label}</span>
                           <span className="gyp-surface-meta">
                             {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
                           </span>
@@ -382,7 +419,7 @@ export function SheetGypsum() {
               <div className="section-body">
                 <Stack className="section-pad" gap={1}>
                   <Row label="Surface area" value={area.gross.toFixed(2)} unit="m²" />
-                  {openingCount > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
+                  {area.openings > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
                   <Row label="Net area" value={area.net.toFixed(2)} unit="m²" />
                   {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
                   <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
@@ -394,7 +431,7 @@ export function SheetGypsum() {
 
                   <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
                     <span className="pw-formula-text">
-                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and compound, not sheets.
+                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and compound; a placed one also drops any piece wholly inside it.
                     </span>
                   </div>
                   <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>

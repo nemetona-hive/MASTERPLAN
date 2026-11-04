@@ -11,7 +11,7 @@ import { buildGypsumTakeOff } from "../src/utils/gypsum-take-off.js";
 
 const job = (over = {}) => buildGypsumTakeOff({
   mode: "room", lenMm: "4000", widMm: "3000", heightMm: "2600", wallW: "", wallH: "", ceiling: false,
-  doors: "", doorW: "900", doorH: "2100", windows: "", winW: "1200", winH: "1200",
+  openings: [],
   sheetW: "1200", sheetL: "2600", orientation: "V", layers: "1", waste: "0",
   screwRate: "", compoundRate: "", bagKg: "", sheetPrice: "", product: "", ...over
 });
@@ -20,12 +20,14 @@ describe("room faces", () => {
   it("folds four walls and a floor outline around the centre", () => {
     const t = job();
     const { faces, scale } = roomFaces(t.room, t.surfaces);
-    expect(faces.map(f => f.id)).toEqual(["back", "front", "left", "right", "floor"]);
+    // A back, then clockwise seen from above: B right, C front, D left.
+    expect(faces.map(f => f.id)).toEqual(["back", "right", "front", "left", "floor"]);
+    expect(faces.map(f => f.tag)).toEqual(["A", "B", "C", "D", null]);
     const back = faces.find(f => f.id === "back");
     expect(back.w).toBeCloseTo(4000 * scale, 6);
     expect(back.transform).toBe(`translateZ(${-1500 * scale}px)`);
     // Width walls are drawn from the width-wall layout.
-    expect(faces.find(f => f.id === "left").surface.id).toBe("walls-w");
+    expect(faces.find(f => f.id === "left").surface.id).toBe("wall-bd");
   });
 
   it("adds the ceiling only when it is boarded, lifted clear of the walls", () => {
@@ -40,6 +42,13 @@ describe("room faces", () => {
     expect(depth).toBeCloseTo(-(1300 + 1430) * scale, 6);
     // …and the drawing is re-centred on room plus lid.
     expect(shift).toBeCloseTo(715 * scale, 6);
+  });
+
+  it("gives a wall with a door its own drawing", () => {
+    const t = job({ openings: [{ kind: "door", wall: "C", x: "500", w: "900", h: "2100" }] });
+    const { faces } = roomFaces(t.room, t.surfaces);
+    expect(faces.find(f => f.tag === "C").surface.openings).toHaveLength(1);
+    expect(faces.find(f => f.tag === "A").surface.openings).toHaveLength(0);
   });
 
   it("is a single panel for one wall", () => {

@@ -7,7 +7,7 @@ import { buildGypsumTakeOff } from "../src/utils/gypsum-take-off.js";
 
 const takeOff = buildGypsumTakeOff({
   mode: "room", lenMm: "4200", widMm: "3100", heightMm: "2700", ceiling: true,
-  doors: "1", doorW: "900", doorH: "2100", windows: "", winW: "1200", winH: "1200",
+  openings: [{ kind: "door", wall: "B", x: "1000", w: "900", h: "2100" }],
   sheetW: "1200", sheetL: "2600", orientation: "V", layers: "1", waste: "5",
   screwRate: "13", compoundRate: "0.34", bagKg: "25", sheetPrice: "7.90", product: ""
 });
@@ -17,7 +17,8 @@ const takeOff = buildGypsumTakeOff({
 describe("the printed gypsum take-off", () => {
   it("draws one diagram per laid-out surface", () => {
     render(<GypsumTakeOffSheet takeOff={takeOff} />);
-    expect(document.querySelectorAll(".doc-sheet .gyp-print-svg")).toHaveLength(3);
+    // Walls A+C together, B (it has the door) apart from D, and the ceiling.
+    expect(document.querySelectorAll(".doc-sheet .gyp-print-svg")).toHaveLength(4);
   });
 
   it("draws every piece the model placed, typed full or cut", () => {
@@ -34,5 +35,11 @@ describe("the printed gypsum take-off", () => {
     // 4200 is widest; the 3100 walls are drawn at 3100/4200 of it.
     expect(widths[0]).toBe("100%");
     expect(parseFloat(widths[1])).toBeCloseTo(3100 / 4200 * 100, 3);
+  });
+
+  it("outlines each placed opening with its label", () => {
+    render(<GypsumTakeOffSheet takeOff={takeOff} />);
+    expect(document.querySelectorAll(".gyp-print-opening")).toHaveLength(1);
+    expect(document.querySelector(".gyp-print-label--opening").textContent).toBe("D1");
   });
 });

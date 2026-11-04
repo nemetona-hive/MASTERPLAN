@@ -73,12 +73,21 @@ a second layer. All figures, and the diagrams, come from
 - **End joints** only exist where a lane is longer than a sheet. Alternate
   lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
   moves the lane's joint instead of leaving a sliver.
-- **Openings** come off the *area* (screws, compound) and never off sheets:
-  boards are hung whole and cut out. Deliberately conservative.
+- **Openings** are a list (`+ Door` / `+ Window`): wall A–D, `x` from the
+  wall's left end *as seen from inside*, width, height, and a sill for a
+  window. Room walls are A back, then clockwise seen from above (B right, C
+  front, D left), the order the 3D view folds them in. Labels (D1, W1…) are
+  the model's (`readOpenings`). Every opening comes off the *area* (screws,
+  compound). Position is optional: an unplaced one only does that. A placed
+  one is drawn in 2D, 3D and print, and drops any piece lying **wholly**
+  inside it from the drawing and the sheet count; a piece it only crosses is
+  hung whole and cut out. One that runs off its wall is left out and named in
+  the warning.
+- Walls are grouped (drawn once, labelled `Walls A, C`) only while identical:
+  same size and the same openings in the same places.
 - **Two layers** double sheets, screws and compound. Tape is face layer only.
   Tape = board joints from the layout, plus four internal corners and, with a
   ceiling, the ceiling angle.
-- Equal-sized surfaces are laid out and drawn once with a count (`×2`, `×4`).
 - The diagram is `LayoutVisualization`; the model emits rows in the
   `simulation.js` shape with `meta.exactRows`, which draws each lane at its
   real width so a ripped last lane is narrow.
@@ -97,7 +106,9 @@ a second layer. All figures, and the diagrams, come from
     swipes scrolling the page); arrow keys turn it; Above / Level / Reset ease
     there, a drag does not. End walls and ceiling are shaded with
     `filter: brightness`, not a colour, so depth reads in every theme.
-  - Openings are not drawn — they have no position along their wall yet.
+  - Each wall panel carries its letter (bottom centre: the corners are
+    overlapped by the neighbouring wall, the top by the lid) and draws its own
+    openings, so a door on C is on C only.
 - **Printed take-off** = surfaces table, order, then one ink drawing per
   surface (`GypsumTakeOffSheet`). It draws `layout.pieces` — rectangles the
   model places in surface mm — and labels each with the model's `len`, so the

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildGypsumTakeOff, lanePieces, layoutSurface, packSheets, MIN_END_PIECE } from "../src/utils/gypsum-take-off.js";
+import { buildGypsumTakeOff, lanePieces, layoutSurface, packSheets, readOpenings, MIN_END_PIECE } from "../src/utils/gypsum-take-off.js";
 
 /* A 4 × 3 m room, 2.6 m high, boarded vertically with 1200 × 2600 sheets —
    one sheet spans the height, so every lane is one piece. */
 const fields = (over = {}) => ({
   mode: "room", lenMm: "4000", widMm: "3000", heightMm: "2600",
   wallW: "", wallH: "", ceiling: false,
-  doors: "", doorW: "900", doorH: "2100", windows: "", winW: "1200", winH: "1200",
+  openings: [],
   sheetW: "1200", sheetL: "2600", orientation: "V", layers: "1", waste: "0",
   screwRate: "20", compoundRate: "0.25", bagKg: "25", sheetPrice: "8.50", product: "Knauf", ...over
 });
@@ -93,9 +93,13 @@ describe("the gypsum take-off", () => {
     expect(t.sheets.toBuy).toBe(14);
   });
 
-  it("deducts openings from area but not from sheets", () => {
+  it("deducts unplaced openings from area but not from sheets", () => {
     const plain = buildGypsumTakeOff(fields());
-    const t = buildGypsumTakeOff(fields({ doors: "1", windows: "2" }));
+    const t = buildGypsumTakeOff(fields({ openings: [
+      { kind: "door", wall: "A", x: "", w: "900", h: "2100" },
+      { kind: "window", wall: "B", x: "", w: "1200", h: "1200", sill: "900" },
+      { kind: "window", wall: "C", x: "", w: "1200", h: "1200", sill: "900" }
+    ] }));
     expect(t.area.gross).toBe(36.4);
     expect(t.area.openings).toBeCloseTo(0.9 * 2.1 + 2 * 1.44, 2);
     expect(t.area.net).toBeCloseTo(36.4 - 4.77, 2);
@@ -104,7 +108,7 @@ describe("the gypsum take-off", () => {
 
   it("adds the ceiling as a surface and its angle to the tape", () => {
     const t = buildGypsumTakeOff(fields({ ceiling: true }));
-    expect(t.surfaces.map(s => s.id)).toEqual(["walls-l", "walls-w", "ceiling"]);
+    expect(t.surfaces.map(s => s.id)).toEqual(["wall-ac", "wall-bd", "ceiling"]);
     expect(t.area.gross).toBe(48.4);
     expect(t.tape.corners).toBeCloseTo((4 * 2600 + 2 * 7000) / 1000, 3);
   });
@@ -153,5 +157,68 @@ describe("the gypsum take-off", () => {
     const t = buildGypsumTakeOff(fields({ lenMm: "99999999" }));
     expect(t.ready).toBe(false);
     expect(t.issue).toMatch(/too large/);
+  });
+});
+
+describe("openings", () => {
+  const door = (over = {}) => ({ kind: "door", wall: "A", x: "1000", w: "900", h: "2100", ...over });
+  const win = (over = {}) => ({ kind: "window", wall: "A", x: "2400", w: "1200", h: "1200", sill: "900", ...over });
+
+  it("numbers doors and windows separately", () => {
+    const read = readOpenings([door(), win(), door()], { room: true, wallSize: () => ({ w: 4000, h: 2600 }) });
+    expect(read.map(o => o.label)).toEqual(["D1", "W1", "D2"]);
+  });
+
+  it("splits a wall with an opening from its twin", () => {
+    const t = buildGypsumTakeOff(fields({ openings: [door()] }));
+    // In wall order: A first, then B with its twin D, then C on its own.
+    expect(t.surfaces.map(s => s.id)).toEqual(["wall-a", "wall-bd", "wall-c"]);
+    expect(t.surfaces[0].label).toBe("Wall A");
+    expect(t.surfaces[1].label).toBe("Walls B, D");
+  });
+
+  it("places an opening in the wall's frame, y down from the top", () => {
+    const t = buildGypsumTakeOff(fields({ openings: [win()] }));
+    // 2600 wall, 900 sill, 1200 high: top of the window is 500 below the top.
+    expect(t.surfaces[0].openings[0]).toMatchObject({ x: 2400, y: 500, w: 1200, h: 1200, label: "W1" });
+  });
+
+  it("drops a piece that lies wholly inside an opening, and counts one sheet fewer", () => {
+    // Vertical 1200 lanes on a 2600 wall with 2600 sheets: lane 2 is x 1200–2400.
+    // A 1200 × 2600 "opening" over exactly that lane removes a whole sheet.
+    const big = { kind: "door", wall: "A", x: "1200", w: "1200", h: "2600" };
+    const plain = buildGypsumTakeOff(fields());
+    const t = buildGypsumTakeOff(fields({ openings: [big] }));
+    expect(t.sheets.layout).toBe(plain.sheets.layout - 1);
+    expect(t.surfaces[0].layout.pieces.some(p => p.x === 1200)).toBe(false);
+  });
+
+  it("keeps a piece the opening only overlaps — it is cut around", () => {
+    const plain = buildGypsumTakeOff(fields());
+    const t = buildGypsumTakeOff(fields({ openings: [door()] }));
+    expect(t.sheets.layout).toBe(plain.sheets.layout);
+    expect(t.area.openings).toBeCloseTo(1.89, 2);
+  });
+
+  it("leaves out an opening that runs off its wall, and says so", () => {
+    const t = buildGypsumTakeOff(fields({ openings: [door({ x: "3500" })] }));
+    expect(t.area.openings).toBe(0);
+    expect(t.warning).toMatch(/D1 \(wall A\) does not fit/);
+  });
+
+  it("checks a window's sill and height against the wall", () => {
+    const t = buildGypsumTakeOff(fields({ openings: [win({ sill: "2000" })] }));
+    expect(t.warning).toMatch(/W1/);
+  });
+
+  it("puts every opening on the one wall in single-wall mode", () => {
+    const t = buildGypsumTakeOff(fields({ mode: "wall", wallW: "3000", wallH: "2600", openings: [door({ wall: "C" })] }));
+    expect(t.surfaces[0].openings).toHaveLength(1);
+  });
+
+  it("ignores a row with nothing typed", () => {
+    const t = buildGypsumTakeOff(fields({ openings: [{ kind: "door", wall: "A", x: "", w: "", h: "" }] }));
+    expect(t.warning).toBe(null);
+    expect(t.openings.doors).toBe(0);
   });
 });

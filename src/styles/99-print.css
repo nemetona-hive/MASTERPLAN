@@ -323,6 +323,15 @@
 		vector-effect: non-scaling-stroke;
 	}
 	.gyp-print-piece--full { fill: #ddd; }
+	/* A cut-out: paper white, dashed, over whatever pieces it is cut from. */
+	.gyp-print-opening {
+		fill: #fff;
+		stroke: #111;
+		stroke-width: 0.8pt;
+		stroke-dasharray: 3pt 2pt;
+		vector-effect: non-scaling-stroke;
+	}
+	.gyp-print-label--opening { font-weight: 700; }
 	.gyp-print-piece--cut { fill: #fff; }
 	.gyp-print-label {
 		fill: #111;

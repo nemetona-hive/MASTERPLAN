@@ -28,8 +28,8 @@ describe("the gypsum page", () => {
     render(<SheetGypsum />);
     fillRoom();
     expect(sheetsNeeded()).toBe("12");
-    expect(screen.getByText("Length walls ×2")).toBeTruthy();
-    expect(screen.getByText("Width walls ×2")).toBeTruthy();
+    expect(screen.getByText("Walls A, C")).toBeTruthy();
+    expect(screen.getByText("Walls B, D")).toBeTruthy();
     expect(document.querySelectorAll(".gyp-surface svg[role='img']")).toHaveLength(2);
   });
 
@@ -65,5 +65,36 @@ describe("the gypsum page", () => {
     expect(screen.getByText("Take-off").closest("button").disabled).toBe(true);
     fillRoom();
     expect(screen.getByText("Take-off").closest("button").disabled).toBe(false);
+  });
+
+  it("adds a door, places it, and draws it on its own wall", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    fireEvent.click(screen.getByText("Door"));
+    expect(screen.getByText("D1")).toBeTruthy();
+    // Unplaced: off the area, not drawn, and walls A and C still drawn as one.
+    expect(screen.getByText("Walls A, C")).toBeTruthy();
+    expect(document.querySelectorAll(".layout-svg-opening")).toHaveLength(0);
+    fireEvent.change(document.querySelector("[id$='-x']"), { target: { value: "500" } });
+    expect(screen.getByText("Wall A")).toBeTruthy();
+    expect(screen.getByText("Wall C")).toBeTruthy();
+    expect(document.querySelectorAll(".layout-svg-opening")).toHaveLength(1);
+  });
+
+  it("moves an opening to another wall", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    fireEvent.click(screen.getByText("Window"));
+    fireEvent.change(document.querySelector("[id$='-x']"), { target: { value: "500" } });
+    fireEvent.click(screen.getByRole("button", { name: "B" }));
+    expect(screen.getByText("Wall B")).toBeTruthy();
+    expect(screen.getByText("Walls A, C")).toBeTruthy();
+  });
+
+  it("removes an opening", () => {
+    render(<SheetGypsum />);
+    fireEvent.click(screen.getByText("Door"));
+    fireEvent.click(screen.getByLabelText("Remove D1"));
+    expect(screen.queryByText("D1")).toBe(null);
   });
 });

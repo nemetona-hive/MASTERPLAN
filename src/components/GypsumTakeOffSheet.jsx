@@ -29,7 +29,7 @@ function SurfaceDrawing({ surface, orientation, widest }) {
   return (
     <figure className="gyp-print-figure">
       <figcaption className="gyp-print-caption">
-        <strong>{label}{count > 1 ? ` ×${count}` : ""}</strong>
+        <strong>{label}</strong>
         {" "}{mm(w)} × {mm(h)} mm · {layout.full} full, {layout.cut} cut{count > 1 ? " each" : ""}
       </figcaption>
       {/* Every surface on one scale: the widest fills its column and the rest
@@ -37,8 +37,14 @@ function SurfaceDrawing({ surface, orientation, widest }) {
       <svg className="gyp-print-svg" style={{ width: `${(w / widest) * 100}%` }} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMinYMin meet"
         role="img" aria-label={`${label}: ${layout.full} full and ${layout.cut} cut pieces, ${orientation === "V" ? "vertical" : "horizontal"} fixing`}>
         {layout.pieces.map((p, i) => {
-          // Horizontal text: needs about four digits of width, one line of height.
-          const fits = p.w > fs * 2.6 && p.h > fs * 1.3;
+          // Horizontal text: needs about four digits of width, one line of height,
+          // and not under an opening, whose own label sits in its middle.
+          // The label's box — about four digits wide, one line high — not its
+          // centre: a label centred just outside an opening still runs into it.
+          const cx = p.x + p.w / 2, cy = p.y + p.h / 2, hw = fs * 1.4, hh = fs * 0.7;
+          const underOpening = (surface.openings || []).some(o =>
+            cx + hw > o.x && cx - hw < o.x + o.w && cy + hh > o.y && cy - hh < o.y + o.h);
+          const fits = p.w > fs * 2.6 && p.h > fs * 1.3 && !underOpening;
           return (
             <g key={i}>
               <rect x={p.x} y={p.y} width={p.w} height={p.h} className={`gyp-print-piece gyp-print-piece--${p.type}`} />
@@ -49,6 +55,13 @@ function SurfaceDrawing({ surface, orientation, widest }) {
             </g>
           );
         })}
+        {(surface.openings || []).map(o => (
+          <g key={o.label}>
+            <rect x={o.x} y={o.y} width={o.w} height={o.h} className="gyp-print-opening" />
+            <text x={o.x + o.w / 2} y={o.y + o.h / 2} fontSize={fs} textAnchor="middle"
+              dominantBaseline="central" className="gyp-print-label gyp-print-label--opening">{o.label}</text>
+          </g>
+        ))}
       </svg>
     </figure>
   );
@@ -155,8 +168,9 @@ export function GypsumTakeOffSheet({ takeOff }) {
         </table>
         <p className="doc-sheet-note">
           Sheets are counted from the layout with offcuts reused, so waste covers breakage rather
-          than cutting. Openings reduce screws and compound but not sheets: boards are hung whole
-          and cut out. The price covers board only.
+          than cutting. Openings reduce screws and compound. A placed opening also removes any
+          piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
+          price covers board only.
         </p>
       </section>
       <section className="doc-sheet-block doc-sheet-block--table">

@@ -43,27 +43,34 @@ export function roomFaces(room, surfaces) {
   const lift = ceiling ? H * LIFT : 0;
   const radius = Math.hypot(L, W, H + lift) / 2 || 1;
   const s = (STAGE * 0.45) / radius;
-  const byId = Object.fromEntries(surfaces.filter(x => x.layout).map(x => [x.id, x]));
-  const lengthWall = byId.walls || byId["walls-l"] || byId.wall;
-  const widthWall = byId.walls || byId["walls-w"];
+  const drawn = surfaces.filter(x => x.layout);
+  /* Each wall finds its own drawing by letter: walls with different openings
+     are different surfaces even when they are the same size. */
+  const wall = letter => drawn.find(x => x.walls && x.walls.includes(letter));
+  const ceilingSurface = drawn.find(x => x.id === "ceiling");
 
   /* With a lid the whole model is taller than the room, so everything drops by
      half the lift: the view turns around the middle of what is drawn. */
   const centre = lift ? `translateY(${lift / 2 * s}px) ` : "";
-  const face = (id, surface, w, h, transform) => ({ id, surface, w: w * s, h: h * s, transform: centre + transform });
+  const face = (id, surface, w, h, transform, tag = null) => ({ id, surface, w: w * s, h: h * s, transform: centre + transform, tag });
   if (W === 0) {
-    return { scale: s, faces: lengthWall ? [face("wall", lengthWall, L, H, "translateZ(0px)")] : [] };
+    const only = wall("A");
+    return { scale: s, faces: only ? [face("wall", only, L, H, "translateZ(0px)")] : [] };
   }
   const faces = [
-    face("back", lengthWall, L, H, `translateZ(${-W / 2 * s}px)`),
-    face("front", lengthWall, L, H, `rotateY(180deg) translateZ(${-W / 2 * s}px)`),
-    face("left", widthWall, W, H, `rotateY(90deg) translateZ(${-L / 2 * s}px)`),
-    face("right", widthWall, W, H, `rotateY(-90deg) translateZ(${-L / 2 * s}px)`),
+    /* A is the back wall and the letters go clockwise seen from above, the
+       order the model names them in. Each panel's left edge is its wall's
+       left end as seen from inside, which is where an opening's `x` runs
+       from — a panel is only ever seen from inside, so it is never mirrored. */
+    face("back", wall("A"), L, H, `translateZ(${-W / 2 * s}px)`, "A"),
+    face("right", wall("B"), W, H, `rotateY(-90deg) translateZ(${-L / 2 * s}px)`, "B"),
+    face("front", wall("C"), L, H, `rotateY(180deg) translateZ(${-W / 2 * s}px)`, "C"),
+    face("left", wall("D"), W, H, `rotateY(90deg) translateZ(${-L / 2 * s}px)`, "D"),
     /* Not boarded: drawn as an outline so the room has somewhere to stand. */
     face("floor", null, L, W, `rotateX(90deg) translateZ(${-H / 2 * s}px)`)
   ];
-  if (ceiling && byId.ceiling) {
-    faces.push(face("ceiling", byId.ceiling, L, W, `rotateX(-90deg) translateZ(${-(H / 2 + lift) * s}px)`));
+  if (ceiling && ceilingSurface) {
+    faces.push(face("ceiling", ceilingSurface, L, W, `rotateX(-90deg) translateZ(${-(H / 2 + lift) * s}px)`));
   }
   return { scale: s, faces: faces.filter(f => f.id === "floor" || f.surface) };
 }
@@ -79,8 +86,12 @@ function Panel({ face }) {
             <rect key={i} x={p.x} y={p.y} width={p.w} height={p.h}
               className={`layout-svg-seg ${p.type === "full" ? "color-s1" : "color-cut"}`} />
           ))}
+          {(surface.openings || []).map(o => (
+            <rect key={o.label} x={o.x} y={o.y} width={o.w} height={o.h} className="layout-svg-opening" />
+          ))}
         </svg>
       )}
+      {face.tag && <span className="gyp3d-face-tag" aria-hidden="true">{face.tag}</span>}
     </div>
   );
 }

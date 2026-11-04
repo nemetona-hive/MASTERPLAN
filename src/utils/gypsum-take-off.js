@@ -14,9 +14,11 @@ import { parseMeasurement } from "./measurements.cjs";
  * offcut is reused when a later piece fits in it. Waste % is then added on top
  * for breakage and mistakes, not for cutting — the cutting is already counted.
  *
- * Openings are deducted from AREA (screws, compound) but not from sheets: a
- * door is cut out of boards that are hung whole, and the piece above it comes
- * from the same board. Counting sheets with openings removed undercounts.
+ * Openings are deducted from AREA (screws, compound). From SHEETS only when
+ * placed, and then only the pieces lying wholly inside one: a piece the
+ * opening merely crosses is hung whole and cut out, and the piece above a door
+ * comes from the same board. Removing an opening's area from the sheet count
+ * would undercount.
  *
  * EVERYTHING NUMERIC IS A NUMBER. Renderers format on the way to the page.
  */
@@ -74,8 +76,13 @@ export function lanePieces(span, sheetL, laneIndex) {
  * Rows come out in the shape `simulation.js` produces, because the diagram is
  * the existing LayoutVisualization: in "V" its rows are columns and a
  * segment's `x` runs along the lane.
+ *
+ * `openings` are rectangles on the surface (same frame as `pieces`). A piece
+ * lying wholly inside one is never hung, so it is dropped — from the drawing
+ * and from the sheet count. A piece the opening only overlaps stays: it is
+ * hung and cut around.
  */
-export function layoutSurface({ w, h, sheetW, sheetL, orientation }) {
+export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [] }) {
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
@@ -85,7 +92,7 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation }) {
     lanes.push(Math.min(sheetW, across - pos));
     pos += sheetW;
   }
-  const rows = lanes.map((laneW, laneIndex) => {
+  const fullRows = lanes.map((laneW, laneIndex) => {
     let x = 0;
     const segs = lanePieces(laneLength, sheetL, laneIndex).map(len => {
       const whole = Math.abs(len - sheetL) < EPS && Math.abs(laneW - sheetW) < EPS;
@@ -98,9 +105,11 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation }) {
   });
 
   /* Joint length on this face: the long edges between lanes, plus every end
-     joint across its lane's width. This is what the tape covers. */
+     joint across its lane's width. This is what the tape covers. Taken
+     before openings drop pieces — an opening's own edges need taping too, and
+     this is the closer of the two figures to that. */
   const edgeJoints = Math.max(0, lanes.length - 1) * laneLength;
-  const endJoints = rows.reduce((total, row) => total + (row.segs.length - 1) * row.h, 0);
+  const endJoints = fullRows.reduce((total, row) => total + (row.segs.length - 1) * row.h, 0);
 
   /* Every piece as a rectangle on the surface, x right and y down from the
      top-left corner, in mm. The printed sheet draws these as they are — the
@@ -108,12 +117,21 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation }) {
      Lanes are placed the way the screen draws them: vertical columns from the
      left with the first piece at the top, horizontal rows from the top. */
   const pieces = [];
+  const inside = rect => openings.some(o =>
+    rect.x >= o.x - EPS && rect.y >= o.y - EPS &&
+    rect.x + rect.w <= o.x + o.w + EPS && rect.y + rect.h <= o.y + o.h + EPS);
   let laneStart = 0;
-  rows.forEach((row, lane) => {
-    row.segs.forEach(seg => pieces.push(vertical
-      ? { x: laneStart, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane }
-      : { x: seg.x, y: laneStart, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane }));
+  const rows = fullRows.map((row, lane) => {
+    const segs = row.segs.filter(seg => {
+      const rect = vertical
+        ? { x: laneStart, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane }
+        : { x: seg.x, y: laneStart, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane };
+      if (inside(rect)) return false;
+      pieces.push(rect);
+      return true;
+    });
     laneStart += row.h;
+    return { ...row, segs };
   });
 
   return {
@@ -133,7 +151,9 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation }) {
       PPi: sheetL, PLa: sheetW,
       direction: vertical ? "V" : "H",
       exactRows: true,
-      palClasses: ["color-s1"]
+      palClasses: ["color-s1"],
+      /* Drawn over the pieces, in surface mm. */
+      openings
     }
   };
 }
@@ -167,6 +187,42 @@ export function packSheets(pieces, sheetW, sheetL) {
   return { whole, cutSheets, total: whole + cutSheets };
 }
 
+export const WALLS = ["A", "B", "C", "D"];
+
+/**
+ * Reads the openings list into numbers and checks each against its wall.
+ *
+ * An opening is a door or window on wall A–D (a room) or on the one wall. Its
+ * position — `x`, mm from the wall's left end as seen from inside the room —
+ * is optional: without it the opening still comes off the area, it just is
+ * not drawn and removes no pieces. A window stands on its sill; a door on the
+ * floor. Sizes are what is cut out of the board, not the frame.
+ *
+ * Returns every opening with `status`: "ok", "unplaced", "invalid" (no usable
+ * size) or "misfit" (placed, but runs off its wall). The last two take no
+ * part in anything except the warning that names them.
+ */
+export function readOpenings(list, { room, wallSize }) {
+  const counters = { door: 0, window: 0 };
+  return (Array.isArray(list) ? list : []).map(o => {
+    const kind = o.kind === "window" ? "window" : "door";
+    counters[kind] += 1;
+    const label = `${kind === "door" ? "D" : "W"}${counters[kind]}`;
+    const wall = room && WALLS.includes(o.wall) ? o.wall : "A";
+    const w = num(o.w), h = num(o.h);
+    const sill = kind === "window" ? num(o.sill) : 0;
+    const placed = given(o.x);
+    const x = num(o.x);
+    const base = { label, kind, wall, w, h, sill, x: placed ? x : null };
+    if (!(w > 0 && h > 0)) return { ...base, status: given(o.w) || given(o.h) ? "invalid" : "empty" };
+    const size = wallSize(wall);
+    if (size && (w > size.w + EPS || sill + h > size.h + EPS)) return { ...base, status: "misfit" };
+    if (!placed) return { ...base, status: "unplaced" };
+    if (size && x + w > size.w + EPS) return { ...base, status: "misfit" };
+    return { ...base, status: "ok" };
+  });
+}
+
 /**
  * Builds the gypsum take-off from the page's raw fields. Returns a model even
  * when half-filled; `ready` says whether there is enough to print.
@@ -174,7 +230,7 @@ export function packSheets(pieces, sheetW, sheetL) {
 export function buildGypsumTakeOff(fields) {
   const {
     mode, lenMm, widMm, heightMm, wallW, wallH, ceiling,
-    doors, doorW, doorH, windows, winW, winH,
+    openings: openingList,
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product
   } = fields;
@@ -189,21 +245,45 @@ export function buildGypsumTakeOff(fields) {
     : [wallW, wallH].every(supplied);
   const sheetReady = supplied(sheetW) && supplied(sheetL);
 
-  /* The surfaces, grouped by identical size so each is laid out (and drawn)
-     once and counted `count` times. */
+  /* The walls, one each. A room's go A (back), B (right), C (front), D
+     (left) — clockwise seen from above, and the order the 3D view folds them
+     in. Each wall's openings sit in its own frame: x from its left end as seen
+     from inside, y down from its top. */
   const L = num(lenMm), W = num(widMm), H = num(heightMm);
-  let surfaces = [];
-  if (dimsReady) {
-    if (room) {
-      if (Math.abs(L - W) < EPS) surfaces.push({ id: "walls", label: "Walls", w: L, h: H, count: 4, wall: true });
-      else {
-        surfaces.push({ id: "walls-l", label: "Length walls", w: L, h: H, count: 2, wall: true });
-        surfaces.push({ id: "walls-w", label: "Width walls", w: W, h: H, count: 2, wall: true });
-      }
-      if (ceiling) surfaces.push({ id: "ceiling", label: "Ceiling", w: L, h: W, count: 1, wall: false });
+  const wallDims = !dimsReady ? []
+    : room ? [["A", L, H], ["B", W, H], ["C", L, H], ["D", W, H]]
+    : [["A", num(wallW), num(wallH)]];
+  const wallSize = letter => {
+    const found = wallDims.find(([id]) => id === letter);
+    return found ? { w: found[1], h: found[2] } : null;
+  };
+  const openingsRead = readOpenings(openingList, { room, wallSize });
+  const counted = openingsRead.filter(o => o.status === "ok" || o.status === "unplaced");
+  const placed = openingsRead.filter(o => o.status === "ok");
+
+  /* Walls that match exactly — same size, same openings in the same places —
+     are laid out and drawn once with a count; any difference splits them. */
+  const groups = new Map();
+  for (const [letter, w, h] of wallDims) {
+    const rects = placed.filter(o => o.wall === letter)
+      .map(o => ({ x: o.x, y: h - o.sill - o.h, w: o.w, h: o.h, kind: o.kind, label: o.label }));
+    const key = JSON.stringify([w, h, rects.map(r => [r.x, r.y, r.w, r.h])]);
+    if (groups.has(key)) {
+      const g = groups.get(key);
+      g.walls.push(letter); g.count += 1;
+      /* Labels differ between identical twins (D1 on A, D2 on C); the
+         drawing shows the first wall's. */
     } else {
-      surfaces.push({ id: "wall", label: "Wall", w: num(wallW), h: num(wallH), count: 1, wall: true });
+      groups.set(key, { w, h, walls: [letter], count: 1, wall: true, openings: rects });
     }
+  }
+  let surfaces = [...groups.values()].map(g => ({
+    ...g,
+    id: room ? `wall-${g.walls.join("").toLowerCase()}` : "wall",
+    label: !room ? "Wall" : `${g.walls.length > 1 ? "Walls" : "Wall"} ${g.walls.join(", ")}`
+  }));
+  if (dimsReady && room && ceiling) {
+    surfaces.push({ id: "ceiling", label: "Ceiling", w: L, h: W, count: 1, wall: false, walls: [], openings: [] });
   }
 
   const tooLarge = sheetReady && surfaces.some(s => {
@@ -214,7 +294,7 @@ export function buildGypsumTakeOff(fields) {
   });
 
   const laidOut = sheetReady && !tooLarge
-    ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix }) }))
+    ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings }) }))
     : surfaces.map(s => ({ ...s, layout: null }));
 
   /* Pack one face layer; a second layer is the same count again (its joints
@@ -231,10 +311,9 @@ export function buildGypsumTakeOff(fields) {
 
   // Area, in m². Openings come off walls only.
   const gross = surfaces.reduce((total, s) => total + s.w * s.h * s.count, 0) / 1e6;
-  const doorArea = num(doors) * num(doorW) * num(doorH) / 1e6;
-  const windowArea = num(windows) * num(winW) * num(winH) / 1e6;
+  const openingArea = counted.reduce((t, o) => t + o.w * o.h, 0) / 1e6;
   const wallArea = surfaces.filter(s => s.wall).reduce((t, s) => t + s.w * s.h * s.count, 0) / 1e6;
-  const openings = Math.min(wallArea, doorArea + windowArea);
+  const openings = Math.min(wallArea, openingArea);
   const net = Math.max(0, gross - openings);
   const boarded = net * layerCount;
 
@@ -253,7 +332,9 @@ export function buildGypsumTakeOff(fields) {
   const price = num(sheetPrice);
   const total = toBuy > 0 && price > 0 ? toBuy * price : null;
 
-  const openingsTooBig = doorArea + windowArea > wallArea + EPS && wallArea > 0;
+  const openingsTooBig = openingArea > wallArea + EPS && wallArea > 0;
+  const misfits = openingsRead.filter(o => o.status === "misfit");
+  const invalid = openingsRead.filter(o => o.status === "invalid");
   const sheetValid = sheetReady && SW <= SL;
   const ready = dimsReady && sheetValid && !tooLarge && gross > 0 && toBuy > 0;
 
@@ -265,7 +346,10 @@ export function buildGypsumTakeOff(fields) {
       : !sheetValid ? "Sheet width cannot be more than its length."
       : tooLarge ? "That surface is too large to lay out — check the dimensions."
       : "Enter valid dimensions to finish the estimate.",
-    warning: openingsTooBig ? "Openings are larger than the wall area; they are capped at it." : null,
+    warning: misfits.length
+      ? `${misfits.map(o => room ? `${o.label} (wall ${o.wall})` : o.label).join(", ")} ${misfits.length === 1 ? "does" : "do"} not fit on ${misfits.length === 1 ? "its" : "their"} wall and ${misfits.length === 1 ? "is" : "are"} left out.`
+      : invalid.length ? `${invalid.map(o => o.label).join(", ")}: enter a width and height.`
+      : openingsTooBig ? "Openings are larger than the wall area; they are capped at it." : null,
 
     mode: room ? "room" : "wall",
     /* The box the 3D view folds the surfaces into, in mm. A single wall has
@@ -279,6 +363,7 @@ export function buildGypsumTakeOff(fields) {
     sheet: { width: SW || null, length: SL || null, area: round(SW * SL / 1e6, 2) },
     surfaces: laidOut.map(s => ({
       id: s.id, label: s.label, width: s.w, height: s.h, count: s.count,
+      walls: s.walls, openings: s.openings,
       area: round(s.w * s.h * s.count / 1e6, 2),
       layout: s.layout
     })),
@@ -289,8 +374,10 @@ export function buildGypsumTakeOff(fields) {
       boarded: round(boarded, 2)
     },
     openings: {
-      doors: num(doors), doorW: num(doorW), doorH: num(doorH),
-      windows: num(windows), winW: num(winW), winH: num(winH)
+      list: openingsRead,
+      doors: counted.filter(o => o.kind === "door").length,
+      windows: counted.filter(o => o.kind === "window").length,
+      placed: placed.length
     },
     sheets: {
       full: packed.whole * layerCount,
