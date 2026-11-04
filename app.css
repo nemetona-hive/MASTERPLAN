@@ -4356,7 +4356,8 @@ input[type="range"]:focus-visible {
 
 .gyp3d-stage {
 	position: relative;
-	height: 340px;
+
+	height: clamp(340px, 50vh, 600px);
 	overflow: hidden;
 
 	perspective: 900px;
@@ -4421,6 +4422,29 @@ input[type="range"]:focus-visible {
 	gap: var(--sp-2);
 	flex-wrap: wrap;
 	margin-top: var(--sp-2);
+}
+
+.gyp-control .concrete-split-wrap { grid-template-columns: 1fr; gap: var(--sp-4); }
+.gyp-control .concrete-split-divider { height: 1px; width: 100%; }
+.gyp-control .gyp-open-fields { flex-basis: 100%; }
+.gyp-control .gyp-open-del { order: 1; margin-left: auto; }
+.gyp-preview .gyp-split { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1025px) {
+
+	.gyp-split > .gyp-result-wrap { order: -1; }
+	.gyp-result { flex-direction: row; align-items: center; flex-wrap: wrap; gap: var(--sp-4) var(--sp-6); }
+	.gyp-result .result-card-split {
+		margin-top: 0;
+		padding: 0 0 0 var(--sp-6);
+		border-top: none;
+		border-left: 1px solid var(--edge);
+		align-self: stretch;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: var(--sp-1);
+	}
+	.gyp-result .result-card-print { width: auto; margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
 	.gyp3d-scene.is-animated { transition: none; }

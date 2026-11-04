@@ -158,180 +158,254 @@ export function SheetGypsum() {
     <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={0} onChange={set(name)} req={extra.req ?? false} {...extra} />
   );
 
+  /* Pattern Layouts' shape: the inputs in the fixed control column, and the
+     results, layout views and reference tables across the rest of the width,
+     so the 2D and 3D views get the room. Inside the preview, a layout-split
+     with one column keeps the result card's mobile bottom bar (the split's
+     second child), which the desktop shows first instead. */
   return (
-    <div className="page-scroll">
-      <Stack className="page-inner" gap={5}>
-        <div className="layout-split">
-          <Stack className="calc-main-stack" gap={4}>
+    <>
+      <Stack id="data-control" className="data-control gyp-control" gap={4}>
+        {/* ── Surface ── */}
+        <div className="section unboxed">
+          <div className="section-head"><span>Surface</span></div>
+          <div className="section-body">
+            <div className="concrete-split-wrap section-pad">
+              <Stack gap={3}>
+                <Seg label="What to board" value={mode} onChange={setMode}
+                  options={[["room", "Room"], ["wall", "Single wall"]]} />
+                <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+                  {mode === "room" ? <>
+                    {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
+                    {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
+                  </> : <>
+                    {num("wallW", "Width (mm)", { min: 1, req: req("wallW") })}
+                    {num("wallH", "Height (mm)", { min: 1, req: req("wallH") })}
+                  </>}
+                </div>
+              </Stack>
 
-            {/* ── Surface ── */}
-            <div className="section unboxed">
-              <div className="section-head"><span>Surface</span></div>
-              <div className="section-body">
-                <div className="concrete-split-wrap section-pad">
-                  <Stack gap={3}>
-                    <Seg label="What to board" value={mode} onChange={setMode}
-                      options={[["room", "Room"], ["wall", "Single wall"]]} />
-                    <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                      {mode === "room" ? <>
-                        {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
-                        {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
-                      </> : <>
-                        {num("wallW", "Width (mm)", { min: 1, req: req("wallW") })}
-                        {num("wallH", "Height (mm)", { min: 1, req: req("wallH") })}
-                      </>}
+              <div className="concrete-split-divider" />
+
+              <Stack gap={3}>
+                {mode === "room" && <>
+                  <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
+                    options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
+                  {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
+                </>}
+              </Stack>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Openings ── */}
+        <div className="section unboxed">
+          <div className="section-head"><span>Openings (mm)</span></div>
+          <div className="section-body">
+            <Stack className="section-pad" gap={3}>
+              {openingRows.map((o, i) => {
+                const read = takeOff.openings.list[i];
+                const field = (key, label) => (
+                  <div className="gyp-open-field">
+                    <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{label}</label>
+                    <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
+                      className="num-input" value={o[key] ?? ""}
+                      aria-invalid={read?.status === "misfit" || read?.status === "invalid" ? true : undefined}
+                      onChange={e => updateOpening(o.id, key, e.target.value)} />
+                  </div>
+                );
+                return (
+                  <div key={o.id} className="gyp-open-row">
+                    <span className="gyp-open-tag">{read?.label}</span>
+                    {mode === "room" && (
+                      <Seg inline label={`${read?.label} wall`} value={o.wall} onChange={v => updateOpening(o.id, "wall", v)}
+                        options={WALLS.map(w => [w, w])} />
+                    )}
+                    <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
+                      aria-label={`Remove ${read?.label}`} title={`Remove ${read?.label}`}
+                      onClick={() => removeOpening(o.id)}>
+                      <Icon name="close" />
+                    </button>
+                    <div className="gyp-open-fields">
+                      {field("x", "From left")}
+                      {field("w", "Width")}
+                      {field("h", "Height")}
+                      {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
                     </div>
-                  </Stack>
+                  </div>
+                );
+              })}
+              <Stack direction="row" gap={2}>
+                <button type="button" className="ctrl-dir" onClick={() => addOpening("door")}>
+                  <Icon name="plus" /> Door
+                </button>
+                <button type="button" className="ctrl-dir" onClick={() => addOpening("window")}>
+                  <Icon name="plus" /> Window
+                </button>
+              </Stack>
+            </Stack>
+          </div>
+        </div>
 
-                  <div className="concrete-split-divider" />
+        {/* ── Sheet & fixing ── */}
+        <div className="section unboxed">
+          <div className="section-head">
+            <div className="u-flex-row" style={{ flex: 1, alignItems: "center" }}>
+              <span>Sheet & Fixing</span>
+              <span className={"pw-updated-note" + (showUpdated ? " pw-updated-note-visible" : "")}>
+                <Icon name="check" /> updated
+              </span>
+            </div>
+          </div>
+          <div className="section-body">
+            <div className="concrete-split-wrap section-pad">
+              <Stack gap={3}>
+                <div className={"num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : "")} ref={presetAnchorRef}>
+                  <NumInput
+                    id="input-gyp-sheetW"
+                    label="Sheet width (mm)"
+                    note={activePreset !== null ? presets[activePreset]?.name : ""}
+                    value={val("sheetW")} min={100}
+                    onChange={productChange("sheetW")}
+                    req={req("sheetW")}
+                    presetsOpen={showPresets}
+                    presetHoveredIndex={hoveredIndex}
+                    showActionLabels
+                    onTogglePresets={() => setShowPresets(open => !open)}
+                    onCommit={() => setShowPresets(false)}
+                    onKeyDown={onKeyDown}
+                  />
+                  {showPresets && validPresets.length > 0 && (
+                    <div className="rate-presets-dropdown">
+                      <div className="rate-presets-header">Board Presets</div>
+                      <div id="input-gyp-sheetW-presets" className="rate-presets-list" role="listbox" aria-label="Board presets">
+                        {validPresets.map((p, idx) => {
+                          const originalIdx = presets.indexOf(p);
+                          return (
+                            <div key={idx} id={`input-gyp-sheetW-preset-${idx}`} role="option"
+                              aria-selected={activePreset === originalIdx}
+                              className={"rate-preset-item" + (activePreset === originalIdx ? " active" : "") + (hoveredIndex === idx ? " focused" : "")}
+                              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); applyPreset(p, originalIdx); setShowPresets(false); }}>
+                              <div className="rate-preset-info">
+                                <span className="rate-preset-name">{p.name}</span>
+                                <span className="rate-preset-meta">{p.screwRate} screws · {p.compoundRate} kg/m²</span>
+                              </div>
+                              <span className="rate-preset-val">{p.sheetW}×{p.sheetL}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className={fieldFlash ? "num-input-flash" : ""}>
+                  <NumInput id="input-gyp-sheetL" label="Sheet length (mm)" value={val("sheetL")} min={100}
+                    onChange={productChange("sheetL")} req={req("sheetL")} />
+                </div>
+                <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
+                  options={[["V", "Vertical"], ["H", "Horizontal"]]} />
+                <Seg label="Layers" value={layers} onChange={setLayers}
+                  options={[["1", "1 layer"], ["2", "2 layers"]]} />
+              </Stack>
 
-                  <Stack gap={3}>
-                    {mode === "room" && <>
-                      <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
-                        options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
-                      {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
-                    </>}
+              <div className="concrete-split-divider" />
+
+              <Stack gap={3}>
+                <div className={fieldFlash ? "num-input-flash" : ""}>
+                  <NumInput id="input-gyp-screwRate" label="Screws (pcs/m²)" value={val("screwRate")} min={0}
+                    onChange={productChange("screwRate")} />
+                </div>
+                <div className={fieldFlash ? "num-input-flash" : ""}>
+                  <NumInput id="input-gyp-compoundRate" label="Compound (kg/m²)" value={val("compoundRate")} min={0}
+                    onChange={productChange("compoundRate")} />
+                </div>
+                <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+                  <div className={fieldFlash ? "num-input-flash" : ""}>
+                    <NumInput id="input-gyp-bagKg" label="Bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
+                  </div>
+                  <div className={fieldFlash ? "num-input-flash" : ""}>
+                    <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange("sheetPrice")} />
+                  </div>
+                </div>
+                {num("waste", "Waste (%)", { max: 100 })}
+              </Stack>
+            </div>
+          </div>
+        </div>
+
+        {presetError && <p role="alert" className="input-error">{presetError}</p>}
+
+        <div className="form-action">
+          <button onClick={handleReset} onBlur={disarmReset}
+            className={"ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : "")}
+            aria-label={resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first"}>
+            <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : "Global Reset"}
+          </button>
+        </div>
+      </Stack>
+
+      <div id="data-preview" className="data-preview gyp-preview" role="region" aria-label="Gypsum results">
+        <div className="layout-split gyp-split">
+          <Stack gap={5}>
+            {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
+            {takeOff.warning && <p role="status" className="input-error">{takeOff.warning}</p>}
+
+            {/* ── Layout ── */}
+            {takeOff.surfaces.some(s => s.layout) && (
+              <div className="section unboxed">
+                <div className="section-head">
+                  <span>Layout</span>
+                  <Seg inline label="Layout view" value={view3d ? "3d" : "2d"} onChange={v => setView3d(v === "3d")}
+                    options={[["2d", "2D"], ["3d", "3D"]]} />
+                </div>
+                <div className="section-body">
+                  <Stack className="section-pad" gap={4}>
+                    {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
+                    {!view3d && takeOff.surfaces.filter(s => s.layout).map(s => (
+                      <Stack key={s.id} gap={2} className="gyp-surface">
+                        <div className="gyp-surface-head">
+                          <span className="gyp-surface-name">{s.label}</span>
+                          <span className="gyp-surface-meta">
+                            {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
+                          </span>
+                        </div>
+                        <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }} maxHeight={460} />
+                      </Stack>
+                    ))}
                   </Stack>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* ── Openings ── */}
+            {/* ── Calculation details ── */}
             <div className="section unboxed">
-              <div className="section-head"><span>Openings (mm)</span></div>
+              <div className="section-head"><span>Calculation Details</span></div>
               <div className="section-body">
-                <Stack className="section-pad" gap={3}>
-                  {openingRows.map((o, i) => {
-                    const read = takeOff.openings.list[i];
-                    const field = (key, label) => (
-                      <div className="gyp-open-field">
-                        <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{label}</label>
-                        <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
-                          className="num-input" value={o[key] ?? ""}
-                          aria-invalid={read?.status === "misfit" || read?.status === "invalid" ? true : undefined}
-                          onChange={e => updateOpening(o.id, key, e.target.value)} />
-                      </div>
-                    );
-                    return (
-                      <div key={o.id} className="gyp-open-row">
-                        <span className="gyp-open-tag">{read?.label}</span>
-                        {mode === "room" && (
-                          <Seg inline label={`${read?.label} wall`} value={o.wall} onChange={v => updateOpening(o.id, "wall", v)}
-                            options={WALLS.map(w => [w, w])} />
-                        )}
-                        <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
-                          aria-label={`Remove ${read?.label}`} title={`Remove ${read?.label}`}
-                          onClick={() => removeOpening(o.id)}>
-                          <Icon name="close" />
-                        </button>
-                        <div className="gyp-open-fields">
-                          {field("x", "From left")}
-                          {field("w", "Width")}
-                          {field("h", "Height")}
-                          {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <Stack direction="row" gap={2}>
-                    <button type="button" className="ctrl-dir" onClick={() => addOpening("door")}>
-                      <Icon name="plus" /> Door
-                    </button>
-                    <button type="button" className="ctrl-dir" onClick={() => addOpening("window")}>
-                      <Icon name="plus" /> Window
-                    </button>
-                  </Stack>
+                <Stack className="section-pad" gap={1}>
+                  <Row label="Surface area" value={area.gross.toFixed(2)} unit="m²" />
+                  {area.openings > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
+                  <Row label="Net area" value={area.net.toFixed(2)} unit="m²" />
+                  {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
+                  <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
+                  <Row label={`With ${sheets.waste}% waste`} value={sheets.exact.toFixed(1)} unit="pcs" />
+                  <Row label="Screws" value={screws.count} unit="pcs" />
+                  <Row label="Joint compound" value={compound.kg.toFixed(1)} unit="kg" />
+                  {compound.bagKg && <Row label={`Compound bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
+                  <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
+
+                  <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
+                    <span className="pw-formula-text">
+                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and compound; a placed one also drops any piece wholly inside it.
+                    </span>
+                  </div>
+                  <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+                    <span className="pw-formula-text">
+                      Tape covers board joints on the face layer{mode === "room" ? ", internal corners" : ""}{mode === "room" && ceiling ? " and the ceiling angle" : ""}.
+                    </span>
+                  </div>
                 </Stack>
               </div>
             </div>
-
-            {/* ── Sheet & fixing ── */}
-            <div className="section unboxed">
-              <div className="section-head">
-                <div className="u-flex-row" style={{ flex: 1, alignItems: "center" }}>
-                  <span>Sheet & Fixing</span>
-                  <span className={"pw-updated-note" + (showUpdated ? " pw-updated-note-visible" : "")}>
-                    <Icon name="check" /> updated
-                  </span>
-                </div>
-              </div>
-              <div className="section-body">
-                <div className="concrete-split-wrap section-pad">
-                  <Stack gap={3}>
-                    <div className={"num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : "")} ref={presetAnchorRef}>
-                      <NumInput
-                        id="input-gyp-sheetW"
-                        label="Sheet width (mm)"
-                        note={activePreset !== null ? presets[activePreset]?.name : ""}
-                        value={val("sheetW")} min={100}
-                        onChange={productChange("sheetW")}
-                        req={req("sheetW")}
-                        presetsOpen={showPresets}
-                        presetHoveredIndex={hoveredIndex}
-                        showActionLabels
-                        onTogglePresets={() => setShowPresets(open => !open)}
-                        onCommit={() => setShowPresets(false)}
-                        onKeyDown={onKeyDown}
-                      />
-                      {showPresets && validPresets.length > 0 && (
-                        <div className="rate-presets-dropdown">
-                          <div className="rate-presets-header">Board Presets</div>
-                          <div id="input-gyp-sheetW-presets" className="rate-presets-list" role="listbox" aria-label="Board presets">
-                            {validPresets.map((p, idx) => {
-                              const originalIdx = presets.indexOf(p);
-                              return (
-                                <div key={idx} id={`input-gyp-sheetW-preset-${idx}`} role="option"
-                                  aria-selected={activePreset === originalIdx}
-                                  className={"rate-preset-item" + (activePreset === originalIdx ? " active" : "") + (hoveredIndex === idx ? " focused" : "")}
-                                  onMouseDown={e => { e.preventDefault(); e.stopPropagation(); applyPreset(p, originalIdx); setShowPresets(false); }}>
-                                  <div className="rate-preset-info">
-                                    <span className="rate-preset-name">{p.name}</span>
-                                    <span className="rate-preset-meta">{p.screwRate} screws · {p.compoundRate} kg/m²</span>
-                                  </div>
-                                  <span className="rate-preset-val">{p.sheetW}×{p.sheetL}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className={fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-gyp-sheetL" label="Sheet length (mm)" value={val("sheetL")} min={100}
-                        onChange={productChange("sheetL")} req={req("sheetL")} />
-                    </div>
-                    <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
-                      options={[["V", "Vertical"], ["H", "Horizontal"]]} />
-                    <Seg label="Layers" value={layers} onChange={setLayers}
-                      options={[["1", "1 layer"], ["2", "2 layers"]]} />
-                  </Stack>
-
-                  <div className="concrete-split-divider" />
-
-                  <Stack gap={3}>
-                    <div className={fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-gyp-screwRate" label="Screws (pcs/m²)" value={val("screwRate")} min={0}
-                        onChange={productChange("screwRate")} />
-                    </div>
-                    <div className={fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-gyp-compoundRate" label="Compound (kg/m²)" value={val("compoundRate")} min={0}
-                        onChange={productChange("compoundRate")} />
-                    </div>
-                    <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                      <div className={fieldFlash ? "num-input-flash" : ""}>
-                        <NumInput id="input-gyp-bagKg" label="Bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
-                      </div>
-                      <div className={fieldFlash ? "num-input-flash" : ""}>
-                        <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange("sheetPrice")} />
-                      </div>
-                    </div>
-                    {num("waste", "Waste (%)", { max: 100 })}
-                  </Stack>
-                </div>
-              </div>
-            </div>
-
-            {presetError && <p role="alert" className="input-error">{presetError}</p>}
 
             {/* ── Board presets ── */}
             <DetailSection title="Board Presets" open={false}>
@@ -382,79 +456,10 @@ export function SheetGypsum() {
                 </div>
               </Stack>
             </DetailSection>
-
-            {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
-            {takeOff.warning && <p role="status" className="input-error">{takeOff.warning}</p>}
-
-            {/* ── Layout ── */}
-            {takeOff.surfaces.some(s => s.layout) && (
-              <div className="section unboxed">
-                <div className="section-head">
-                  <span>Layout</span>
-                  <Seg inline label="Layout view" value={view3d ? "3d" : "2d"} onChange={v => setView3d(v === "3d")}
-                    options={[["2d", "2D"], ["3d", "3D"]]} />
-                </div>
-                <div className="section-body">
-                  <Stack className="section-pad" gap={4}>
-                    {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
-                    {!view3d && takeOff.surfaces.filter(s => s.layout).map(s => (
-                      <Stack key={s.id} gap={2} className="gyp-surface">
-                        <div className="gyp-surface-head">
-                          <span className="gyp-surface-name">{s.label}</span>
-                          <span className="gyp-surface-meta">
-                            {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
-                          </span>
-                        </div>
-                        <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }} maxHeight={320} />
-                      </Stack>
-                    ))}
-                  </Stack>
-                </div>
-              </div>
-            )}
-
-            {/* ── Calculation details ── */}
-            <div className="section unboxed">
-              <div className="section-head"><span>Calculation Details</span></div>
-              <div className="section-body">
-                <Stack className="section-pad" gap={1}>
-                  <Row label="Surface area" value={area.gross.toFixed(2)} unit="m²" />
-                  {area.openings > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
-                  <Row label="Net area" value={area.net.toFixed(2)} unit="m²" />
-                  {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
-                  <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
-                  <Row label={`With ${sheets.waste}% waste`} value={sheets.exact.toFixed(1)} unit="pcs" />
-                  <Row label="Screws" value={screws.count} unit="pcs" />
-                  <Row label="Joint compound" value={compound.kg.toFixed(1)} unit="kg" />
-                  {compound.bagKg && <Row label={`Compound bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
-                  <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
-
-                  <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
-                    <span className="pw-formula-text">
-                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and compound; a placed one also drops any piece wholly inside it.
-                    </span>
-                  </div>
-                  <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
-                    <span className="pw-formula-text">
-                      Tape covers board joints on the face layer{mode === "room" ? ", internal corners" : ""}{mode === "room" && ceiling ? " and the ceiling angle" : ""}.
-                    </span>
-                  </div>
-                </Stack>
-              </div>
-            </div>
-
-            <div className="form-action">
-              <button onClick={handleReset} onBlur={disarmReset}
-                className={"ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : "")}
-                aria-label={resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first"}>
-                <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : "Global Reset"}
-              </button>
-            </div>
           </Stack>
 
-          {/* ── Sticky result column ── */}
-          <div className="u-sticky u-sticky-top" style={{ marginTop: "var(--sticky-offset)", top: "20px" }}>
-            <div className="result-card result-card--concrete">
+          <div className="gyp-result-wrap">
+            <div className="result-card result-card--concrete gyp-result">
               <div className="result-card-primary">
                 <span className="result-card-title">Sheets Needed</span>
                 <span className="result-card-value">
@@ -477,8 +482,8 @@ export function SheetGypsum() {
             </div>
           </div>
         </div>
-      </Stack>
+      </div>
       <GypsumTakeOffSheet takeOff={printTakeOff} />
-    </div>
+    </>
   );
 }

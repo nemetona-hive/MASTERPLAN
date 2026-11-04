@@ -423,11 +423,12 @@
    folded around. */
 .gyp3d-stage {
 	position: relative;
-	height: 340px;
+	/* As tall as the view can use without pushing the controls off screen. */
+	height: clamp(340px, 50vh, 600px);
 	overflow: hidden;
 	/* Strong enough that near edges are visibly larger, which is most of what
 	   tells a viewer they are looking into a box rather than at one. */
-	perspective: 900px;
+	perspective: 900px; /* three times the stage side; GypsumRoom3D sets it inline as the stage resizes */
 	background: var(--surface-1);
 	border-radius: 8px; /* matches .viz-card, the 2D diagram it replaces */
 	box-shadow: var(--ring-soft);
@@ -495,6 +496,31 @@
 	gap: var(--sp-2);
 	flex-wrap: wrap;
 	margin-top: var(--sp-2);
+}
+/* Gypsum in the Pattern Layouts shell (Gypsum.jsx). The control column is
+   384px, so the page's two-up input splits stack there as they do on a phone. */
+.gyp-control .concrete-split-wrap { grid-template-columns: 1fr; gap: var(--sp-4); }
+.gyp-control .concrete-split-divider { height: 1px; width: 100%; }
+.gyp-control .gyp-open-fields { flex-basis: 100%; }
+.gyp-control .gyp-open-del { order: 1; margin-left: auto; }
+.gyp-preview .gyp-split { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1025px) {
+	/* The result card is the split's second child so the phone bar still finds
+	   it; on a desktop it leads, laid out in a row across the top. */
+	.gyp-split > .gyp-result-wrap { order: -1; }
+	.gyp-result { flex-direction: row; align-items: center; flex-wrap: wrap; gap: var(--sp-4) var(--sp-6); }
+	.gyp-result .result-card-split {
+		margin-top: 0;
+		padding: 0 0 0 var(--sp-6);
+		border-top: none;
+		border-left: 1px solid var(--edge);
+		align-self: stretch;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: var(--sp-1);
+	}
+	.gyp-result .result-card-print { width: auto; margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
 	.gyp3d-scene.is-animated { transition: none; }

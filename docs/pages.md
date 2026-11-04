@@ -63,6 +63,16 @@ direction, waste, price) and extended with a layout diagram per surface and
 a second layer. All figures, and the diagrams, come from
 `utils/gypsum-take-off.js`; the page and `GypsumTakeOffSheet` only render it.
 
+- **Pattern Layouts' shell, not the calculator card.** The page is served in
+  `main-data`: inputs in the 384px `.data-control` column, and the result card,
+  2D/3D layout, calculation details and board presets in `.data-preview`, so
+  the diagrams get the full remaining width (it was capped by `.page-inner`'s
+  1024px). The preview holds a one-column `.layout-split` whose second child is
+  the result card: that keeps the phone's bottom results bar, which is keyed to
+  `.layout-split > :nth-child(2)`; on a desktop it is moved first and laid out
+  in a row. The 3D stage measures itself and scales the room (and its
+  perspective) to the shorter side, so it fills the larger stage too.
+
 - **The layout is the count.** Each surface is cut into lanes of board width
   (vertical fixing: columns up the wall; horizontal: rows along it), each lane
   into pieces, and the pieces are packed first-fit-decreasing back into stock

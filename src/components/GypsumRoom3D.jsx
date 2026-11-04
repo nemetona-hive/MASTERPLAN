@@ -20,8 +20,9 @@ import { React } from "../react-globals.js";
  * disagree.
  */
 
-/* The stage is laid out at this size, in CSS px, and the room scaled to fit:
-   the room's bounding sphere fills a little under half of it. */
+/* The room is scaled so its bounding sphere fills a little under half of the
+   stage's shorter side. The stage measures itself; this is the size before it
+   has, and in jsdom, which has no layout. */
 const STAGE = 300;
 const VIEWS = { above: -32, level: -8 };
 /* How far the ceiling floats above the walls, as a share of the height. */
@@ -37,12 +38,12 @@ const clampPitch = v => Math.max(-85, Math.min(85, v));
  * (towards the viewer); each transform translates it out along its normal and
  * rotates it to its wall. Read right to left: translate first, then rotate.
  */
-export function roomFaces(room, surfaces) {
+export function roomFaces(room, surfaces, stage = STAGE) {
   if (!room) return { faces: [], scale: 0 };
   const { length: L, width: W, height: H, ceiling } = room;
   const lift = ceiling ? H * LIFT : 0;
   const radius = Math.hypot(L, W, H + lift) / 2 || 1;
-  const s = (STAGE * 0.45) / radius;
+  const s = (stage * 0.45) / radius;
   const drawn = surfaces.filter(x => x.layout);
   /* Each wall finds its own drawing by letter: walls with different openings
      are different surfaces even when they are the same size. */
@@ -102,8 +103,21 @@ export function GypsumRoom3D({ room, surfaces }) {
   /* Eased only when a button sets the view; a drag or a key follows at once. */
   const [animate, setAnimate] = React.useState(false);
   const drag = React.useRef(null);
-  const { faces } = roomFaces(room, surfaces);
-  if (!faces.length) return null;
+  const stageRef = React.useRef(null);
+  const [stage, setStage] = React.useState(STAGE);
+  const { faces } = roomFaces(room, surfaces, stage);
+  const shown = faces.length > 0;
+  React.useEffect(() => {
+    const el = stageRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      const side = Math.min(entry.contentRect.width, entry.contentRect.height);
+      if (side > 0) setStage(Math.round(side));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shown]);
+  if (!shown) return null;
 
   const onPointerDown = e => {
     drag.current = { x: e.clientX, y: e.clientY, pitch, yaw };
@@ -133,7 +147,10 @@ export function GypsumRoom3D({ room, surfaces }) {
 
   return (
     <div className="gyp3d">
-      <div className="gyp3d-stage" tabIndex={0} role="img" aria-label={label}
+      {/* Perspective in step with the size, so a bigger stage is the same
+          view enlarged rather than a flatter one. */}
+      <div ref={stageRef} className="gyp3d-stage" tabIndex={0} role="img" aria-label={label}
+        style={{ perspective: `${stage * 3}px` }}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove}
         onPointerUp={endDrag} onPointerCancel={endDrag} onKeyDown={onKeyDown}>
         <div className={"gyp3d-scene" + (animate ? " is-animated" : "")}

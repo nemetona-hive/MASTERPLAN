@@ -88,6 +88,7 @@ function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGr
     content = <SheetConcrete />;
   } else if (page === "gypsum") {
     content = <SheetGypsum />;
+    wrapperClass = "main-data";
   } else if (page === "timesheet") {
     content = <SheetTimesheet />;
   } else if (page === "golden-ratio") {
