@@ -88,13 +88,14 @@ comes from the same script. A mark drawn in `index.html` instead is a taskbar
 that disagrees with the shortcut that opened it, which is how the old gold
 triangle lasted after the shortcut moved on.
 
-And it has to be offered **at the sizes the taskbar uses**:
-`assets/favicon-{16,24,32,48,64}.png`, one `<link rel="icon" sizes>` each,
-beside the 192. Chromium keeps a window's favicon as a small bitmap (16, 24 or
-32 px, more at a higher display scale); offered only the 192 it shrank that
-and Windows stretched it back up, and the taskbar icon looked soft. With an
-exact size to pick, nothing is resampled. Edge caches favicons, so after an
-icon change close the app window and reopen it (Ctrl+F5 if it persists).
+And it is **a vector**, `assets/icon.svg`, the glyph's own outline out of the
+vendored font, and the page's only favicon. Chromium draws a window's favicon
+at whatever size the taskbar and the display scale ask for; a bitmap is
+resampled to get there and looks soft. Both were tried: the 192 PNG, then a PNG
+per size (16 to 64), and the taskbar was still visibly softer than MONEYFLOW's,
+whose favicon is an SVG. Do not add a PNG favicon beside it: given the choice,
+the browser may pick the bitmap. Edge caches favicons, so after an icon change
+close the app window and reopen it (Ctrl+F5 if it persists).
 
 The cost of hiding the console is that a failed start is silent — the browser
 opens and fails to connect, and that is the only signal. Run `./run.sh` from a

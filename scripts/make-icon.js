@@ -12,9 +12,7 @@
  * drift into two different marks:
  *
  *   masterplan.ico              the desktop shortcut, 7 frames
- *   assets/favicon-{16,24,32,48,64}.png
- *                               the favicon, one file per size the taskbar asks
- *                               for — see FAVICONS below
+ *   assets/icon.svg             the favicon, and so the taskbar icon — see below
  *   assets/icon-192.png         `any` — drawn as-is on whatever the OS gives it
  *   assets/icon-512.png         `any`, larger
  *   assets/icon-maskable-512.png  `maskable` — see the safe zone below
@@ -24,7 +22,8 @@
  *
  * Requires python3 with Pillow, which is what has FreeType bound to it here.
  * FreeType reads the vendored .woff2 directly, so the icon is the same face the
- * app renders with rather than a lookalike.
+ * app renders with rather than a lookalike. The SVG's outline comes from the
+ * same file through harfbuzz (already a dependency, behind subset-font).
  */
 
 const { execFileSync } = require("node:child_process");
@@ -79,21 +78,8 @@ frames[-1].save("${path.join(ROOT, "masterplan.ico")}", format="ICO",
                 sizes=[(s, s) for s in SIZES], append_images=frames[:-1])
 print("Built masterplan.ico (" + ", ".join(str(s) for s in SIZES) + ")")
 
-# THE TASKBAR ICON IS THE FAVICON. run.sh opens an msedge --app window, and
-# Chromium gives that window the page's favicon, kept as a bitmap at the size
-# the screen asks for: 16, 24 or 32 px, more at a higher display scale. Offered
-# only the 192 px icon, it shrank that to 16 or 32 and Windows stretched the
-# result back up to the taskbar's size, which is what made it look soft. One
-# file per size, each the same tile as the .ico's frame, lets the browser pick
-# an exact match instead of resampling.
-FAVICONS = [16, 24, 32, 48, 64]
-
 import os
 ASSETS = "${path.join(ROOT, "assets")}"
-os.makedirs(ASSETS, exist_ok=True)
-for px in FAVICONS:
-    tile(px).save(os.path.join(ASSETS, f"favicon-{px}.png"))
-print("Built assets/favicon-" + ", ".join(str(s) for s in FAVICONS) + ".png")
 os.makedirs(ASSETS, exist_ok=True)
 BG = tuple(int("${BG}"[i:i+2], 16) for i in (1, 3, 5)) + (255,)
 
@@ -128,6 +114,47 @@ print("Built assets/icon-192.png, icon-512.png, icon-maskable-512.png")
 
 execFileSync("python3", ["-c", py], { stdio: "inherit" });
 
+/*
+ * THE TASKBAR ICON IS THE FAVICON, AND IT IS A VECTOR. run.sh opens an
+ * `msedge --app` window, and Chromium gives that window the page's favicon,
+ * drawn at whatever size the taskbar and the display scale ask for. A bitmap
+ * favicon is resampled to get there, and looked soft: first the 192 px PNG,
+ * then a PNG per size, which Chromium still rescaled. An SVG is drawn at the
+ * size asked for, which is why MONEYFLOW's taskbar icon was the sharper one.
+ * So the favicon is this glyph's own outline, from the vendored font, in the
+ * same gold, with nothing to resample.
+ */
+async function writeSvg() {
+  const fs = require("node:fs");
+  const hb = await require("harfbuzzjs");
+  const fontverter = require("fontverter");
+  const sfnt = await fontverter.convert(fs.readFileSync(path.join(ROOT, "vendor/fa-solid-900.woff2")), "sfnt");
+  const blob = hb.createBlob(sfnt), face = hb.createFace(blob, 0), font = hb.createFont(face);
+  const buffer = hb.createBuffer();
+  buffer.addText(String.fromCodePoint(GLYPH));
+  buffer.guessSegmentProperties();
+  hb.shape(font, buffer);
+  const glyphId = buffer.json()[0].g;
+  const d = font.glyphToPath(glyphId);
+  const ext = font.glyphExtents(glyphId);
+  if (!d || !ext || !glyphId) throw new Error("glyph has no outline - wrong codepoint or font");
+  /* Font units run y up; SVG runs y down, so the path is flipped and the box
+     with it. A square box, the glyph centred, a hair of margin so the
+     antialiased edge is not clipped. */
+  const x0 = ext.xBearing, x1 = ext.xBearing + ext.width;
+  const top = -ext.yBearing, bottom = -(ext.yBearing + ext.height);
+  const side = Math.max(x1 - x0, bottom - top) * 1.04;
+  const vx = (x0 + x1) / 2 - side / 2, vy = (top + bottom) / 2 - side / 2;
+  const n = v => String(Math.round(v * 100) / 100);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${n(vx)} ${n(vy)} ${n(side)} ${n(side)}">` +
+    `<path fill="${COLOUR}" transform="scale(1,-1)" d="${d}"/></svg>\n`;
+  fs.writeFileSync(path.join(ROOT, "assets/icon.svg"), svg);
+  for (const f of [font, face, blob]) f.destroy();
+  buffer.destroy();
+  process.stdout.write("Built assets/icon.svg\n");
+}
+
+writeSvg().then(() => {
 if (process.argv.includes("--deploy")) {
   const dest = execFileSync("bash", ["-lc",
     'wslpath -u "$(cmd.exe /c \'echo %LOCALAPPDATA%\' 2>/dev/null | tr -d "\\r")"'],
@@ -137,3 +164,4 @@ if (process.argv.includes("--deploy")) {
   process.stdout.write(`Deployed to ${target}\n`);
   process.stdout.write("Windows caches shortcut icons; log out or clear the icon cache if the desktop still shows the old one.\n");
 }
+}).catch(err => { console.error(err); process.exit(1); });
