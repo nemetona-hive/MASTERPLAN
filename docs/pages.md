@@ -93,6 +93,14 @@ a second layer. All figures, and the diagrams, come from
   inside it from the drawing and the sheet count; a piece it only crosses is
   hung whole and cut out. One that runs off its wall is left out and named in
   the warning.
+- **First panel offset (mm)** starts each wall with a strip that wide at its
+  left corner (as seen from inside), so the first full board's edge lands on
+  a stud rather than at the corner: with studs at 600 centres, 600 puts it on
+  the first stud after the corner stud. Walls only (a ceiling's joists are
+  another grid) and vertical fixing only (board edges are what must land on
+  studs), so the field shows only for vertical. One as wide as a board or
+  wider is left out with a warning. The strips pack into boards like any
+  other cut piece (`layoutSurface({ firstLane })`).
 - Walls are grouped (drawn once, labelled `Walls A, C`) only while identical:
   same size and the same openings in the same places.
 - **Screwed or glued.** Glued ("dot and dab") sticks the boards straight onto

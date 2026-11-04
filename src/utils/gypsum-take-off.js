@@ -81,13 +81,22 @@ export function lanePieces(span, sheetL, laneIndex) {
  * lying wholly inside one is never hung, so it is dropped — from the drawing
  * and from the sheet count. A piece the opening only overlaps stays: it is
  * hung and cut around.
+ *
+ * `firstLane` (mm) starts the surface with a strip that wide instead of a full
+ * board, so the first full board's edge lands on a stud rather than at the
+ * corner: with studs at 600 centres, a 600 strip puts it on the first stud
+ * after the corner stud. Ignored unless it is narrower than a board.
  */
-export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [] }) {
+export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0 }) {
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
   const lanes = [];
   let pos = 0;
+  if (firstLane > EPS && firstLane < sheetW - EPS) {
+    lanes.push(Math.min(firstLane, across));
+    pos = firstLane;
+  }
   while (across - pos > EPS) {
     lanes.push(Math.min(sheetW, across - pos));
     pos += sheetW;
@@ -255,7 +264,7 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm
+    skimRate, skimMm, firstOffset
   } = fields;
 
   const room = mode !== "wall";
@@ -313,6 +322,13 @@ export function buildGypsumTakeOff(fields) {
     surfaces.push({ id: "ceiling", label: "Ceiling", w: L, h: W, count: 1, wall: false, walls: [], openings: [] });
   }
 
+  /* First-panel offset: walls only (a ceiling's joists are another grid),
+     vertical fixing only (it is board edges that must land on studs), and
+     narrower than a board, or it would be a board. */
+  const offsetAsked = given(firstOffset) ? num(firstOffset) : 0;
+  const offsetFits = offsetAsked > 0 && SW > 0 && offsetAsked < SW;
+  const offset = fix === "V" && offsetFits ? offsetAsked : 0;
+
   const tooLarge = sheetReady && surfaces.some(s => {
     const vertical = fix === "V";
     const lanes = Math.ceil((vertical ? s.w : s.h) / SW);
@@ -321,7 +337,8 @@ export function buildGypsumTakeOff(fields) {
   });
 
   const laidOut = sheetReady && !tooLarge
-    ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings }) }))
+    ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
+        firstLane: s.wall ? offset : 0 }) }))
     : surfaces.map(s => ({ ...s, layout: null }));
 
   /* Pack one face layer; a second layer is the same count again (its joints
@@ -398,7 +415,8 @@ export function buildGypsumTakeOff(fields) {
       ? `${misfits.map(o => room ? `${o.label} (wall ${o.wall})` : o.label).join(", ")} ${misfits.length === 1 ? "does" : "do"} not fit on ${misfits.length === 1 ? "its" : "their"} wall and ${misfits.length === 1 ? "is" : "are"} left out.`
       : invalid.length ? `${invalid.map(o => o.label).join(", ")}: enter a width and height.`
       : openingsTooBig ? "Openings are larger than the wall area; they are capped at it."
-      : skimThickness > 0 && !skimPerMm ? "Enter the filler's kg/m² per 1 mm to count the surface skim." : null,
+      : skimThickness > 0 && !skimPerMm ? "Enter the filler's kg/m² per 1 mm to count the surface skim."
+      : offsetAsked > 0 && SW > 0 && !offsetFits ? "First panel offset must be less than the sheet width; it is left out." : null,
 
     mode: room ? "room" : "wall",
     /* The box the 3D view folds the surfaces into, in mm. A single wall has
@@ -408,6 +426,7 @@ export function buildGypsumTakeOff(fields) {
               : { length: num(wallW), width: 0, height: num(wallH), ceiling: false })
       : null,
     orientation: fix,
+    firstOffset: offset || null,
     fixing: glued ? "glue" : "screw",
     layers: layerCount,
     sheet: { width: SW || null, length: SL || null, area: round(SW * SL / 1e6, 2) },

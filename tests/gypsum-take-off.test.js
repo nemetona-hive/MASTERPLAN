@@ -216,6 +216,43 @@ describe("the gypsum take-off", () => {
     });
   });
 
+  describe("first panel offset", () => {
+    it("starts each wall with a strip, so the first full board lands on the first stud", () => {
+      const lay = layoutSurface({ w: 4000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", firstLane: 600 });
+      expect(lay.rows.map(r => r.h)).toEqual([600, 1200, 1200, 1000]);
+      const firstFull = lay.pieces.find(p => p.type === "full");
+      expect(firstFull.x).toBe(600);
+    });
+
+    it("applies to walls, not the ceiling, and only when fixing vertically", () => {
+      const t = buildGypsumTakeOff(fields({ ceiling: true, firstOffset: "600" }));
+      const wall = t.surfaces.find(s => s.id === "wall-ac");
+      const ceiling = t.surfaces.find(s => s.id === "ceiling");
+      expect(wall.layout.rows[0].h).toBe(600);
+      expect(ceiling.layout.rows[0].h).toBe(1200);
+      expect(t.firstOffset).toBe(600);
+      const h = buildGypsumTakeOff(fields({ orientation: "H", firstOffset: "600" }));
+      expect(h.firstOffset).toBe(null);
+    });
+
+    it("packs the corner strips two to a board", () => {
+      const plain = buildGypsumTakeOff(fields());
+      const offset = buildGypsumTakeOff(fields({ firstOffset: "600" }));
+      // 4000: 600 + 1200 + 1200 + 1000; 3000: 600 + 1200 + 1200 — two full
+      // boards a wall, 8 in all. The four 600 strips make two boards and the
+      // two 1000 strips one each: 12, as many as without the offset here.
+      expect(offset.sheets.full).toBe(8);
+      expect(offset.sheets.fromCuts).toBe(4);
+      expect(offset.sheets.layout).toBe(plain.sheets.layout);
+    });
+
+    it("leaves out an offset as wide as a board, and says so", () => {
+      const t = buildGypsumTakeOff(fields({ firstOffset: "1200" }));
+      expect(t.firstOffset).toBe(null);
+      expect(t.warning).toMatch(/less than the sheet width/);
+    });
+  });
+
   it("prices the sheets bought", () => {
     const t = buildGypsumTakeOff(fields({ waste: "10" }));
     expect(t.sheets.total).toBe(14 * 8.5);
