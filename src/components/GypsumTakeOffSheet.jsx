@@ -1,5 +1,5 @@
 import { ReactDOM } from "../react-globals.js";
-import { getBuildId } from "../shared.jsx";
+import { DocHead } from "./DocHead.jsx";
 import { eur, mm as mmPlaces, nf } from "../utils/format.js";
 
 /**
@@ -13,25 +13,6 @@ import { eur, mm as mmPlaces, nf } from "../utils/format.js";
 
 /* Board and opening sizes keep a half millimetre where one was typed. */
 const mm = value => mmPlaces(value, 1);
-
-/* The sheet's head: what it is, a line under it, and when and from which build
-   it was printed. The room sheet and the project sheet share it. */
-function DocHead({ title, sub }) {
-  const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
-  const build = getBuildId();
-  return (
-    <header className="doc-sheet-head">
-      <div>
-        <h1 className="doc-sheet-title">{title}</h1>
-        <p className="doc-sheet-sub">{sub}</p>
-      </div>
-      <div className="doc-sheet-stamp">
-        <div>{printed}</div>
-        {build && <div>build {build}</div>}
-      </div>
-    </header>
-  );
-}
 
 /* One surface as drawn on paper: the model's piece rectangles in surface
    millimetres, scaled by the viewBox. Ink and stroke come from 99-print.css,
@@ -92,8 +73,9 @@ function RoomTakeOff({ takeOff, title, projectName }) {
 
   return (
     <>
-      <DocHead title={`Gypsum take-off${title ? ` — ${title}` : ""}`}
-        sub={`${projectName ? `${projectName} · ` : ""}${nf(area.net, 2)} m² net · ${mm(sheet.width)} × ${mm(sheet.length)} mm${product ? ` · ${product}` : ""}`} />
+      <DocHead title={`Gypsum take-off${title ? ` — ${title}` : ""}`}>
+        {projectName ? `${projectName} · ` : ""}{nf(area.net, 2)} m² net · {mm(sheet.width)} × {mm(sheet.length)} mm{product ? ` · ${product}` : ""}
+      </DocHead>
 
       <section className="doc-sheet-block">
         <h2 className="doc-sheet-h2">Surfaces</h2>
@@ -229,8 +211,9 @@ export function GypsumProjectSheet({ project, entries, projectName = "" }) {
 
   return ReactDOM.createPortal(
     <div className="doc-sheet">
-      <DocHead title={`Gypsum take-off${projectName ? ` — ${projectName}` : ""}`}
-        sub={`${project.readyCount} of ${project.count} rooms and walls · ${nf(project.area.net, 2)} m² net`} />
+      <DocHead title={`Gypsum take-off${projectName ? ` — ${projectName}` : ""}`}>
+        {project.readyCount} of {project.count} rooms and walls · {nf(project.area.net, 2)} m² net
+      </DocHead>
 
       <section className="doc-sheet-block">
         <h2 className="doc-sheet-h2">Rooms</h2>

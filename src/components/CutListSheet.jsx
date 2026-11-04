@@ -1,5 +1,5 @@
 import { React, ReactDOM } from "../react-globals.js";
-import { getBuildId } from "../shared.jsx";
+import { DocHead } from "./DocHead.jsx";
 
 /**
  * The cut list as a printed document.
@@ -58,28 +58,16 @@ export function CutListSheet({ list }) {
   if (!list) return null;
 
   const { surface, material, system, totals, gaps, panels, rows } = list;
-  const printed = new Date().toLocaleDateString("en-GB",
-    { year: "numeric", month: "short", day: "numeric" });
-  const build = getBuildId();
 
   return ReactDOM.createPortal(
     <div className="doc-sheet">
-      <header className="doc-sheet-head">
-        <div>
-          <h1 className="doc-sheet-title">Cut list</h1>
-          <p className="doc-sheet-sub">
-            {/* SYSTEMS titles already end in "layout" (config.js), so this
-                takes them as they are rather than appending the word twice. */}
-            {system.title || "Layout"} ·{" "}
-            {mm(surface.width)} × {mm(surface.height)} mm ·{" "}
-            {surface.direction === "V" ? "vertical" : "horizontal"}
-          </p>
-        </div>
-        <div className="doc-sheet-stamp">
-          <div>{printed}</div>
-          {build && <div>build {build}</div>}
-        </div>
-      </header>
+      <DocHead title="Cut list">
+        {/* SYSTEMS titles already end in "layout" (config.js), so this
+            takes them as they are rather than appending the word twice. */}
+        {system.title || "Layout"} ·{" "}
+        {mm(surface.width)} × {mm(surface.height)} mm ·{" "}
+        {surface.direction === "V" ? "vertical" : "horizontal"}
+      </DocHead>
 
       <section className="doc-sheet-block">
         <h2 className="doc-sheet-h2">Material</h2>

@@ -117,3 +117,19 @@ describe("the concrete take-off", () => {
     }
   });
 });
+
+describe("bags that fill exactly", () => {
+  /* 10 m² × 10 mm × 2.2 kg is 220.00000000000003 kg in floating point; a plain
+     ceiling bought a twelfth bag for a pour that fills eleven. */
+  it("buys the whole number of bags a pour fills, not one more", () => {
+    const t = buildTakeOff({ areaMode: "direct", areaManual: "10", thickMode: "avg", avgH: "10", rate: "2.2", bagKg: "20", bagPrice: "4" });
+    expect(t.bags.exact).toBe(11);
+    expect(t.bags.toBuy).toBe(11);
+    expect(t.bags.total).toBe(44);
+  });
+
+  it("still rounds a real part bag up", () => {
+    const t = buildTakeOff({ areaMode: "direct", areaManual: "10", thickMode: "avg", avgH: "10", rate: "2.21", bagKg: "20" });
+    expect(t.bags.toBuy).toBe(12);
+  });
+});

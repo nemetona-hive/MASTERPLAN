@@ -1,5 +1,5 @@
 import { React, ReactDOM } from "../react-globals.js";
-import { getBuildId } from "../shared.jsx";
+import { DocHead } from "./DocHead.jsx";
 import { eur, mm, nf } from "../utils/format.js";
 
 /**
@@ -15,33 +15,21 @@ import { eur, mm, nf } from "../utils/format.js";
  * mounted, because only one page is routed at a time.
  */
 
-/* Euros in the app's own locale, matching the figure the page shows beside the
-   button somebody pressed to get here (utils/format.js). */
+/* Figures format through utils/format.js, the same helpers the page uses for
+   the euro figure beside the button somebody pressed to get here. */
 
 export function TakeOffSheet({ takeOff }) {
   if (!takeOff || !takeOff.ready) return null;
 
   const { area, thickness, volume, mass, bags, product } = takeOff;
-  const printed = new Date().toLocaleDateString("en-GB",
-    { year: "numeric", month: "short", day: "numeric" });
-  const build = getBuildId();
 
   return ReactDOM.createPortal(
     <div className="doc-sheet">
-      <header className="doc-sheet-head">
-        <div>
-          <h1 className="doc-sheet-title">Concrete take-off</h1>
-          <p className="doc-sheet-sub">
-            {nf(area.value, 2)} m² · {mm(thickness.average, 1)} mm
-            {thickness.mode === "corners" ? " average" : ""}
-            {product.name ? ` · ${product.name}` : ""}
-          </p>
-        </div>
-        <div className="doc-sheet-stamp">
-          <div>{printed}</div>
-          {build && <div>build {build}</div>}
-        </div>
-      </header>
+      <DocHead title="Concrete take-off">
+        {nf(area.value, 2)} m² · {mm(thickness.average, 1)} mm
+        {thickness.mode === "corners" ? " average" : ""}
+        {product.name ? ` · ${product.name}` : ""}
+      </DocHead>
 
       <section className="doc-sheet-block">
         <h2 className="doc-sheet-h2">The pour</h2>

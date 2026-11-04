@@ -336,7 +336,7 @@ export function SheetTimesheet() {
           </Stack>
 
           {/* Sticky Result Column */}
-          <div className="u-sticky u-sticky-top" style={{ marginTop: 'var(--sticky-offset)', top: '20px' }}>
+          <div className="result-sticky">
             <div className="result-card">
               <div className="result-card-primary">
               <span className="result-card-title">Total Hours</span>

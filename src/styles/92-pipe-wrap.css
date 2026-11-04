@@ -4,11 +4,12 @@
  * ----------------------------------------------------------
  */
 
+/* No margin of its own: it sits in a Stack, whose gap spaces it. Every caller
+   used to cancel the 16px it carried with an inline style. */
 .pw-grid-2col {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: var(--sp-4);
-	margin-bottom: 16px;
 }
 
 @media (max-width: 480px) {
@@ -55,6 +56,10 @@
 
 .pw-formula-wrap {
 	padding: 0 16px 14px;
+}
+/* The first note under a block of figures, set off from the last row. */
+.pw-formula-wrap--lead {
+	margin-top: var(--sp-4);
 }
 
 .pw-formula-text {

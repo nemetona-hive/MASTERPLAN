@@ -72,7 +72,7 @@ export function PipeWrapCalculator() {
               </div>
               <div className="section-body">
                 <Stack className="section-pad" gap={3}>
-                  <div className="pw-grid-2col" style={{marginBottom: 0}}>
+                  <div className="pw-grid-2col">
                     <Stack gap={3}>
                       <NumInput
                         id="input-pipeDiam"
@@ -170,7 +170,7 @@ export function PipeWrapCalculator() {
             </Section>
 
             {/* ── details ── */}
-            <div className="section unboxed" style={{ marginTop: 'var(--sp-4)' }}>
+            <div className="section unboxed calc-details">
               <div className="section-head">
                 <span>Calculation Details</span>
               </div>
@@ -264,7 +264,7 @@ export function PipeWrapCalculator() {
             </div>
           </Stack>
 
-          <div className="u-sticky u-sticky-top" style={{ marginTop: 'var(--sticky-offset)', top: '20px' }}>
+          <div className="result-sticky">
             <div className="result-card">
               <div className="result-card-primary">
               <span className="result-card-title">Final length needed</span>

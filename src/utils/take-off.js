@@ -48,6 +48,9 @@ const supplied = value => {
    decimals because a cubic metre is a big unit and the third decimal is a
    litre; mass and money keep two. Done here so every renderer prints the same
    number rather than each rounding its own way. */
+/* Floating-point slack: 10 m² × 10 mm × 2.2 kg is 220.00000000000003 kg, and
+   a plain ceiling turned the 11 bags it fills into 12. */
+const EPS = 1e-6;
 const round = (value, places) => {
   const f = 10 ** places;
   return Math.round(value * f) / f;
@@ -94,7 +97,7 @@ export function buildTakeOff(fields) {
   /* Ceiling, because you cannot buy 0.4 of a bag. The two figures are both
      printed: `exact` is what the pour needs and `toBuy` is what leaves the
      merchant, and the gap between them is the offcut of this page. */
-  const toBuy = Math.ceil(exact);
+  const toBuy = exact > 0 ? Math.ceil(exact - EPS) : 0;
 
   const price = num(bagPrice);
   const total = toBuy > 0 && price > 0 ? toBuy * price : null;

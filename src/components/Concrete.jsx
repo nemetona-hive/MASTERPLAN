@@ -1,4 +1,4 @@
-import { useSessionState } from "../utils/session-state.js";
+import { SessionDraftContext, useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
 import { Icon, NumInput, Row, SegGroup, Stack, useTimedState } from "../shared.jsx";
 import { ManagePresetsButton, PresetField, PresetManager, presetHeader, usePresetLibrary } from "./PresetLibrary.jsx";
@@ -40,61 +40,61 @@ export const CONCRETE_LIBRARY = {
   note: "Consumption is the maker's kg per m² per 1 mm of layer."
 };
 
+const KEY = name => `Concrete.jsx:${name}`;
+/* The two switches, and every typed field. All of them live in one `job`
+   object, so reset, the model call and the "anything typed yet" check read
+   one list rather than repeating fourteen names each. */
+const MODES = { areaMode: "direct", thickMode: "avg" };   // "direct" | "dims", "avg" | "corners"
+const INPUTS = ["areaManual", "lenMm", "widMm", "avgH", "ca", "cb", "cc", "cd", "rate", "bagKg", "bagPrice"];
+const blankJob = () => ({ ...MODES, ...Object.fromEntries(INPUTS.map(name => [name, ""])) });
+/* A field is empty only when nothing is in it: 0 is a value (a corner of
+   0 mm is a real measurement, and the model asks for it). */
+const empty = value => value === "" || value === null || value === undefined;
+
+/* Before `job`, each field was its own draft under these keys. A project saved
+   then opens with them gathered into one, and the old keys are dropped from
+   the drafts so they are not saved again beside it. */
+const LEGACY = [...Object.keys(MODES), ...INPUTS];
+function legacyJob(drafts) {
+  if (!drafts || !LEGACY.some(name => drafts.has(KEY(name)))) return null;
+  const job = blankJob();
+  for (const name of LEGACY) if (drafts.has(KEY(name))) job[name] = drafts.get(KEY(name));
+  return job;
+}
+
 export function SheetConcrete() {
-  const [areaMode,  setAreaMode]  = useSessionState("Concrete.jsx:areaMode", "direct"); // "direct" | "dims"
-  const [thickMode, setThickMode] = useSessionState("Concrete.jsx:thickMode", "avg");    // "avg" | "corners"
+  const drafts = React.useContext(SessionDraftContext);
+  const [storedJob, setJob] = useSessionState(KEY("job"), () => legacyJob(drafts) || blankJob());
+  React.useEffect(() => { if (drafts) for (const name of LEGACY) drafts.delete(KEY(name)); }, [drafts]);
+  const job = { ...blankJob(), ...(storedJob && typeof storedJob === "object" ? storedJob : {}) };
+  const set = name => value => setJob(current => ({ ...current, [name]: value }));
+  const { areaMode, thickMode } = job;
 
-  // Area inputs
-  const [areaManual, setAreaManual] = useSessionState("Concrete.jsx:areaManual", "");
-  const [lenMm,      setLenMm]      = useSessionState("Concrete.jsx:lenMm", "");
-  const [widMm,      setWidMm]      = useSessionState("Concrete.jsx:widMm", "");
-
-  // Thickness inputs
-  const [avgH, setAvgH] = useSessionState("Concrete.jsx:avgH", "");
-  const [ca,   setCa]   = useSessionState("Concrete.jsx:ca", "");
-  const [cb,   setCb]   = useSessionState("Concrete.jsx:cb", "");
-  const [cc,   setCc]   = useSessionState("Concrete.jsx:cc", "");
-  const [cd,   setCd]   = useSessionState("Concrete.jsx:cd", "");
-
-  // Consumption & packaging
-  const [rate,     setRate]     = useSessionState("Concrete.jsx:rate", "");
-  const [bagKg,    setBagKg]    = useSessionState("Concrete.jsx:bagKg", "");
-  const [bagPrice, setBagPrice] = useSessionState("Concrete.jsx:bagPrice", "");
-
-  /* Reset arms on the first click and fires on the second. useTimedState is
-     already how this file holds transient UI state, and it disarms itself, so
-     a click made and thought better of expires on its own. */
-  const [resetArmed,   armReset, disarmReset] = useTimedState(false, 4000);
-
-  const [activePreset, setActivePreset] = useSessionState("Concrete.jsx:activePreset", null);
+  const [resetArmed, armReset, disarmReset] = useTimedState(false, 4000);
+  const [activePreset, setActivePreset] = useSessionState(KEY("activePreset"), null);
   const library = usePresetLibrary(CONCRETE_LIBRARY, {
     active: activePreset, setActive: setActivePreset,
-    onApply: values => { setRate(values.rate); setBagKg(values.bagKg); setBagPrice(values.bagPrice); }
+    onApply: values => setJob(current => ({ ...current, ...values }))
   });
 
-  const resetAll = () => {
-    setAreaManual("");
-    setLenMm("");
-    setWidMm("");
-    setAvgH("");
-    setCa(""); setCb(""); setCc(""); setCd("");
-    setRate("");
-    setBagKg("");
-    setBagPrice("");
+  /* Reset arms on the first click and fires on the second, and disarms itself
+     after a while, so a click thought better of expires on its own. It clears
+     every typed field and keeps the two switches where they are. */
+  const handleReset = () => {
+    if (!resetArmed) { armReset(true); return; }
+    disarmReset();
+    setJob(current => ({ ...blankJob(), areaMode: current.areaMode, thickMode: current.thickMode }));
     setActivePreset(null);
   };
 
-  const handleReset = () => {
-    if (!resetArmed) {
-      armReset(true);
-      return;
-    }
-    disarmReset();
-    resetAll();
-  };
-
   /* A hand edit means the values are no longer the preset's. */
-  const productChange = (current, set) => v => { if (v !== current) library.edited(); set(v); };
+  const productChange = name => v => { if (v !== job[name]) library.edited(); set(name)(v); };
+
+  const hasAnyInput = INPUTS.some(name => !empty(job[name]));
+  const req = name => hasAnyInput && empty(job[name]);
+  const num = (name, label, min, id) => (
+    <NumInput id={id} label={label} value={job[name]} min={min} onChange={set(name)} req={req(name)} />
+  );
 
   /* ── Derived values ────────────────────────────────────────────────────────
    *
@@ -105,12 +105,7 @@ export function SheetConcrete() {
    * are real answers to different questions, and a screen showing one while a
    * printout showed the other is how somebody buys the wrong amount of
    * concrete. One model, and the sheet reads the same object. */
-  const takeOff = buildTakeOff({
-    areaMode, areaManual, lenMm, widMm,
-    thickMode, avgH, ca, cb, cc, cd,
-    rate, bagKg, bagPrice,
-    product: library.selected?.name || ""
-  });
+  const takeOff = buildTakeOff({ ...job, product: library.selected?.name || "" });
 
   /* Staged for printing, and printed from an EFFECT rather than the click:
      window.print() blocks on the dialog, so calling it in the handler opens a
@@ -123,25 +118,11 @@ export function SheetConcrete() {
     return () => cancelAnimationFrame(frame);
   }, [printTakeOff]);
 
-  React.useEffect(() => { setPrintTakeOff(null); },
-    [areaMode, areaManual, lenMm, widMm, thickMode, avgH, ca, cb, cc, cd, rate, bagKg, bagPrice, activePreset, library.presets]);
+  React.useEffect(() => { setPrintTakeOff(null); }, [storedJob, activePreset, library.presets]);
 
-  const area = takeOff.area.value;
-  const computedDimsArea = takeOff.area.fromDims;
-  const computedAvgH = takeOff.thickness.average;
-  const diff = takeOff.thickness.difference;
-  const volume = takeOff.volume;
-  const mass = takeOff.mass;
-  const bagsExact = takeOff.bags.exact;
-  const bags = takeOff.bags.toBuy;
-  const totalPrice = takeOff.bags.total;
-
-
-  const hasAnyInput = Boolean(
-    areaManual || lenMm || widMm || 
-    avgH || ca || cb || cc || cd || 
-    rate || bagKg || bagPrice
-  );
+  /* Shown as the model rounded them, the same figures the printed sheet
+     states: area to 2 decimals, thickness and fall to 1. */
+  const { area, thickness, volume, mass, bags } = takeOff;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -162,28 +143,21 @@ export function SheetConcrete() {
                   
                   {/* Left Column: Floor Area */}
                   <Stack gap={3}>
-                    <SegGroup label="Floor area" value={areaMode} onChange={setAreaMode}
+                    <SegGroup label="Floor area" value={areaMode} onChange={set("areaMode")}
                       options={[["direct", "Enter area"], ["dims", "Dimensions"]]} />
 
                     <div className="concrete-split-content">
                       {areaMode === "direct" && (
-                        <NumInput
-                          id="input-slf-area"
-                          label="Area (m²)"
-                          value={areaManual}
-                          min={0}
-                          onChange={v => setAreaManual(String(v))}
-                          req={hasAnyInput && !areaManual}
-                        />
+                        num("areaManual", "Area (m²)", 0, "input-slf-area")
                       )}
 
                       {areaMode === "dims" && (
                         <Stack gap={3}>
-                          <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                            <NumInput id="input-slf-len" label="Length (mm)" value={lenMm} min={1} onChange={setLenMm} req={hasAnyInput && !lenMm} />
-                            <NumInput id="input-slf-wid" label="Width (mm)"  value={widMm} min={1} onChange={setWidMm} req={hasAnyInput && !widMm} />
+                          <div className="pw-grid-2col">
+                            {num("lenMm", "Length (mm)", 1, "input-slf-len")}
+                            {num("widMm", "Width (mm)", 1, "input-slf-wid")}
                           </div>
-                          <Row label="Calculated area" value={computedDimsArea.toFixed(2)} unit="m²" />
+                          <Row label="Calculated area" value={area.fromDims.toFixed(2)} unit="m²" />
                         </Stack>
                       )}
                     </div>
@@ -193,25 +167,20 @@ export function SheetConcrete() {
 
                   {/* Right Column: Layer Thickness */}
                   <Stack gap={3}>
-                    <SegGroup label="Layer thickness" value={thickMode} onChange={setThickMode}
+                    <SegGroup label="Layer thickness" value={thickMode} onChange={set("thickMode")}
                       options={[["avg", "Avg thickness"], ["corners", "4 corners"]]} />
 
                     <div className="concrete-split-content">
                       {thickMode === "avg" && (
-                        <NumInput id="input-slf-havg" label="Average thickness (mm)" value={avgH} min={1} onChange={setAvgH} req={hasAnyInput && !avgH} />
+                        num("avgH", "Average thickness (mm)", 1, "input-slf-havg")
                       )}
 
                       {thickMode === "corners" && (
-                        <Stack gap={3}>
-                          <div className="pw-grid-2col" style={{ marginBottom: "var(--sp-3)" }}>
-                            <NumInput id="input-slf-ca" label="Corner A (mm)" value={ca} min={0} onChange={setCa} req={hasAnyInput && !ca} />
-                            <NumInput id="input-slf-cb" label="Corner B (mm)" value={cb} min={0} onChange={setCb} req={hasAnyInput && !cb} />
-                          </div>
-                          <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                            <NumInput id="input-slf-cc" label="Corner C (mm)" value={cc} min={0} onChange={setCc} req={hasAnyInput && !cc} />
-                            <NumInput id="input-slf-cd" label="Corner D (mm)" value={cd} min={0} onChange={setCd} req={hasAnyInput && !cd} />
-                          </div>
-                        </Stack>
+                        <div className="pw-grid-2col">
+                          {["a", "b", "c", "d"].map(c => (
+                            <React.Fragment key={c}>{num(`c${c}`, `Corner ${c.toUpperCase()} (mm)`, 0, `input-slf-c${c}`)}</React.Fragment>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </Stack>
@@ -232,8 +201,8 @@ export function SheetConcrete() {
                       height: a .ctrl-dir in a column otherwise collapses. */}
                   <Stack gap={3} className="ctrl-list">
                     <PresetField library={library} field="rate" id="input-slf-rate" label="Consumption (kg/m²·mm)"
-                      className="num-input-wrap-relative" value={rate} min={0.1}
-                      onChange={productChange(rate, setRate)} req={hasAnyInput && !rate} />
+                      className="num-input-wrap-relative" value={job.rate} min={0.1}
+                      onChange={productChange("rate")} req={req("rate")} />
                     <ManagePresetsButton library={library} />
                   </Stack>
 
@@ -242,10 +211,10 @@ export function SheetConcrete() {
                   {/* Right: Packaging */}
                   <Stack gap={3}>
                     <div className={library.fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-slf-bagkg" label="Bag weight (kg)" value={bagKg} min={1} onChange={productChange(bagKg, setBagKg)} req={hasAnyInput && !bagKg} />
+                      <NumInput id="input-slf-bagkg" label="Bag weight (kg)" value={job.bagKg} min={1} onChange={productChange("bagKg")} req={req("bagKg")} />
                     </div>
                     <div className={library.fieldFlash ? "num-input-flash" : ""}>
-                      <NumInput id="input-slf-bagprice" label="Bag price (€)" value={bagPrice} min={0} onChange={productChange(bagPrice, setBagPrice)} />
+                      <NumInput id="input-slf-bagprice" label="Bag price (€)" value={job.bagPrice} min={0} onChange={productChange("bagPrice")} />
                     </div>
                   </Stack>
                 </div>
@@ -255,32 +224,28 @@ export function SheetConcrete() {
 
             {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
             {/* ── Calculations & Details ── */}
-            <div className="section unboxed" style={{ marginTop: 'var(--sp-4)' }}>
+            <div className="section unboxed calc-details">
               <div className="section-head">
                 <span>Calculation Details</span>
               </div>
               <div className="section-body">
                 <Stack className="section-pad" gap={1}>
-                  <Row label="Floor area"       value={area.toFixed(1)}              unit="m²" />
-                  <Row label="Avg thickness"    value={Math.round(computedAvgH)}     unit="mm" />
-                  {diff !== null && (
-                    <Row label="Height difference" value={Math.round(diff)}          unit="mm" />
+                  <Row label="Floor area" value={area.value.toFixed(2)} unit="m²" />
+                  <Row label="Avg thickness" value={String(thickness.average)} unit="mm" />
+                  {thickness.difference !== null && (
+                    <Row label="Height difference" value={String(thickness.difference)} unit="mm" />
                   )}
-                  <Row label="Volume"           value={volume > 0 ? volume.toFixed(3) : "0.000"} unit="m³" />
-                  <Row label="Total mix mass"   value={mass > 0 ? mass.toFixed(1) : "0.0"} unit="kg" />
-                  <Row 
-                    label="Exact bags calculated" 
-                    value={bagsExact > 0 ? bagsExact.toFixed(2) : "0.00"} 
-                    unit="pcs" 
-                  />
+                  <Row label="Volume" value={volume.toFixed(3)} unit="m³" />
+                  <Row label="Total mix mass" value={mass.toFixed(1)} unit="kg" />
+                  <Row label="Exact bags calculated" value={bags.exact.toFixed(2)} unit="pcs" />
 
-                  <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
+                  <div className="pw-formula-wrap pw-formula-wrap--lead">
                     <span className="pw-formula-text">
                       mass = area × avg thickness × consumption rate
                     </span>
                   </div>
 
-                  <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+                  <div className="pw-formula-wrap">
                     <span className="pw-formula-text">
                       Results are approximate — actual consumption may vary due to substrate absorption and mixing residue.
                     </span>
@@ -312,16 +277,16 @@ export function SheetConcrete() {
           </Stack>
 
           {/* Sticky Result Column */}
-          <div className="u-sticky u-sticky-top" style={{ marginTop: 'var(--sticky-offset)', top: '20px' }}>
+          <div className="result-sticky">
             <div className="result-card result-card--concrete">
               <div className="result-card-primary">
               <span className="result-card-title">Bags Needed</span>
               <span className="result-card-value">
-                {bags > 0 ? bags : "0"} 
+                {bags.toBuy}
                 <span className="result-card-unit">pcs</span>
               </span>
               <span className="result-card-note">
-                exact: {bagsExact > 0 ? bagsExact.toFixed(2) : "0.00"} pcs
+                exact: {bags.exact.toFixed(2)} pcs
               </span>
 
               </div>
@@ -330,10 +295,10 @@ export function SheetConcrete() {
               <div className="result-card-split">
                 <span className="result-card-title">Total Price</span>
                 <span className="result-card-value">
-                  {totalPrice !== null ? (
+                  {bags.total !== null ? (
                     <>
                       <span className="result-card-currency">€</span>
-                      <span>{eur(totalPrice)}</span>
+                      <span>{eur(bags.total)}</span>
                     </>
                   ) : "—"}
                 </span>

@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, fireEvent, screen, within } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
 import { SheetConcrete } from "../src/components/Concrete.jsx";
+import { DraftStore, SessionDraftContext } from "../src/utils/session-state.js";
 
 /* The page's own wiring: the two mode switches, the armed reset, and the
    result card. The arithmetic is `tests/take-off.test.js` — this asserts that
@@ -41,6 +42,37 @@ describe("the concrete page", () => {
     type("input-slf-len", 1500);
     type("input-slf-wid", 1300);
     expect(screen.getByText("Calculated area").closest("div").textContent).toContain("1.95");
+  });
+
+  it("shows area, thickness and fall as the printed sheet rounds them", () => {
+    // 20.25 m² showed as 20.3 and 12.5 mm as 13, while the sheet said 20.25 and 12,5.
+    render(<SheetConcrete />);
+    type("input-slf-area", "20.25");
+    click("4 corners");
+    for (const [id, v] of [["input-slf-ca", 10], ["input-slf-cb", 15], ["input-slf-cc", 10], ["input-slf-cd", 15]]) type(id, v);
+    const row = label => [...document.querySelectorAll(".data-row")]
+      .find(r => r.querySelector(".data-row-lbl")?.textContent === label).querySelector(".data-row-val").textContent;
+    expect(row("Floor area")).toBe("20.25");
+    expect(row("Avg thickness")).toBe("12.5");
+    expect(row("Height difference")).toBe("5");
+  });
+
+  it("takes a corner of 0 mm as a value, not a missing field", () => {
+    render(<SheetConcrete />);
+    click("4 corners");
+    type("input-slf-area", 20);
+    type("input-slf-ca", 0);
+    expect(field("input-slf-ca")).not.toHaveClass("num-input--req");
+    expect(field("input-slf-cb")).toHaveClass("num-input--req");
+  });
+
+  it("opens a project saved field by field, with the fields gathered into one", () => {
+    const drafts = new DraftStore([["Concrete.jsx:areaMode", "dims"], ["Concrete.jsx:lenMm", 5000], ["Concrete.jsx:rate", 2]]);
+    render(<SessionDraftContext.Provider value={drafts}><SheetConcrete /></SessionDraftContext.Provider>);
+    expect(field("input-slf-len").value).toBe("5000");
+    expect(field("input-slf-rate").value).toBe("2");
+    expect(drafts.has("Concrete.jsx:lenMm")).toBe(false);
+    expect(drafts.get("Concrete.jsx:job")).toMatchObject({ areaMode: "dims", lenMm: 5000, rate: 2 });
   });
 
   it("names the consumption preset and apply actions", () => {

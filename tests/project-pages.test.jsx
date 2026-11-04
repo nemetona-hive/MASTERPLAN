@@ -33,7 +33,8 @@ function draftKeysInSource() {
 describe("which page owns what", () => {
   it("gives every draft key in the source a page", () => {
     const keys = draftKeysInSource();
-    expect(keys.length).toBeGreaterThan(20);
+    // A floor, so a scanner that stopped finding keys cannot pass by finding none.
+    expect(keys.length).toBeGreaterThan(10);
     expect(keys.filter(key => !pageOfDraft(key))).toEqual([]);
   });
 

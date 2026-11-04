@@ -215,18 +215,18 @@ function CalculationDetails({ takeOff, room }) {
           {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
           <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
 
-          <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
+          <div className="pw-formula-wrap pw-formula-wrap--lead">
             <span className="pw-formula-text">
               Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness.
             </span>
           </div>
-          <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+          <div className="pw-formula-wrap">
             <span className="pw-formula-text">
               Tape covers board joints on the face layer{isRoom ? ", internal corners" : ""}{isRoom && room.ceiling ? " and the ceiling angle" : ""}.
             </span>
           </div>
           {glued && (
-            <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+            <div className="pw-formula-wrap">
               <span className="pw-formula-text">
                 Glued: boards stuck in dabs straight onto masonry, one layer. Adhesive covers the walls' net area; a ceiling is still screwed. An uneven wall takes more.
               </span>
@@ -467,7 +467,7 @@ export function SheetGypsum({ projectName = "" }) {
           <Stack gap={3} className="ctrl-list">
             <SegGroup label="What to board" value={mode} onChange={setMode}
               options={[["room", "Room"], ["wall", "Single wall"]]} />
-            <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+            <div className="pw-grid-2col">
               {mode === "room" ? <>
                 {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
                 {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
@@ -511,7 +511,7 @@ export function SheetGypsum({ projectName = "" }) {
             {/* Glued walls take no screws; a boarded ceiling still does. */}
             {(!glued || (mode === "room" && ceiling)) &&
               productNum(board, "screwRate", glued ? "Ceiling screws (pcs/m²)" : "Screws (pcs/m²)")}
-            <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+            <div className="pw-grid-2col">
               {productNum(board, "sheetPrice", "Sheet price (€)")}
               {num("waste", "Waste (%)", { max: 100 })}
             </div>
@@ -538,7 +538,7 @@ export function SheetGypsum({ projectName = "" }) {
           <Stack gap={3} className="ctrl-list">
             <PresetField library={filler} field="compoundRate" id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)"
               value={val("compoundRate")} onChange={productChange(filler, "compoundRate")} />
-            <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+            <div className="pw-grid-2col">
               {productNum(filler, "skimRate", "Per 1 mm (kg/m²)")}
               {productNum(filler, "bagKg", "Filler bag (kg)", { min: 0.1 })}
             </div>

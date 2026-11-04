@@ -254,6 +254,19 @@ the product's rate. All figures come from `utils/take-off.js`; the page and
 - The keys did not change: `DEFAULT_CONCRETE_PRESETS` / `concretePresets`
   (name, rate, bagKg, bagPrice), and the drafts `Concrete.jsx:presets` and
   `Concrete.jsx:activePreset`, so saved defaults and projects carry over.
+- **One `job` object** (`Concrete.jsx:job`) holds both switches and every
+  typed field, as Gypsum's does, so reset, the model call and the "anything
+  typed yet" check read one list. It replaced thirteen drafts of a field each;
+  a project saved with those opens with them gathered into `job`
+  (`legacyJob`), and the old keys are dropped. Reset clears the fields and
+  leaves the two switches. A field is empty only when nothing is in it: 0 is
+  a value, so a 0 mm corner is not marked as missing.
+- **The screen shows the model's rounding**, the figures the printed sheet
+  states: area to 2 decimals, average thickness and fall to 1. It used to
+  round again (20.25 m² read 20.3 on screen, 12.5 mm read 13).
+- **Bags round up with a tolerance** (`EPS` in `take-off.js`), as Gypsum's
+  sheets do: 10 m² × 10 mm × 2.2 kg is 220.00000000000003 kg in floating
+  point, and a plain ceiling bought 12 bags for a pour that fills 11.
 - Gone with the old system: its own copy of the dropdown, the "updated" tag
   that flashed in the section head, `NumInput`'s `note` (the preset's name
   under the field, Concrete's only), and `DetailSection`, which nothing else

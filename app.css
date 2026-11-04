@@ -3713,7 +3713,6 @@ input[type="range"]:focus-visible {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: var(--sp-4);
-	margin-bottom: 16px;
 }
 
 @media (max-width: 480px) {
@@ -3760,6 +3759,10 @@ input[type="range"]:focus-visible {
 
 .pw-formula-wrap {
 	padding: 0 16px 14px;
+}
+
+.pw-formula-wrap--lead {
+	margin-top: var(--sp-4);
 }
 
 .pw-formula-text {
@@ -3978,17 +3981,13 @@ input[type="range"]:focus-visible {
 	align-items: start;
 }
 
-.u-sticky {
+.calc-details { margin-top: var(--sp-4); }
+
+.result-sticky {
 	position: sticky;
 	z-index: 10;
-}
-
-.u-sticky-top {
-	top: 0;
-}
-
-.u-sticky-bottom {
-	bottom: 0;
+	top: var(--sp-5);
+	margin-top: var(--sticky-offset);
 }
 
 .result-card {

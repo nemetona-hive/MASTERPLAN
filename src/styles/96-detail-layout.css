@@ -64,18 +64,18 @@
    Stacked block flow is the correct layout for both orientations, and it is
    what `.data-preview` already computes to. */
 
-/* Sticky Utilities */
-.u-sticky {
+/* Calculation Details on the calculator pages (Concrete, Pipe Wrap): set
+   further off than the Stack gap, so the figures read apart from the inputs. */
+.calc-details { margin-top: var(--sp-4); }
+
+/* The result card's column on the calculator pages (Concrete, Pipe Wrap,
+   Timesheet): it follows the form down the page, level with its first
+   section's heading. Below the mobile breakpoint the card is a fixed bar. */
+.result-sticky {
 	position: sticky;
 	z-index: 10;
-}
-
-.u-sticky-top {
-	top: 0;
-}
-
-.u-sticky-bottom {
-	bottom: 0;
+	top: var(--sp-5);
+	margin-top: var(--sticky-offset);
 }
 
 /* Result Card / Band Styles */
