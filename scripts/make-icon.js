@@ -12,11 +12,14 @@
  * drift into two different marks:
  *
  *   masterplan.ico              the desktop shortcut, 7 frames
+ *   assets/favicon-{16,24,32,48,64}.png
+ *                               the favicon, one file per size the taskbar asks
+ *                               for — see FAVICONS below
  *   assets/icon-192.png         `any` — drawn as-is on whatever the OS gives it
  *   assets/icon-512.png         `any`, larger
  *   assets/icon-maskable-512.png  `maskable` — see the safe zone below
  *
- *   node scripts/make-icon.js            rebuild all four
+ *   node scripts/make-icon.js            rebuild them all
  *   node scripts/make-icon.js --deploy   also copy the .ico to %LOCALAPPDATA%
  *
  * Requires python3 with Pillow, which is what has FreeType bound to it here.
@@ -76,8 +79,21 @@ frames[-1].save("${path.join(ROOT, "masterplan.ico")}", format="ICO",
                 sizes=[(s, s) for s in SIZES], append_images=frames[:-1])
 print("Built masterplan.ico (" + ", ".join(str(s) for s in SIZES) + ")")
 
+# THE TASKBAR ICON IS THE FAVICON. run.sh opens an msedge --app window, and
+# Chromium gives that window the page's favicon, kept as a bitmap at the size
+# the screen asks for: 16, 24 or 32 px, more at a higher display scale. Offered
+# only the 192 px icon, it shrank that to 16 or 32 and Windows stretched the
+# result back up to the taskbar's size, which is what made it look soft. One
+# file per size, each the same tile as the .ico's frame, lets the browser pick
+# an exact match instead of resampling.
+FAVICONS = [16, 24, 32, 48, 64]
+
 import os
 ASSETS = "${path.join(ROOT, "assets")}"
+os.makedirs(ASSETS, exist_ok=True)
+for px in FAVICONS:
+    tile(px).save(os.path.join(ASSETS, f"favicon-{px}.png"))
+print("Built assets/favicon-" + ", ".join(str(s) for s in FAVICONS) + ".png")
 os.makedirs(ASSETS, exist_ok=True)
 BG = tuple(int("${BG}"[i:i+2], 16) for i in (1, 3, 5)) + (255,)
 
