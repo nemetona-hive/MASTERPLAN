@@ -272,6 +272,34 @@ the product's rate. All figures come from `utils/take-off.js`; the page and
   under the field, Concrete's only), and `DetailSection`, which nothing else
   used.
 
+## Pipe Wrap tool
+
+Wrap length round an insulated pipe: π × (pipe Ø + 2 × thickness), plus an
+overlap, less a gap. The figures come from `utils/pipe-wrap.js`
+(`buildPipeWrap`), which the page and its diagram both read; it takes typed
+text or numbers alike, and the page stores numbers only (the sliders included).
+
+- **The diagram** (`WrapDiagram` in the page) is drawn only once there is a
+  pipe: before that every figure in it would be a zero nobody entered. The
+  outer ring always fills the frame and the pipe is drawn in proportion
+  inside it, never above 80% of the ring (`PIPE_MAX`), so thin material still
+  shows as a band and its gap and overlap are visible. A pipe drawn too small
+  for its label inside is labelled under the ring.
+- **The gap and overlap** are wedges of the ring, each its share of the
+  circumference, and together never more than one turn (the model clamps
+  them): 150 mm of overlap on a 62.8 mm wrap is the full ring, not 2.4 turns
+  drawn out of sight.
+- **The sum** beside the ring is monospaced, so its width is known from its
+  length; a line too long for the frame is drawn condensed
+  (`lengthAdjust="spacingAndGlyphs"`) rather than cut off at the edge.
+- **Adjustments** start closed, since most wraps need neither. Closed, the
+  heading still says what is applied ("+30 mm overlap · −10 mm gap"), so an
+  overlap left from the last pipe cannot apply out of sight. Its number fields
+  are named by the labels beside them.
+- **Global Reset** asks first and clears all four fields, as on Concrete.
+- Colours and type are classes (`.pw-diag-*` in `92-pipe-wrap.css`), not
+  inline styles.
+
 ## Golden Ratio tool
 
 PHI = 1.6180339887499. Builds 7 descending steps: `base / PHI^n`.

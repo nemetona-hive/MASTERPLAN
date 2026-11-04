@@ -54,6 +54,59 @@
 	display: block;
 }
 
+/* The diagram's shapes and words (PipeWrapCalculator.jsx). Sizes are SVG
+   units, scaled with the drawing. */
+.pw-diag-ring {
+	fill: color-mix(in srgb, var(--border) 80%, transparent);
+	stroke: var(--text-subtle);
+	stroke-width: 0.5;
+}
+.pw-diag-gap,
+.pw-diag-key--gap {
+	fill: color-mix(in srgb, var(--text-muted) 40%, transparent);
+	stroke: var(--text-subtle);
+	stroke-width: 0.5;
+}
+.pw-diag-overlap,
+.pw-diag-key--overlap {
+	fill: color-mix(in srgb, var(--accent) 35%, transparent);
+	stroke: var(--accent);
+	stroke-width: 0.5;
+}
+.pw-diag-pipe {
+	fill: var(--bg);
+	stroke: var(--text-subtle);
+	stroke-width: 0.5;
+}
+.pw-diag-label,
+.pw-diag-line,
+.pw-diag-legend,
+.pw-diag-total {
+	font-family: var(--mono);
+	fill: var(--text-muted);
+}
+.pw-diag-label { font-size: 9px; }
+.pw-diag-line { font-size: 11px; }
+.pw-diag-legend { font-size: 10px; }
+.pw-diag-line--overlap,
+.pw-diag-legend--overlap { fill: var(--accent); }
+.pw-diag-total {
+	font-size: 14px;
+	font-weight: var(--fw-bold);
+	fill: var(--brand);
+}
+
+/* What the collapsed Adjustments section is still adding and taking off. */
+.pw-adj-summary {
+	margin-left: var(--sp-2);
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	text-transform: none;
+	letter-spacing: 0;
+	font-weight: var(--fw-reg);
+	color: var(--text-muted);
+}
+
 .pw-formula-wrap {
 	padding: 0 16px 14px;
 }

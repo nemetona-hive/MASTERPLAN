@@ -146,6 +146,76 @@ describe("the pipe wrap calculator", () => {
     });
   });
 
+  it("names the overlap and gap number fields by their labels", () => {
+    render(<PipeWrapCalculator />);
+    fireEvent.click(screen.getByText("Adjustments"));
+    expect(screen.getByLabelText("Overlap / extra (mm)").id).toBe("input-overlap-val");
+    expect(screen.getByLabelText("Gap / cutout (mm)").id).toBe("input-gap-val");
+  });
+
+  it("stores the slider's value as a number, as the field does", () => {
+    render(<PipeWrapCalculator />);
+    set("input-pipeDiam", 100);
+    fireEvent.click(screen.getByText("Adjustments"));
+    fireEvent.click(document.querySelector(".range-lock-btn"));
+    fireEvent.change(document.getElementById("input-overlap"), { target: { value: "50" } });
+    expect(document.getElementById("input-overlap-val").value).toBe("50");
+    expect(totalMm()).toBeCloseTo(circumference(100, 0) + 50, 1);
+  });
+
+  describe("the diagram", () => {
+    const texts = () => [...document.querySelectorAll(".pw-diag-svg text")];
+
+    it("is not drawn until there is a pipe, rather than drawing zeros", () => {
+      render(<PipeWrapCalculator />);
+      expect(document.querySelector(".pw-diag-svg")).toBeNull();
+      set("input-pipeDiam", 100);
+      expect(document.querySelector(".pw-diag-svg")).toBeTruthy();
+    });
+
+    it("condenses a sum too long for the frame instead of cutting it off", () => {
+      render(<PipeWrapCalculator />);
+      set("input-pipeDiam", "1125.5");
+      set("input-matThick", "112.5");
+      const sum = texts().find(t => t.textContent.startsWith("π"));
+      expect(sum.getAttribute("lengthAdjust")).toBe("spacingAndGlyphs");
+      set("input-pipeDiam", 100);
+      set("input-matThick", 10);
+      expect(texts().find(t => t.textContent.startsWith("π")).getAttribute("textLength")).toBeNull();
+    });
+
+    it("fills the frame with a thin pipe, and labels it under the ring when it is small inside", () => {
+      render(<PipeWrapCalculator />);
+      set("input-pipeDiam", 20);
+      expect(texts().some(t => t.textContent === "pipe")).toBe(true);
+      set("input-matThick", 50);
+      expect(texts().some(t => t.textContent === "pipe Ø20mm")).toBe(true);
+    });
+  });
+
+  describe("the reset", () => {
+    it("asks first, then clears every field", () => {
+      render(<PipeWrapCalculator />);
+      set("input-pipeDiam", 100);
+      set("input-matThick", 10);
+      fireEvent.click(screen.getByText("Global Reset"));
+      expect(document.getElementById("input-pipeDiam").value).toBe("100");
+      fireEvent.click(screen.getByText("Confirm reset?"));
+      expect(document.getElementById("input-pipeDiam").value).toBe("");
+      expect(document.getElementById("input-matThick").value).toBe("");
+      expect(card().textContent).toContain("Enter the pipe outer diameter.");
+    });
+  });
+
+  it("says on the closed Adjustments section what it is still adding", () => {
+    render(<PipeWrapCalculator />);
+    fireEvent.click(screen.getByText("Adjustments"));
+    set("input-overlap-val", 50);
+    set("input-gap-val", 20);
+    fireEvent.click(screen.getByText("Adjustments"));
+    expect(document.querySelector(".pw-adj-summary").textContent).toBe(" +50 mm overlap · −20 mm gap");
+  });
+
   it("shows centimetres beside the millimetres", () => {
     // The tape is in cm and the cut list is in mm; the page states both so
     // nobody divides by ten in their head at the wrong moment.

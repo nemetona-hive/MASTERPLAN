@@ -1,62 +1,112 @@
 import { useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
-import { parseMeasurement } from "../utils/measurements.cjs";
-import { NumInput, RangeSlider, Row, Section, Stack } from "../shared.jsx";
+import { Icon, NumInput, RangeSlider, Row, Section, Stack, useTimedState } from "../shared.jsx";
+import { buildPipeWrap } from "../utils/pipe-wrap.js";
 import { ProjectSection } from "./ProjectMenu.jsx";
 
 const PRESETS = [100, 125, 160, 200];
 const THICKNESS_PRESETS = [20, 30, 50, 100];
+
+/* The diagram's frame, in SVG units: the ring sits left, the sum right. */
+const VIEW_W = 420, CX = 100, CY = 90, RING = 72, TEXT_X = 230;
+const TURN = Math.PI * 2;
+/* A label fits inside the pipe only when the pipe is drawn at least this big;
+   a thick wrap on a thin pipe moves it under the ring instead. */
+const LABEL_INSIDE_R = 24;
+/* The pipe never takes more of the ring than this, so the wrap is always a
+   band you can see: thin material drawn to scale would be a hairline, and the
+   gap and overlap drawn on it would vanish under the pipe. */
+const PIPE_MAX = 0.8;
+
+/* The sum's lines are monospaced, so their width is their length times 0.6 of
+   the font size. A line that would run past the frame is drawn condensed to
+   fit rather than cut off at the edge. */
+const fit = (text, size) => {
+  const room = VIEW_W - TEXT_X - 6;
+  return text.length * size * 0.6 > room ? { textLength: room, lengthAdjust: "spacingAndGlyphs" } : {};
+};
+
+/* A wedge of the outer ring, from `start` round `span` radians. A full turn is
+   a circle: an arc whose ends meet draws nothing. */
+function Wedge({ start, span, className }) {
+  if (span <= 0) return null;
+  if (span >= TURN - 1e-6) return <circle cx={CX} cy={CY} r={RING} className={className} />;
+  const at = a => `${CX + RING * Math.cos(a)} ${CY + RING * Math.sin(a)}`;
+  const large = span > Math.PI ? 1 : 0;
+  return <path d={`M ${CX} ${CY} L ${at(start)} A ${RING} ${RING} 0 ${large} 1 ${at(start + span)} Z`} className={className} />;
+}
+
+/* The wrap drawn round its pipe, with the sum beside it. Drawn only once there
+   is a pipe: before that every figure in it would be a zero nobody entered. */
+function WrapDiagram({ wrap }) {
+  const { pipe: d, thickness: t, overlap: o, gap: g, base, total, angles } = wrap;
+  /* The outer ring always fills the frame, and the pipe is drawn in
+     proportion inside it, so a thin pipe is as readable as a thick one. */
+  const rPipe = RING * Math.min(PIPE_MAX, (d / 2) / (d / 2 + t));
+  const top = -Math.PI / 2;
+  const lines = [
+    { text: `π × (${d} + 2×${t}) = ${base.toFixed(1)} mm`, className: "pw-diag-line", size: 11 },
+    o > 0 && { text: `+ overlap ${o} mm`, className: "pw-diag-line pw-diag-line--overlap", size: 11 },
+    g > 0 && { text: `− gap ${g} mm`, className: "pw-diag-line", size: 11 }
+  ].filter(Boolean);
+  const totalY = 28 + lines.length * 20 + 2;
+  const legendY = totalY + 14;
+  const keys = [g > 0 && ["gap", "pw-diag-key--gap"], o > 0 && ["overlap", "pw-diag-key--overlap"]].filter(Boolean);
+  const pipeLabel = `Ø${d}mm`;
+
+  return (
+    <svg viewBox={`0 0 ${VIEW_W} 180`} width="100%" className="pw-diag-svg" role="img"
+      aria-label={`Pipe wrap diagram: pipe ${d} mm, wrap length ${total.toFixed(1)} mm`}>
+      <circle cx={CX} cy={CY} r={RING} className="pw-diag-ring" />
+      <Wedge start={top} span={angles.gap} className="pw-diag-gap" />
+      <Wedge start={top + angles.gap} span={angles.overlap} className="pw-diag-overlap" />
+      <circle cx={CX} cy={CY} r={rPipe} className="pw-diag-pipe" />
+
+      {rPipe >= LABEL_INSIDE_R ? <>
+        <text x={CX} y={CY - 4} className="pw-diag-label" textAnchor="middle">pipe</text>
+        <text x={CX} y={CY + 8} className="pw-diag-label" textAnchor="middle">{pipeLabel}</text>
+      </> : (
+        <text x={CX} y={CY + RING + 14} className="pw-diag-label" textAnchor="middle">pipe {pipeLabel}</text>
+      )}
+
+      {lines.map((line, i) => (
+        <text key={i} x={TEXT_X} y={28 + i * 20} className={line.className} {...fit(line.text, line.size)}>{line.text}</text>
+      ))}
+      <text x={TEXT_X} y={totalY} className="pw-diag-total" {...fit(`= ${total.toFixed(1)} mm`, 14)}>= {total.toFixed(1)} mm</text>
+
+      {keys.map(([label, keyClass], i) => (
+        <g key={label}>
+          <rect x={TEXT_X} y={legendY + i * 16} width="9" height="9" rx="2" className={keyClass} />
+          <text x={TEXT_X + 13} y={legendY + 8 + i * 16} className={`pw-diag-legend pw-diag-legend--${label}`}>{label}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
 
 export function PipeWrapCalculator() {
   const [pipeDiam, setPipeDiam] = useSessionState("PipeWrapCalculator.jsx:pipeDiam", "");
   const [matThick, setMatThick] = useSessionState("PipeWrapCalculator.jsx:matThick", "");
   const [overlap, setOverlap] = useSessionState("PipeWrapCalculator.jsx:overlap", "");
   const [gap, setGap] = useSessionState("PipeWrapCalculator.jsx:gap", "");
+  const [adjOpen, setAdjOpen] = React.useState(false);
+  const [resetArmed, armReset, disarmReset] = useTimedState(false, 4000);
 
-  // The same strict parser as the other pages: blank, malformed and negative
-  // all read as "not entered" rather than being half-parsed by parseFloat.
-  const measure = v => { const n = parseMeasurement(v); return Number.isFinite(n) && n > 0 ? n : 0; };
-  const d = measure(pipeDiam);
-  const t = measure(matThick);
-  const o = measure(overlap);
-  const g = measure(gap);
-
-  /* Without a pipe there is nothing to wrap: overlap alone must not read as a
-     length to cut. */
-  const ready = d > 0;
-  const outer = d + 2 * t;
-  const base = Math.PI * outer;
-  const raw = base + o - g;
-  const total = ready ? Math.max(0, raw) : 0;
-  const gapTooLong = ready && raw < 0;
+  const wrap = buildPipeWrap({ pipeDiam, matThick, overlap, gap });
+  const { ready, pipe: d, thickness: t, overlap: o, gap: g, outer, base, total } = wrap;
   const dash = "—";
 
-  const [adjOpen, setAdjOpen] = React.useState(false);
-
-  // ── Diagram calculations ───────────────────────────────────────────────────
-  const cx = 100, cy = 90, maxR = 72;
-  const totalR_mm = (d / 2 + t) || 1;
-  const refR_mm = 110;
-  const scale = maxR / Math.max(refR_mm, totalR_mm);
-  const rP = (d / 2) * scale;
-  const rO = totalR_mm * scale;
-
-  const gapAngle = outer > 0 ? (g / (Math.PI * outer)) * Math.PI * 2 : 0;
-  const overAngle = outer > 0 ? (o / (Math.PI * outer)) * Math.PI * 2 : 0;
-
-  const getArcPath = (r, startA, endA) => {
-    const x1 = cx + r * Math.cos(startA), y1 = cy + r * Math.sin(startA);
-    const x2 = cx + r * Math.cos(endA), y2 = cy + r * Math.sin(endA);
-    const lg = (endA - startA) > Math.PI ? 1 : 0;
-    return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${lg} 1 ${x2} ${y2} Z`;
+  /* Reset arms on the first click and fires on the second, as on the other
+     calculators, and disarms itself after a while. */
+  const handleReset = () => {
+    if (!resetArmed) { armReset(true); return; }
+    disarmReset();
+    setPipeDiam(""); setMatThick(""); setOverlap(""); setGap("");
   };
 
-  // Text vertical positions
-  const ty1 = 28;
-  const ty2 = ty1 + 20;
-  const ty3 = ty2 + (o > 0 ? 20 : 0);
-  const tyTotal = ty1 + (o > 0 ? 20 : 0) + (g > 0 ? 20 : 0) + 22;
-  const tyLegend = tyTotal + 14;
+  /* Collapsed, the section still says what it is adding and taking off: an
+     overlap left in from the last pipe would otherwise apply out of sight. */
+  const adjustments = [o > 0 && `+${o} mm overlap`, g > 0 && `−${g} mm gap`].filter(Boolean).join(" · ");
 
   return (
     <div className="page-scroll">
@@ -127,17 +177,18 @@ export function PipeWrapCalculator() {
             </div>
 
             {/* ── adjustments ── */}
-            <Section title="Adjustments" open={adjOpen} setOpen={setAdjOpen}>
+            <Section open={adjOpen} setOpen={setAdjOpen}
+              title={<>Adjustments{!adjOpen && adjustments && <span className="pw-adj-summary"> {adjustments}</span>}</>}>
               <Stack className="section-pad" gap={3}>
 
                 {/* overlap */}
                 <Stack direction="row" gap={3} className="pw-adj-row">
-                  <span className="ctrl-sublbl pw-adj-label">Overlap / extra (mm)</span>
+                  <label className="ctrl-sublbl pw-adj-label" htmlFor="input-overlap-val">Overlap / extra (mm)</label>
                   <RangeSlider
                     id="input-overlap" label="Overlap in millimetres"
                     min={0} max={200} step={5} value={overlap}
                     className="pw-adj-range"
-                    onChange={e => setOverlap(e.target.value)}
+                    onChange={e => setOverlap(Number(e.target.value))}
                   />
                   <NumInput
                     id="input-overlap-val"
@@ -150,12 +201,12 @@ export function PipeWrapCalculator() {
 
                 {/* gap */}
                 <Stack direction="row" gap={3} className="pw-adj-row">
-                  <span className="ctrl-sublbl pw-adj-label">Gap / cutout (mm)</span>
+                  <label className="ctrl-sublbl pw-adj-label" htmlFor="input-gap-val">Gap / cutout (mm)</label>
                   <RangeSlider
                     id="input-gap" label="Gap in millimetres"
                     min={0} max={200} step={5} value={gap}
                     className="pw-adj-range"
-                    onChange={e => setGap(e.target.value)}
+                    onChange={e => setGap(Number(e.target.value))}
                   />
                   <NumInput
                     id="input-gap-val"
@@ -182,77 +233,7 @@ export function PipeWrapCalculator() {
                     <Row label="Calculated total" value={ready ? total.toFixed(1) : dash} unit="mm" />
                   </div>
 
-                  {/* diagram */}
-                  <div className="pw-diag-wrap">
-                    <svg viewBox="0 0 420 180" width="100%" className="pw-diag-svg" role="img"
-                      aria-label={ready
-                        ? `Pipe wrap diagram: pipe ${d} mm, wrap length ${total.toFixed(1)} mm`
-                        : "Pipe wrap diagram: enter a pipe diameter to draw it"}>
-                      {/* Outer ring */}
-                      <circle cx={cx} cy={cy} r={rO}
-                        fill="color-mix(in srgb, var(--color-gray-light) 80%, transparent)"
-                        stroke="var(--color-gray)" strokeWidth="0.5"/>
-
-                      {/* Gap arc */}
-                      {g > 0 && (
-                        <path d={getArcPath(rO, -Math.PI / 2, -Math.PI / 2 + gapAngle)}
-                          fill="color-mix(in srgb, var(--color-gray-opa80) 40%, transparent)"
-                          stroke="var(--color-gray)" strokeWidth="0.5"/>
-                      )}
-
-                      {/* Overlap arc */}
-                      {o > 0 && (
-                        <path d={getArcPath(rO, -Math.PI / 2 + gapAngle, -Math.PI / 2 + gapAngle + overAngle)}
-                          fill="color-mix(in srgb, var(--color-blue) 35%, transparent)"
-                          stroke="var(--color-blue)" strokeWidth="0.5" opacity="0.9"/>
-                      )}
-
-                      {/* Pipe circle */}
-                      <circle cx={cx} cy={cy} r={rP}
-                        fill="var(--color-darkblue)"
-                        stroke="var(--color-gray)" strokeWidth="0.5"/>
-
-                      {/* Pipe labels */}
-                      <text x={cx} y={cy - 4} style={{ fontFamily: 'var(--mono)', fontSize: '9px', fill: 'var(--color-gray-opa80)' }} textAnchor="middle">pipe</text>
-                      <text x={cx} y={cy + 8} style={{ fontFamily: 'var(--mono)', fontSize: '9px', fill: 'var(--color-gray-opa80)' }} textAnchor="middle">Ø{d}mm</text>
-
-                      {/* Calculation lines */}
-                      <text x="230" y={ty1} style={{ fontFamily: 'var(--mono)', fontSize: '11px', fill: 'var(--color-gray-opa80)' }}>
-                        π × ({d} + 2×{t}) = {base.toFixed(1)} mm
-                      </text>
-                      {o > 0 && (
-                        <text x="230" y={ty2} style={{ fontFamily: 'var(--mono)', fontSize: '11px', fill: 'var(--color-blue)' }}>
-                          + overlap {o} mm
-                        </text>
-                      )}
-                      {g > 0 && (
-                        <text x="230" y={ty3} style={{ fontFamily: 'var(--mono)', fontSize: '11px', fill: 'var(--color-gray-opa80)' }}>
-                          − gap {g} mm
-                        </text>
-                      )}
-                      <text x="230" y={tyTotal} style={{ fontFamily: 'var(--mono)', fontSize: '14px', fontWeight: 700, fill: 'var(--color-primary)' }}>
-                        = {total.toFixed(1)} mm
-                      </text>
-
-                      {/* Legend */}
-                      {g > 0 && (
-                        <g>
-                          <rect x="230" y={tyLegend} width="9" height="9" rx="2"
-                            fill="color-mix(in srgb, var(--color-gray-opa80) 40%, transparent)"
-                            stroke="var(--color-gray)" strokeWidth="0.5"/>
-                          <text x="243" y={tyLegend + 8} style={{ fontFamily: 'var(--mono)', fontSize: '10px', fill: 'var(--color-gray-opa80)' }}>gap</text>
-                        </g>
-                      )}
-                      {o > 0 && (
-                        <g>
-                          <rect x="230" y={tyLegend + (g > 0 ? 16 : 0)} width="9" height="9" rx="2"
-                            fill="color-mix(in srgb, var(--color-blue) 35%, transparent)"
-                            stroke="var(--color-blue)" strokeWidth="0.5"/>
-                          <text x="243" y={tyLegend + 8 + (g > 0 ? 16 : 0)} style={{ fontFamily: 'var(--mono)', fontSize: '10px', fill: 'var(--color-blue)' }}>overlap</text>
-                        </g>
-                      )}
-                    </svg>
-                  </div>
+                  {ready && <div className="pw-diag-wrap"><WrapDiagram wrap={wrap} /></div>}
 
                   <div className="pw-formula-wrap">
                     <span className="pw-formula-text">
@@ -261,6 +242,17 @@ export function PipeWrapCalculator() {
                   </div>
                 </Stack>
               </div>
+            </div>
+
+            {/* Ends the form, as on Concrete: below the breakpoint the result
+                column is a fixed bar, and clearing every field does not belong
+                pinned under the thumb. */}
+            <div className="form-action">
+              <button onClick={handleReset} onBlur={disarmReset}
+                className={"ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : "")}
+                aria-label={resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first"}>
+                <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : "Global Reset"}
+              </button>
             </div>
           </Stack>
 
@@ -273,7 +265,7 @@ export function PipeWrapCalculator() {
               <span className="result-card-detail">
                 {ready ? `${total.toFixed(1)} mm` : "Enter the pipe outer diameter."}
               </span>
-              {gapTooLong && (
+              {wrap.gapTooLong && (
                 <span role="status" className="input-error">The gap is longer than the wrap, so nothing is left to cut.</span>
               )}
             </div>
