@@ -52,12 +52,22 @@ describe("the gypsum page", () => {
     expect(sheetsNeeded()).toBe("2");
   });
 
-  it("fills sheet and consumables from a board preset", () => {
+  it("fills sheet and consumables from a board preset, and names it in the card", () => {
     render(<SheetGypsum />);
-    fireEvent.click(screen.getByText("Board Presets"));
-    fireEvent.click(screen.getAllByTitle("Apply these values to the calculator")[1]);
+    fireEvent.click(screen.getAllByTitle("Presets")[1]);   // on sheet length, the second list
+    fireEvent.pointerDown(screen.getByText("Gyproc GN 13"));
     expect(document.getElementById("input-gyp-sheetW").value).toBe("1200");
     expect(document.getElementById("input-gyp-screwRate").value).toBe("13");
+    expect(document.querySelector("#control-gyp-board .panel-preset-meta").textContent).toContain("Gyproc GN 13");
+  });
+
+  it("manages presets in a dialog, as Pattern Layouts does", () => {
+    render(<SheetGypsum />);
+    fireEvent.click(screen.getByText("Manage Presets"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).toContain("Manage Board Presets");
+    fireEvent.click(screen.getAllByTitle("Apply these values to the calculator")[0]);
+    expect(document.getElementById("input-gyp-sheetW").value).toBe("1250");
   });
 
   it("keeps printing disabled until there is a job", () => {

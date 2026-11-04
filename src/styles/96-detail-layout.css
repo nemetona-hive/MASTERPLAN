@@ -497,12 +497,11 @@
 	flex-wrap: wrap;
 	margin-top: var(--sp-2);
 }
-/* Gypsum in the Pattern Layouts shell (Gypsum.jsx). The control column is
-   384px, so the page's two-up input splits stack there as they do on a phone. */
-.gyp-control .concrete-split-wrap { grid-template-columns: 1fr; gap: var(--sp-4); }
-.gyp-control .concrete-split-divider { height: 1px; width: 100%; }
+/* Gypsum in the Pattern Layouts shell (Gypsum.jsx): form cards in the 384px
+   control column, so an opening's fields take a line of their own. */
 .gyp-control .gyp-open-fields { flex-basis: 100%; }
 .gyp-control .gyp-open-del { order: 1; margin-left: auto; }
+.gyp-control .gyp-open-row > .seg-group { flex: 1 1 0; min-width: 0; }
 .gyp-preview .gyp-split { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1025px) {
 	/* The result card is the split's second child so the phone bar still finds
@@ -640,6 +639,8 @@
 }
 
 /* ── Projects dialog (components/ProjectMenu.jsx) ── */
+/* The board table has seven columns; the default 680px squeezes them. */
+.mp-modal.gyp-preset-modal { max-width: min(960px, 100%); }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;

@@ -265,8 +265,11 @@
  * sliver instead of the standard 36px control height, its 8px radius
  * reading as a full pill against a bar that thin. A vertical list of
  * selectable entries (Guider's panel, and any future one like it)
- * needs .ctrl-list on the wrapping Stack. */
-.ctrl-list .ctrl-dir {
+ * needs .ctrl-list on the wrapping Stack. Direct children only: a
+ * segmented row nested in the list (Gypsum's Room | Single wall) is a row
+ * again, and stretching each of its segments to 100% pushed all but the
+ * first out of the track. */
+.ctrl-list > .ctrl-dir {
   flex: none;
   width: 100%;
 }

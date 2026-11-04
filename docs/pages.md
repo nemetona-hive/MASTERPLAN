@@ -65,7 +65,7 @@ a second layer. All figures, and the diagrams, come from
 
 - **Pattern Layouts' shell, not the calculator card.** The page is served in
   `main-data`: inputs in the 384px `.data-control` column, and the result card,
-  2D/3D layout, calculation details and board presets in `.data-preview`, so
+  2D/3D layout and calculation details in `.data-preview`, so
   the diagrams get the full remaining width (it was capped by `.page-inner`'s
   1024px). The preview holds a one-column `.layout-split` whose second child is
   the result card: that keeps the phone's bottom results bar, which is keyed to
@@ -129,6 +129,12 @@ a second layer. All figures, and the diagrams, come from
   sheet size and consumption. Knauf: 20 screws/m², Uniflott 0.25 kg/m².
   Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c), 0.34 kg/m²
   (74 m² per 25 kg). Single layer, makers' figures; sources in `config.js`.
+  Managed as Pattern Layouts manages its own: the inputs are `ControlPanel`
+  form cards; the **Board** card names the chosen preset in its header
+  (`SelectedPresetDetail`, now in `shared.jsx`); both sheet fields open a
+  `MaterialPresetDropdown`; and the table sits behind **Manage Presets**, a
+  modal shown only where `canSaveStaticDefaults()` holds. On GitHub Pages
+  presets can be picked but not edited, as on Pattern Layouts.
 
 ## Golden Ratio tool
 

@@ -932,6 +932,30 @@ export function SaveDefaultsButton({ status, onClick, disabled = false, errorMes
   );
 }
 
+const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/* The chosen preset, in a form card's header: its name and size. Shared by
+   Pattern Layouts and Gypsum. `preset` is { name, width, length }. */
+export function SelectedPresetDetail({ preset }) {
+  if (!preset) return null;
+  const dimensions = `${preset.width} × ${preset.length} mm`;
+  const dimensionSuffix = new RegExp(
+    `\\s*${escapeRegExp(preset.width)}\\s*[×x]\\s*${escapeRegExp(preset.length)}(?:\\s*mm)?\\s*$`,
+    "i"
+  );
+  const displayName = String(preset.name).replace(dimensionSuffix, "").trim();
+  const fullTitle = displayName ? `${displayName} — ${dimensions}` : dimensions;
+  return (
+    <div className="panel-preset-meta" role="status" aria-live="polite">
+      <span className="panel-preset-meta-label">Preset</span>
+      <span className="panel-preset-meta-value" title={fullTitle}>
+        {displayName && <><span>{displayName}</span><span aria-hidden="true"> · </span></>}
+        <span>{dimensions}</span>
+      </span>
+    </div>
+  );
+}
+
 export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1, title = "Material Presets" }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 

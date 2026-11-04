@@ -1,7 +1,7 @@
 import { useSessionState } from "../utils/session-state.js";
 import { parseMeasurement } from "../utils/measurements.cjs";
 import { React } from "../react-globals.js";
-import { DetailSection, Icon, NumInput, Row, SaveDefaultsButton, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, Modal, NumInput, Row, SaveDefaultsButton, SelectedPresetDetail, Stack, safeSaveStaticDefaults, useClickOutside, useDropdownKeyboard, useTimedState } from "../shared.jsx";
 import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
@@ -63,12 +63,13 @@ export function SheetGypsum() {
   const [presetError, setPresetError] = React.useState("");
   const [flashIdx, setFlashIdx] = useTimedState(null, 1200);
   const [fieldFlash, setFieldFlash] = useTimedState(false, 900);
-  const [showUpdated, setShowUpdated] = useTimedState(false, 2500);
   const [resetArmed, armReset, disarmReset] = useTimedState(false, 4000);
   const [saveStatus, setSaveStatus] = useTimedState("");
   const [saveError, setSaveError] = React.useState("");
-  const [showPresets, setShowPresets] = React.useState(false);
-  const presetAnchorRef = React.useRef(null);
+  const [showModal, setShowModal] = React.useState(false);
+  const [dropdown, setDropdown] = React.useState(null);   // "sheetW" | "sheetL" | null
+  const widthRef = React.useRef(null);
+  const lengthRef = React.useRef(null);
 
   const saveDefaults = async () => {
     setSaveStatus("saving", 0);
@@ -112,20 +113,29 @@ export function SheetGypsum() {
     setActivePreset(idx);
     setFlashIdx(idx);
     setFieldFlash(true);
-    setShowUpdated(true);
   };
 
   /* A hand edit of a product field means the values are no longer the
      preset's, so its name stops showing. */
   const productChange = name => v => { if (v !== val(name)) setActivePreset(null); set(name)(v); };
 
-  useClickOutside([presetAnchorRef], () => setShowPresets(false));
+  /* The dropdowns list only named presets, as Pattern Layouts' do, in the
+     { name, width, length } shape MaterialPresetDropdown reads. */
   const validPresets = presets.filter(p => p.name);
-  const { hoveredIndex, onKeyDown } = useDropdownKeyboard(
-    showPresets ? validPresets.length : 0,
-    idx => { applyPreset(validPresets[idx], presets.indexOf(validPresets[idx])); setShowPresets(false); },
-    () => setShowPresets(false)
-  );
+  const dropdownPresets = validPresets.map(p => ({ name: p.name, width: p.sheetW, length: p.sheetL }));
+  const selectedPreset = activePreset !== null && presets[activePreset]?.name ? presets[activePreset] : null;
+  const activeValid = selectedPreset ? validPresets.indexOf(selectedPreset) : null;
+  const pickPreset = idx => {
+    const p = validPresets[idx];
+    if (p) applyPreset(p, presets.indexOf(p));
+    setDropdown(null);
+  };
+  useClickOutside([widthRef, lengthRef], () => setDropdown(null), dropdown !== null);
+  const keyboard = {
+    sheetW: useDropdownKeyboard(dropdown === "sheetW" ? validPresets.length : 0, pickPreset, () => setDropdown(null)),
+    sheetL: useDropdownKeyboard(dropdown === "sheetL" ? validPresets.length : 0, pickPreset, () => setDropdown(null))
+  };
+
 
   // ── Derived values: all of it from the model ───────────────────────────────
   const takeOff = buildGypsumTakeOff({
@@ -166,174 +176,125 @@ export function SheetGypsum() {
   return (
     <>
       <Stack id="data-control" className="data-control gyp-control" gap={4}>
-        {/* ── Surface ── */}
-        <div className="section unboxed">
-          <div className="section-head"><span>Surface</span></div>
-          <div className="section-body">
-            <div className="concrete-split-wrap section-pad">
-              <Stack gap={3}>
-                <Seg label="What to board" value={mode} onChange={setMode}
-                  options={[["room", "Room"], ["wall", "Single wall"]]} />
-                <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                  {mode === "room" ? <>
-                    {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
-                    {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
-                  </> : <>
-                    {num("wallW", "Width (mm)", { min: 1, req: req("wallW") })}
-                    {num("wallH", "Height (mm)", { min: 1, req: req("wallH") })}
-                  </>}
-                </div>
-              </Stack>
-
-              <div className="concrete-split-divider" />
-
-              <Stack gap={3}>
-                {mode === "room" && <>
-                  <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
-                    options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
-                  {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
-                </>}
-              </Stack>
+        <ControlPanel id="control-gyp-surface" title="Surface" noToggle className="form-section-card">
+          <Stack gap={3} className="ctrl-list">
+            <Seg label="What to board" value={mode} onChange={setMode}
+              options={[["room", "Room"], ["wall", "Single wall"]]} />
+            <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+              {mode === "room" ? <>
+                {num("lenMm", "Length (mm)", { min: 1, req: req("lenMm") })}
+                {num("widMm", "Width (mm)", { min: 1, req: req("widMm") })}
+              </> : <>
+                {num("wallW", "Width (mm)", { min: 1, req: req("wallW") })}
+                {num("wallH", "Height (mm)", { min: 1, req: req("wallH") })}
+              </>}
             </div>
-          </div>
-        </div>
+            {mode === "room" && <>
+              <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
+                options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
+              {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
+            </>}
+          </Stack>
+        </ControlPanel>
 
-        {/* ── Openings ── */}
-        <div className="section unboxed">
-          <div className="section-head"><span>Openings (mm)</span></div>
-          <div className="section-body">
-            <Stack className="section-pad" gap={3}>
-              {openingRows.map((o, i) => {
-                const read = takeOff.openings.list[i];
-                const field = (key, label) => (
-                  <div className="gyp-open-field">
-                    <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{label}</label>
-                    <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
-                      className="num-input" value={o[key] ?? ""}
-                      aria-invalid={read?.status === "misfit" || read?.status === "invalid" ? true : undefined}
-                      onChange={e => updateOpening(o.id, key, e.target.value)} />
-                  </div>
-                );
-                return (
-                  <div key={o.id} className="gyp-open-row">
-                    <span className="gyp-open-tag">{read?.label}</span>
-                    {mode === "room" && (
-                      <Seg inline label={`${read?.label} wall`} value={o.wall} onChange={v => updateOpening(o.id, "wall", v)}
-                        options={WALLS.map(w => [w, w])} />
-                    )}
-                    <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
-                      aria-label={`Remove ${read?.label}`} title={`Remove ${read?.label}`}
-                      onClick={() => removeOpening(o.id)}>
-                      <Icon name="close" />
-                    </button>
-                    <div className="gyp-open-fields">
-                      {field("x", "From left")}
-                      {field("w", "Width")}
-                      {field("h", "Height")}
-                      {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
-                    </div>
-                  </div>
-                );
-              })}
-              <Stack direction="row" gap={2}>
-                <button type="button" className="ctrl-dir" onClick={() => addOpening("door")}>
-                  <Icon name="plus" /> Door
+        <ControlPanel id="control-gyp-openings" title="Openings (mm)" noToggle className="form-section-card">
+          <Stack gap={3} className="ctrl-list">
+          {openingRows.map((o, i) => {
+            const read = takeOff.openings.list[i];
+            const field = (key, label) => (
+              <div className="gyp-open-field">
+                <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{label}</label>
+                <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
+                  className="num-input" value={o[key] ?? ""}
+                  aria-invalid={read?.status === "misfit" || read?.status === "invalid" ? true : undefined}
+                  onChange={e => updateOpening(o.id, key, e.target.value)} />
+              </div>
+            );
+            return (
+              <div key={o.id} className="gyp-open-row">
+                <span className="gyp-open-tag">{read?.label}</span>
+                {mode === "room" && (
+                  <Seg inline label={`${read?.label} wall`} value={o.wall} onChange={v => updateOpening(o.id, "wall", v)}
+                    options={WALLS.map(w => [w, w])} />
+                )}
+                <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
+                  aria-label={`Remove ${read?.label}`} title={`Remove ${read?.label}`}
+                  onClick={() => removeOpening(o.id)}>
+                  <Icon name="close" />
                 </button>
-                <button type="button" className="ctrl-dir" onClick={() => addOpening("window")}>
-                  <Icon name="plus" /> Window
-                </button>
-              </Stack>
-            </Stack>
-          </div>
-        </div>
+                <div className="gyp-open-fields">
+                  {field("x", "From left")}
+                  {field("w", "Width")}
+                  {field("h", "Height")}
+                  {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
+                </div>
+              </div>
+            );
+          })}
+          <Stack direction="row" gap={2}>
+            <button type="button" className="ctrl-dir" onClick={() => addOpening("door")}>
+              <Icon name="plus" /> Door
+            </button>
+            <button type="button" className="ctrl-dir" onClick={() => addOpening("window")}>
+              <Icon name="plus" /> Window
+            </button>
+          </Stack>
+          </Stack>
+        </ControlPanel>
 
-        {/* ── Sheet & fixing ── */}
-        <div className="section unboxed">
-          <div className="section-head">
-            <div className="u-flex-row" style={{ flex: 1, alignItems: "center" }}>
-              <span>Sheet & Fixing</span>
-              <span className={"pw-updated-note" + (showUpdated ? " pw-updated-note-visible" : "")}>
-                <Icon name="check" /> updated
-              </span>
+        {/* Pattern Layouts' preset system: the chosen preset named in the card's
+            header, a preset list on both sheet fields, and the table behind
+            Manage Presets — which, as there, only appears where Save Defaults
+            can write (the local dev server). */}
+        <ControlPanel id="control-gyp-board" title="Board" noToggle className="form-section-card"
+          headerDetail={selectedPreset && <SelectedPresetDetail preset={{ name: selectedPreset.name, width: selectedPreset.sheetW, length: selectedPreset.sheetL }} />}>
+          <Stack gap={3} className="ctrl-list">
+            {[["sheetW", "Sheet width (mm)", "arrow-h", widthRef], ["sheetL", "Sheet length (mm)", "arrow-v", lengthRef]].map(([name, label, icon, ref]) => (
+              <div key={name} className={fieldFlash ? "num-input-flash" : ""} ref={ref} style={{ position: "relative" }}>
+                <NumInput id={`input-gyp-${name}`} label={label} labelIcon={icon} value={val(name)} min={100}
+                  onChange={productChange(name)} req={req(name)} showActionLabels
+                  presetsOpen={dropdown === name} presetHoveredIndex={keyboard[name].hoveredIndex}
+                  onTogglePresets={() => setDropdown(open => (open === name ? null : name))}
+                  onCommit={() => setDropdown(null)} onKeyDown={keyboard[name].onKeyDown} />
+                {dropdown === name && dropdownPresets.length > 0 && (
+                  <MaterialPresetDropdown anchorRef={ref} presets={dropdownPresets} activePreset={activeValid}
+                    onApply={(_, idx) => pickPreset(idx)} field={name === "sheetW" ? "width" : "length"}
+                    inputId={`input-gyp-${name}`} hoveredIndex={keyboard[name].hoveredIndex} title="Board Presets" />
+                )}
+              </div>
+            ))}
+            <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
+              options={[["V", "Vertical"], ["H", "Horizontal"]]} />
+            <Seg label="Layers" value={layers} onChange={setLayers}
+              options={[["1", "1 layer"], ["2", "2 layers"]]} />
+            {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
+              <button className="ctrl-dir form-section-action" onClick={() => setShowModal(true)}>
+                <Icon name="plus" /> Manage Presets
+              </button>
+            )}
+          </Stack>
+        </ControlPanel>
+
+        <ControlPanel id="control-gyp-fixing" title="Fixing & Price" noToggle className="form-section-card">
+          <Stack gap={3} className="ctrl-list">
+            {[["screwRate", "Screws (pcs/m²)", 0], ["compoundRate", "Compound (kg/m²)", 0]].map(([name, label, min]) => (
+              <div key={name} className={fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={min} onChange={productChange(name)} />
+              </div>
+            ))}
+            <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+              <div className={fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-bagKg" label="Bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
+              </div>
+              <div className={fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange("sheetPrice")} />
+              </div>
             </div>
-          </div>
-          <div className="section-body">
-            <div className="concrete-split-wrap section-pad">
-              <Stack gap={3}>
-                <div className={"num-input-wrap-relative" + (fieldFlash ? " num-input-flash" : "")} ref={presetAnchorRef}>
-                  <NumInput
-                    id="input-gyp-sheetW"
-                    label="Sheet width (mm)"
-                    note={activePreset !== null ? presets[activePreset]?.name : ""}
-                    value={val("sheetW")} min={100}
-                    onChange={productChange("sheetW")}
-                    req={req("sheetW")}
-                    presetsOpen={showPresets}
-                    presetHoveredIndex={hoveredIndex}
-                    showActionLabels
-                    onTogglePresets={() => setShowPresets(open => !open)}
-                    onCommit={() => setShowPresets(false)}
-                    onKeyDown={onKeyDown}
-                  />
-                  {showPresets && validPresets.length > 0 && (
-                    <div className="rate-presets-dropdown">
-                      <div className="rate-presets-header">Board Presets</div>
-                      <div id="input-gyp-sheetW-presets" className="rate-presets-list" role="listbox" aria-label="Board presets">
-                        {validPresets.map((p, idx) => {
-                          const originalIdx = presets.indexOf(p);
-                          return (
-                            <div key={idx} id={`input-gyp-sheetW-preset-${idx}`} role="option"
-                              aria-selected={activePreset === originalIdx}
-                              className={"rate-preset-item" + (activePreset === originalIdx ? " active" : "") + (hoveredIndex === idx ? " focused" : "")}
-                              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); applyPreset(p, originalIdx); setShowPresets(false); }}>
-                              <div className="rate-preset-info">
-                                <span className="rate-preset-name">{p.name}</span>
-                                <span className="rate-preset-meta">{p.screwRate} screws · {p.compoundRate} kg/m²</span>
-                              </div>
-                              <span className="rate-preset-val">{p.sheetW}×{p.sheetL}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className={fieldFlash ? "num-input-flash" : ""}>
-                  <NumInput id="input-gyp-sheetL" label="Sheet length (mm)" value={val("sheetL")} min={100}
-                    onChange={productChange("sheetL")} req={req("sheetL")} />
-                </div>
-                <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
-                  options={[["V", "Vertical"], ["H", "Horizontal"]]} />
-                <Seg label="Layers" value={layers} onChange={setLayers}
-                  options={[["1", "1 layer"], ["2", "2 layers"]]} />
-              </Stack>
+            {num("waste", "Waste (%)", { max: 100 })}
+          </Stack>
+        </ControlPanel>
 
-              <div className="concrete-split-divider" />
-
-              <Stack gap={3}>
-                <div className={fieldFlash ? "num-input-flash" : ""}>
-                  <NumInput id="input-gyp-screwRate" label="Screws (pcs/m²)" value={val("screwRate")} min={0}
-                    onChange={productChange("screwRate")} />
-                </div>
-                <div className={fieldFlash ? "num-input-flash" : ""}>
-                  <NumInput id="input-gyp-compoundRate" label="Compound (kg/m²)" value={val("compoundRate")} min={0}
-                    onChange={productChange("compoundRate")} />
-                </div>
-                <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-                  <div className={fieldFlash ? "num-input-flash" : ""}>
-                    <NumInput id="input-gyp-bagKg" label="Bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
-                  </div>
-                  <div className={fieldFlash ? "num-input-flash" : ""}>
-                    <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange("sheetPrice")} />
-                  </div>
-                </div>
-                {num("waste", "Waste (%)", { max: 100 })}
-              </Stack>
-            </div>
-          </div>
-        </div>
-
-        {presetError && <p role="alert" className="input-error">{presetError}</p>}
+        {presetError && !showModal && <p role="alert" className="input-error">{presetError}</p>}
 
         <div className="form-action">
           <button onClick={handleReset} onBlur={disarmReset}
@@ -406,56 +367,6 @@ export function SheetGypsum() {
                 </Stack>
               </div>
             </div>
-
-            {/* ── Board presets ── */}
-            <DetailSection title="Board Presets" open={false}>
-              <Stack gap={4}>
-                <Stack gap={3}>
-                  <div className="pw-preset-header pw-preset-grid--gypsum">
-                    <span>Product Name</span>
-                    {PRESET_COLUMNS.map(([key, head]) => <span key={key}>{head}</span>)}
-                    <span>&nbsp;</span>
-                  </div>
-                  {presets.map((p, idx) => (
-                    <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
-                      <div className="pw-preset-fields pw-preset-grid--gypsum">
-                        <div>
-                          <span className="pw-preset-lbl-hide">Product Name</span>
-                          <input id={`gyp-preset-name-${idx}`} aria-label={`Product name ${idx}`} type="text"
-                            className="num-input" value={p.name} onChange={e => updatePreset(idx, "name", e.target.value)} />
-                        </div>
-                        {PRESET_COLUMNS.map(([key, head, aria]) => (
-                          <div key={key}>
-                            <span className="pw-preset-lbl-hide">{head}</span>
-                            <input id={`gyp-preset-${key}-${idx}`} aria-label={`${aria} ${idx}`} type="text"
-                              inputMode="decimal" autoComplete="off" className="num-input"
-                              value={p[key]} onChange={e => updatePreset(idx, key, e.target.value)} />
-                          </div>
-                        ))}
-                        <div className="num-wrap" style={{ justifyContent: "center" }}>
-                          <span className="pw-preset-lbl-hide">&nbsp;</span>
-                          {activePreset === idx
-                            ? <div className="pw-preset-badge">active</div>
-                            : <button className={"ctrl-dir on pw-preset-apply" + (flashIdx === idx ? " pw-preset-flash" : "")}
-                                onClick={() => applyPreset(p, idx)} title="Apply these values to the calculator">
-                                <Icon name="check" /> {flashIdx === idx ? "Applied" : "Apply"}
-                              </button>}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </Stack>
-                <Stack direction="row" gap={2}>
-                  <button className="ctrl-dir" onClick={() => setPresets([...presets, { ...BLANK_PRESET }])}>
-                    <Icon name="plus" /> Add Row
-                  </button>
-                  <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveDefaults} />
-                </Stack>
-                <div className="pw-formula-text">
-                  Knauf and Gyproc rates are the makers' published single-layer figures. Check them against the system you are building.
-                </div>
-              </Stack>
-            </DetailSection>
           </Stack>
 
           <div className="gyp-result-wrap">
@@ -483,6 +394,58 @@ export function SheetGypsum() {
           </div>
         </div>
       </div>
+      {showModal && (
+        <Modal title="Manage Board Presets" onClose={() => setShowModal(false)} className="gyp-preset-modal">
+          <Stack gap={4}>
+            <Stack gap={3}>
+              <div className="pw-preset-header pw-preset-grid--gypsum">
+                <span>Product Name</span>
+                {PRESET_COLUMNS.map(([key, head]) => <span key={key}>{head}</span>)}
+                <span>&nbsp;</span>
+              </div>
+              {presets.map((p, idx) => (
+                <div key={idx} className={"pw-preset-row" + (activePreset === idx ? " pw-preset-active" : "")}>
+                  <div className="pw-preset-fields pw-preset-grid--gypsum">
+                    <div>
+                      <span className="pw-preset-lbl-hide">Product Name</span>
+                      <input id={`gyp-preset-name-${idx}`} aria-label={`Product name ${idx}`} type="text"
+                        className="num-input" value={p.name} onChange={e => updatePreset(idx, "name", e.target.value)} />
+                    </div>
+                    {PRESET_COLUMNS.map(([key, head, aria]) => (
+                      <div key={key}>
+                        <span className="pw-preset-lbl-hide">{head}</span>
+                        <input id={`gyp-preset-${key}-${idx}`} aria-label={`${aria} ${idx}`} type="text"
+                          inputMode="decimal" autoComplete="off" className="num-input"
+                          value={p[key]} onChange={e => updatePreset(idx, key, e.target.value)} />
+                      </div>
+                    ))}
+                    <div className="num-wrap" style={{ justifyContent: "center" }}>
+                      <span className="pw-preset-lbl-hide">&nbsp;</span>
+                      {activePreset === idx
+                        ? <div className="pw-preset-badge">active</div>
+                        : <button className={"ctrl-dir on pw-preset-apply" + (flashIdx === idx ? " pw-preset-flash" : "")}
+                            onClick={() => applyPreset(p, idx)} title="Apply these values to the calculator">
+                            <Icon name="check" /> {flashIdx === idx ? "Applied" : "Apply"}
+                          </button>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Stack>
+            <Stack direction="row" gap={2}>
+              <button className="ctrl-dir" onClick={() => setPresets([...presets, { ...BLANK_PRESET }])}>
+                <Icon name="plus" /> Add Row
+              </button>
+              <SaveDefaultsButton status={saveStatus} errorMessage={saveError} onClick={saveDefaults} />
+            </Stack>
+            <div className="pw-formula-text">
+              Fill preset data above and click "Apply" to update the calculator, or "Save Defaults" to persist.
+              Knauf and Gyproc rates are the makers' published single-layer figures. Check them against the system you are building.
+            </div>
+          </Stack>
+          {presetError && <p role="alert" className="input-error">{presetError}</p>}
+        </Modal>
+      )}
       <GypsumTakeOffSheet takeOff={printTakeOff} />
     </>
   );

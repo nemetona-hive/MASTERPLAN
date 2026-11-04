@@ -1,6 +1,6 @@
 import { React } from "../react-globals.js";
 import { LAYOUT_REGISTRY } from "../Controls.jsx";
-import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, Stack, clampNumber, isMobileViewport, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
+import { ControlPanel, Icon, MaterialPresetDropdown, NumInput, Row, SaveDefaultsButton, SelectedPresetDetail, Stack, clampNumber, isMobileViewport, safeSaveStaticDefaults, useClickOutside, useDocHistory, useDropdownKeyboard, useTimedState, Modal } from "../shared.jsx";
 import { LayoutEmptyState, LayoutPanel, LayoutVisualization, PanelSummary, PreviewSection } from "../Visualization.jsx";
 import { CutListSheet } from "./CutListSheet.jsx";
 import { parseMeasurement } from "../utils/measurements.cjs";
@@ -18,7 +18,6 @@ const clampOptionalDimension = (value, min, max) => {
   return Number.isFinite(n) ? clampNumber(n, min, max, min) : "";
 };
 const dimensionsMatch = (actual, expected) => parseMeasurement(actual) === parseMeasurement(expected);
-const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 function getSurfaceReadiness(sh) {
   const valid = {
@@ -639,26 +638,6 @@ function LargePreviewMaterialSpec({ sh, setSh, setMat, presets, activePreset, ap
       isLargePreview={true}
       idPrefix="large-"
     />
-  );
-}
-
-function SelectedPresetDetail({ preset }) {
-  if (!preset) return null;
-  const dimensions = `${preset.width} × ${preset.length} mm`;
-  const dimensionSuffix = new RegExp(
-    `\\s*${escapeRegExp(preset.width)}\\s*[×x]\\s*${escapeRegExp(preset.length)}(?:\\s*mm)?\\s*$`,
-    "i"
-  );
-  const displayName = String(preset.name).replace(dimensionSuffix, "").trim();
-  const fullTitle = displayName ? `${displayName} — ${dimensions}` : dimensions;
-  return (
-    <div className="panel-preset-meta" role="status" aria-live="polite">
-      <span className="panel-preset-meta-label">Preset</span>
-      <span className="panel-preset-meta-value" title={fullTitle}>
-        {displayName && <><span>{displayName}</span><span aria-hidden="true"> · </span></>}
-        <span>{dimensions}</span>
-      </span>
-    </div>
   );
 }
 
