@@ -66,6 +66,21 @@ describe("projects on the local server", () => {
     expect(fs.existsSync(path.join(dir(), "ghost.json"))).toBe(false);
   });
 
+  it("renames a project in place, keeping its file and values", () => {
+    request({ method: "POST", body: project() });
+    const res = request({ method: "PATCH", url: "/api/projects/kitchen", body: { name: "  Kitchen   floor 2 " } });
+    expect(res.code).toBe(200);
+    expect(res.json).toMatchObject({ id: "kitchen", name: "Kitchen floor 2" });
+    expect(request({ url: "/api/projects/kitchen" }).json.drafts).toEqual({ "Gypsum.jsx:mode": "room" });
+    expect(fs.readdirSync(dir())).toEqual(["kitchen.json"]);
+  });
+
+  it("refuses an empty new name, and a rename of nothing", () => {
+    request({ method: "POST", body: project() });
+    expect(request({ method: "PATCH", url: "/api/projects/kitchen", body: { name: " " } }).code).toBe(400);
+    expect(request({ method: "PATCH", url: "/api/projects/ghost", body: { name: "x" } }).code).toBe(404);
+  });
+
   it("moves a deleted project to the trash rather than erasing it", () => {
     request({ method: "POST", body: project() });
     expect(request({ method: "DELETE", url: "/api/projects/kitchen" }).code).toBe(200);

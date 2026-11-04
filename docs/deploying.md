@@ -150,7 +150,7 @@ public file set, so a project is never committed, never pushed, never served.
 | Piece | File |
 |---|---|
 | Store: atomic write (temp, fsync, rename, fsync dir), `0600`, symlinks refused, delete → `.trash/` | `scripts/project-store.js` |
-| Routes: `GET/POST /api/projects`, `GET/PUT/DELETE /api/projects/:id`, all behind `isLocalRequest()` — reads too, since a project is private | `scripts/local-dev-server.js` |
+| Routes: `GET/POST /api/projects`, `GET/PUT/PATCH/DELETE /api/projects/:id` (PATCH renames), all behind `isLocalRequest()` — reads too, since a project is private | `scripts/local-dev-server.js` |
 | Client API, `probeProjects()`, the autosaver | `src/utils/projects.js` |
 | Open / create / close / delete, autosave wiring, reopen-on-load | `src/useProjects.js` |
 | Header control and dialog | `src/components/ProjectMenu.jsx` |
@@ -180,7 +180,20 @@ With no project open, opening one would replace unsaved work, so it asks
 (two clicks). The last project open is remembered in `localStorage` and reopened
 on load.
 
-**Not built:** rename, restore points (MONEYFLOW's `.backups/`), and import /
+**Renaming** changes the name, never the id: the file keeps the slug it was
+created with, so `kitchen.json` can hold "Kitchen floor 2". That keeps an open
+project saving to the same file, and it has no rename-on-disk to get wrong. The
+open project is renamed *through its own autosave* (the PUT carries the new
+name) rather than by PATCH, because a separate request could race a save still
+in flight with the old name and lose; any other project is renamed by PATCH,
+which rewrites the name and keeps the values. A failed rename of the open
+project puts the old name back in the header.
+
+The dialog's two fields sit in `<form>`s so Enter submits them. App's global
+"Enter blurs the field" handler skips any input with a `.form`, because its
+`preventDefault()` would otherwise cancel the submit.
+
+**Not built:** restore points (MONEYFLOW's `.backups/`), and import /
 export. The trash is the only undo for a delete: move a file back out of
 `_personal/projects/.trash/` to restore it.
 

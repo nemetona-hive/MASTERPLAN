@@ -46,6 +46,7 @@ export const listProjects = () => call("GET");
 export const readProject = id => call("GET", id);
 export const createProject = project => call("POST", "", project);
 export const saveProject = (id, project) => call("PUT", id, project);
+export const renameProject = (id, name) => call("PATCH", id, { name });
 export const deleteProject = id => call("DELETE", id);
 
 /** Whether this page has a project server behind it. Never throws. */
@@ -90,6 +91,7 @@ export function createAutosaver({ save, read, onStatus = () => {}, delay = AUTOS
   let pending = false;
   let lastSent = null;
   let stopped = false;
+  let watcher = null;
 
   const run = async () => {
     timer = null;
@@ -106,6 +108,7 @@ export function createAutosaver({ save, read, onStatus = () => {}, delay = AUTOS
         onStatus(null);
       } catch (err) {
         onStatus(err);
+        watcher?.(err);
       } finally {
         inFlight = null;
       }
@@ -120,11 +123,13 @@ export function createAutosaver({ save, read, onStatus = () => {}, delay = AUTOS
       if (timer) clearTimeout(timer);
       timer = setTimeout(run, delay);
     },
-    async flush() {
+    /** `onError` also hears this flush's failure, for a caller that must know. */
+    async flush({ onError } = {}) {
       if (timer) { clearTimeout(timer); timer = null; }
       if (inFlight) { pending = true; await inFlight; }
       pending = false;
-      await run();
+      watcher = onError || null;
+      try { await run(); } finally { watcher = null; }
     },
     /** What is on disk now, so the next schedule() only saves a real change. */
     markSaved(body) { lastSent = JSON.stringify(body); },

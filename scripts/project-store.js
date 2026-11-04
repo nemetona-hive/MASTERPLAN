@@ -171,6 +171,14 @@ function createProjectStore({ rootDir, io = fs, now = () => new Date() }) {
       return write(id, project);
     },
 
+    /* Renames in place: the name changes, the filename (the id) does not, so
+       an open project keeps saving to the same file. Values are untouched. */
+    rename(id, body) {
+      const name = cleanName(isRecord(body) ? body.name : undefined);
+      const doc = readFile(id);
+      return write(id, { name, drafts: isRecord(doc.drafts) ? doc.drafts : {}, app: isRecord(doc.app) ? doc.app : {} });
+    },
+
     /** Moves the file to `.trash/`, stamped, rather than deleting it. */
     remove(id) {
       const file = fileOf(id);

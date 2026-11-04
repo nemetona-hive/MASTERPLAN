@@ -208,12 +208,14 @@ function App() {
     };
   }, []);
 
-  // Enter in any input commits by blurring the field (matches NumInput button intent)
+  /* Enter in any input commits by blurring the field (matches NumInput button
+     intent). Not in a <form>: there Enter submits, and preventDefault here
+     would cancel the submit (the project dialog's Create and Rename). */
   React.useEffect(() => {
     const onEnterCommit = e => {
       if (e.key !== "Enter" || e.defaultPrevented || e.isComposing) return;
       const target = e.target;
-      if (!(target instanceof HTMLInputElement)) return;
+      if (!(target instanceof HTMLInputElement) || target.form) return;
       e.preventDefault();
       target.blur();
     };
@@ -311,7 +313,7 @@ function App() {
             <div className="hdr-group">
               <ProjectMenu projects={projects.projects} project={projects.project} saveError={projects.saveError}
                 scratchHasValues={projects.scratchHasValues} onRefresh={projects.refresh}
-                onCreate={projects.create} onOpen={projects.open} onCloseProject={projects.close} onDelete={projects.remove} />
+                onCreate={projects.create} onOpen={projects.open} onCloseProject={projects.close} onDelete={projects.remove} onRename={projects.rename} />
             </div>
           </>}
           <span className="hdr-sep" aria-hidden="true" />

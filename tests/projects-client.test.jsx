@@ -104,7 +104,7 @@ describe("the project control", () => {
     projects: [{ id: "kitchen", name: "Kitchen", savedAt: "2026-11-04T10:00:00Z" }],
     project: null, saveError: "", scratchHasValues: false,
     onCreate: vi.fn(async () => {}), onOpen: vi.fn(async () => {}), onCloseProject: vi.fn(async () => {}),
-    onDelete: vi.fn(async () => {}), onRefresh: vi.fn(), ...over
+    onDelete: vi.fn(async () => {}), onRename: vi.fn(async () => {}), onRefresh: vi.fn(), ...over
   });
 
   it("says when no project is open", () => {
@@ -139,6 +139,32 @@ describe("the project control", () => {
     expect(p.onDelete).not.toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText("Confirm delete Kitchen"));
     await waitFor(() => expect(p.onDelete).toHaveBeenCalledWith("kitchen"));
+  });
+
+  it("renames in place: Enter saves, Escape cancels", async () => {
+    const p = props();
+    render(<ProjectMenu {...p} />);
+    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByLabelText("Rename Kitchen"));
+    const field = screen.getByLabelText("New name for Kitchen");
+    fireEvent.keyDown(field, { key: "Escape" });
+    expect(screen.queryByLabelText("New name for Kitchen")).toBe(null);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Rename Kitchen"));
+    fireEvent.change(screen.getByLabelText("New name for Kitchen"), { target: { value: "Kitchen 2" } });
+    fireEvent.submit(screen.getByLabelText("New name for Kitchen").closest("form"));
+    await waitFor(() => expect(p.onRename).toHaveBeenCalledWith("kitchen", "Kitchen 2"));
+    await waitFor(() => expect(screen.queryByLabelText("New name for Kitchen")).toBe(null));
+  });
+
+  it("keeps the field open and says why when a rename fails", async () => {
+    const p = props({ onRename: vi.fn(async () => { throw new Error("disk full"); }) });
+    render(<ProjectMenu {...p} />);
+    fireEvent.click(screen.getByText("No project"));
+    fireEvent.click(screen.getByLabelText("Rename Kitchen"));
+    fireEvent.submit(screen.getByLabelText("New name for Kitchen").closest("form"));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("disk full"));
+    expect(screen.getByLabelText("New name for Kitchen")).toBeTruthy();
   });
 
   it("names the open project and turns to an error when a save fails", () => {

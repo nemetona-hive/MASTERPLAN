@@ -1,7 +1,7 @@
 import { React } from "./react-globals.js";
 import {
   createAutosaver, createProject, deleteProject, lastProject, listProjects,
-  probeProjects, readProject, rememberProject, saveProject
+  probeProjects, readProject, rememberProject, renameProject, saveProject
 } from "./utils/projects.js";
 
 /**
@@ -117,6 +117,31 @@ export function useProjects({ drafts, appState, applyAppState }) {
       setProject(null);
       setSaveError("");
       rememberProject(null);
+    },
+    /* The open project is renamed through its own autosave: a separate
+       request could race a save still carrying the old name and lose. Any
+       other project is renamed on the server, which keeps its values. */
+    async rename(id, name) {
+      const clean = String(name || "").trim().replace(/\s+/g, " ");
+      if (!clean) throw new Error("Give the project a name");
+      if (current.current.project?.id === id) {
+        await saver.flush();
+        const before = current.current.project;
+        const renamed = { id, name: clean };
+        current.current.project = renamed;
+        setProject(renamed);
+        let failed = null;
+        await saver.flush({ onError: err => { failed = err; } });
+        if (failed) {
+          // Back to the name on disk, so the header does not claim one it lacks.
+          current.current.project = before;
+          setProject(before);
+          throw failed;
+        }
+      } else {
+        await renameProject(id, clean);
+      }
+      await refresh();
     },
     async remove(id) {
       if (project?.id === id) {

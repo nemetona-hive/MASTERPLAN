@@ -9,9 +9,10 @@ import { Icon, Modal, Stack, useTimedState } from "../shared.jsx";
  * keystroke is noise. It does turn to the danger colour, and say why in its
  * tooltip, when a save has failed — that is the one state you need to see.
  *
- * The dialog does four things: start a project from what is on screen, open
- * one, close the open one (its values stay on screen and stop saving), and
- * delete one (two clicks; the file goes to `_personal/projects/.trash/`).
+ * The dialog does five things: start a project from what is on screen, open
+ * one, close the open one (its values stay on screen and stop saving), rename
+ * one (in place: Enter saves, Escape cancels), and delete one (two clicks; the
+ * file goes to `_personal/projects/.trash/`).
  */
 
 const when = iso => {
@@ -21,11 +22,12 @@ const when = iso => {
     { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 };
 
-export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, onCloseProject, onDelete, onRefresh, scratchHasValues }) {
+export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, onCloseProject, onDelete, onRename, onRefresh, scratchHasValues }) {
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const [renaming, setRenaming] = React.useState(null);   // { id, name }
   // Two-click confirms, each disarming itself, as Global Reset does.
   const [armedDelete, armDelete, disarmDelete] = useTimedState(null, 4000);
   const [armedOpen, armOpen, disarmOpen] = useTimedState(null, 4000);
@@ -38,7 +40,7 @@ export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, on
     finally { setBusy(false); }
   };
 
-  const show = () => { setOpen(true); setError(""); onRefresh(); };
+  const show = () => { setOpen(true); setError(""); setRenaming(null); onRefresh(); };
   const create = async e => {
     e.preventDefault();
     if (await run(() => onCreate(name))) { setName(""); setOpen(false); }
@@ -49,6 +51,11 @@ export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, on
     if (!project && scratchHasValues && armedOpen !== id) { armOpen(id); return; }
     disarmOpen();
     if (await run(() => onOpen(id))) setOpen(false);
+  };
+  const rename = async e => {
+    e.preventDefault();
+    const { id, name: next } = renaming;
+    if (await run(() => onRename(id, next))) setRenaming(null);
   };
   const remove = async id => {
     if (armedDelete !== id) { armDelete(id); return; }
@@ -103,6 +110,17 @@ export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, on
               <ul className="project-list" aria-label="Saved projects">
                 {projects.map(p => (
                   <li key={p.id} className={"project-row" + (project?.id === p.id ? " is-current" : "")}>
+                    {renaming?.id === p.id ? (
+                      <form className="project-rename" onSubmit={rename}>
+                        <input className="num-input" type="text" autoComplete="off" maxLength={80} autoFocus
+                          aria-label={`New name for ${p.name}`} value={renaming.name}
+                          onChange={e => setRenaming({ id: p.id, name: e.target.value })}
+                          onKeyDown={e => { if (e.key === "Escape") { e.preventDefault(); setRenaming(null); } }} />
+                        <button type="submit" className="ts-btn ctl-sm" disabled={busy || !renaming.name.trim()}>Save</button>
+                        <button type="button" className="ts-btn ctl-ghost ctl-sm" disabled={busy}
+                          onClick={() => setRenaming(null)}>Cancel</button>
+                      </form>
+                    ) : (<>
                     <span className="project-name">{p.name}</span>
                     <span className="project-when">{p.unreadable ? "cannot be read" : when(p.savedAt)}</span>
                     <span className="project-actions">
@@ -113,12 +131,20 @@ export function ProjectMenu({ projects, project, saveError, onCreate, onOpen, on
                           {armedOpen === p.id ? "Replace screen?" : "Open"}
                         </button>
                       )}
+                      {!p.unreadable && (
+                        <button type="button" className="ts-btn ctl-ghost ctl-sm" disabled={busy}
+                          onClick={() => { setError(""); setRenaming({ id: p.id, name: p.name }); }}
+                          aria-label={`Rename ${p.name}`}>
+                          Rename
+                        </button>
+                      )}
                       <button type="button" className={"ts-btn ctl-ghost ctl-sm ctl-danger" + (armedDelete === p.id ? " is-armed" : "")}
                         disabled={busy} onClick={() => remove(p.id)} onBlur={disarmDelete}
                         aria-label={armedDelete === p.id ? `Confirm delete ${p.name}` : `Delete ${p.name}`}>
                         {armedDelete === p.id ? "Delete?" : "Delete"}
                       </button>
                     </span>
+                    </>)}
                   </li>
                 ))}
               </ul>

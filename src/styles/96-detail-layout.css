@@ -647,3 +647,5 @@
 .project-name { flex: 1 1 10rem; min-width: 0; color: var(--text); overflow-wrap: anywhere; }
 .project-when { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text-muted); }
 .project-actions { display: flex; gap: var(--sp-1); }
+.project-rename { flex: 1; display: flex; align-items: center; gap: var(--sp-1); min-width: 0; }
+.project-rename .num-input { flex: 1; min-width: 0; }

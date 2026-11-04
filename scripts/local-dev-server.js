@@ -330,6 +330,7 @@ function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
     if (!id && req.method === "POST") { readJson(req, res, body => projectReply(res, () => projects.create(body))); return; }
     if (id && req.method === "GET") { projectReply(res, () => projects.read(id)); return; }
     if (id && req.method === "PUT") { readJson(req, res, body => projectReply(res, () => projects.save(id, body))); return; }
+    if (id && req.method === "PATCH") { readJson(req, res, body => projectReply(res, () => projects.rename(id, body))); return; }
     if (id && req.method === "DELETE") { projectReply(res, () => projects.remove(id)); return; }
     reply(res, 405, { error: "Method not allowed" });
   }
