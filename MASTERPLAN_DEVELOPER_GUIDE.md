@@ -88,14 +88,21 @@ comes from the same script. A mark drawn in `index.html` instead is a taskbar
 that disagrees with the shortcut that opened it, which is how the old gold
 triangle lasted after the shortcut moved on.
 
-And it is **a vector**, `assets/icon.svg`, the glyph's own outline out of the
-vendored font, and the page's only favicon. Chromium draws a window's favicon
-at whatever size the taskbar and the display scale ask for; a bitmap is
-resampled to get there and looks soft. Both were tried: the 192 PNG, then a PNG
-per size (16 to 64), and the taskbar was still visibly softer than MONEYFLOW's,
-whose favicon is an SVG. Do not add a PNG favicon beside it: given the choice,
-the browser may pick the bitmap. Edge caches favicons, so after an icon change
-close the app window and reopen it (Ctrl+F5 if it persists).
+The favicon is a vector, `assets/icon.svg`, the glyph's own outline out of the
+vendored font, and the page's only favicon (given a PNG beside it the browser
+may pick the bitmap). But a vector does **not** make a plain `--app` window's
+taskbar icon sharp: Chromium rasterises the favicon at 16 px and Windows
+stretches that to the taskbar's size. A 192 PNG, a PNG per size and the SVG
+were all tried and all came out soft. MONEYFLOW's looks crisper only because
+its mark is a bare Λ that survives being 16 px; the compass does not.
+
+The sharp taskbar icon comes from **installing** the app: open
+`http://localhost:3005` in Edge, then *Apps → Install this site as an app*.
+The installed window takes its icon from the manifest's PNGs, which Edge turns
+into a multi-size `.ico`, and `run.sh` launches that Start Menu shortcut
+(`Nemetona MASTERPLAN.lnk`) when it finds one, falling back to `msedge --app`
+when it does not. Edge caches icons, so after an icon change uninstall and
+reinstall the app.
 
 The cost of hiding the console is that a failed start is silent — the browser
 opens and fails to connect, and that is the only signal. Run `./run.sh` from a

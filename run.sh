@@ -40,9 +40,30 @@ fi
 open_browser() {
     local url="http://localhost:3005"
     if grep -qi microsoft /proc/version 2>/dev/null || grep -qi wsl /proc/sys/kernel/osrelease 2>/dev/null; then
-        # From WSL the browser is on the Windows side, so it has to be launched
-        # through cmd.exe. --app drops the tab strip and address bar, which is
-        # what makes this feel like the app rather than a page.
+        # Prefer the installed web app, as MONEYFLOW's run.sh does. Edge writes
+        # a Start Menu shortcut when the site is installed ("Install this site
+        # as an app"), and that window takes its taskbar icon from the
+        # manifest's PNGs, which Edge turns into a multi-size .ico. A plain
+        # --app window takes the favicon instead, which Chromium rasterises at
+        # 16 px and Windows stretches to the taskbar's size: a vector favicon
+        # does not help, and the detailed compass comes out soft.
+        #
+        # Keyed on the shortcut, not on --app-id: the id is a hash that stops
+        # matching silently if the manifest changes. Searched two levels deep
+        # because browsers file installed apps under "Microsoft Edge Apps",
+        # "Chrome Apps" and the like.
+        local start_menu app_lnk="" candidate
+        start_menu="$(wslpath -u "$(cmd.exe /c 'echo %APPDATA%' 2>/dev/null | tr -d '\r')" 2>/dev/null)/Microsoft/Windows/Start Menu/Programs"
+        for candidate in "Nemetona MASTERPLAN" "MASTERPLAN"; do
+            app_lnk="$(find "$start_menu" -maxdepth 2 -iname "$candidate.lnk" -print -quit 2>/dev/null)"
+            [ -n "$app_lnk" ] && break
+        done
+        if [ -n "$app_lnk" ]; then
+            cmd.exe /c start "" "$(wslpath -w "$app_lnk")" >/dev/null 2>&1 && return
+        fi
+
+        # Not installed: from WSL the browser is on the Windows side, so it is
+        # launched through cmd.exe. --app drops the tab strip and address bar.
         cmd.exe /c "start msedge --app=$url" 2>/dev/null || \
         cmd.exe /c "start chrome --app=$url" 2>/dev/null || \
         cmd.exe /c "start $url" 2>/dev/null || \
