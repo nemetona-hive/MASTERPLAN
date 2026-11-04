@@ -15,8 +15,8 @@ const PRESET_COLUMNS = [
   ["sheetW", "Width mm", "Sheet width"],
   ["sheetL", "Length mm", "Sheet length"],
   ["screwRate", "Screws/m²", "Screws per m²"],
-  ["compoundRate", "kg/m²", "Compound per m²"],
-  ["bagKg", "Bag kg", "Bag weight"],
+  ["compoundRate", "Filler kg/m²", "Joint filler per m²"],
+  ["bagKg", "Filler bag kg", "Filler bag weight"],
   ["sheetPrice", "€ sheet", "Sheet price"]
 ];
 const BLANK_PRESET = { name: "", sheetW: "", sheetL: "", screwRate: "", compoundRate: "", bagKg: "", sheetPrice: "" };
@@ -105,7 +105,7 @@ export function SheetGypsum() {
     const required = values.slice(0, 5);
     const priceOk = values[5] === null || (Number.isFinite(values[5]) && values[5] >= 0);
     if (!required.every(v => Number.isFinite(v) && v > 0) || !priceOk) {
-      setPresetError("Fill in sheet size, screws, compound and bag weight before applying this preset.");
+      setPresetError("Fill in sheet size, screws, joint filler and bag weight before applying this preset.");
       return;
     }
     setPresetError("");
@@ -277,14 +277,14 @@ export function SheetGypsum() {
 
         <ControlPanel id="control-gyp-fixing" title="Fixing & Price" noToggle className="form-section-card">
           <Stack gap={3} className="ctrl-list">
-            {[["screwRate", "Screws (pcs/m²)", 0], ["compoundRate", "Compound (kg/m²)", 0]].map(([name, label, min]) => (
+            {[["screwRate", "Screws (pcs/m²)", 0], ["compoundRate", "Joint filler (kg/m²)", 0]].map(([name, label, min]) => (
               <div key={name} className={fieldFlash ? "num-input-flash" : ""}>
                 <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={min} onChange={productChange(name)} />
               </div>
             ))}
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
               <div className={fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-bagKg" label="Bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
+                <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
               </div>
               <div className={fieldFlash ? "num-input-flash" : ""}>
                 <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange("sheetPrice")} />
@@ -350,13 +350,13 @@ export function SheetGypsum() {
                   <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
                   <Row label={`With ${sheets.waste}% waste`} value={sheets.exact.toFixed(1)} unit="pcs" />
                   <Row label="Screws" value={screws.count} unit="pcs" />
-                  <Row label="Joint compound" value={compound.kg.toFixed(1)} unit="kg" />
-                  {compound.bagKg && <Row label={`Compound bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
+                  <Row label="Joint filler" value={compound.kg.toFixed(1)} unit="kg" />
+                  {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
                   <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
 
                   <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
                     <span className="pw-formula-text">
-                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and compound; a placed one also drops any piece wholly inside it.
+                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws and joint filler; a placed one also drops any piece wholly inside it.
                     </span>
                   </div>
                   <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>

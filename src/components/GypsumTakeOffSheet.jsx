@@ -152,7 +152,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
             )}
             {compound.rate !== null && (
               <tr>
-                <td>Joint compound</td>
+                <td>Joint filler</td>
                 <td>{nf(compound.kg, 1)} kg</td>
                 <td className="doc-sheet-strong">{compound.bagKg ? `${compound.bags} × ${nf(compound.bagKg)} kg` : `${nf(compound.kg, 1)} kg`}</td>
                 {sheets.price && <><td /><td /></>}
@@ -168,7 +168,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
         </table>
         <p className="doc-sheet-note">
           Sheets are counted from the layout with offcuts reused, so waste covers breakage rather
-          than cutting. Openings reduce screws and compound. A placed opening also removes any
+          than cutting. Openings reduce screws and joint filler. A placed opening also removes any
           piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
           price covers board only.
         </p>

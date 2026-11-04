@@ -161,7 +161,7 @@ var PAGES = [{
   id: "gypsum",
   label: "Gypsum",
   title: "Gypsum",
-  desc: "Lay out plasterboard on walls and ceilings and count sheets, screws, compound and tape.",
+  desc: "Lay out plasterboard on walls and ceilings and count sheets, screws, joint filler and tape.",
   icon: "gypsum"
 }, {
   id: "pipe-wrap",

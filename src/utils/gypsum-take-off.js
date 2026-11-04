@@ -14,7 +14,7 @@ import { parseMeasurement } from "./measurements.cjs";
  * offcut is reused when a later piece fits in it. Waste % is then added on top
  * for breakage and mistakes, not for cutting — the cutting is already counted.
  *
- * Openings are deducted from AREA (screws, compound). From SHEETS only when
+ * Openings are deducted from AREA (screws, joint filler). From SHEETS only when
  * placed, and then only the pieces lying wholly inside one: a piece the
  * opening merely crosses is hung whole and cut out, and the piece above a door
  * comes from the same board. Removing an opening's area from the sheet count

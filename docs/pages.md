@@ -51,7 +51,7 @@ All calculators and pages are stored as standalone files inside `src/components/
 | `golden-ratio` | `SheetGoldenRatio` | `components/GoldenRatio.jsx` | Calculates Phi sequences |
 | `pipe-wrap` | `PipeWrapCalculator` | `components/PipeWrapCalculator.jsx` | Pipe wrap length calculator with SVG diagram |
 | `concrete` | `SheetConcrete` | `components/Concrete.jsx` | Concrete consumption estimator |
-| `gypsum` | `SheetGypsum` | `components/Gypsum.jsx` | Plasterboard layout and take-off: sheets, screws, compound, tape |
+| `gypsum` | `SheetGypsum` | `components/Gypsum.jsx` | Plasterboard layout and take-off: sheets, screws, joint filler, tape |
 | `guider` | `SheetGuider` | `components/Guider.jsx` | Reference/guide pages (e.g. electrical wiring diagrams) with an entry list panel |
 | `timesheet` | `SheetTimesheet` | `components/Timesheet.jsx` | Work hours calculator |
 
@@ -88,14 +88,14 @@ a second layer. All figures, and the diagrams, come from
   window. Room walls are A back, then clockwise seen from above (B right, C
   front, D left), the order the 3D view folds them in. Labels (D1, W1…) are
   the model's (`readOpenings`). Every opening comes off the *area* (screws,
-  compound). Position is optional: an unplaced one only does that. A placed
+  joint filler). Position is optional: an unplaced one only does that. A placed
   one is drawn in 2D, 3D and print, and drops any piece lying **wholly**
   inside it from the drawing and the sheet count; a piece it only crosses is
   hung whole and cut out. One that runs off its wall is left out and named in
   the warning.
 - Walls are grouped (drawn once, labelled `Walls A, C`) only while identical:
   same size and the same openings in the same places.
-- **Two layers** double sheets, screws and compound. Tape is face layer only.
+- **Two layers** double sheets, screws and joint filler. Tape is face layer only.
   Tape = board joints from the layout, plus four internal corners and, with a
   ceiling, the ceiling angle.
 - The diagram is `LayoutVisualization`; the model emits rows in the
@@ -126,7 +126,10 @@ a second layer. All figures, and the diagrams, come from
   so a short wall prints short. A drawing never splits: one that does not fit
   moves to the next page whole. Colours live in `99-print.css`.
 - **Board presets** (`DEFAULT_GYPSUM_PRESETS`, save key `gypsumPresets`) carry
-  sheet size and consumption. Knauf: 20 screws/m², Uniflott 0.25 kg/m².
+  sheet size and consumption. "Joint filler" on screen and paper is the
+  taping and finishing filler, not adhesive (boards are screwed); the data
+  keeps the older name `compoundRate` / `compound`, since saved presets and
+  projects carry it. Knauf: 20 screws/m², Uniflott 0.25 kg/m².
   Gyproc: 13 screws/m² (44 per 2.88 m² board at 450 c/c), 0.34 kg/m²
   (74 m² per 25 kg). Single layer, makers' figures; sources in `config.js`.
   Managed as Pattern Layouts manages its own: the inputs are `ControlPanel`
