@@ -434,7 +434,6 @@ export function buildGypsumTakeOff(fields) {
       : offsetAsked > 0 && offsetLimit > 0 && !offsetFits
         ? `First panel offset must be less than the sheet ${fix === "V" ? "width" : "length"}; it is left out.` : null,
 
-    mode: room ? "room" : "wall",
     /* The box the 3D view folds the surfaces into, in mm. A single wall has
        no depth and no ceiling. */
     room: dimsReady
@@ -445,7 +444,7 @@ export function buildGypsumTakeOff(fields) {
     firstOffset: offset || null,
     fixing: glued ? "glue" : "screw",
     layers: layerCount,
-    sheet: { width: SW || null, length: SL || null, area: round(SW * SL / 1e6, 2) },
+    sheet: { width: SW || null, length: SL || null },
     surfaces: laidOut.map(s => ({
       id: s.id, label: s.label, width: s.w, height: s.h, count: s.count,
       walls: s.walls, openings: s.openings,
@@ -461,8 +460,7 @@ export function buildGypsumTakeOff(fields) {
     openings: {
       list: openingsRead,
       doors: counted.filter(o => o.kind === "door").length,
-      windows: counted.filter(o => o.kind === "window").length,
-      placed: placed.length
+      windows: counted.filter(o => o.kind === "window").length
     },
     sheets: {
       full: packed.whole * layerCount,
@@ -493,7 +491,6 @@ export function buildGypsumTakeOff(fields) {
       product: given(fillerProduct) ? fillerProduct : null,
       kg: round(compoundKg, 1),
       bagKg: bag || null,
-      bagsExact: round(bagsExact, 2),
       bags
     },
     tape: {
@@ -536,8 +533,8 @@ export function buildGypsumProjectTakeOff(entries) {
 
   const boards = byKey(ready, ({ takeOff: t }) => [t.product, t.sheet.width, t.sheet.length, t.sheets.price],
     ({ takeOff: t }) => ({ product: t.product, width: t.sheet.width, length: t.sheet.length, price: t.sheets.price,
-      layout: 0, exact: 0, rooms: [] }),
-    (g, { name, takeOff: t }) => { g.layout += t.sheets.layout; g.exact += t.sheets.exact; g.rooms.push(name); })
+      exact: 0, rooms: [] }),
+    (g, { name, takeOff: t }) => { g.exact += t.sheets.exact; g.rooms.push(name); })
     .map(g => {
       const toBuy = g.exact > 0 ? Math.ceil(g.exact - EPS) : 0;
       return { ...g, exact: round(g.exact, 2), toBuy, total: g.price ? round(toBuy * g.price, 2) : null };
@@ -560,12 +557,9 @@ export function buildGypsumProjectTakeOff(entries) {
     readyCount: ready.length,
     rooms: list.map(({ id, name, takeOff: t }) => ({
       id, name,
-      mode: t.mode,
       ready: t.ready,
-      issue: t.ready ? null : t.issue,
       net: t.ready ? t.area.net : 0,
       sheets: t.ready ? t.sheets.toBuy : 0,
-      exact: t.ready ? t.sheets.exact : 0,
       product: t.product,
       sheet: t.sheet,
       total: t.ready ? t.sheets.total : null
@@ -576,7 +570,6 @@ export function buildGypsumProjectTakeOff(entries) {
       net: round(sum(ready, t => t.area.net), 2)
     },
     boards,
-    sheets: boards.reduce((total, b) => total + b.toBuy, 0),
     screws: { count: sum(screwed, t => t.screws.count) },
     adhesive,
     filler,

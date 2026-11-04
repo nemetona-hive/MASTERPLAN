@@ -109,6 +109,12 @@ a second layer. All figures, and the diagrams, come from
     project sheet: rooms table and order first, then each finished room's own
     sheet on a page of its own (`GypsumProjectSheet`, `.gyp-print-room`).
     Both sheets carry the open project's name.
+  - **Every room is laid out on every render, but only once per change.**
+    Each room's take-off is remembered against the room object and the three
+    preset lists (a `WeakMap` in `SheetGypsum`). An edit replaces only its own
+    room's object, so typing in one room does not lay the others out again;
+    editing a preset list lays them all out, since product names come from it.
+    Keep room updates immutable, or the cache serves a stale take-off.
 - **The layout is the count.** Each surface is cut into lanes of board width
   (vertical fixing: columns up the wall; horizontal: rows along it), each lane
   into pieces, and the pieces are packed first-fit-decreasing back into stock

@@ -784,6 +784,22 @@ export function Row({ label, value, unit, hi, danger, hoverType, hoveredType, se
   );
 }
 
+/**
+ * A segmented choice: one `.ctrl-dir` per option in a `.seg-group` track, the
+ * chosen one `.on` and `aria-pressed`. `options` are [id, text] pairs.
+ * `inline` sizes the segments to their text, for a switch in a heading.
+ */
+export function SegGroup({ value, options, onChange, label, inline = false }) {
+  return (
+    <div className={"seg-group" + (inline ? " seg-group--inline" : "")} role="group" aria-label={label}>
+      {options.map(([id, text]) => (
+        <button key={id} type="button" className={"ctrl-dir" + (value === id ? " on" : "")}
+          aria-pressed={value === id} onClick={() => onChange(id)}>{text}</button>
+      ))}
+    </div>
+  );
+}
+
 // Stable visual identity for id-driven cards (A/B/C... + tone buckets)
 export function getLinkedCardTone(id) {
   const key = String(id || "").toLowerCase();

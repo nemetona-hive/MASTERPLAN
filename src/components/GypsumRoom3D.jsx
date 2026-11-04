@@ -1,4 +1,5 @@
 import { React } from "../react-globals.js";
+import { SegGroup } from "../shared.jsx";
 
 /*
  * The gypsum room in 3D, with CSS transforms and no 3D library.
@@ -159,12 +160,8 @@ export function GypsumRoom3D({ room, surfaces }) {
         </div>
       </div>
       <div className="gyp3d-controls">
-        <div className="seg-group seg-group--inline" role="group" aria-label="View from">
-          {[["above", "Above"], ["level", "Level"]].map(([id, text]) => (
-            <button key={id} type="button" className={"ctrl-dir" + (view === id ? " on" : "")} aria-pressed={view === id}
-              onClick={() => { setAnimate(true); setPitch(VIEWS[id]); }}>{text}</button>
-          ))}
-        </div>
+        <SegGroup inline label="View from" value={view} options={[["above", "Above"], ["level", "Level"]]}
+          onChange={id => { setAnimate(true); setPitch(VIEWS[id]); }} />
         <button type="button" className="ts-btn ctl-ghost" onClick={() => { setAnimate(true); setPitch(VIEWS.above); setYaw(DEFAULT_YAW); }}>
           Reset
         </button>

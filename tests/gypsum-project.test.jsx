@@ -154,6 +154,22 @@ describe("the gypsum page's rooms", () => {
     expect(document.querySelector("#control-gyp-board .panel-preset-meta").textContent).toContain("Gyproc GN 13");
   });
 
+  /* Take-offs are cached per room; a preset list edit must still reach the
+     rooms not on screen, since their product names come from it. */
+  it("renames a product in every room when its preset is renamed", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    fireEvent.click(screen.getAllByTitle("Presets")[0]);
+    fireEvent.pointerDown(screen.getByText("Gyproc GN 13"));
+    fireEvent.click(screen.getByText("Duplicate"));
+    expect(screen.getAllByText("Gyproc GN 13 1200 × 2600")).toHaveLength(1);
+    fireEvent.click(screen.getByLabelText("Manage board presets"));
+    fireEvent.change(document.getElementById("gyp-board-preset-name-1"), { target: { value: "Gyproc GN 13 Pro" } });
+    fireEvent.click(screen.getByLabelText("Close"));
+    expect(screen.getByText("Gyproc GN 13 Pro 1200 × 2600")).toBeTruthy();
+    expect(screen.queryByText("Gyproc GN 13 1200 × 2600")).toBe(null);
+  });
+
   it("resets the room on screen and leaves the others", () => {
     render(<SheetGypsum />);
     fillRoom(4000);

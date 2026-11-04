@@ -1,5 +1,6 @@
 import { ReactDOM } from "../react-globals.js";
 import { getBuildId } from "../shared.jsx";
+import { eur, mm as mmPlaces, nf } from "../utils/format.js";
 
 /**
  * The gypsum take-off as a printed document.
@@ -10,12 +11,27 @@ import { getBuildId } from "../shared.jsx";
  * `<body>` so print can hide the app by position.
  */
 
-const nf = (value, places = 0) =>
-  Number(value).toLocaleString("en-GB", { minimumFractionDigits: places, maximumFractionDigits: places });
-const mm = value =>
-  Number(value).toLocaleString("et-EE", { useGrouping: false, maximumFractionDigits: 1 });
-const eur = value =>
-  Number(value).toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* Board and opening sizes keep a half millimetre where one was typed. */
+const mm = value => mmPlaces(value, 1);
+
+/* The sheet's head: what it is, a line under it, and when and from which build
+   it was printed. The room sheet and the project sheet share it. */
+function DocHead({ title, sub }) {
+  const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+  const build = getBuildId();
+  return (
+    <header className="doc-sheet-head">
+      <div>
+        <h1 className="doc-sheet-title">{title}</h1>
+        <p className="doc-sheet-sub">{sub}</p>
+      </div>
+      <div className="doc-sheet-stamp">
+        <div>{printed}</div>
+        {build && <div>build {build}</div>}
+      </div>
+    </header>
+  );
+}
 
 /* One surface as drawn on paper: the model's piece rectangles in surface
    millimetres, scaled by the viewBox. Ink and stroke come from 99-print.css,
@@ -71,26 +87,13 @@ function SurfaceDrawing({ surface, orientation, widest }) {
    alone, the project sheet once per finished room. */
 function RoomTakeOff({ takeOff, title, projectName }) {
   const { area, sheet, surfaces, sheets, screws, compound, tape, product, layers, orientation, openings, fixing, adhesive } = takeOff;
-  const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
-  const build = getBuildId();
   const drawn = surfaces.filter(s => s.layout);
   const widest = Math.max(...drawn.map(s => s.width));
 
   return (
     <>
-      <header className="doc-sheet-head">
-        <div>
-          <h1 className="doc-sheet-title">Gypsum take-off{title ? ` — ${title}` : ""}</h1>
-          <p className="doc-sheet-sub">
-            {projectName ? `${projectName} · ` : ""}{nf(area.net, 2)} m² net · {mm(sheet.width)} × {mm(sheet.length)} mm
-            {product ? ` · ${product}` : ""}
-          </p>
-        </div>
-        <div className="doc-sheet-stamp">
-          <div>{printed}</div>
-          {build && <div>build {build}</div>}
-        </div>
-      </header>
+      <DocHead title={`Gypsum take-off${title ? ` — ${title}` : ""}`}
+        sub={`${projectName ? `${projectName} · ` : ""}${nf(area.net, 2)} m² net · ${mm(sheet.width)} × ${mm(sheet.length)} mm${product ? ` · ${product}` : ""}`} />
 
       <section className="doc-sheet-block">
         <h2 className="doc-sheet-h2">Surfaces</h2>
@@ -220,26 +223,14 @@ const baggedNeed = g => g.bagKg ? `${g.bags} × ${nf(g.bagKg)} kg` : `${nf(g.kg,
  */
 export function GypsumProjectSheet({ project, entries, projectName = "" }) {
   if (!project || !project.ready || !entries) return null;
-  const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
-  const build = getBuildId();
   const priced = project.boards.some(b => b.price);
   const blank = priced ? <><td /><td /></> : null;
   const left = project.rooms.filter(r => !r.ready);
 
   return ReactDOM.createPortal(
     <div className="doc-sheet">
-      <header className="doc-sheet-head">
-        <div>
-          <h1 className="doc-sheet-title">Gypsum take-off{projectName ? ` — ${projectName}` : ""}</h1>
-          <p className="doc-sheet-sub">
-            {project.readyCount} {project.readyCount === 1 ? "surface" : "rooms and walls"} · {nf(project.area.net, 2)} m² net
-          </p>
-        </div>
-        <div className="doc-sheet-stamp">
-          <div>{printed}</div>
-          {build && <div>build {build}</div>}
-        </div>
-      </header>
+      <DocHead title={`Gypsum take-off${projectName ? ` — ${projectName}` : ""}`}
+        sub={`${project.readyCount} of ${project.count} rooms and walls · ${nf(project.area.net, 2)} m² net`} />
 
       <section className="doc-sheet-block">
         <h2 className="doc-sheet-h2">Rooms</h2>
@@ -315,7 +306,7 @@ export function GypsumProjectSheet({ project, entries, projectName = "" }) {
         </table>
         {project.cost && (
           <dl className="doc-sheet-facts">
-            <div className="doc-sheet-fact--lead"><dt>Board cost{project.cost.partial ? " (priced boards only)" : ""}</dt><dd>€{eur(project.cost.total)}</dd></div>
+            <div className="doc-sheet-fact--lead"><dt>Sheet cost{project.cost.partial ? " (priced boards only)" : ""}</dt><dd>€{eur(project.cost.total)}</dd></div>
           </dl>
         )}
         <p className="doc-sheet-note">

@@ -4,6 +4,7 @@ import { Icon, NumInput, Row, Stack, useTimedState } from "../shared.jsx";
 import { ManagePresetsButton, PresetField, PresetManager, presetHeader, usePresetLibrary } from "./PresetLibrary.jsx";
 import { TakeOffSheet } from "./TakeOffSheet.jsx";
 import { buildTakeOff } from "../utils/take-off.js";
+import { eur } from "../utils/format.js";
 import { ProjectSection } from "./ProjectMenu.jsx";
 
 // ── Concrete Calculator ────────────────────────────────────────────────────────
@@ -135,7 +136,6 @@ export function SheetConcrete() {
   const bags = takeOff.bags.toBuy;
   const totalPrice = takeOff.bags.total;
 
-  const fmtEur = n => n.toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const hasAnyInput = Boolean(
     areaManual || lenMm || widMm || 
@@ -345,7 +345,7 @@ export function SheetConcrete() {
                   {totalPrice !== null ? (
                     <>
                       <span style={{ fontSize: 'var(--fs-lg)' }}>€</span>
-                      <span>{fmtEur(totalPrice)}</span>
+                      <span>{eur(totalPrice)}</span>
                     </>
                   ) : "—"}
                 </span>

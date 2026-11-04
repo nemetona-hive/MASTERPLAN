@@ -1,11 +1,12 @@
 import { SessionDraftContext, useSessionState } from "../utils/session-state.js";
 import { React } from "../react-globals.js";
-import { ControlPanel, Icon, NumInput, Row, Stack, useTimedState } from "../shared.jsx";
+import { ControlPanel, Icon, NumInput, Row, SegGroup, Stack, useTimedState } from "../shared.jsx";
 import { LIBRARIES, ManagePresetsButton, PresetField, PresetManager, libraryFields, presetHeader, usePresetLibrary } from "./GypsumPresets.jsx";
 import { LayoutVisualization } from "../Visualization.jsx";
 import { GypsumProjectSheet, GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
 import { buildGypsumProjectTakeOff, buildGypsumTakeOff, jointFillerRate, WALLS } from "../utils/gypsum-take-off.js";
+import { eur } from "../utils/format.js";
 import { ProjectSection } from "./ProjectMenu.jsx";
 
 // ── Gypsum board estimator ────────────────────────────────────────────────────
@@ -13,10 +14,15 @@ import { ProjectSection } from "./ProjectMenu.jsx";
 const KEY = name => `Gypsum.jsx:${name}`;
 /* Every product field, across the board, filler and adhesive libraries. */
 const PRODUCT_FIELDS = Object.values(LIBRARIES).flatMap(libraryFields);
+/* The fields that describe the surface itself, by mode. A room added from
+   another keeps everything else — board, fixing, filler, waste — and starts
+   these empty, since two rooms are rarely one size but are usually one order. */
+const DIMS = { room: ["lenMm", "widMm", "heightMm"], wall: ["wallW", "wallH"] };
+const SURFACE_FIELDS = [...DIMS.room, ...DIMS.wall];
 
 /* Fields that begin empty, and those that begin at a sensible value. Opening
    sizes are standard enough to prefill; job dimensions never are. */
-const EMPTY = ["lenMm", "widMm", "heightMm", "wallW", "wallH", "skimMm", "firstOffset", ...PRODUCT_FIELDS];
+const EMPTY = [...SURFACE_FIELDS, "skimMm", "firstOffset", ...PRODUCT_FIELDS];
 const PREFILLED = { waste: "5" };
 /* A new opening starts at a common size; its position starts empty, and an
    opening with no position still comes off the area — it is just not drawn. */
@@ -25,25 +31,10 @@ const NEW_OPENING = {
   window: { kind: "window", wall: "A", x: "", w: "1200", h: "1200", sill: "900" }
 };
 
-function Seg({ value, options, onChange, label, inline = false }) {
-  return (
-    <div className={"seg-group" + (inline ? " seg-group--inline" : "")} role="group" aria-label={label}>
-      {options.map(([id, text]) => (
-        <button key={id} type="button" className={"ctrl-dir" + (value === id ? " on" : "")}
-          aria-pressed={value === id} onClick={() => onChange(id)}>{text}</button>
-      ))}
-    </div>
-  );
-}
-
 /* A room or wall's own settings, beside its `job` of typed fields. */
 const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw" };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
-/* The fields that describe the surface itself. A room added from another
-   keeps everything else — board, fixing, filler, waste — and starts these
-   empty, since two rooms are rarely one size but are usually one order. */
-const SURFACE_FIELDS = ["lenMm", "widMm", "heightMm", "wallW", "wallH"];
 
 const blankJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), ...PREFILLED, openings: [] });
 export const newRoom = (id, mode = "room") =>
@@ -73,6 +64,256 @@ function legacyRoom(drafts) {
   return room;
 }
 const validRooms = list => Array.isArray(list) && list.length > 0 && list.every(r => r && r.job);
+const presetName = (presets, idx) => (idx !== null && idx !== undefined ? presets[idx]?.name || "" : "");
+
+// ── Pieces of the page ────────────────────────────────────────────────────────
+
+/* The job's rooms and walls. The list shows once there is a second entry;
+   until then the card is the name and the ways to add one. */
+function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onDelete, deleteArmed, disarmDelete }) {
+  const name = entries[roomIndex].name;
+  return (
+    <ControlPanel id="control-gyp-rooms" title="Rooms" noToggle className="form-section-card">
+      <Stack gap={3} className="ctrl-list">
+        {rooms.length > 1 && (
+          <div className="gyp-room-list" role="group" aria-label="Rooms and walls">
+            {entries.map(e => (
+              <button key={e.id} type="button" className={"ctrl-dir gyp-room-btn" + (e.id === room.id ? " on" : "")}
+                aria-pressed={e.id === room.id} onClick={() => onSelect(e.id)}>
+                <span className="gyp-room-name">{e.name}</span>
+                <span className="gyp-room-meta">{e.takeOff.ready ? `${e.takeOff.sheets.toBuy} pcs` : "—"}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="num-wrap">
+          <label htmlFor="input-gyp-room-name" className="num-lbl">Name</label>
+          <input id="input-gyp-room-name" className="num-input" type="text" autoComplete="off" maxLength={60}
+            placeholder={roomLabel({ ...room, name: "" }, roomIndex, rooms)} value={room.name}
+            onChange={e => onRename(e.target.value)} />
+        </div>
+        <div className="gyp-room-actions">
+          <button type="button" className="ctrl-dir" onClick={() => onAdd("room")}><Icon name="plus" /> Room</button>
+          <button type="button" className="ctrl-dir" onClick={() => onAdd("wall")}><Icon name="plus" /> Wall</button>
+          <button type="button" className="ctrl-dir" onClick={onDuplicate} aria-label={`Duplicate ${name}`}>Duplicate</button>
+          {rooms.length > 1 && (
+            <button type="button" className={"ctrl-dir ctl-danger" + (deleteArmed ? " is-armed" : "")}
+              onClick={onDelete} onBlur={disarmDelete}
+              aria-label={deleteArmed ? `Confirm delete ${name}` : `Delete ${name}`}>
+              {deleteArmed ? "Delete?" : "Delete"}
+            </button>
+          )}
+        </div>
+      </Stack>
+    </ControlPanel>
+  );
+}
+
+/* Doors and windows. Labels (D1, W1…) and each one's status are the model's
+   (`readOpenings`), in the list's own order. */
+function OpeningsPanel({ openings, read, onWall, onAdd, onUpdate, onRemove }) {
+  return (
+    <ControlPanel id="control-gyp-openings" title="Openings (mm)" noToggle className="form-section-card">
+      <Stack gap={3} className="ctrl-list">
+        {openings.map((o, i) => {
+          const { label, status } = read[i] || {};
+          const field = (key, text) => (
+            <div className="gyp-open-field">
+              <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{text}</label>
+              <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
+                className="num-input" value={o[key] ?? ""}
+                aria-invalid={status === "misfit" || status === "invalid" ? true : undefined}
+                onChange={e => onUpdate(o.id, key, e.target.value)} />
+            </div>
+          );
+          return (
+            <div key={o.id} className="gyp-open-row">
+              <span className="gyp-open-tag">{label}</span>
+              {onWall && (
+                <SegGroup inline label={`${label} wall`} value={o.wall} onChange={v => onUpdate(o.id, "wall", v)}
+                  options={WALLS.map(w => [w, w])} />
+              )}
+              <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
+                aria-label={`Remove ${label}`} title={`Remove ${label}`} onClick={() => onRemove(o.id)}>
+                <Icon name="close" />
+              </button>
+              <div className="gyp-open-fields">
+                {field("x", "From left")}
+                {field("w", "Width")}
+                {field("h", "Height")}
+                {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
+              </div>
+            </div>
+          );
+        })}
+        <Stack direction="row" gap={2}>
+          <button type="button" className="ctrl-dir" onClick={() => onAdd("door")}><Icon name="plus" /> Door</button>
+          <button type="button" className="ctrl-dir" onClick={() => onAdd("window")}><Icon name="plus" /> Window</button>
+        </Stack>
+      </Stack>
+    </ControlPanel>
+  );
+}
+
+/* The 2D drawings or the 3D room, of the room on screen. */
+function LayoutSection({ takeOff, view3d, setView3d }) {
+  const drawn = takeOff.surfaces.filter(s => s.layout);
+  if (!drawn.length) return null;
+  return (
+    <div className="section unboxed">
+      <div className="section-head">
+        <span>Layout</span>
+        <SegGroup inline label="Layout view" value={view3d ? "3d" : "2d"} onChange={v => setView3d(v === "3d")}
+          options={[["2d", "2D"], ["3d", "3D"]]} />
+      </div>
+      <div className="section-body">
+        <Stack className="section-pad" gap={4}>
+          {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
+          {!view3d && drawn.map(s => (
+            <Stack key={s.id} gap={2} className="gyp-surface">
+              <div className="gyp-surface-head">
+                <span className="gyp-surface-name">{s.label}</span>
+                <span className="gyp-surface-meta">
+                  {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
+                </span>
+              </div>
+              <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }} maxHeight={460} />
+            </Stack>
+          ))}
+        </Stack>
+      </div>
+    </div>
+  );
+}
+
+/* The room's figures, every one read from the model. */
+function CalculationDetails({ takeOff, room }) {
+  const { area, sheets, screws, compound, tape, adhesive } = takeOff;
+  const glued = takeOff.fixing === "glue";
+  const isRoom = room.mode === "room";
+  const fillerRate = compound.rate !== null ? ` (${compound.rate} kg/m)` : "";
+  return (
+    <div className="section unboxed">
+      <div className="section-head"><span>Calculation Details</span></div>
+      <div className="section-body">
+        <Stack className="section-pad" gap={1}>
+          <Row label="Surface area" value={area.gross.toFixed(2)} unit="m²" />
+          {area.openings > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
+          <Row label="Net area" value={area.net.toFixed(2)} unit="m²" />
+          {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
+          <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
+          <Row label={`With ${sheets.waste}% waste`} value={sheets.exact.toFixed(1)} unit="pcs" />
+          {(!glued || screws.area > 0) && <Row label={glued ? "Ceiling screws" : "Screws"} value={screws.count} unit="pcs" />}
+          {adhesive && <Row label="Adhesive" value={adhesive.kg.toFixed(1)} unit="kg" />}
+          {adhesive?.bagKg && <Row label={`Adhesive bags (${adhesive.bagKg} kg)`} value={adhesive.bags} unit="pcs" />}
+          <Row label="Joints filled" value={compound.length.toFixed(1)} unit="m" />
+          {compound.skim && <>
+            <Row label={`Filler for joints${fillerRate}`} value={compound.jointKg.toFixed(1)} unit="kg" />
+            <Row label={`Surface skim ${compound.skim.mm} mm (${compound.skim.area.toFixed(2)} m²)`} value={compound.skim.kg.toFixed(1)} unit="kg" />
+          </>}
+          <Row label={compound.skim ? "Joint filler, total" : `Joint filler${fillerRate}`} value={compound.kg.toFixed(1)} unit="kg" />
+          {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
+          <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
+
+          <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
+            <span className="pw-formula-text">
+              Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness.
+            </span>
+          </div>
+          <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+            <span className="pw-formula-text">
+              Tape covers board joints on the face layer{isRoom ? ", internal corners" : ""}{isRoom && room.ceiling ? " and the ceiling angle" : ""}.
+            </span>
+          </div>
+          {glued && (
+            <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+              <span className="pw-formula-text">
+                Glued: boards stuck in dabs straight onto masonry, one layer. Adhesive covers the walls' net area; a ceiling is still screwed. An uneven wall takes more.
+              </span>
+            </div>
+          )}
+        </Stack>
+      </div>
+    </div>
+  );
+}
+
+/* Every room, added up (buildGypsumProjectTakeOff). */
+function ProjectTotals({ project, onPrint }) {
+  const bagged = (g, fallback) => ({
+    label: `${g.product || fallback}${g.bagKg ? ` (${g.bagKg} kg bags)` : ""}`,
+    value: g.bagKg ? g.bags : g.kg.toFixed(1),
+    unit: g.bagKg ? "bags" : "kg"
+  });
+  return (
+    <div className="section unboxed">
+      <div className="section-head">
+        <span>All Rooms</span>
+        <button type="button" className="ts-btn ctl-ghost ctl-sm" disabled={!project.ready} onClick={onPrint}
+          title={project.ready ? "Take-off for every room — opens the print dialog" : "Finish a room first"}>
+          <Icon name="print" /> Take-off
+        </button>
+      </div>
+      <div className="section-body">
+        <Stack className="section-pad" gap={1}>
+          {project.rooms.map(r => (
+            <Row key={r.id} label={r.name} value={r.ready ? r.sheets : "—"} unit={r.ready ? "sheets" : ""} />
+          ))}
+          <div className="gyp-total-rule" />
+          <Row label="Net area" value={project.area.net.toFixed(2)} unit="m²" />
+          {project.boards.map(b => (
+            <Row key={`${b.product}|${b.width}|${b.length}|${b.price}`} hi
+              label={`${b.product || "Board"} ${b.width} × ${b.length}`} value={b.toBuy} unit="sheets" />
+          ))}
+          {project.screws.count > 0 && <Row label="Screws" value={project.screws.count} unit="pcs" />}
+          {project.adhesive.map(a => <Row key={`a|${a.product}|${a.bagKg}`} {...bagged(a, "Adhesive")} />)}
+          {project.filler.map(f => <Row key={`f|${f.product}|${f.bagKg}`} {...bagged(f, "Joint filler")} />)}
+          <Row label="Joint tape" value={project.tape.total.toFixed(1)} unit="m" />
+          {project.cost && (
+            <Row label={project.cost.partial ? "Sheet cost (priced boards)" : "Sheet cost"} value={`€${eur(project.cost.total)}`} />
+          )}
+          {project.readyCount < project.count && (
+            <p className="pw-formula-text gyp-total-note">
+              {project.count - project.readyCount} of {project.count} not finished and left out of the total.
+            </p>
+          )}
+        </Stack>
+      </div>
+    </div>
+  );
+}
+
+/* The room's headline: sheets to buy and what they cost. The phone's bottom
+   bar is this card (it is the layout-split's second child). */
+function ResultCard({ takeOff, onPrint }) {
+  const { sheets, ready } = takeOff;
+  return (
+    <div className="gyp-result-wrap">
+      <div className="result-card result-card--concrete gyp-result">
+        <div className="result-card-primary">
+          <span className="result-card-title">Sheets Needed</span>
+          <span className="result-card-value">
+            {sheets.toBuy}
+            <span style={{ fontSize: "var(--fs-md)", fontWeight: "var(--fw-reg)", marginLeft: "4px" }}>pcs</span>
+          </span>
+          <span className="result-card-note">layout: {sheets.layout} · +{sheets.waste}% waste</span>
+        </div>
+        <div className="result-card-split">
+          <span className="result-card-title">Sheet Cost</span>
+          <span className="result-card-value">
+            {sheets.total !== null ? (<><span style={{ fontSize: "var(--fs-lg)" }}>€</span><span>{eur(sheets.total)}</span></>) : "—"}
+          </span>
+        </div>
+        <button type="button" className="ts-btn ctl-ghost result-card-print" onClick={onPrint} disabled={!ready}
+          title={ready ? "Take-off sheet — opens the print dialog, where Save as PDF is" : "Enter the surface and sheet size first"}>
+          <Icon name="print" /> Take-off
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── The page ──────────────────────────────────────────────────────────────────
 
 export function SheetGypsum({ projectName = "" }) {
   /* Every room and wall of the job. Which one is on screen is `currentId`;
@@ -109,41 +350,35 @@ export function SheetGypsum({ projectName = "" }) {
   /* Three preset libraries, each filling its own fields (GypsumPresets.jsx).
      The lists are the project's; the applied preset is the room's. */
   const merge = values => setJob(current => ({ ...current, ...values }));
-  const [activeBoard, setActiveBoard] = roomState(LIBRARIES.board.activeKey);
-  const [activeFiller, setActiveFiller] = roomState(LIBRARIES.filler.activeKey);
-  const [activeAdhesive, setActiveAdhesive] = roomState(LIBRARIES.adhesive.activeKey);
-  const board = usePresetLibrary(LIBRARIES.board, { onApply: merge, active: activeBoard ?? null, setActive: setActiveBoard });
-  const filler = usePresetLibrary(LIBRARIES.filler, { onApply: merge, active: activeFiller ?? null, setActive: setActiveFiller });
-  const adhesive = usePresetLibrary(LIBRARIES.adhesive, { onApply: merge, active: activeAdhesive ?? null, setActive: setActiveAdhesive });
+  const appliedIn = lib => {
+    const [active, setActive] = roomState(lib.activeKey);
+    return { onApply: merge, active: active ?? null, setActive };
+  };
+  const board = usePresetLibrary(LIBRARIES.board, appliedIn(LIBRARIES.board));
+  const filler = usePresetLibrary(LIBRARIES.filler, appliedIn(LIBRARIES.filler));
+  const adhesive = usePresetLibrary(LIBRARIES.adhesive, appliedIn(LIBRARIES.adhesive));
   const libraries = [board, filler, adhesive];
   const [resetArmed, armReset, disarmReset] = useTimedState(false, 4000);
   const [deleteArmed, armDelete, disarmDelete] = useTimedState(false, 4000);
 
   /* Reset clears the room on screen, never the others: with a list, wiping
      every room behind one button would be the one irreversible thing here. */
-  const resetAll = () => {
-    updateRoom(room.id, r => ({ ...newRoom(r.id), name: r.name }));
-    setView3d(false);
-  };
   const handleReset = () => {
     if (!resetArmed) { armReset(true); return; }
     disarmReset();
-    resetAll();
+    updateRoom(room.id, r => ({ ...newRoom(r.id), name: r.name }));
+    setView3d(false);
   };
 
   // ── The list: add, duplicate, delete, switch ───────────────────────────────
   const nextId = () => rooms.reduce((m, r) => Math.max(m, r.id), 0) + 1;
-  const addRoom = kind => {
-    const id = nextId();
-    setRooms([...rooms, roomFrom(room, id, kind)]);
-    setCurrentId(id);
+  const insertRoom = (made, at = rooms.length) => {
+    setRooms([...rooms.slice(0, at), made, ...rooms.slice(at)]);
+    setCurrentId(made.id);
   };
-  const duplicateRoom = () => {
-    const id = nextId();
-    const copy = { ...JSON.parse(JSON.stringify(room)), id, name: room.name.trim() ? `${room.name.trim()} copy` : "" };
-    setRooms([...rooms.slice(0, roomIndex + 1), copy, ...rooms.slice(roomIndex + 1)]);
-    setCurrentId(id);
-  };
+  const addRoom = kind => insertRoom(roomFrom(room, nextId(), kind));
+  const duplicateRoom = () => insertRoom({ ...JSON.parse(JSON.stringify(room)), id: nextId(),
+    name: room.name.trim() ? `${room.name.trim()} copy` : "" }, roomIndex + 1);
   const deleteRoom = () => {
     if (rooms.length < 2) return;
     if (!deleteArmed) { armDelete(true); return; }
@@ -152,57 +387,63 @@ export function SheetGypsum({ projectName = "" }) {
     setRooms(rest);
     setCurrentId(rest[Math.min(roomIndex, rest.length - 1)].id);
   };
+  const selectRoom = id => { disarmDelete(); setCurrentId(id); };
 
   /* A hand edit of a product field means the values are no longer the
      preset's, so its name stops showing. */
-  const productChange = (library, name) => v => { if (v !== val(name)) library.edited(); set(name)(v); };
+  const productChange = (lib, name) => v => { if (v !== val(name)) lib.edited(); set(name)(v); };
 
   // ── Derived values: all of it from the model ───────────────────────────────
   /* Every room's take-off, so the list and the project total read the same
-     figures as the room's own card. The product names come from the shared
-     lists by each room's own choice. */
-  const nameIn = (library, idx) => (idx !== null && idx !== undefined ? library.presets[idx]?.name || "" : "");
-  const entries = React.useMemo(() => rooms.map((r, i) => ({
-    id: r.id,
-    name: roomLabel(r, i, rooms),
-    takeOff: buildGypsumTakeOff({
+     figures as the room's own card. Remembered per room object and preset
+     lists: an edit replaces only its own room's object, so typing in one room
+     does not lay every other room out again. */
+  const cache = React.useRef(new WeakMap());
+  const lists = [board.presets, filler.presets, adhesive.presets];
+  const takeOffOf = r => {
+    const hit = cache.current.get(r);
+    if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
+    const takeOff = buildGypsumTakeOff({
       ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing,
-      product: nameIn(board, r.activePreset),
-      fillerProduct: nameIn(filler, r.activeFiller),
-      adhesiveProduct: nameIn(adhesive, r.activeAdhesive)
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  })), [rooms, board.presets, filler.presets, adhesive.presets]);
+      product: presetName(board.presets, r.activePreset),
+      fillerProduct: presetName(filler.presets, r.activeFiller),
+      adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
+    });
+    cache.current.set(r, { lists, takeOff });
+    return takeOff;
+  };
+  const entries = rooms.map((r, i) => ({ id: r.id, name: roomLabel(r, i, rooms), takeOff: takeOffOf(r) }));
   const takeOff = entries[roomIndex].takeOff;
+  const roomName = entries[roomIndex].name;
   const project = rooms.length > 1 ? buildGypsumProjectTakeOff(entries) : null;
-  const { area, sheets, screws, compound, tape } = takeOff;
   const derivedJoint = jointFillerRate(val("compoundRate"), val("skimRate"));
 
   /* One document at a time: the room's sheet or the project's. Both are
-     portalled to <body>, and print shows every .doc-sheet it finds. */
+     portalled to <body>, and print shows every .doc-sheet it finds. Any edit
+     drops what was staged, so a sheet never prints figures since changed. */
   const [printing, setPrinting] = React.useState(null);
   React.useEffect(() => {
     if (!printing) return;
     const frame = requestAnimationFrame(() => window.print());
     return () => cancelAnimationFrame(frame);
   }, [printing]);
-  const fieldKey = JSON.stringify([rooms, room.id, ...libraries.map(l => l.presets)]);
-  React.useEffect(() => { setPrinting(null); }, [fieldKey]);
+  React.useEffect(() => { setPrinting(null); }, [storedRooms, room.id, board.presets, filler.presets, adhesive.presets]);
 
-  const dimsKeys = mode === "room" ? ["lenMm", "widMm", "heightMm"] : ["wallW", "wallH"];
-  const hasAnyInput = [...dimsKeys, ...PRODUCT_FIELDS].some(name => val(name) !== "");
+  const hasAnyInput = [...DIMS[mode === "wall" ? "wall" : "room"], ...PRODUCT_FIELDS].some(name => val(name) !== "");
   const req = name => hasAnyInput && val(name) === "";
-  const fmtEur = n => n.toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const openingRows = job.openings || [];
   const setOpenings = update => setJob(current => ({ ...current, openings: update(current.openings || []) }));
-  const addOpening = kind => setOpenings(list =>
-    [...list, { ...NEW_OPENING[kind], id: list.reduce((m, o) => Math.max(m, o.id), 0) + 1 }]);
-  const updateOpening = (id, key, value) => setOpenings(list => list.map(o => (o.id === id ? { ...o, [key]: value } : o)));
-  const removeOpening = id => setOpenings(list => list.filter(o => o.id !== id));
 
   const num = (name, label, extra = {}) => (
     <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={0} onChange={set(name)} req={extra.req ?? false} {...extra} />
   );
+  /* A product field outside its library's dropdown: it flashes with the
+     library when a preset fills it, and a hand edit stops naming the preset. */
+  const productNum = (lib, name, label, extra = {}) => (
+    <div className={lib.fieldFlash ? "num-input-flash" : ""}>
+      <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={0} onChange={productChange(lib, name)} {...extra} />
+    </div>
+  );
+  const libraryError = lib => lib.error && !lib.managing && <p role="alert" className="input-error">{lib.error}</p>;
 
   /* Pattern Layouts' shape: the inputs in the fixed control column, and the
      results, layout views and reference tables across the rest of the width,
@@ -211,44 +452,12 @@ export function SheetGypsum({ projectName = "" }) {
      second child), which the desktop shows first instead. */
   return (
     <>
-      <Stack id="data-control" className="data-control gyp-control" gap={4}>
+      <Stack id="data-control" className="data-control" gap={4}>
         <ProjectSection />
-        {/* The job's rooms and walls. The list shows once there is a second
-            entry; until then the card is the name and the ways to add one. */}
-        <ControlPanel id="control-gyp-rooms" title="Rooms" noToggle className="form-section-card">
-          <Stack gap={3} className="ctrl-list">
-            {rooms.length > 1 && (
-              <div className="gyp-room-list" role="group" aria-label="Rooms and walls">
-                {entries.map(e => (
-                  <button key={e.id} type="button" className={"ctrl-dir gyp-room-btn" + (e.id === room.id ? " on" : "")}
-                    aria-pressed={e.id === room.id} onClick={() => { disarmDelete(); setCurrentId(e.id); }}>
-                    <span className="gyp-room-name">{e.name}</span>
-                    <span className="gyp-room-meta">{e.takeOff.ready ? `${e.takeOff.sheets.toBuy} pcs` : "—"}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="num-wrap">
-              <label htmlFor="input-gyp-room-name" className="num-lbl">Name</label>
-              <input id="input-gyp-room-name" className="num-input" type="text" autoComplete="off" maxLength={60}
-                placeholder={roomLabel({ ...room, name: "" }, roomIndex, rooms)} value={room.name}
-                onChange={e => updateRoom(room.id, () => ({ name: e.target.value }))} />
-            </div>
-            <div className="gyp-room-actions">
-              <button type="button" className="ctrl-dir" onClick={() => addRoom("room")}><Icon name="plus" /> Room</button>
-              <button type="button" className="ctrl-dir" onClick={() => addRoom("wall")}><Icon name="plus" /> Wall</button>
-              <button type="button" className="ctrl-dir" onClick={duplicateRoom}
-                aria-label={`Duplicate ${entries[roomIndex].name}`}>Duplicate</button>
-              {rooms.length > 1 && (
-                <button type="button" className={"ctrl-dir ctl-danger" + (deleteArmed ? " is-armed" : "")}
-                  onClick={deleteRoom} onBlur={disarmDelete}
-                  aria-label={deleteArmed ? `Confirm delete ${entries[roomIndex].name}` : `Delete ${entries[roomIndex].name}`}>
-                  {deleteArmed ? "Delete?" : "Delete"}
-                </button>
-              )}
-            </div>
-          </Stack>
-        </ControlPanel>
+        <RoomsPanel rooms={rooms} entries={entries} room={room} roomIndex={roomIndex}
+          onSelect={selectRoom} onRename={name => updateRoom(room.id, () => ({ name }))}
+          onAdd={addRoom} onDuplicate={duplicateRoom} onDelete={deleteRoom}
+          deleteArmed={deleteArmed} disarmDelete={disarmDelete} />
 
         {/* Keyed by the room, so switching remounts the fields: each reads the
             new room's values, and field undo cannot carry one room's typing
@@ -256,7 +465,7 @@ export function SheetGypsum({ projectName = "" }) {
         <React.Fragment key={room.id}>
         <ControlPanel id="control-gyp-surface" title="Surface" noToggle className="form-section-card">
           <Stack gap={3} className="ctrl-list">
-            <Seg label="What to board" value={mode} onChange={setMode}
+            <SegGroup label="What to board" value={mode} onChange={setMode}
               options={[["room", "Room"], ["wall", "Single wall"]]} />
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
               {mode === "room" ? <>
@@ -268,57 +477,17 @@ export function SheetGypsum({ projectName = "" }) {
               </>}
             </div>
             {mode === "room" && <>
-              <Seg label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
+              <SegGroup label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
                 options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
               {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
             </>}
           </Stack>
         </ControlPanel>
 
-        <ControlPanel id="control-gyp-openings" title="Openings (mm)" noToggle className="form-section-card">
-          <Stack gap={3} className="ctrl-list">
-          {openingRows.map((o, i) => {
-            const read = takeOff.openings.list[i];
-            const field = (key, label) => (
-              <div className="gyp-open-field">
-                <label className="gyp-open-lbl" htmlFor={`gyp-open-${o.id}-${key}`}>{label}</label>
-                <input id={`gyp-open-${o.id}-${key}`} type="text" inputMode="decimal" autoComplete="off"
-                  className="num-input" value={o[key] ?? ""}
-                  aria-invalid={read?.status === "misfit" || read?.status === "invalid" ? true : undefined}
-                  onChange={e => updateOpening(o.id, key, e.target.value)} />
-              </div>
-            );
-            return (
-              <div key={o.id} className="gyp-open-row">
-                <span className="gyp-open-tag">{read?.label}</span>
-                {mode === "room" && (
-                  <Seg inline label={`${read?.label} wall`} value={o.wall} onChange={v => updateOpening(o.id, "wall", v)}
-                    options={WALLS.map(w => [w, w])} />
-                )}
-                <button type="button" className="num-btn ctl-ghost ctl-sm ctl-icon ctl-danger gyp-open-del"
-                  aria-label={`Remove ${read?.label}`} title={`Remove ${read?.label}`}
-                  onClick={() => removeOpening(o.id)}>
-                  <Icon name="close" />
-                </button>
-                <div className="gyp-open-fields">
-                  {field("x", "From left")}
-                  {field("w", "Width")}
-                  {field("h", "Height")}
-                  {o.kind === "window" ? field("sill", "Sill") : <div className="gyp-open-field" />}
-                </div>
-              </div>
-            );
-          })}
-          <Stack direction="row" gap={2}>
-            <button type="button" className="ctrl-dir" onClick={() => addOpening("door")}>
-              <Icon name="plus" /> Door
-            </button>
-            <button type="button" className="ctrl-dir" onClick={() => addOpening("window")}>
-              <Icon name="plus" /> Window
-            </button>
-          </Stack>
-          </Stack>
-        </ControlPanel>
+        <OpeningsPanel openings={job.openings || []} read={takeOff.openings.list} onWall={mode === "room"}
+          onAdd={kind => setOpenings(list => [...list, { ...NEW_OPENING[kind], id: list.reduce((m, o) => Math.max(m, o.id), 0) + 1 }])}
+          onUpdate={(id, key, value) => setOpenings(list => list.map(o => (o.id === id ? { ...o, [key]: value } : o)))}
+          onRemove={id => setOpenings(list => list.filter(o => o.id !== id))} />
 
         <ControlPanel id="control-gyp-board" title="Board" noToggle className="form-section-card"
           headerDetail={presetHeader(board)}>
@@ -327,51 +496,42 @@ export function SheetGypsum({ projectName = "" }) {
               value={val("sheetW")} min={100} onChange={productChange(board, "sheetW")} req={req("sheetW")} />
             <PresetField library={board} field="sheetL" id="input-gyp-sheetL" label="Sheet length (mm)" labelIcon="arrow-v"
               value={val("sheetL")} min={100} onChange={productChange(board, "sheetL")} req={req("sheetL")} />
-            <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
+            <SegGroup label="Fixing direction" value={orientation} onChange={setOrientation}
               options={[["V", "Vertical"], ["H", "Horizontal"]]} />
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
             {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
             {/* Glued is one layer on walls; the model enforces it, so the choice
                 is not offered rather than offered and ignored. */}
-            <Seg label="Fixing method" value={fixing} onChange={setFixing}
+            <SegGroup label="Fixing method" value={fixing} onChange={setFixing}
               options={[["screw", "Screwed"], ["glue", "Glued"]]} />
             {!glued && (
-              <Seg label="Layers" value={layers} onChange={setLayers}
+              <SegGroup label="Layers" value={layers} onChange={setLayers}
                 options={[["1", "1 layer"], ["2", "2 layers"]]} />
             )}
             {/* Glued walls take no screws; a boarded ceiling still does. */}
-            {(!glued || (mode === "room" && ceiling)) && (
-              <div className={board.fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-screwRate" label={glued ? "Ceiling screws (pcs/m²)" : "Screws (pcs/m²)"}
-                  value={val("screwRate")} min={0} onChange={productChange(board, "screwRate")} />
-              </div>
-            )}
+            {(!glued || (mode === "room" && ceiling)) &&
+              productNum(board, "screwRate", glued ? "Ceiling screws (pcs/m²)" : "Screws (pcs/m²)")}
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-              <div className={board.fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-sheetPrice" label="Sheet price (€)" value={val("sheetPrice")} min={0} onChange={productChange(board, "sheetPrice")} />
-              </div>
+              {productNum(board, "sheetPrice", "Sheet price (€)")}
               {num("waste", "Waste (%)", { max: 100 })}
             </div>
             <ManagePresetsButton library={board} />
           </Stack>
         </ControlPanel>
-        {board.error && !board.managing && <p role="alert" className="input-error">{board.error}</p>}
+        {libraryError(board)}
 
-        {glued && (
+        {glued && <>
           <ControlPanel id="control-gyp-adhesive" title="Adhesive" noToggle className="form-section-card"
             headerDetail={presetHeader(adhesive)}>
             <Stack gap={3} className="ctrl-list">
               <PresetField library={adhesive} field="adhesiveRate" id="input-gyp-adhesiveRate" label="Adhesive (kg/m²)"
                 value={val("adhesiveRate")} onChange={productChange(adhesive, "adhesiveRate")} />
-              <div className={adhesive.fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-adhesiveBagKg" label="Adhesive bag (kg)" value={val("adhesiveBagKg")} min={0.1}
-                  onChange={productChange(adhesive, "adhesiveBagKg")} />
-              </div>
+              {productNum(adhesive, "adhesiveBagKg", "Adhesive bag (kg)", { min: 0.1 })}
               <ManagePresetsButton library={adhesive} />
             </Stack>
           </ControlPanel>
-        )}
-        {glued && adhesive.error && !adhesive.managing && <p role="alert" className="input-error">{adhesive.error}</p>}
+          {libraryError(adhesive)}
+        </>}
 
         <ControlPanel id="control-gyp-filler" title="Joint Filler" noToggle className="form-section-card"
           headerDetail={presetHeader(filler)}>
@@ -379,12 +539,8 @@ export function SheetGypsum({ projectName = "" }) {
             <PresetField library={filler} field="compoundRate" id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)"
               value={val("compoundRate")} onChange={productChange(filler, "compoundRate")} />
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
-              <div className={filler.fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-skimRate" label="Per 1 mm (kg/m²)" value={val("skimRate")} min={0} onChange={productChange(filler, "skimRate")} />
-              </div>
-              <div className={filler.fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange(filler, "bagKg")} />
-              </div>
+              {productNum(filler, "skimRate", "Per 1 mm (kg/m²)")}
+              {productNum(filler, "bagKg", "Filler bag (kg)", { min: 0.1 })}
             </div>
             {/* Worked out, not typed: said once, under the field it stands in for. */}
             {derivedJoint.derived && (
@@ -396,14 +552,14 @@ export function SheetGypsum({ projectName = "" }) {
             <ManagePresetsButton library={filler} />
           </Stack>
         </ControlPanel>
-        {filler.error && !filler.managing && <p role="alert" className="input-error">{filler.error}</p>}
+        {libraryError(filler)}
         </React.Fragment>
 
         <div className="form-action">
           <button onClick={handleReset} onBlur={disarmReset}
             className={"ts-btn ctl-ghost ctl-danger" + (resetArmed ? " is-armed" : "")}
             aria-label={rooms.length > 1
-              ? (resetArmed ? `Confirm reset — clears every field of ${entries[roomIndex].name}` : `Reset ${entries[roomIndex].name} — clears its fields, asks first`)
+              ? (resetArmed ? `Confirm reset — clears every field of ${roomName}` : `Reset ${roomName} — clears its fields, asks first`)
               : (resetArmed ? "Confirm global reset — clears every field" : "Global reset — clears every field, asks first")}>
             <Icon name="refresh-cw" /> {resetArmed ? "Confirm reset?" : rooms.length > 1 ? `Reset ${mode === "wall" ? "Wall" : "Room"}` : "Global Reset"}
           </button>
@@ -415,151 +571,15 @@ export function SheetGypsum({ projectName = "" }) {
           <Stack gap={5}>
             {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
             {takeOff.warning && <p role="status" className="input-error">{takeOff.warning}</p>}
-
-            {/* ── Layout ── */}
-            {takeOff.surfaces.some(s => s.layout) && (
-              <div className="section unboxed">
-                <div className="section-head">
-                  <span>Layout</span>
-                  <Seg inline label="Layout view" value={view3d ? "3d" : "2d"} onChange={v => setView3d(v === "3d")}
-                    options={[["2d", "2D"], ["3d", "3D"]]} />
-                </div>
-                <div className="section-body">
-                  <Stack className="section-pad" gap={4}>
-                    {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
-                    {!view3d && takeOff.surfaces.filter(s => s.layout).map(s => (
-                      <Stack key={s.id} gap={2} className="gyp-surface">
-                        <div className="gyp-surface-head">
-                          <span className="gyp-surface-name">{s.label}</span>
-                          <span className="gyp-surface-meta">
-                            {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
-                          </span>
-                        </div>
-                        <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }} maxHeight={460} />
-                      </Stack>
-                    ))}
-                  </Stack>
-                </div>
-              </div>
-            )}
-
-            {/* ── Calculation details ── */}
-            <div className="section unboxed">
-              <div className="section-head"><span>Calculation Details</span></div>
-              <div className="section-body">
-                <Stack className="section-pad" gap={1}>
-                  <Row label="Surface area" value={area.gross.toFixed(2)} unit="m²" />
-                  {area.openings > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
-                  <Row label="Net area" value={area.net.toFixed(2)} unit="m²" />
-                  {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
-                  <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
-                  <Row label={`With ${sheets.waste}% waste`} value={sheets.exact.toFixed(1)} unit="pcs" />
-                  {(!glued || screws.area > 0) && <Row label={glued ? "Ceiling screws" : "Screws"} value={screws.count} unit="pcs" />}
-                  {takeOff.adhesive && <Row label="Adhesive" value={takeOff.adhesive.kg.toFixed(1)} unit="kg" />}
-                  {takeOff.adhesive?.bagKg && <Row label={`Adhesive bags (${takeOff.adhesive.bagKg} kg)`} value={takeOff.adhesive.bags} unit="pcs" />}
-                  <Row label="Joints filled" value={compound.length.toFixed(1)} unit="m" />
-                  {compound.skim && <>
-                    <Row label={`Filler for joints${compound.rate !== null ? ` (${compound.rate} kg/m)` : ""}`} value={compound.jointKg.toFixed(1)} unit="kg" />
-                    <Row label={`Surface skim ${compound.skim.mm} mm (${compound.skim.area.toFixed(2)} m²)`} value={compound.skim.kg.toFixed(1)} unit="kg" />
-                  </>}
-                  <Row label={compound.skim ? "Joint filler, total" : `Joint filler${compound.rate !== null ? ` (${compound.rate} kg/m)` : ""}`} value={compound.kg.toFixed(1)} unit="kg" />
-                  {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
-                  <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
-
-                  <div className="pw-formula-wrap" style={{ marginTop: "1rem" }}>
-                    <span className="pw-formula-text">
-                      Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness.
-                    </span>
-                  </div>
-                  <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
-                    <span className="pw-formula-text">
-                      Tape covers board joints on the face layer{mode === "room" ? ", internal corners" : ""}{mode === "room" && ceiling ? " and the ceiling angle" : ""}.
-                    </span>
-                  </div>
-                  {glued && (
-                    <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
-                      <span className="pw-formula-text">
-                        Glued: boards stuck in dabs straight onto masonry, one layer. Adhesive covers the walls' net area; a ceiling is still screwed. An uneven wall takes more.
-                      </span>
-                    </div>
-                  )}
-                </Stack>
-              </div>
-            </div>
-
-            {/* ── Every room, added up (buildGypsumProjectTakeOff) ── */}
-            {project && (
-              <div className="section unboxed">
-                <div className="section-head">
-                  <span>All Rooms</span>
-                  <button type="button" className="ts-btn ctl-ghost ctl-sm" disabled={!project.ready}
-                    onClick={() => setPrinting({ project, entries })}
-                    title={project.ready ? "Take-off for every room — opens the print dialog" : "Finish a room first"}>
-                    <Icon name="print" /> Take-off
-                  </button>
-                </div>
-                <div className="section-body">
-                  <Stack className="section-pad" gap={1}>
-                    {project.rooms.map(r => (
-                      <Row key={r.id} label={r.name} value={r.ready ? r.sheets : "—"} unit={r.ready ? "sheets" : ""} />
-                    ))}
-                    <div className="gyp-total-rule" />
-                    <Row label="Net area" value={project.area.net.toFixed(2)} unit="m²" />
-                    {project.boards.map(b => (
-                      <Row key={`${b.product}|${b.width}|${b.length}|${b.price}`} hi
-                        label={`${b.product || "Board"} ${b.width} × ${b.length}`} value={b.toBuy} unit="sheets" />
-                    ))}
-                    {project.screws.count > 0 && <Row label="Screws" value={project.screws.count} unit="pcs" />}
-                    {project.adhesive.map(a => (
-                      <Row key={`a|${a.product}|${a.bagKg}`} label={`${a.product || "Adhesive"}${a.bagKg ? ` (${a.bagKg} kg bags)` : ""}`}
-                        value={a.bagKg ? a.bags : a.kg.toFixed(1)} unit={a.bagKg ? "bags" : "kg"} />
-                    ))}
-                    {project.filler.map(f => (
-                      <Row key={`f|${f.product}|${f.bagKg}`} label={`${f.product || "Joint filler"}${f.bagKg ? ` (${f.bagKg} kg bags)` : ""}`}
-                        value={f.bagKg ? f.bags : f.kg.toFixed(1)} unit={f.bagKg ? "bags" : "kg"} />
-                    ))}
-                    <Row label="Joint tape" value={project.tape.total.toFixed(1)} unit="m" />
-                    {project.cost && (
-                      <Row label={project.cost.partial ? "Sheet cost (priced boards)" : "Sheet cost"} value={`€${fmtEur(project.cost.total)}`} />
-                    )}
-                    {project.readyCount < project.count && (
-                      <p className="pw-formula-text gyp-total-note">
-                        {project.count - project.readyCount} of {project.count} not finished and left out of the total.
-                      </p>
-                    )}
-                  </Stack>
-                </div>
-              </div>
-            )}
+            <LayoutSection takeOff={takeOff} view3d={view3d} setView3d={setView3d} />
+            <CalculationDetails takeOff={takeOff} room={room} />
+            {project && <ProjectTotals project={project} onPrint={() => setPrinting({ project, entries })} />}
           </Stack>
-
-          <div className="gyp-result-wrap">
-            <div className="result-card result-card--concrete gyp-result">
-              <div className="result-card-primary">
-                <span className="result-card-title">Sheets Needed</span>
-                <span className="result-card-value">
-                  {sheets.toBuy}
-                  <span style={{ fontSize: "var(--fs-md)", fontWeight: "var(--fw-reg)", marginLeft: "4px" }}>pcs</span>
-                </span>
-                <span className="result-card-note">layout: {sheets.layout} · +{sheets.waste}% waste</span>
-              </div>
-              <div className="result-card-split">
-                <span className="result-card-title">Sheet Cost</span>
-                <span className="result-card-value">
-                  {sheets.total !== null ? (<><span style={{ fontSize: "var(--fs-lg)" }}>€</span><span>{fmtEur(sheets.total)}</span></>) : "—"}
-                </span>
-              </div>
-              <button type="button" className="ts-btn ctl-ghost result-card-print"
-                onClick={() => setPrinting({ takeOff })} disabled={!takeOff.ready}
-                title={takeOff.ready ? "Take-off sheet — opens the print dialog, where Save as PDF is" : "Enter the surface and sheet size first"}>
-                <Icon name="print" /> Take-off
-              </button>
-            </div>
-          </div>
+          <ResultCard takeOff={takeOff} onPrint={() => setPrinting({ takeOff })} />
         </div>
       </div>
-      {libraries.map(library => <PresetManager key={library.lib.id} library={library} />)}
-      <GypsumTakeOffSheet takeOff={printing?.takeOff || null} title={rooms.length > 1 ? entries[roomIndex].name : ""} projectName={projectName} />
+      {libraries.map(lib => <PresetManager key={lib.lib.id} library={lib} />)}
+      <GypsumTakeOffSheet takeOff={printing?.takeOff || null} title={rooms.length > 1 ? roomName : ""} projectName={projectName} />
       <GypsumProjectSheet project={printing?.project || null} entries={printing?.entries || null} projectName={projectName} />
     </>
   );

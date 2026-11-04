@@ -1,5 +1,6 @@
 import { React, ReactDOM } from "../react-globals.js";
 import { getBuildId } from "../shared.jsx";
+import { eur, mm, nf } from "../utils/format.js";
 
 /**
  * The concrete take-off as a printed document.
@@ -14,22 +15,8 @@ import { getBuildId } from "../shared.jsx";
  * mounted, because only one page is routed at a time.
  */
 
-const nf = (value, places = 0) =>
-  Number(value).toLocaleString("en-GB", {
-    minimumFractionDigits: places, maximumFractionDigits: places
-  });
-
-/* Millimetres never take a thousands separator (1000, not 1,000); a fraction
-   keeps the app's decimal comma (12,5), and a whole number carries no ",0". */
-const mm = (value, places = 0) =>
-  Number(value).toLocaleString("et-EE", {
-    useGrouping: false, minimumFractionDigits: 0, maximumFractionDigits: places
-  });
-
 /* Euros in the app's own locale, matching the figure the page shows beside the
-   button somebody pressed to get here. */
-const eur = value =>
-  Number(value).toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+   button somebody pressed to get here (utils/format.js). */
 
 export function TakeOffSheet({ takeOff }) {
   if (!takeOff || !takeOff.ready) return null;
