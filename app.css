@@ -4026,6 +4026,12 @@ input[type="range"]:focus-visible {
 }
 .result-card-currency { font-size: var(--fs-lg); }
 
+.result-card-detail {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--text-muted);
+}
+
 .result-card-note {
 	font-family: var(--mono);
 	font-size: var(--fs-md);

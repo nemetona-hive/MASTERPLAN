@@ -270,7 +270,7 @@ export function PipeWrapCalculator() {
               <span className="result-card-title">Final length needed</span>
               <span className="result-card-value">{ready ? `${(total / 10).toFixed(1)} cm` : dash}</span>
               </div>
-              <span style={{fontFamily: 'var(--mono)', fontSize: 'var(--fs-sm)', color: 'var(--color-gray-opa80)'}}>
+              <span className="result-card-detail">
                 {ready ? `${total.toFixed(1)} mm` : "Enter the pipe outer diameter."}
               </span>
               {gapTooLong && (

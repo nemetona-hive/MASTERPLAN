@@ -117,6 +117,14 @@
 	margin-left: var(--sp-1);
 }
 .result-card-currency { font-size: var(--fs-lg); }
+/* A secondary line that stays in the phone's result bar, where
+   .result-card-note is hidden: Pipe Wrap's exact millimetres, or what to
+   enter first. */
+.result-card-detail {
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	color: var(--text-muted);
+}
 
 /* Concrete's result card carries a second stat and a note under the headline
    figure. These were inline styles; they are classes so the mobile bar can
