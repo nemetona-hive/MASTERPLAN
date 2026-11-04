@@ -143,6 +143,10 @@ select:-webkit-autofill {
 	100% { background: transparent; }
 }
 
+/* A number field with its preset list (PresetLibrary.jsx): the list is
+   positioned from this box. */
+.preset-field { position: relative; }
+
 .num-input-wrap-relative {
 	position: relative;
 	width: 100%;

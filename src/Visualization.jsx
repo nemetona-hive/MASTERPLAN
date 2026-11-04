@@ -420,8 +420,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
 
   return (
     <div className="viz-card">
-      <div style={{ display: "flex", alignItems: "stretch", gap: "var(--sp-2)" }}>
-        <div style={{ position: "relative", flex: 1, aspectRatio, maxHeight: `${maxHeight}px` }}>
+      <div className="viz-body">
+        {/* Shape and cap are the drawing's own, so they stay inline. */}
+        <div className="viz-frame" style={{ aspectRatio, maxHeight: `${maxHeight}px` }}>
           {onLargePreview && (
             <button type="button" className="viz-expand-btn ctl-icon" onClick={() => onLargePreview()} title={alwaysShowLabels ? "Close large preview" : "Open large preview"}>
               <Icon name={alwaysShowLabels ? "minimize" : "maximize"} />
@@ -432,7 +433,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label={svgLabel}
-            style={{ display: "block", width: "100%", height: "100%", borderRadius: "8px" }}
+            className="viz-svg"
             onClick={() => { setSelectedKey(null); setSelectedSourceId(null); }}
           >
             <defs>
@@ -455,7 +456,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                 cx + hw > o.x && cx - hw < o.x + o.w && cy + hh > o.y && cy - hh < o.y + o.h);
               const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035 && !underOpening;
               return (
-                <g key={rect.key} style={{ cursor: rect.sourceId ? "pointer" : "default" }}
+                <g key={rect.key} className={rect.sourceId ? "viz-seg is-linked" : "viz-seg"}
                   onClick={e => { e.stopPropagation(); handleSegClick(rect); }}
                 >
                   <rect
@@ -512,9 +513,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
           </svg>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "18px" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-1)", writingMode: "vertical-rl", fontFamily: "var(--mono)", fontSize: "var(--fs-md)", color: "var(--color-gray-opa80)", whiteSpace: "nowrap" }}>
-            <Icon name="arrow-v" style={{ writingMode: "horizontal-tb", fontSize: "var(--fs-md)", color: "var(--color-primary)" }} />
+        <div className="viz-legend-v">
+          <div className="viz-legend-v-text">
+            <Icon name="arrow-v" className="viz-legend-icon viz-legend-icon--upright" />
             <span>{vertLabel}</span>
           </div>
         </div>
@@ -523,9 +524,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
       {/* Dimension legends */}
       <div className="viz-legends">
         <div className="viz-legend-h">
-          <Icon name="arrow-h" style={{ color: "var(--color-primary)" }} />
+          <Icon name="arrow-h" className="viz-legend-icon" />
           <span>{horzLabel}</span>
-          <Icon name="arrow-h" style={{ color: "var(--color-primary)" }} />
+          <Icon name="arrow-h" className="viz-legend-icon" />
         </div>
       </div>
     </div>

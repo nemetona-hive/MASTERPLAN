@@ -237,7 +237,7 @@ describe("material presets on the surface layout page", () => {
     const user = userEvent.setup();
     render(<SurfaceHarness />);
 
-    await user.click(within(document.getElementById("control-surface")).getByRole("button", { name: "Manage Presets" }));
+    await user.click(within(document.getElementById("control-surface")).getByRole("button", { name: "Manage input presets" }));
     expect(screen.getByRole("dialog", { name: "Manage Input Presets" })).toBeInTheDocument();
     expect(screen.getByDisplayValue(DEFAULT_SURFACE_PRESETS[0].name)).toBeInTheDocument();
   });

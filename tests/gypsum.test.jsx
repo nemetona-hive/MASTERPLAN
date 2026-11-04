@@ -104,7 +104,7 @@ describe("the gypsum page", () => {
   it("keeps board, filler and adhesive presets apart", () => {
     render(<SheetGypsum />);
     fireEvent.click(screen.getByText("Glued"));
-    const list = id => document.getElementById(id).closest("[style]").querySelector("[title='Presets']");
+    const list = id => document.getElementById(id).closest(".preset-field").querySelector("[title='Presets']");
     fireEvent.click(list("input-gyp-sheetW"));
     fireEvent.pointerDown(screen.getByText("Gyproc GN 13"));
     expect(document.getElementById("input-gyp-compoundRate").value).toBe("");
@@ -129,7 +129,7 @@ describe("the gypsum page", () => {
 
   it("shows the per-metre rate it worked out for a filler given per 1 mm", () => {
     render(<SheetGypsum />);
-    const list = document.getElementById("input-gyp-compoundRate").closest("[style]").querySelector("[title='Presets']");
+    const list = document.getElementById("input-gyp-compoundRate").closest(".preset-field").querySelector("[title='Presets']");
     fireEvent.click(list);
     fireEvent.pointerDown(screen.getByText("Knauf Fill & Finish Light"));
     expect(document.getElementById("input-gyp-compoundRate").value).toBe("");

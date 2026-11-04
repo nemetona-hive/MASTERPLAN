@@ -236,7 +236,7 @@ try {
   await touchPage.keyboard.press("Escape");
   check(await touchPage.locator(".mp-modal").count() === 0, "Escape closes the mobile modal");
   check(await modalOpener.evaluate(el => el === document.activeElement), "Closing the modal restores focus to its opener");
-  await touchPage.locator("#control-material").getByRole("button", { name: "Manage Presets", exact: true }).tap();
+  await touchPage.locator("#control-material").getByRole("button", { name: "Manage material presets", exact: true }).tap();
   await touchPage.locator(".mp-modal-overlay").tap({ position: { x: 3, y: 3 } });
   check(await touchPage.locator(".mp-modal").count() === 0, "Tapping the scrim closes the mobile modal");
 

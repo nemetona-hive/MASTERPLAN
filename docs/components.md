@@ -31,7 +31,7 @@
   used to copy it on change only bought a second render and a way to clobber a
   user's toggle mid-interaction.
 - `<Section title bg>` — collapsible section for preview area
-- **Preset libraries** (`components/PresetLibrary.jsx`): one hook and four pieces for every page with a product list — Concrete's one library and Gypsum's three. `usePresetLibrary(lib, { onApply, active, setActive })` holds the list (as a draft under `lib.draftKey`) and applies or saves it; the page keeps which one is applied, since Gypsum keeps that per room. `PresetField` is a field with the shared `MaterialPresetDropdown`, `presetHeader(library)` names the applied preset through `SelectedPresetDetail`, `ManagePresetsButton` shows only where Save Defaults can write, and `PresetManager` is the table, in a `Modal`. A library is data; its fields are listed in the file's header.
+- **Preset libraries** (`components/PresetLibrary.jsx`): one hook and four pieces for every page with a product list — Concrete's one library, Gypsum's three, and Pattern Layouts' two (materials and inputs, both sizes: no `describe`, so the dropdown draws width × length; `validate` gives the page's range message; `nameLabel` titles the inputs table "Configuration Name"). `usePresetLibrary(lib, { onApply, active, setActive })` holds the list (as a draft under `lib.draftKey`) and applies or saves it; the page keeps which one is applied, since Gypsum keeps that per room. `PresetField` is a field with the shared `MaterialPresetDropdown`, `presetHeader(library)` names the applied preset through `SelectedPresetDetail`, `ManagePresetsButton` shows only where Save Defaults can write, and `PresetManager` is the table, in a `Modal`. A library is data; its fields are listed in the file's header.
 - `<Row label value unit hi danger hoverType hoveredType setHoveredType />` — data display row
 - `<SegGroup id value options onChange label inline />` — a segmented choice: `.ctrl-dir` segments in a `.seg-group` track, named by `label` as a `role="group"`, the chosen one `.on` and `aria-pressed`. `options` are `[id, text]` pairs, or `[id, text, name]` when the text is too short to name the option (Pattern Layouts' `V` is "Vertical"). `onChange` hears only a change, so a re-click of the chosen option spends no undo step. `inline` sizes the segments to their text, for a switch in a section heading. Every segmented control in the app is one; do not hand-write the markup.
 - Result card units: `.result-card-unit` after a headline figure (`pcs`, `h`) and `.result-card-currency` before a price, both in `96-detail-layout.css`; `.result-card-detail` is a secondary line that stays in the phone's bar, where `.result-card-note` is hidden. Not inline styles: the phone's result bar has to be able to size them.
@@ -148,16 +148,16 @@ same rule stated twice.
 - **Large Preview Modal**: Full-screen analytical dashboard.
   - **Live Synchronization**: Edits to material or surface inputs within the modal reflect immediately in the visualization and stats.
   - **Dashboard Layout**: Uses a 3-column split (Material/Surface, Layout Engine, and Detailed Statistics).
-  - `MaterialSpecification` takes an `isLargePreview` flag (set by the
-    `LargePreviewMaterialSpec` wrapper); it hides the "Manage Presets" button
-    there, since preset management belongs to the main control panel, not the
-    modal.
-  - The main-page instance also takes `largePreviewOpen`, which disables its
-    `useClickOutside` while the modal is up so it cannot swallow clicks aimed
-    at the modal's own dropdown. Pass the state, not a DOM probe: this was a
-    `document.querySelector` for a class that never existed, so the guard was
-    dead for as long as it had been written — and a query during render reads
-    the *previous* commit even when the selector is right.
+  - The modal draws the page's own material and surface cards again
+    (`MaterialCard` / `SurfaceCard` with `manage={false}`): preset management
+    belongs to the main control panel, not the modal. Both copies share the
+    page's two preset libraries, so a preset applied in either is the same
+    choice.
+  - Each field keeps its own "list open" state (`PresetField`), so the page's
+    copy behind the scrim cannot close the modal's list. The page used to share
+    one such state between its two fields and needed a `largePreviewOpen`
+    guard to stop its click-outside swallowing the modal's clicks; with the
+    state per field there is nothing to guard.
   - Modal copies use a `large-` ID prefix. The background fields still exist
     behind the scrim, so reusing their IDs can send label and ARIA relationships
     to the wrong copy even while keyboard focus is trapped.

@@ -18,8 +18,13 @@ import { Icon, MaterialPresetDropdown, Modal, NumInput, SaveDefaultsButton, Sele
  *   required / requiredAny / requiredText — what a preset must fill in to apply
  *   grid, modalClass   — the table's column template and the dialog's width
  *   idBase             — prefix of the table's input ids (default `<id>-preset`)
+ *   nameLabel          — the name column's heading (default "Product Name")
+ *   validate(values)   — optional: a message when parsed values cannot be applied,
+ *                        in place of the required/positive check
  *   detail(p)          — the line under the card header naming the preset
- *   describe(p, field) — the dropdown row: { meta, value, unit }
+ *   describe(p, field) — the dropdown row: { meta, value, unit }; left out for a
+ *                        library of sizes ({ width, length }), which the dropdown
+ *                        draws as they are
  *   note               — a line under the table
  */
 
@@ -54,8 +59,10 @@ export function usePresetLibrary(lib, { onApply, active, setActive }) {
     const positive = field => Number.isFinite(values[field]) && values[field] > 0;
     const requiredOk = lib.required.every(positive) && (!lib.requiredAny || lib.requiredAny.some(positive));
     const restOk = fields.every(field => values[field] === null || (Number.isFinite(values[field]) && values[field] >= 0));
-    if (!requiredOk || !restOk) {
-      setError(`Fill in ${lib.requiredText} before applying this preset.`);
+    const refusal = lib.validate ? lib.validate(values)
+      : !requiredOk || !restOk ? `Fill in ${lib.requiredText} before applying this preset.` : null;
+    if (refusal) {
+      setError(refusal);
       return;
     }
     setError("");
@@ -100,7 +107,7 @@ export function presetHeader({ selected, lib }) {
 }
 
 /** A number field that also opens its library's preset list. */
-export function PresetField({ library, field, id, label, labelIcon, value, onChange, min = 0, req = false, className = "" }) {
+export function PresetField({ library, field, id, label, labelIcon, value, onChange, min = 0, max, req = false, className = "" }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
   const { named, selected, presets, apply, lib, fieldFlash } = library;
@@ -112,14 +119,14 @@ export function PresetField({ library, field, id, label, labelIcon, value, onCha
   };
   const { hoveredIndex, onKeyDown } = useDropdownKeyboard(open ? named.length : 0, pick, () => setOpen(false));
   return (
-    <div className={[className, fieldFlash ? "num-input-flash" : ""].filter(Boolean).join(" ")} ref={ref} style={{ position: "relative" }}>
-      <NumInput id={id} label={label} labelIcon={labelIcon} value={value} min={min} onChange={onChange} req={req}
+    <div className={["preset-field", className, fieldFlash ? "num-input-flash" : ""].filter(Boolean).join(" ")} ref={ref}>
+      <NumInput id={id} label={label} labelIcon={labelIcon} value={value} min={min} max={max} onChange={onChange} req={req}
         showActionLabels presetsOpen={open} presetHoveredIndex={hoveredIndex}
         onTogglePresets={() => setOpen(current => !current)} onCommit={() => setOpen(false)} onKeyDown={onKeyDown} />
       {open && named.length > 0 && (
         <MaterialPresetDropdown anchorRef={ref} presets={named} activePreset={selected ? named.indexOf(selected) : null}
           onApply={(_, idx) => pick(idx)} inputId={id} hoveredIndex={hoveredIndex} title={lib.title}
-          describe={p => lib.describe(p, field)} />
+          field={field} describe={lib.describe ? p => lib.describe(p, field) : undefined} />
       )}
     </div>
   );
@@ -141,12 +148,14 @@ export function PresetManager({ library }) {
   const { lib, presets, active, flashIdx, error, saveStatus, saveError, managing, setManaging, update, apply, add, save } = library;
   if (!managing) return null;
   const base = lib.idBase || `${lib.id}-preset`;
+  const nameLabel = lib.nameLabel || "Product Name";
+  const nameAria = nameLabel.charAt(0) + nameLabel.slice(1).toLowerCase();
   return (
     <Modal title={`Manage ${lib.title}`} onClose={() => setManaging(false)} className={lib.modalClass || ""}>
       <Stack gap={4}>
         <Stack gap={3}>
           <div className={`pw-preset-header ${lib.grid}`}>
-            <span>Product Name</span>
+            <span>{nameLabel}</span>
             {lib.columns.map(([field, head]) => <span key={field}>{head}</span>)}
             <span>&nbsp;</span>
           </div>
@@ -154,8 +163,8 @@ export function PresetManager({ library }) {
             <div key={idx} className={"pw-preset-row" + (active === idx ? " pw-preset-active" : "")}>
               <div className={`pw-preset-fields ${lib.grid}`}>
                 <div>
-                  <span className="pw-preset-lbl-hide">Product Name</span>
-                  <input id={`${base}-name-${idx}`} aria-label={`Product name ${idx + 1}`} type="text"
+                  <span className="pw-preset-lbl-hide">{nameLabel}</span>
+                  <input id={`${base}-name-${idx}`} aria-label={`${nameAria} ${idx + 1}`} type="text"
                     className="num-input" value={p.name} onChange={e => update(idx, "name", e.target.value)} />
                 </div>
                 {lib.columns.map(([field, head, aria]) => (
@@ -166,7 +175,7 @@ export function PresetManager({ library }) {
                       value={p[field] ?? ""} onChange={e => update(idx, field, e.target.value)} />
                   </div>
                 ))}
-                <div className="num-wrap" style={{ justifyContent: "center" }}>
+                <div className="num-wrap pw-preset-apply-cell">
                   <span className="pw-preset-lbl-hide">&nbsp;</span>
                   {active === idx
                     ? <div className="pw-preset-badge">active</div>

@@ -55,6 +55,34 @@ All calculators and pages are stored as standalone files inside `src/components/
 | `guider` | `SheetGuider` | `components/Guider.jsx` | Reference/guide pages (e.g. electrical wiring diagrams) with an entry list panel |
 | `timesheet` | `SheetTimesheet` | `components/Timesheet.jsx` | Work hours calculator |
 
+## Pattern Layouts tool
+
+The default route (`pattern-layout`, served by the fallback): four row layouts
+compared over one surface and one material, from `simulation.js` through
+`Controls.jsx`'s `LAYOUT_REGISTRY`. App holds the page's values (`sh`) and the
+four panels' open state (`layoutPanelsOpen`).
+
+- **Presets are the shared preset system** (`components/PresetLibrary.jsx`),
+  as `MATERIAL_LIBRARY` and `SURFACE_LIBRARY` in `SurfaceLayout.jsx`. The two
+  cards (`MaterialCard`, `SurfaceCard`) are one `DimensionCard` over a library
+  each. It used to be two hand-written cards, a hand-written Material dialog
+  beside a `DimensionPresetManager` for Inputs, and plain component state:
+  - the lists and applied presets were lost on leaving the page and never
+    reached a project; they are drafts now (`SurfaceLayout.jsx:materialPresets`,
+    `:surfacePresets`, `:activeMaterial`, `:activeSurface`);
+  - a refused preset's message rendered outside the control column, as an
+    extra column in the page's flex row, and hid behind the dialog it came
+    from; it now shows under its own card, and in the dialog;
+  - the dropdown was given the applied preset's place in the full list but
+    shown only the named ones, so an unnamed preset before it moved the
+    highlight to the wrong row.
+- The save keys (`materialPresets`, `surfacePresets`) and the table's id
+  prefixes (`mat-preset-*`, `surface-preset-*`) are the ones the page always
+  used; the Material table's width and length ids are now `mat-preset-width-N`
+  and `mat-preset-length-N`, like the Inputs table's.
+- An applied preset stays named while the fields still hold its sizes
+  (`dimensionsMatch`), and an apply is an undo step.
+
 ## Gypsum tool
 
 Metric plasterboard estimator, modelled on the inputs of layoutdrywall.org

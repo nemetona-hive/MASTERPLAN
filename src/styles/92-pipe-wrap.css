@@ -228,6 +228,9 @@
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
+/* The Apply / active cell at the end of a preset row. */
+.pw-preset-apply-cell { justify-content: center; }
+
 .pw-preset-lbl-hide {
 	display: none;
 }

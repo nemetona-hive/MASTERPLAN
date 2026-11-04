@@ -289,7 +289,7 @@ function App() {
   const [sh,      setSh]      = useState(DEFAULT_SH);
   const [sym,     setSym]     = useState(DEFAULT_SYM);
   const [grItems, setGrItems] = useState(DEFAULT_GR);
-  const [s4PanelOpen, setS4PanelOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
+  const [layoutPanelsOpen, setLayoutPanelsOpen] = useState({ s1: false, s2: false, s3: false, s4: false });
 
   /* Projects, local mode only, one set per page (src/useProjects.js): a
      page's drafts plus whichever of App's own state that page owns. Opening
@@ -364,7 +364,7 @@ function App() {
         <PageErrorBoundary key={`${page}:${projects.epochs[projectPage] || 0}`}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
-          panelOpen={s4PanelOpen} setPanelOpen={setS4PanelOpen} projectsAvailable={projects.available}
+          panelOpen={layoutPanelsOpen} setPanelOpen={setLayoutPanelsOpen} projectsAvailable={projects.available}
           projectName={pageProjects?.project?.name || ""} />
         </PageErrorBoundary>
         </ProjectContext.Provider>

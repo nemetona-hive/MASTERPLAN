@@ -1110,6 +1110,8 @@ select:-webkit-autofill {
 	100% { background: transparent; }
 }
 
+.preset-field { position: relative; }
+
 .num-input-wrap-relative {
 	position: relative;
 	width: 100%;
@@ -3967,6 +3969,8 @@ input[type="range"]:focus-visible {
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
+.pw-preset-apply-cell { justify-content: center; }
+
 .pw-preset-lbl-hide {
 	display: none;
 }
@@ -4720,6 +4724,27 @@ input[type="range"]:focus-visible {
   outline: none;
   box-shadow: 0 2px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
 }
+
+.viz-body { display: flex; align-items: stretch; gap: var(--sp-2); }
+.viz-frame { position: relative; flex: 1; }
+.viz-svg { display: block; width: 100%; height: 100%; border-radius: 8px; }
+
+.viz-seg.is-linked { cursor: pointer; }
+.viz-legend-v { display: flex; align-items: center; justify-content: center; min-width: 18px; }
+.viz-legend-v-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+}
+
+.viz-legend-icon { color: var(--brand); font-size: var(--fs-md); }
+.viz-legend-icon--upright { writing-mode: horizontal-tb; }
 
 .viz-legends {
   display: flex;

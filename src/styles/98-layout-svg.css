@@ -53,6 +53,31 @@
   box-shadow: 0 2px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
+/* The drawing beside its vertical legend (LayoutVisualization). The frame's
+   aspect ratio and height cap are the drawing's, set inline. */
+.viz-body { display: flex; align-items: stretch; gap: var(--sp-2); }
+.viz-frame { position: relative; flex: 1; }
+.viz-svg { display: block; width: 100%; height: 100%; border-radius: 8px; }
+/* A piece cut from a stock panel that another piece shares: clicking it
+   highlights its partner. */
+.viz-seg.is-linked { cursor: pointer; }
+.viz-legend-v { display: flex; align-items: center; justify-content: center; min-width: 18px; }
+.viz-legend-v-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+}
+/* The arrows were meant in the brand colour all along: Icon takes no style
+   prop, so the inline colour they carried was never applied. */
+.viz-legend-icon { color: var(--brand); font-size: var(--fs-md); }
+.viz-legend-icon--upright { writing-mode: horizontal-tb; }
+
 /* Dimension legend row */
 .viz-legends {
   display: flex;
