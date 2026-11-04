@@ -70,7 +70,7 @@ function SurfaceDrawing({ surface, orientation, widest }) {
 export function GypsumTakeOffSheet({ takeOff }) {
   if (!takeOff || !takeOff.ready) return null;
 
-  const { area, sheet, surfaces, sheets, screws, compound, tape, product, layers, orientation, openings } = takeOff;
+  const { area, sheet, surfaces, sheets, screws, compound, tape, product, layers, orientation, openings, fixing, adhesive } = takeOff;
   const printed = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
   const build = getBuildId();
   const drawn = surfaces.filter(s => s.layout);
@@ -125,7 +125,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
             </div>
           )}
           <div className="doc-sheet-fact--lead"><dt>Net area</dt><dd>{nf(area.net, 2)} m²</dd></div>
-          <div><dt>Fixing</dt><dd>{orientation === "V" ? "Vertical" : "Horizontal"}, {layers} layer{layers === 1 ? "" : "s"}</dd></div>
+          <div><dt>Fixing</dt><dd>{fixing === "glue" ? "Glued walls" : "Screwed"}, {orientation === "V" ? "vertical" : "horizontal"}, {layers} layer{layers === 1 ? "" : "s"}</dd></div>
         </dl>
       </section>
 
@@ -142,9 +142,17 @@ export function GypsumTakeOffSheet({ takeOff }) {
               <td className="doc-sheet-strong">{sheets.toBuy} sheets</td>
               {sheets.price && <><td>€{eur(sheets.price)}</td><td className="doc-sheet-strong">€{eur(sheets.total)}</td></>}
             </tr>
-            {screws.rate !== null && (
+            {adhesive && adhesive.rate !== null && (
               <tr>
-                <td>Screws</td>
+                <td>Adhesive</td>
+                <td>{nf(adhesive.kg, 1)} kg</td>
+                <td className="doc-sheet-strong">{adhesive.bagKg ? `${adhesive.bags} × ${nf(adhesive.bagKg)} kg` : `${nf(adhesive.kg, 1)} kg`}</td>
+                {sheets.price && <><td /><td /></>}
+              </tr>
+            )}
+            {screws.rate !== null && screws.area > 0 && (
+              <tr>
+                <td>{fixing === "glue" ? "Ceiling screws" : "Screws"}</td>
                 <td>{nf(screws.rate, 1)} /m²</td>
                 <td className="doc-sheet-strong">{nf(screws.count)} pcs</td>
                 {sheets.price && <><td /><td /></>}
@@ -170,7 +178,7 @@ export function GypsumTakeOffSheet({ takeOff }) {
           Sheets are counted from the layout with offcuts reused, so waste covers breakage rather
           than cutting. Openings reduce screws and joint filler. A placed opening also removes any
           piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
-          price covers board only.
+          price covers board only.{fixing === "glue" ? " Glued walls are stuck in dabs onto masonry, one layer; an uneven wall takes more adhesive, and a ceiling is screwed." : ""}
         </p>
       </section>
       <section className="doc-sheet-block doc-sheet-block--table">

@@ -117,7 +117,7 @@
 }
 
 .pw-preset-grid--gypsum {
-	--pw-preset-columns: minmax(0, 2fr) repeat(6, minmax(0, 1fr)) var(--pw-preset-action-width);
+	--pw-preset-columns: minmax(0, 2fr) repeat(8, minmax(0, 1fr)) var(--pw-preset-action-width);
 }
 
 .pw-preset-grid--dimensions {

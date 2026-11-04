@@ -135,6 +135,40 @@ describe("the gypsum take-off", () => {
     expect(t.compound.bags).toBe(1);
   });
 
+  describe("glued walls", () => {
+    const glued = over => buildGypsumTakeOff(fields({ fixing: "glue", adhesiveRate: "5", adhesiveBagKg: "25", ...over }));
+
+    it("take adhesive on the walls' net area instead of screws", () => {
+      const t = glued({ openings: [{ id: 1, kind: "door", wall: "A", x: "", w: "900", h: "2100" }] });
+      const net = 36.4 - 0.9 * 2.1;
+      expect(t.fixing).toBe("glue");
+      expect(t.screws.count).toBe(0);
+      expect(t.adhesive.area).toBeCloseTo(net, 2);
+      expect(t.adhesive.kg).toBeCloseTo(net * 5, 1);
+      expect(t.adhesive.bags).toBe(Math.ceil(net * 5 / 25));
+      // Joint filler and tape do not depend on how the board is held.
+      expect(t.compound.kg).toBeCloseTo(net * 0.25, 1);
+    });
+
+    it("still screw a boarded ceiling", () => {
+      const t = glued({ ceiling: true });
+      expect(t.screws.area).toBeCloseTo(12, 2);
+      expect(t.screws.count).toBe(12 * 20);
+      expect(t.adhesive.area).toBeCloseTo(36.4, 2);
+    });
+
+    it("are one layer, whatever the layer choice says", () => {
+      const one = glued();
+      const asked = glued({ layers: "2" });
+      expect(asked.layers).toBe(1);
+      expect(asked.sheets.layout).toBe(one.sheets.layout);
+    });
+
+    it("carry no adhesive when screwed", () => {
+      expect(buildGypsumTakeOff(fields({ adhesiveRate: "5" })).adhesive).toBe(null);
+    });
+  });
+
   it("prices the sheets bought", () => {
     const t = buildGypsumTakeOff(fields({ waste: "10" }));
     expect(t.sheets.total).toBe(14 * 8.5);

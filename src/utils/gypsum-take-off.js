@@ -232,12 +232,17 @@ export function buildGypsumTakeOff(fields) {
     mode, lenMm, widMm, heightMm, wallW, wallH, ceiling,
     openings: openingList,
     sheetW, sheetL, orientation, layers, waste,
-    screwRate, compoundRate, bagKg, sheetPrice, product
+    screwRate, compoundRate, bagKg, sheetPrice, product,
+    fixing, adhesiveRate, adhesiveBagKg
   } = fields;
 
   const room = mode !== "wall";
   const SW = num(sheetW), SL = num(sheetL);
-  const layerCount = String(layers) === "2" ? 2 : 1;
+  /* Glued ("dot and dab") is a lining stuck straight onto masonry: walls only,
+     one layer. A ceiling cannot hang on adhesive, so it stays screwed, and a
+     second layer has nothing to be screwed into — glued forces one layer. */
+  const glued = fixing === "glue";
+  const layerCount = !glued && String(layers) === "2" ? 2 : 1;
   const fix = orientation === "H" ? "H" : "V";
 
   const dimsReady = room
@@ -317,7 +322,15 @@ export function buildGypsumTakeOff(fields) {
   const net = Math.max(0, gross - openings);
   const boarded = net * layerCount;
 
-  const screws = Math.ceil(boarded * num(screwRate) - EPS);
+  /* Glued walls take adhesive instead of screws; the ceiling, if boarded,
+     is screwed either way. Openings come off the walls, so the glued area is
+     the walls' net. */
+  const wallNet = Math.max(0, wallArea - openings);
+  const screwedArea = (glued ? net - wallNet : net) * layerCount;
+  const screws = Math.max(0, Math.ceil(screwedArea * num(screwRate) - EPS));   // max: ceil(-EPS) is -0
+  const adhesiveKg = glued ? wallNet * num(adhesiveRate) : 0;
+  const adhesiveBag = num(adhesiveBagKg);
+  const adhesiveBags = adhesiveBag > 0 ? Math.ceil(adhesiveKg / adhesiveBag - EPS) : 0;
   const compoundKg = boarded * num(compoundRate);
   const bag = num(bagKg);
   const bagsExact = bag > 0 ? compoundKg / bag : 0;
@@ -359,6 +372,7 @@ export function buildGypsumTakeOff(fields) {
               : { length: num(wallW), width: 0, height: num(wallH), ceiling: false })
       : null,
     orientation: fix,
+    fixing: glued ? "glue" : "screw",
     layers: layerCount,
     sheet: { width: SW || null, length: SL || null, area: round(SW * SL / 1e6, 2) },
     surfaces: laidOut.map(s => ({
@@ -389,7 +403,14 @@ export function buildGypsumTakeOff(fields) {
       price: price || null,
       total: total === null ? null : round(total, 2)
     },
-    screws: { rate: given(screwRate) ? num(screwRate) : null, count: screws },
+    screws: { rate: given(screwRate) ? num(screwRate) : null, count: screws, area: round(screwedArea, 2) },
+    adhesive: glued ? {
+      rate: given(adhesiveRate) ? num(adhesiveRate) : null,
+      area: round(wallNet, 2),
+      kg: round(adhesiveKg, 1),
+      bagKg: adhesiveBag || null,
+      bags: adhesiveBags
+    } : null,
     compound: {
       rate: given(compoundRate) ? num(compoundRate) : null,
       kg: round(compoundKg, 1),

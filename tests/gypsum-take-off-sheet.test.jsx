@@ -15,7 +15,20 @@ const takeOff = buildGypsumTakeOff({
 /* What @media print shows is `npm run layout`'s to check; this checks the
    sheet draws what the model says, and only that. */
 describe("the printed gypsum take-off", () => {
-  it("draws one diagram per laid-out surface", () => {
+  it("orders adhesive for glued walls and screws only for the ceiling", () => {
+    const glued = buildGypsumTakeOff({ mode: "room", lenMm: "4200", widMm: "3100", heightMm: "2700",
+      ceiling: true, openings: [], sheetW: "1200", sheetL: "2600", orientation: "V", layers: "1", waste: "5",
+      screwRate: "13", compoundRate: "0.34", bagKg: "25", sheetPrice: "", product: "",
+      fixing: "glue", adhesiveRate: "4.3", adhesiveBagKg: "25" });
+    render(<GypsumTakeOffSheet takeOff={glued} />);
+    const order = document.querySelector(".doc-sheet-table--order").textContent;
+    expect(order).toContain("Adhesive");
+    expect(order).toContain(`${glued.adhesive.bags} × 25 kg`);
+    expect(order).toContain("Ceiling screws");
+    expect(document.querySelector(".doc-sheet-facts").textContent).toContain("Glued walls");
+  });
+
+    it("draws one diagram per laid-out surface", () => {
     render(<GypsumTakeOffSheet takeOff={takeOff} />);
     // Walls A+C together, B (it has the door) apart from D, and the ceiling.
     expect(document.querySelectorAll(".doc-sheet .gyp-print-svg")).toHaveLength(4);

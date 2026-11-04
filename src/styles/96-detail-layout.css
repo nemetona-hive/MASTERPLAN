@@ -639,8 +639,8 @@
 }
 
 /* ── Projects dialog (components/ProjectMenu.jsx) ── */
-/* The board table has seven columns; the default 680px squeezes them. */
-.mp-modal.gyp-preset-modal { max-width: min(960px, 100%); }
+/* The board table has nine columns; the default 680px squeezes them. */
+.mp-modal.gyp-preset-modal { max-width: min(1120px, 100%); }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;

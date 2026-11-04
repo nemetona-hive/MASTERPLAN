@@ -291,6 +291,10 @@ const DEFAULT_CONCRETE_PRESETS = [
      ~0.25 kg/m² on 12.5mm HRAK board (Uniflott datasheet).
    - Gyproc: ~44 screws per 1200×2400 board at 450 studs ≈ 13 pcs/m² (Gyproc
      SE installation guide); joint filler ~74 m² per 25 kg ≈ 0.34 kg/m².
+   Adhesive, for glued (dot-and-dab) walls on masonry:
+   - Knauf Perlfix: approx. 5 kg/m², 25 kg bag (Knauf HR data sheet K465).
+   - Gyproc: one 25 kg bag of DriWall adhesive per two 1200×2400 boards
+     (British Gypsum) = 25 / 5.76 m² ≈ 4.3 kg/m². More on an uneven wall.
    Prices are left blank — they are the merchant's, not the maker's. */
 const DEFAULT_GYPSUM_PRESETS = [
   {
@@ -300,7 +304,9 @@ const DEFAULT_GYPSUM_PRESETS = [
     screwRate: 20,
     compoundRate: 0.25,
     bagKg: 25,
-    sheetPrice: ""
+    sheetPrice: "",
+    adhesiveRate: 5,
+    adhesiveBagKg: 25
   },
   {
     name: "Gyproc GN 13",
@@ -309,7 +315,9 @@ const DEFAULT_GYPSUM_PRESETS = [
     screwRate: 13,
     compoundRate: 0.34,
     bagKg: 25,
-    sheetPrice: ""
+    sheetPrice: "",
+    adhesiveRate: 4.3,
+    adhesiveBagKg: 25
   },
   {
     name: "",
@@ -318,7 +326,9 @@ const DEFAULT_GYPSUM_PRESETS = [
     screwRate: "",
     compoundRate: "",
     bagKg: "",
-    sheetPrice: ""
+    sheetPrice: "",
+    adhesiveRate: "",
+    adhesiveBagKg: ""
   }
 ];
 

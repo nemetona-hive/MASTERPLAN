@@ -61,7 +61,20 @@ describe("the gypsum page", () => {
     expect(document.querySelector("#control-gyp-board .panel-preset-meta").textContent).toContain("Gyproc GN 13");
   });
 
-  it("manages presets in a dialog, as Pattern Layouts does", () => {
+  it("offers glued walls: adhesive instead of screws, one layer", () => {
+    render(<SheetGypsum />);
+    fireEvent.click(screen.getAllByTitle("Presets")[0]);
+    fireEvent.pointerDown(screen.getByText("Knauf GKB 12.5"));
+    fireEvent.click(screen.getByText("Glued"));
+    expect(screen.queryByText("2 layers")).toBe(null);
+    expect(document.getElementById("input-gyp-screwRate")).toBe(null);
+    expect(document.getElementById("input-gyp-adhesiveRate").value).toBe("5");
+    fireEvent.click(screen.getByText("Walls + ceiling"));
+    expect(document.getElementById("input-gyp-screwRate").value).toBe("20");
+    expect(screen.getByText("Ceiling screws (pcs/m²)")).toBeTruthy();
+  });
+
+    it("manages presets in a dialog, as Pattern Layouts does", () => {
     render(<SheetGypsum />);
     fireEvent.click(screen.getByText("Manage Presets"));
     const dialog = screen.getByRole("dialog");

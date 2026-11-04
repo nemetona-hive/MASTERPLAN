@@ -95,6 +95,14 @@ a second layer. All figures, and the diagrams, come from
   the warning.
 - Walls are grouped (drawn once, labelled `Walls A, C`) only while identical:
   same size and the same openings in the same places.
+- **Screwed or glued.** Glued ("dot and dab") sticks the boards straight onto
+  masonry: walls only, one layer. Walls then take adhesive on their net area
+  (`takeOff.adhesive`: kg and bags) and no screws; a boarded ceiling is still
+  screwed, so `screws` counts the ceiling only (`screws.area`). The page hides
+  the layer choice rather than offer one the model ignores. Joint filler and
+  tape do not change. Rates: Knauf Perlfix approx. 5 kg/m², 25 kg bag (Knauf
+  data sheet); Gyproc DriWall one 25 kg bag per two 1200×2400 boards (British
+  Gypsum) ≈ 4.3 kg/m². Both rise on an uneven wall.
 - **Two layers** double sheets, screws and joint filler. Tape is face layer only.
   Tape = board joints from the layout, plus four internal corners and, with a
   ceiling, the ceiling angle.

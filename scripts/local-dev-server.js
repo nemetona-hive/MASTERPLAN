@@ -109,7 +109,9 @@ function validateGypsumPresets(value) {
       screwRate: toNumberOrBlank(preset.screwRate, 0.01, 1000),
       compoundRate: toNumberOrBlank(preset.compoundRate, 0.001, 100),
       bagKg: toNumberOrBlank(preset.bagKg, 0.01),
-      sheetPrice: toNumberOrBlank(preset.sheetPrice)
+      sheetPrice: toNumberOrBlank(preset.sheetPrice),
+      adhesiveRate: toNumberOrBlank(preset.adhesiveRate, 0.01, 100),
+      adhesiveBagKg: toNumberOrBlank(preset.adhesiveBagKg, 0.01)
     };
   });
 }

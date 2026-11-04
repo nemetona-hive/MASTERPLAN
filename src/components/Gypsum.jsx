@@ -10,16 +10,20 @@ import { buildGypsumTakeOff, WALLS } from "../utils/gypsum-take-off.js";
 // ── Gypsum board estimator ────────────────────────────────────────────────────
 
 const KEY = name => `Gypsum.jsx:${name}`;
-const PRODUCT_FIELDS = ["sheetW", "sheetL", "screwRate", "compoundRate", "bagKg", "sheetPrice"];
+/* The first five are required to apply a preset; price and the adhesive pair
+   are optional (a preset need not cover glued walls). */
+const PRODUCT_FIELDS = ["sheetW", "sheetL", "screwRate", "compoundRate", "bagKg", "sheetPrice", "adhesiveRate", "adhesiveBagKg"];
 const PRESET_COLUMNS = [
   ["sheetW", "Width mm", "Sheet width"],
   ["sheetL", "Length mm", "Sheet length"],
   ["screwRate", "Screws/m²", "Screws per m²"],
   ["compoundRate", "Filler kg/m²", "Joint filler per m²"],
   ["bagKg", "Filler bag kg", "Filler bag weight"],
-  ["sheetPrice", "€ sheet", "Sheet price"]
+  ["sheetPrice", "€ sheet", "Sheet price"],
+  ["adhesiveRate", "Glue kg/m²", "Adhesive per m²"],
+  ["adhesiveBagKg", "Glue bag kg", "Adhesive bag weight"]
 ];
-const BLANK_PRESET = { name: "", sheetW: "", sheetL: "", screwRate: "", compoundRate: "", bagKg: "", sheetPrice: "" };
+const BLANK_PRESET = { name: "", sheetW: "", sheetL: "", screwRate: "", compoundRate: "", bagKg: "", sheetPrice: "", adhesiveRate: "", adhesiveBagKg: "" };
 
 /* Fields that begin empty, and those that begin at a sensible value. Opening
    sizes are standard enough to prefill; job dimensions never are. */
@@ -48,6 +52,8 @@ export function SheetGypsum() {
   const [ceiling, setCeiling] = useSessionState(KEY("ceiling"), false);
   const [orientation, setOrientation] = useSessionState(KEY("orientation"), "V");
   const [layers, setLayers] = useSessionState(KEY("layers"), "1");
+  const [fixing, setFixing] = useSessionState(KEY("fixing"), "screw");      // "screw" | "glue"
+  const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
 
   /* Every typed field in one object, so reset and the model call do not repeat
@@ -85,7 +91,7 @@ export function SheetGypsum() {
 
   const resetAll = () => {
     setJob(initialJob());
-    setMode("room"); setCeiling(false); setView3d(false); setOrientation("V"); setLayers("1");
+    setMode("room"); setCeiling(false); setView3d(false); setOrientation("V"); setLayers("1"); setFixing("screw");
     setActivePreset(null);
   };
   const handleReset = () => {
@@ -103,8 +109,8 @@ export function SheetGypsum() {
   const applyPreset = (p, idx) => {
     const values = PRODUCT_FIELDS.map(name => parseMeasurement(p[name]));
     const required = values.slice(0, 5);
-    const priceOk = values[5] === null || (Number.isFinite(values[5]) && values[5] >= 0);
-    if (!required.every(v => Number.isFinite(v) && v > 0) || !priceOk) {
+    const optionalOk = values.slice(5).every(v => v === null || (Number.isFinite(v) && v >= 0));
+    if (!required.every(v => Number.isFinite(v) && v > 0) || !optionalOk) {
       setPresetError("Fill in sheet size, screws, joint filler and bag weight before applying this preset.");
       return;
     }
@@ -139,7 +145,7 @@ export function SheetGypsum() {
 
   // ── Derived values: all of it from the model ───────────────────────────────
   const takeOff = buildGypsumTakeOff({
-    ...job, mode, ceiling, orientation, layers,
+    ...job, mode, ceiling, orientation, layers, fixing,
     product: activePreset !== null && presets[activePreset] ? presets[activePreset].name : ""
   });
   const { area, sheets, screws, compound, tape } = takeOff;
@@ -150,7 +156,7 @@ export function SheetGypsum() {
     const frame = requestAnimationFrame(() => window.print());
     return () => cancelAnimationFrame(frame);
   }, [printTakeOff]);
-  const fieldKey = JSON.stringify([job, mode, ceiling, orientation, layers, activePreset, presets]);
+  const fieldKey = JSON.stringify([job, mode, ceiling, orientation, layers, fixing, activePreset, presets]);
   React.useEffect(() => { setPrintTakeOff(null); }, [fieldKey]);
 
   const dimsKeys = mode === "room" ? ["lenMm", "widMm", "heightMm"] : ["wallW", "wallH"];
@@ -265,8 +271,14 @@ export function SheetGypsum() {
             ))}
             <Seg label="Fixing direction" value={orientation} onChange={setOrientation}
               options={[["V", "Vertical"], ["H", "Horizontal"]]} />
-            <Seg label="Layers" value={layers} onChange={setLayers}
-              options={[["1", "1 layer"], ["2", "2 layers"]]} />
+            {/* Glued is one layer on walls; the model enforces it, so the choice
+                is not offered rather than offered and ignored. */}
+            <Seg label="Fixing method" value={fixing} onChange={setFixing}
+              options={[["screw", "Screwed"], ["glue", "Glued"]]} />
+            {!glued && (
+              <Seg label="Layers" value={layers} onChange={setLayers}
+                options={[["1", "1 layer"], ["2", "2 layers"]]} />
+            )}
             {typeof canSaveStaticDefaults !== "undefined" && canSaveStaticDefaults() && (
               <button className="ctrl-dir form-section-action" onClick={() => setShowModal(true)}>
                 <Icon name="plus" /> Manage Presets
@@ -277,11 +289,29 @@ export function SheetGypsum() {
 
         <ControlPanel id="control-gyp-fixing" title="Fixing & Price" noToggle className="form-section-card">
           <Stack gap={3} className="ctrl-list">
-            {[["screwRate", "Screws (pcs/m²)", 0], ["compoundRate", "Joint filler (kg/m²)", 0]].map(([name, label, min]) => (
-              <div key={name} className={fieldFlash ? "num-input-flash" : ""}>
-                <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={min} onChange={productChange(name)} />
+            {/* Glued walls take no screws; a boarded ceiling still does. */}
+            {(!glued || (mode === "room" && ceiling)) && (
+              <div className={fieldFlash ? "num-input-flash" : ""}>
+                <NumInput id="input-gyp-screwRate" label={glued ? "Ceiling screws (pcs/m²)" : "Screws (pcs/m²)"}
+                  value={val("screwRate")} min={0} onChange={productChange("screwRate")} />
               </div>
-            ))}
+            )}
+            {glued && (
+              <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
+                <div className={fieldFlash ? "num-input-flash" : ""}>
+                  <NumInput id="input-gyp-adhesiveRate" label="Adhesive (kg/m²)" value={val("adhesiveRate")} min={0}
+                    onChange={productChange("adhesiveRate")} />
+                </div>
+                <div className={fieldFlash ? "num-input-flash" : ""}>
+                  <NumInput id="input-gyp-adhesiveBagKg" label="Adhesive bag (kg)" value={val("adhesiveBagKg")} min={0.1}
+                    onChange={productChange("adhesiveBagKg")} />
+                </div>
+              </div>
+            )}
+            <div className={fieldFlash ? "num-input-flash" : ""}>
+              <NumInput id="input-gyp-compoundRate" label="Joint filler (kg/m²)" value={val("compoundRate")} min={0}
+                onChange={productChange("compoundRate")} />
+            </div>
             <div className="pw-grid-2col" style={{ marginBottom: 0 }}>
               <div className={fieldFlash ? "num-input-flash" : ""}>
                 <NumInput id="input-gyp-bagKg" label="Filler bag (kg)" value={val("bagKg")} min={0.1} onChange={productChange("bagKg")} />
@@ -349,7 +379,9 @@ export function SheetGypsum() {
                   {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
                   <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
                   <Row label={`With ${sheets.waste}% waste`} value={sheets.exact.toFixed(1)} unit="pcs" />
-                  <Row label="Screws" value={screws.count} unit="pcs" />
+                  {(!glued || screws.area > 0) && <Row label={glued ? "Ceiling screws" : "Screws"} value={screws.count} unit="pcs" />}
+                  {takeOff.adhesive && <Row label="Adhesive" value={takeOff.adhesive.kg.toFixed(1)} unit="kg" />}
+                  {takeOff.adhesive?.bagKg && <Row label={`Adhesive bags (${takeOff.adhesive.bagKg} kg)`} value={takeOff.adhesive.bags} unit="pcs" />}
                   <Row label="Joint filler" value={compound.kg.toFixed(1)} unit="kg" />
                   {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
                   <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
@@ -364,6 +396,13 @@ export function SheetGypsum() {
                       Tape covers board joints on the face layer{mode === "room" ? ", internal corners" : ""}{mode === "room" && ceiling ? " and the ceiling angle" : ""}.
                     </span>
                   </div>
+                  {glued && (
+                    <div className="pw-formula-wrap" style={{ paddingBottom: "1rem" }}>
+                      <span className="pw-formula-text">
+                        Glued: boards stuck in dabs straight onto masonry, one layer. Adhesive covers the walls' net area; a ceiling is still screwed. An uneven wall takes more.
+                      </span>
+                    </div>
+                  )}
                 </Stack>
               </div>
             </div>

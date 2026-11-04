@@ -3845,7 +3845,7 @@ input[type="range"]:focus-visible {
 }
 
 .pw-preset-grid--gypsum {
-	--pw-preset-columns: minmax(0, 2fr) repeat(6, minmax(0, 1fr)) var(--pw-preset-action-width);
+	--pw-preset-columns: minmax(0, 2fr) repeat(8, minmax(0, 1fr)) var(--pw-preset-action-width);
 }
 
 .pw-preset-grid--dimensions {
@@ -4559,7 +4559,7 @@ input[type="range"]:focus-visible {
 	}
 }
 
-.mp-modal.gyp-preset-modal { max-width: min(960px, 100%); }
+.mp-modal.gyp-preset-modal { max-width: min(1120px, 100%); }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;
