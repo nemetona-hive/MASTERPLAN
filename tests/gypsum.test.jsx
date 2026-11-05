@@ -66,6 +66,17 @@ describe("the gypsum page", () => {
     expect(sheetsNeeded()).toBe("12");
   });
 
+  it("shows joint filler rows only once a filler is given", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    expect(screen.queryByText("Joints filled")).toBeNull();
+    expect(screen.queryByText(/^Joint filler/, { selector: "#data-preview *" })).toBeNull();
+    expect(screen.getByText("Joint tape")).toBeTruthy();
+    type("input-gyp-compoundRate", 0.25);
+    expect(screen.getByText("Joints filled")).toBeTruthy();
+    expect(screen.getByText("Joint filler (0.25 kg/m)")).toBeTruthy();
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();
