@@ -22,8 +22,12 @@
   Axial Alignment on its area and product widths, and Concrete on consumption.
   Other numeric fields keep their compact single-action presentation.
 - `<RangeSlider id value onChange min max step className />` — lockable range slider with lock/unlock toggle. Starts locked; click the row or tap the lock icon to unlock.
-- `<ControlPanel id title headerDetail open setOpen>` — collapsible panel for controls sidebar;
+- `<ControlPanel id title headerDetail headerAction open setOpen noToggle>` — collapsible panel for controls sidebar;
   `headerDetail` renders optional contextual metadata directly below the panel heading.
+  `headerAction` puts a control at the head's right end (the Projects button,
+  so the project name below gets the whole width). It renders only with
+  `noToggle`: a folding card's whole head is its toggle button, and a button
+  cannot sit inside another. `Section` takes it the same way.
   (`Section` and `ControlPanel` are one internal `Collapsible`
   wearing two variants; the base is not exported). Pass **both** `open` and
   `setOpen` to control it. `open` on its own is read once as the initial state
