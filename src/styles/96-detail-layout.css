@@ -356,16 +356,17 @@
 .result-card-primary { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
 .result-card-print { width: 100%; justify-content: center; }
 
-/* Gypsum: one heading per laid-out surface above its diagram. */
+/* Gypsum: one heading per laid-out surface above its diagram. The meta —
+   the counts, or the board selected in the drawing — reads straight after
+   the name, at body size, since a selected board is what you are looking at. */
 .gyp-surface-head {
 	display: flex;
 	align-items: baseline;
-	justify-content: space-between;
 	gap: var(--sp-3);
 	flex-wrap: wrap;
 }
 .gyp-surface-name { font-weight: var(--fw-semi); color: var(--text); }
-.gyp-surface-meta { font-family: var(--mono); font-size: var(--fs-xs); color: var(--text-muted); }
+.gyp-surface-meta { font-family: var(--mono); font-size: var(--fs-md); color: var(--text-muted); }
 
 /* Gypsum rooms: the job's rooms and walls, one selector each (the on one is
    the room on screen), then the ways to add, copy or drop one. */
