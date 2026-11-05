@@ -668,15 +668,16 @@
 .mp-modal.gyp-preset-modal--board { max-width: min(860px, 100%); }
 
 /* ── Projects dialog (components/ProjectMenu.jsx) ── */
-/* A page's project section: the open project's name, and the dialog's button. */
-.project-bar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--sp-3);
-	min-width: 0;
+/* A page's project section: the dialog's button in the head, beside the
+   title, and the open project's name the card's whole width under it. The
+   head is uppercase and tracked out; the button is not. */
+.project-head-btn {
+	flex: none;
+	text-transform: none;
+	letter-spacing: normal;
 }
 .project-bar-name {
+	display: block;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -686,7 +687,6 @@
 }
 .project-bar-name.is-none { color: var(--text-muted); font-weight: var(--fw-reg); }
 .project-bar-name.is-error { color: var(--danger); }
-.project-bar .ts-btn { flex: none; }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;

@@ -708,7 +708,10 @@ export function NumInput({ id, label, value, onChange, min = 0, max = Infinity, 
 }
 
 // One collapsible behind both Section and ControlPanel
-function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "", noToggle = false }) {
+/* `headerAction`: a control at the head's right end (the Projects button).
+   A fixed card only: a folding card's whole head is its toggle button, and a
+   button cannot sit inside another. */
+function Collapsible({ id, title, headerDetail = null, headerAction = null, bg, open: openProp, setOpen: setOpenProp, children, variant = "section", className = "", noToggle = false }) {
   const isControlled = openProp !== undefined && setOpenProp !== undefined;
   // Uncontrolled: `open` seeds the initial state and nothing more. Every
   // uncontrolled call site passes a literal (open={false}, open={true}
@@ -730,7 +733,7 @@ function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOp
   return (
     <div id={id} className={[classes[0], headerDetail && "control-panel--has-header-detail", className].filter(Boolean).join(" ")}>
       {noToggle
-        ? <div className={classes[1]} style={bg ? { background: bg } : undefined}>{titleContent}</div>
+        ? <div className={classes[1]} style={bg ? { background: bg } : undefined}>{titleContent}{headerAction}</div>
         : <button type="button" className={`${classes[1]} disclosure`}
             aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>
             {titleContent}

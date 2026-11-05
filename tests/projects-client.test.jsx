@@ -119,6 +119,8 @@ describe("a page's project section", () => {
   it("says when no project is open", () => {
     render(<ProjectMenu {...props()} />);
     expect(screen.getByText("No project")).toBeTruthy();
+    // On a card the button is in the head, beside the title.
+    expect(document.querySelector("#control-project .panel-head button").textContent.trim()).toBe("Projects");
   });
 
   it("creates a blank project", async () => {
@@ -205,7 +207,11 @@ describe("a page's project section", () => {
 
   it("titles the dialog with its page, and is a section on a calculator page", () => {
     render(<ProjectMenu variant="section" {...props()} />);
-    expect(document.querySelector(".section .section-head").textContent).toBe("Project");
+    const head = document.querySelector(".section .section-head");
+    expect(head.firstChild.textContent).toBe("Project");
+    // The button sits in the head, so the name below has the whole width.
+    expect(head.querySelector("button").textContent.trim()).toBe("Projects");
+    expect(head.contains(screen.getByText("No project"))).toBe(false);
     fireEvent.click(screen.getByText("Projects"));
     expect(screen.getByRole("dialog").textContent).toContain("Gypsum projects");
   });

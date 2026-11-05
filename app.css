@@ -4631,14 +4631,13 @@ input[type="range"]:focus-visible {
 
 .mp-modal.gyp-preset-modal--board { max-width: min(860px, 100%); }
 
-.project-bar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--sp-3);
-	min-width: 0;
+.project-head-btn {
+	flex: none;
+	text-transform: none;
+	letter-spacing: normal;
 }
 .project-bar-name {
+	display: block;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -4648,7 +4647,6 @@ input[type="range"]:focus-visible {
 }
 .project-bar-name.is-none { color: var(--text-muted); font-weight: var(--fw-reg); }
 .project-bar-name.is-error { color: var(--danger); }
-.project-bar .ts-btn { flex: none; }
 .project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
 .project-lbl {
 	display: block;

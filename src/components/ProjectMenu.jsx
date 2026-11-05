@@ -11,7 +11,8 @@ import { ControlPanel, Icon, Modal, Stack, useTimedState } from "../shared.jsx";
  * a calculator page (`variant="section"`). Rendered without a provider, as in
  * the page tests and on GitHub Pages, it is nothing.
  *
- * The section names the open project, or says there is none. It shows no
+ * The Projects button sits in the head beside the title, so the open
+ * project's name, or "No project", has the full width under it. It shows no
  * "Saved" tag: saving is automatic and a status that says so on every
  * keystroke is noise. A failed save is the one state you need to see, so it
  * turns the name to the danger colour and says why under it.
@@ -86,18 +87,20 @@ function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreat
     await run(() => onDelete(id));
   };
 
+  /* The button sits in the head, beside the title, so the name has the
+     card's whole width under it. */
+  const button = (
+    <button type="button" className="ts-btn ctl-ghost ctl-sm project-head-btn" onClick={show} aria-haspopup="dialog"
+      aria-label={project ? `Projects — ${project.name} is open` : "Projects — save or open one"}>
+      <Icon name="folder" /> Projects
+    </button>
+  );
   const bar = (
     <Stack gap={2}>
-      <div className="project-bar">
-        <span className={"project-bar-name" + (project ? "" : " is-none") + (saveError ? " is-error" : "")}
-          title={project ? project.name : undefined}>
-          {project ? project.name : "No project"}
-        </span>
-        <button type="button" className="ts-btn ctl-ghost" onClick={show} aria-haspopup="dialog"
-          aria-label={project ? `Projects — ${project.name} is open` : "Projects — save or open one"}>
-          <Icon name="folder" /> Projects
-        </button>
-      </div>
+      <span className={"project-bar-name" + (project ? "" : " is-none") + (saveError ? " is-error" : "")}
+        title={project ? project.name : undefined}>
+        {project ? project.name : "No project"}
+      </span>
       {saveError && <p role="alert" className="input-error">Not saved: {saveError}</p>}
     </Stack>
   );
@@ -106,11 +109,11 @@ function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreat
     <>
       {variant === "section" ? (
         <div className="section unboxed">
-          <div className="section-head"><span>Project</span></div>
+          <div className="section-head"><span>Project</span>{button}</div>
           <div className="section-body"><div className="section-pad">{bar}</div></div>
         </div>
       ) : (
-        <ControlPanel id="control-project" title="Project" noToggle className="form-section-card">{bar}</ControlPanel>
+        <ControlPanel id="control-project" title="Project" noToggle className="form-section-card" headerAction={button}>{bar}</ControlPanel>
       )}
 
       {/* Portalled to <body>, so a page's own stacking and overflow cannot
