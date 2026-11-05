@@ -183,7 +183,8 @@ a second layer. All figures, and the diagrams, come from
   out; box and label are one target. Fixed horizontally the boxes are one
   column in the left margin with the labels after them, and the drawing
   gets a strip of space above and below so an edge row's label (a 100 mm
-  top strip) clears the frame; the wall stays to scale — Pattern Layouts'
+  top strip) clears the frame (fixed vertically, the same strip below the
+  boards, under the labels above them); the wall stays to scale — Pattern Layouts'
   full-height bands for thin rows were declined for that reason. Labels are
   15 screen pixels on every drawing (`LayoutVisualization` measures each
   drawing's on-screen scale; drawing units alone made a 5800 wall's labels

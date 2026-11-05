@@ -467,10 +467,11 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     : !isV && onRowToggle
       ? Math.round(toggleCol.pad * 2 + toggleCol.box + toggleCol.gap + maxRowLabelChars * labelFontSize * 0.62)
       : Math.round(labelFontSize * (isV && onRowToggle ? 1.9 : 3.6));
-  /* Fixed horizontally with checkboxes, a strip of space above and below
-     the drawing, so a row label at an edge — a 100 mm strip at the top —
-     sits clear of the frame. The wall itself stays to scale. */
-  const edgePad = showRowLabels && !isV && onRowToggle ? Math.round(labelFontSize * 0.9) : 0;
+  /* With checkboxes, a strip of space at the drawing's edges: fixed
+     horizontally above and below, so a row label at an edge — a 100 mm
+     strip at the top — sits clear of the frame; fixed vertically below, to
+     match the label strip above. The wall itself stays to scale. */
+  const edgePad = showRowLabels && onRowToggle ? Math.round(labelFontSize * 0.9) : 0;
   const chartX = !isV ? labelMargin : 0;
   const chartY = isV ? labelMargin : edgePad;
   const totalVW = vW + chartX;
