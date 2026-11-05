@@ -192,7 +192,7 @@ function CalculationDetails({ takeOff, room }) {
   const glued = takeOff.fixing === "glue";
   const isRoom = room.mode === "room";
   const fillerRate = compound.rate !== null ? ` (${compound.rate} kg/m)` : "";
-  /* No filler rate typed or picked: the filler rows would be zeros. */
+  /* No filler rate typed or picked: the joint rows (filler and tape) go. */
   const hasFiller = compound.rate !== null || Boolean(compound.skim);
   return (
     <div className="section unboxed">
@@ -216,19 +216,21 @@ function CalculationDetails({ takeOff, room }) {
             </>}
             <Row label={compound.skim ? "Joint filler, total" : `Joint filler${fillerRate}`} value={compound.kg.toFixed(1)} unit="kg" />
             {compound.bagKg && <Row label={`Filler bags (${compound.bagKg} kg)`} value={compound.bags} unit="pcs" />}
+            <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
           </>}
-          <Row label="Joint tape" value={tape.total.toFixed(1)} unit="m" />
 
           <div className="pw-formula-wrap pw-formula-wrap--lead">
             <span className="pw-formula-text">
               Sheets are counted from the layout{takeOff.sheets.fullBoards ? ", a full board for every piece, cut or not," : ", offcuts reused,"} then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it.{hasFiller ? " Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness." : ""}
             </span>
           </div>
-          <div className="pw-formula-wrap">
-            <span className="pw-formula-text">
-              Tape covers board joints on the face layer{isRoom ? ", internal corners" : ""}{isRoom && room.ceiling ? " and the ceiling angle" : ""}.
-            </span>
-          </div>
+          {hasFiller && (
+            <div className="pw-formula-wrap">
+              <span className="pw-formula-text">
+                Tape covers board joints on the face layer{isRoom ? ", internal corners" : ""}{isRoom && room.ceiling ? " and the ceiling angle" : ""}.
+              </span>
+            </div>
+          )}
           {glued && (
             <div className="pw-formula-wrap">
               <span className="pw-formula-text">
