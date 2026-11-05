@@ -81,7 +81,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
         <h2 className="doc-sheet-h2">Surfaces</h2>
         <table className="doc-sheet-table">
           <thead>
-            <tr><th>Surface</th><th>Size</th><th>Qty</th><th>Area</th><th>Full</th><th>Cut</th></tr>
+            <tr><th>Surface</th><th>Size</th><th>Qty</th><th>Area</th><th>Full</th><th>Cut</th><th>Boards</th></tr>
           </thead>
           <tbody>
             {surfaces.map(s => (
@@ -92,6 +92,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
                 <td>{nf(s.area, 2)} m²</td>
                 <td>{s.layout ? s.layout.full * s.count : "—"}</td>
                 <td>{s.layout ? s.layout.cut * s.count : "—"}</td>
+                <td>{s.layout ? s.layout.boards * s.count : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -168,7 +169,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
         <p className="doc-sheet-note">
           {sheets.fullBoards
             ? "Sheets are counted from the layout with a full board for every piece, cut or not; offcuts are not reused."
-            : "Sheets are counted from the layout with offcuts reused, so waste covers breakage rather than cutting."} Openings reduce screws.{tape.needed ? " Joint filler is per metre of joint, corners included." : ""} A placed opening also removes any
+            : "Sheets are counted from the layout with offcuts reused, so waste covers breakage rather than cutting."} Boards per surface count its own offcuts only; the order shares them between surfaces, so it can be less. Openings reduce screws.{tape.needed ? " Joint filler is per metre of joint, corners included." : ""} A placed opening also removes any
           piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
           price covers board only.{fixing === "glue" ? " Glued walls are stuck in dabs onto masonry, one layer; an uneven wall takes more adhesive, and a ceiling is screwed." : ""}
         </p>

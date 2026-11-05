@@ -37,6 +37,13 @@ describe("the printed gypsum take-off", () => {
     expect(document.querySelector(".doc-sheet").textContent).not.toContain("Joint filler");
   });
 
+  it("lists each surface's own boards, for all of its walls", () => {
+    render(<GypsumTakeOffSheet takeOff={takeOff} />);
+    const rows = [...document.querySelectorAll(".doc-sheet-table")[0].querySelectorAll("tbody tr")];
+    const boards = rows.map(r => Number(r.lastElementChild.textContent));
+    expect(boards).toEqual(takeOff.surfaces.map(s => s.layout.boards * s.count));
+  });
+
   it("orders joint tape with a joint filler", () => {
     render(<GypsumTakeOffSheet takeOff={takeOff} />);
     expect(document.querySelector(".doc-sheet-table--order").textContent).toContain("Joint tape");

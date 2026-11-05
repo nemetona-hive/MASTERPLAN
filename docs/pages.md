@@ -165,7 +165,9 @@ a second layer. All figures, and the diagrams, come from
   each`. Boards is what one such wall takes on its own, every layer
   (`layout.boards`: its pieces packed with only its own offcuts). The room's
   sheets pack every surface together, so they can be fewer than the heads
-  added up (four walls at 4 + 3 each are 14 alone, 12 together).
+  added up (four walls at 4 + 3 each are 14 alone, 12 together). The printed
+  Surfaces table has the same figure as a Boards column, times the surface's
+  count, and its note says why the column can add up to more than the order.
 - **Selecting a board names it.** Clicking a piece in a surface's 2D
   drawing names it in that surface's head, after the surface name: lane,
   full or cut, and its size across × up the surface (`R4 · cut · 400 × 2600
