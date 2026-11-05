@@ -195,8 +195,10 @@ describe("the gypsum take-off", () => {
     // Offcuts kept to their own wall: the order is the walls alone.
     const own = buildGypsumTakeOff(fields({ offcutsPerSurface: true }));
     expect([own.sheets.layout, own.sheets.full, own.sheets.fromCuts, own.sheets.perSurface]).toEqual([14, 10, 4, true]);
-    expect(buildGypsumTakeOff(fields({ offcutsPerSurface: true, layers: "2" })).sheets.layout).toBe(28);
-    expect(buildGypsumTakeOff(fields({ layers: "2" })).surfaces[0].layout.boards).toBe(8);
+    // Two layers: each wall's two strips (one a layer) share a board — 400s
+    // on A and C (3 + 3 + 1 = 7 each), 600s on B and D (5 each): 24, not 28.
+    expect(buildGypsumTakeOff(fields({ offcutsPerSurface: true, layers: "2" })).sheets.layout).toBe(24);
+    expect(buildGypsumTakeOff(fields({ layers: "2" })).surfaces[0].layout.boards).toBe(7);
   });
 
   it("leaves a row out of the count and the area, but keeps it drawn", () => {
@@ -272,6 +274,16 @@ describe("the gypsum take-off", () => {
     const t = buildGypsumTakeOff(fields({ widMm: "4000" }));
     expect(t.surfaces).toHaveLength(1);
     expect(t.surfaces[0].count).toBe(4);
+  });
+
+  it("finishes the second layer from the first layer's offcuts", () => {
+    // 3900 × 1200 fixed horizontally in 1200 × 2600: a whole board and a 1300
+    // half a layer. Two layers take 3 boards, the halves from one, not 4.
+    const wall = { mode: "wall", wallW: "3900", wallH: "1200", orientation: "H" };
+    expect(buildGypsumTakeOff(fields(wall)).sheets.layout).toBe(2);
+    const two = buildGypsumTakeOff(fields({ ...wall, layers: "2" }));
+    expect([two.sheets.layout, two.sheets.full, two.sheets.fromCuts]).toEqual([3, 2, 1]);
+    expect(two.surfaces[0].layout.boards).toBe(3);
   });
 
   it("doubles sheets, screws and the board joints filled for two layers, not tape or corners", () => {

@@ -349,7 +349,12 @@ a second layer. All figures, and the diagrams, come from
   (the layer underneath is filled, not taped) plus the corners, and `kg` is
   that times the rate. Openings change it only through the joints of the
   pieces they remove.
-- **Two layers** double sheets and screws, and the board joints filled. Tape is face layer only.
+- **Two layers** hang every piece twice and double screws and the board
+  joints filled. Tape is face layer only. Both layers' pieces are packed
+  together, not one layer counted twice, so a half board left from one
+  layer finishes the other (3900 × 1200 horizontal in 2600s: 3 sheets, not
+  4; changed 2026-11-05). A surface's head and the per-wall count do the
+  same.
   **Kept (decided 2026-11-05):** both layers take the same screws per m²,
   though an inner layer often takes fewer in practice.
   Tape = board joints from the layout, plus four internal corners and, with a

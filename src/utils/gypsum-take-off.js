@@ -447,6 +447,10 @@ export function buildGypsumTakeOff(fields) {
     return lanes > MAX_LANES || lanes * perLane > MAX_PIECES;
   });
 
+  /* A second layer hangs the same pieces again (its joints are offset from
+     the first, which moves pieces but not how many). Both layers' pieces are
+     packed together, so a half board left from one finishes the other. */
+  const layered = segs => Array.from({ length: layerCount }, () => segs).flat();
   /* `boards` on a layout is what one of those surfaces takes on its own,
      every layer: its pieces packed with only its own offcuts. The room's
      count below packs every surface together, so it can be less than these
@@ -456,15 +460,13 @@ export function buildGypsumTakeOff(fields) {
         const layout = layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
           firstLane: s.wall ? offset : 0, firstRow: s.wall ? firstRow : 0, rowStart: start, fullStart: Boolean(fullStart),
           skipLanes: (excludedLanes && excludedLanes[s.id]) || [] });
-        const own = packSheets(hungSegs(layout), SW, SL, { fullBoards: Boolean(fullBoards) });
-        return { ...s, own, layout: { ...layout, boards: own.total * layerCount } };
+        const own = packSheets(layered(hungSegs(layout)), SW, SL, { fullBoards: Boolean(fullBoards) });
+        return { ...s, own, layout: { ...layout, boards: own.total } };
       })
     : surfaces.map(s => ({ ...s, layout: null }));
 
-  /* Pack one face layer; a second layer is the same count again (its joints
-     are offset from the first, which moves pieces but not how many). */
   const pieces = laidOut.flatMap(s => s.layout
-    ? Array.from({ length: s.count }, () => hungSegs(s.layout)).flat()
+    ? Array.from({ length: s.count }, () => layered(hungSegs(s.layout))).flat()
     : []);
   /* `offcutsPerSurface`: no offcut leaves its wall — each surface is bought
      as it is boarded on its own (the `own` packs above), for a crew that
@@ -476,7 +478,7 @@ export function buildGypsumTakeOff(fields) {
           total: t.total + s.own.total * s.count }
       : t), { whole: 0, cutSheets: 0, total: 0 })
     : packSheets(pieces, SW || 1, SL || 1, { fullBoards: Boolean(fullBoards) });
-  const layoutSheets = packed.total * layerCount;
+  const layoutSheets = packed.total;
 
   const wastePct = given(waste) ? num(waste) : 0;
   const sheetsExact = layoutSheets * (1 + wastePct / 100);
@@ -595,8 +597,8 @@ export function buildGypsumTakeOff(fields) {
       windows: counted.filter(o => o.kind === "window").length
     },
     sheets: {
-      full: packed.whole * layerCount,
-      fromCuts: packed.cutSheets * layerCount,
+      full: packed.whole,
+      fromCuts: packed.cutSheets,
       layout: layoutSheets,
       perSurface,
       /* Every surface boarded on its own (each layout's `boards`, times its
