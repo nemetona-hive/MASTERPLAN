@@ -259,15 +259,19 @@ a second layer. All figures, and the diagrams, come from
   default) takes it from the lane's first piece, so a 5130 wall in 2500
   boards is 2330 · 2500 · 300. Full panel keeps the first piece and trims the
   last whole board: 2500 · 2330 · 300. Staggered lanes still start half a
-  board in, a first panel offset still sets the first piece, and a lane with
-  no whole board to trim falls back to trimming the first
-  (`lanePieces(…, fullStart)`).
+  board in, and a lane with no whole board to trim falls back to trimming the
+  first (`lanePieces(…, fullStart)`). **A first panel offset is never
+  trimmed (decided 2026-11-05):** it is a stud measurement, so with one set
+  the last whole board always gives (600 on a 3300 run in 2600s is
+  600 · 2400 · 300, not 400 · 2600 · 300). Fixed horizontally with an offset
+  in effect the toggle has nothing to decide and is hidden; fixed vertically
+  the offset is a strip across the wall and the toggle still applies.
 - **End joints** only exist where a lane is longer than a sheet. Alternate
   lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
   moves the lane's joint instead of leaving a sliver. The trim comes off the
-  first piece unless that would take it under the minimum (a short first
-  panel offset), when it comes off the last whole board instead — no piece
-  is trimmed below 300, or below nothing. A staggered lane whose start wraps
+  first piece unless a first panel offset is set or the trim would take it
+  under the minimum, when it comes off the last whole board instead — no
+  piece is trimmed below 300, or below nothing. A staggered lane whose start wraps
   past a board (offset 1300 + 1250 in 2500s = 50) starts at 300 instead. An
   offset typed under 300 on an unstaggered lane is kept: it was asked for.
   The rule is along a lane only; across the lanes the last one is ripped to

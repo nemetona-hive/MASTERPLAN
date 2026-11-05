@@ -566,9 +566,13 @@ export function SheetGypsum({ projectName = "" }) {
                 ? [["top", "R1 left"], ["bottom", "R1 right"]]
                 : [["top", "R1 top"], ["bottom", "R1 bottom"]]} />
             {/* Where a lane's short end is made up: the first board, or the
-                last whole one so each wall starts on a full panel. */}
-            <SegGroup label="Wall start" value={fullStart ? "full" : "trim"} onChange={v => setFullStart(v === "full")}
-              options={[["trim", "Trim first"], ["full", "Full panel"]]} />
+                last whole one so each wall starts on a full panel. Fixed
+                horizontally with an offset, the offset is the first piece and
+                is never trimmed, so there is nothing left to choose. */}
+            {!(orientation === "H" && takeOff.firstOffset) && (
+              <SegGroup label="Wall start" value={fullStart ? "full" : "trim"} onChange={v => setFullStart(v === "full")}
+                options={[["trim", "Trim first"], ["full", "Full panel"]]} />
+            )}
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
             {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
             {/* R1's height, fixed horizontally (vertically the offset is it). */}

@@ -408,9 +408,13 @@ describe("the gypsum take-off", () => {
       expect(lanePieces(2400, 2600, 0, 600)).toEqual([2400]);
     });
 
-    it("keeps the sliver rule with an offset", () => {
-      // 600 + 2600 leaves 100 on a 3300 run; the first piece gives up 200.
-      expect(lanePieces(3300, 2600, 0, 600)).toEqual([400, 2600, 300]);
+    it("keeps the sliver rule with an offset, trimming the whole board and not the offset", () => {
+      // 600 + 2600 leaves 100 on a 3300 run; the 600 is a stud measurement,
+      // so the whole board gives up the 200 — with Wall start Trim first too.
+      expect(lanePieces(3300, 2600, 0, 600)).toEqual([600, 2400, 300]);
+      expect(lanePieces(3300, 2600, 0, 600, true)).toEqual([600, 2400, 300]);
+      // A staggered row's first piece is offset + half a board: kept as well.
+      expect(lanePieces(4600, 2600, 1, 600)).toEqual([1900, 2400, 300]);
     });
 
     it("packs the corner strips two to a board", () => {

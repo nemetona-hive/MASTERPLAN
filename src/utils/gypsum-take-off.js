@@ -67,9 +67,12 @@ const round = (value, places) => {
  * after it whole). `fullStart` keeps the first piece as it is and trims the
  * last whole board instead, so a lane that starts on a full board still does:
  * 5130 in 2500s is 2330 · 2500 · 300 by default, 2500 · 2330 · 300 with it.
- * A first piece too short to give that much (a short offset) is kept the same
- * way, so no piece is ever trimmed below the minimum — or below nothing.
- * With no whole board to trim it falls back to the first piece.
+ * A `start` is kept the same way whatever `fullStart` says: it is a stud
+ * measurement, and trimming it would move the first joint off the stud
+ * (600 on a 3300 run in 2600s is 600 · 2400 · 300, not 400 · 2600 · 300).
+ * A first piece too short to give that much is kept too, so no piece is ever
+ * trimmed below the minimum — or below nothing. With no whole board to trim
+ * it falls back to the first piece.
  */
 export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false) {
   if (span <= sheetL + EPS) return [span];
@@ -88,7 +91,7 @@ export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false
     if (last > EPS) pieces.push(last);
     return pieces;
   }
-  if (full > 0 && (fullStart || first - short < MIN_END_PIECE - EPS)) {
+  if (full > 0 && (fullStart || start > EPS || first - short < MIN_END_PIECE - EPS)) {
     return [first, ...Array(full - 1).fill(sheetL), sheetL - short, MIN_END_PIECE];
   }
   return [first - short, ...Array(full).fill(sheetL), MIN_END_PIECE];
