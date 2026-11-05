@@ -152,6 +152,16 @@ describe("the gypsum page", () => {
     expect(screen.queryByText("Per wall")).toBeNull();
   });
 
+  it("offers a first row height only when fixing horizontally", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    expect(document.getElementById("input-gyp-firstRow")).toBeNull();
+    fireEvent.click(screen.getByText("Horizontal"));
+    type("input-gyp-firstRow", 600);
+    const rows = document.querySelector(".gyp-surface").querySelectorAll(".layout-svg-row-label");
+    expect(rows).toHaveLength(3);
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();

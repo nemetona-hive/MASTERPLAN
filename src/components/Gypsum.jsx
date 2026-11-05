@@ -22,7 +22,7 @@ const SURFACE_FIELDS = [...DIMS.room, ...DIMS.wall];
 
 /* Fields that begin empty, and those that begin at a sensible value. Opening
    sizes are standard enough to prefill; job dimensions never are. */
-const EMPTY = [...SURFACE_FIELDS, "skimMm", "firstOffset", ...PRODUCT_FIELDS];
+const EMPTY = [...SURFACE_FIELDS, "skimMm", "firstOffset", "firstRow", ...PRODUCT_FIELDS];
 const PREFILLED = { waste: "5" };
 /* A new opening starts at a common size; its position starts empty, and an
    opening with no position still comes off the area — it is just not drawn. */
@@ -495,7 +495,7 @@ export function SheetGypsum({ projectName = "" }) {
   const setOpenings = update => setJob(current => ({ ...current, openings: update(current.openings || []) }));
 
   const num = (name, label, extra = {}) => (
-    <NumInput id={`input-gyp-${name}`} label={label} value={val(name)} min={0} onChange={set(name)} req={extra.req ?? false} {...extra} />
+    <NumInput id={`input-gyp-${name}`} label={label} value={val(name) ?? ""} min={0} onChange={set(name)} req={extra.req ?? false} {...extra} />
   );
   /* A product field outside its library's dropdown: it flashes with the
      library when a preset fills it, and a hand edit stops naming the preset. */
@@ -571,6 +571,8 @@ export function SheetGypsum({ projectName = "" }) {
               options={[["trim", "Trim first"], ["full", "Full panel"]]} />
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
             {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
+            {/* R1's height, fixed horizontally (vertically the offset is it). */}
+            {orientation === "H" && num("firstRow", "First row height (mm)", { max: 10000 })}
             {/* Full boards: every piece, cut or not, is a board bought. */}
             <SegGroup label="Cut pieces" value={fullBoards ? "full" : "reuse"} onChange={v => setFullBoards(v === "full")}
               options={[["reuse", "Reuse offcuts"], ["full", "Full board each"]]} />

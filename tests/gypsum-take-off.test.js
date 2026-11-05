@@ -101,6 +101,29 @@ describe("one surface", () => {
     expect(left.pieces.map(p => p.lane)).toEqual([0, 1]);
   });
 
+  it("rips R1 to the first row height fixed horizontally, the rest full boards", () => {
+    // 2600 high in 1250s with a 600 first row: 600, 1250, 750.
+    const lay = layoutSurface({ w: 4000, h: 2600, sheetW: 1250, sheetL: 2500, orientation: "H", firstRow: 600 });
+    expect(lay.rows.map(r => r.h)).toEqual([600, 1250, 750]);
+    // R1 at the bottom: the 600 row sits on the floor.
+    const bottom = layoutSurface({ w: 4000, h: 2600, sheetW: 1250, sheetL: 2500, orientation: "H", firstRow: 600, rowStart: "bottom" });
+    expect(bottom.pieces.filter(p => p.lane === 0).every(p => p.y === 2000 && p.h === 600)).toBe(true);
+    // Fixed vertically it does nothing; the strip there is the offset.
+    expect(layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", firstRow: 600 }).rows.map(r => r.h)).toEqual([1200, 1200, 600]);
+  });
+
+  it("takes the first row height for walls only, and warns when it is a whole board", () => {
+    const t = buildGypsumTakeOff(fields({ orientation: "H", sheetW: "1250", sheetL: "2500", ceiling: true, firstRow: "600" }));
+    expect(t.firstRow).toBe(600);
+    expect(t.surfaces[0].layout.rows[0].h).toBe(600);
+    expect(t.surfaces.find(s => s.id === "ceiling").layout.rows[0].h).toBe(1250);
+    const big = buildGypsumTakeOff(fields({ orientation: "H", sheetW: "1250", sheetL: "2500", firstRow: "1250" }));
+    expect(big.firstRow).toBe(null);
+    expect(big.warning).toMatch(/First row height/);
+    // Fixed vertically it is not asked, so it is not warned about.
+    expect(buildGypsumTakeOff(fields({ firstRow: "5000" })).warning).toBe(null);
+  });
+
   it("swaps axes for horizontal fixing", () => {
     const l = layoutSurface({ w: 4000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H" });
     expect(l.lanes).toBe(3);

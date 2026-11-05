@@ -280,6 +280,13 @@ a second layer. All figures, and the diagrams, come from
   horizontally — is left out with a warning. Strips and short pieces pack
   into boards like any other cut piece (`layoutSurface({ firstLane })`,
   `lanePieces(span, sheetL, lane, start)`).
+- **First row height (mm)**, shown fixing horizontally only: R1 is ripped
+  to that height wherever R1 sits (a 600 row to put the first joint on a
+  noggin or at a dado), the rows after it are full board width, and the last
+  takes what is left (2600 in 1250s with 600: 600 · 1250 · 750). Walls only,
+  like the offset; one as wide as the board is left out with a warning.
+  Fixed vertically the counterpart is the offset strip, so the field is not
+  offered (`layoutSurface({ firstRow })`).
 - Walls are grouped (drawn once, labelled `Walls A, C`) only while identical:
   same size and the same openings in the same places.
 - **Screwed or glued.** Glued ("dot and dab") sticks the boards straight onto

@@ -112,7 +112,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
           )}
           {area.excluded > 0 && <div><dt>Rows left out</dt><dd>−{nf(area.excluded, 2)} m²</dd></div>}
           <div className="doc-sheet-fact--lead"><dt>Net area</dt><dd>{nf(area.net, 2)} m²</dd></div>
-          <div><dt>Fixing</dt><dd>{fixing === "glue" ? "Glued walls" : "Screwed"}, {orientation === "V" ? "vertical" : "horizontal"}, R1 {orientation === "V" ? (takeOff.rowStart === "bottom" ? "right" : "left") : (takeOff.rowStart === "bottom" ? "bottom" : "top")}, {layers} layer{layers === 1 ? "" : "s"}{takeOff.firstOffset ? `, first panel ${mm(takeOff.firstOffset)} mm from the corner` : ""}</dd></div>
+          <div><dt>Fixing</dt><dd>{fixing === "glue" ? "Glued walls" : "Screwed"}, {orientation === "V" ? "vertical" : "horizontal"}, R1 {orientation === "V" ? (takeOff.rowStart === "bottom" ? "right" : "left") : (takeOff.rowStart === "bottom" ? "bottom" : "top")}, {layers} layer{layers === 1 ? "" : "s"}{takeOff.firstOffset ? `, first panel ${mm(takeOff.firstOffset)} mm from the corner` : ""}{takeOff.firstRow ? `, first row ${mm(takeOff.firstRow)} mm high` : ""}</dd></div>
         </dl>
       </section>
 

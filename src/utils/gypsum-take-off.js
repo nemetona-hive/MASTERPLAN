@@ -130,16 +130,23 @@ export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false
  * the corner stud. Fixed vertically, the surface starts with a strip that
  * wide; fixed horizontally, every lane's first piece is that long (see
  * `lanePieces`). Ignored unless it is shorter than the board's side it cuts.
+ *
+ * `firstRow` (mm) is the horizontal counterpart of the vertical strip: R1 is
+ * ripped to that height (a 600 row to land the first joint on a noggin, or
+ * at a dado), the rows after it are full boards, and the last takes what is
+ * left. Fixed horizontally only — fixed vertically the strip is `firstLane`.
+ * Ignored unless it is shorter than the board's width.
  */
-export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top", fullStart = false, skipLanes = [] }) {
+export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, firstRow = 0, rowStart = "top", fullStart = false, skipLanes = [] }) {
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
   const lanes = [];
   let pos = 0;
-  if (vertical && firstLane > EPS && firstLane < sheetW - EPS) {
-    lanes.push(Math.min(firstLane, across));
-    pos = firstLane;
+  const firstAcross = vertical ? firstLane : firstRow;
+  if (firstAcross > EPS && firstAcross < sheetW - EPS) {
+    lanes.push(Math.min(firstAcross, across));
+    pos = firstAcross;
   }
   while (across - pos > EPS) {
     lanes.push(Math.min(sheetW, across - pos));
@@ -353,7 +360,7 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm, firstOffset, fullBoards, rowStart, fullStart, excluded: excludedLanes,
+    skimRate, skimMm, firstOffset, firstRow: firstRowAsk, fullBoards, rowStart, fullStart, excluded: excludedLanes,
     offcutsPerSurface
   } = fields;
 
@@ -420,6 +427,10 @@ export function buildGypsumTakeOff(fields) {
   const offsetLimit = fix === "V" ? SW : SL;
   const offsetFits = offsetAsked > 0 && offsetLimit > 0 && offsetAsked < offsetLimit;
   const offset = offsetFits ? offsetAsked : 0;
+  /* First row height: walls fixed horizontally, under the board's width. */
+  const rowAsked = fix === "H" && given(firstRowAsk) ? num(firstRowAsk) : 0;
+  const rowFits = rowAsked > 0 && SW > 0 && rowAsked < SW;
+  const firstRow = rowFits ? rowAsked : 0;
 
   const tooLarge = sheetReady && surfaces.some(s => {
     const vertical = fix === "V";
@@ -435,7 +446,7 @@ export function buildGypsumTakeOff(fields) {
   const laidOut = sheetReady && !tooLarge
     ? surfaces.map(s => {
         const layout = layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
-          firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart),
+          firstLane: s.wall ? offset : 0, firstRow: s.wall ? firstRow : 0, rowStart: start, fullStart: Boolean(fullStart),
           skipLanes: (excludedLanes && excludedLanes[s.id]) || [] });
         const own = packSheets(hungSegs(layout), SW, SL, { fullBoards: Boolean(fullBoards) });
         return { ...s, own, layout: { ...layout, boards: own.total * layerCount } };
@@ -534,7 +545,8 @@ export function buildGypsumTakeOff(fields) {
       : openingsTooBig ? "Openings are larger than the wall area; they are capped at it."
       : skimThickness > 0 && !skimPerMm ? "Enter the filler's kg/m² per 1 mm to count the surface skim."
       : offsetAsked > 0 && offsetLimit > 0 && !offsetFits
-        ? `First panel offset must be less than the sheet ${fix === "V" ? "width" : "length"}; it is left out.` : null,
+        ? `First panel offset must be less than the sheet ${fix === "V" ? "width" : "length"}; it is left out.`
+      : rowAsked > 0 && SW > 0 && !rowFits ? "First row height must be less than the sheet width; it is left out." : null,
 
     /* The box the 3D view folds the surfaces into, in mm. A single wall has
        no depth and no ceiling. */
@@ -546,6 +558,7 @@ export function buildGypsumTakeOff(fields) {
     rowStart: start,
     fullStart: Boolean(fullStart),
     firstOffset: offset || null,
+    firstRow: firstRow || null,
     fixing: glued ? "glue" : "screw",
     layers: layerCount,
     sheet: { width: SW || null, length: SL || null },
