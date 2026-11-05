@@ -155,6 +155,14 @@ describe("the gypsum page's rooms", () => {
     expect(screen.getByText("All Rooms")).toBeTruthy();
     const list = screen.getByRole("group", { name: "Rooms and walls" });
     expect(list.querySelectorAll("button")).toHaveLength(2);
+    // The room's result card again, for both rooms: the sheets and the take-off.
+    expect(document.querySelectorAll(".gyp-result")).toHaveLength(2);
+    const room = document.querySelector(".gyp-result-wrap .gyp-result");
+    const all = screen.getByText("All Rooms").closest(".section").querySelector(".gyp-result");
+    const figure = card => Number(card.querySelector(".result-card-value").firstChild.textContent);
+    expect(figure(all)).toBeGreaterThan(figure(room));
+    expect(all.querySelector(".result-card-note").textContent).toBe("2 rooms");
+    expect(all.querySelector(".result-card-print").disabled).toBe(false);
   });
 
   it("renames a room, and deletes one in two clicks", () => {

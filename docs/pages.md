@@ -145,8 +145,13 @@ a second layer. All figures, and the diagrams, come from
   - A project saved before the list kept one room under `Gypsum.jsx:mode`,
     `:job` and so on. It opens as a list of one (`legacyRoom`), and the old
     keys are dropped from the drafts so they are not saved again beside it.
-  - **All Rooms** (once there are two) is `buildGypsumProjectTakeOff`: each
-    room's sheets, then the order across them. Boards are grouped by product,
+  - **All Rooms** (once there are two) is `buildGypsumProjectTakeOff`. It
+    opens with the room's result card (`SheetsCard`, shared with
+    `ResultCard`): Sheets Needed is every board type's to-buy added up, the
+    note the finished rooms and how many board types, Sheet Cost the priced
+    boards (noted when some are not), and its Take-off the project sheet. It
+    sits in the flow, not the phone's bottom bar, which stays the room's.
+    Below it, each room's sheets, then the order across them. Boards are grouped by product,
     size and price, filler and adhesive by product and bag. Sheets add the
     rooms' *exact* counts, waste included, and round up once, so the order
     can be less than the rooms' own counts added (13 + 4 rooms, 16 to buy).

@@ -289,15 +289,18 @@ function ProjectTotals({ project, onPrint }) {
   });
   return (
     <div className="section unboxed">
-      <div className="section-head">
-        <span>All Rooms</span>
-        <button type="button" className="ts-btn ctl-ghost ctl-sm" disabled={!project.ready} onClick={onPrint}
-          title={project.ready ? "Take-off for every room — opens the print dialog" : "Finish a room first"}>
-          <Icon name="print" /> Take-off
-        </button>
-      </div>
+      <div className="section-head"><span>All Rooms</span></div>
       <div className="section-body">
-        <Stack className="section-pad" gap={1}>
+        <Stack className="section-pad" gap={4}>
+        {/* The room's card, for the whole job: one figure across board
+            types, each still its own row below. */}
+        <SheetsCard ready={project.ready} onPrint={onPrint}
+          sheets={project.boards.reduce((t, b) => t + b.toBuy, 0)}
+          note={`${project.readyCount} ${project.readyCount === 1 ? "room" : "rooms"}${project.boards.length > 1 ? ` · ${project.boards.length} board types` : ""}`}
+          cost={project.cost ? project.cost.total : null}
+          costNote={project.cost && project.cost.partial ? "priced boards only" : null}
+          printTitle={project.ready ? "Take-off for every room — opens the print dialog" : "Finish a room first"} />
+        <Stack gap={1}>
           {project.rooms.map(r => (
             <Row key={r.id} label={r.name} value={r.ready ? r.sheets : "—"} unit={r.ready ? "sheets" : ""} />
           ))}
@@ -311,46 +314,54 @@ function ProjectTotals({ project, onPrint }) {
           {project.adhesive.map(a => <Row key={`a|${a.product}|${a.bagKg}`} {...bagged(a, "Adhesive")} />)}
           {project.filler.map(f => <Row key={`f|${f.product}|${f.bagKg}`} {...bagged(f, "Joint filler")} />)}
           {project.tape.needed && <Row label="Joint tape" value={project.tape.total.toFixed(1)} unit="m" />}
-          {project.cost && (
-            <Row label={project.cost.partial ? "Sheet cost (priced boards)" : "Sheet cost"} value={`€${eur(project.cost.total)}`} />
-          )}
           {project.readyCount < project.count && (
             <p className="pw-formula-text gyp-total-note">
               {project.count - project.readyCount} of {project.count} not finished and left out of the total.
             </p>
           )}
         </Stack>
+        </Stack>
       </div>
     </div>
   );
 }
 
-/* The room's headline: sheets to buy and what they cost. The phone's bottom
-   bar is this card (it is the layout-split's second child). */
+/* Sheets to buy, what they cost, and the take-off: the room's headline and
+   the same card again for all rooms. */
+function SheetsCard({ sheets, note, cost, costNote = null, ready, onPrint, printTitle }) {
+  return (
+    <div className="result-card result-card--concrete gyp-result">
+      <div className="result-card-primary">
+        <span className="result-card-title">Sheets Needed</span>
+        <span className="result-card-value">
+          {sheets}
+          <span className="result-card-unit">pcs</span>
+        </span>
+        <span className="result-card-note">{note}</span>
+      </div>
+      <div className="result-card-split">
+        <span className="result-card-title">Sheet Cost</span>
+        <span className="result-card-value">
+          {cost !== null ? (<><span className="result-card-currency">€</span><span>{eur(cost)}</span></>) : "—"}
+        </span>
+        {costNote && <span className="result-card-note">{costNote}</span>}
+      </div>
+      <button type="button" className="ts-btn ctl-ghost result-card-print" onClick={onPrint} disabled={!ready} title={printTitle}>
+        <Icon name="print" /> Take-off
+      </button>
+    </div>
+  );
+}
+
+/* The room's card. The phone's bottom bar is this one (it is the
+   layout-split's second child). */
 function ResultCard({ takeOff, onPrint }) {
   const { sheets, ready } = takeOff;
   return (
     <div className="gyp-result-wrap">
-      <div className="result-card result-card--concrete gyp-result">
-        <div className="result-card-primary">
-          <span className="result-card-title">Sheets Needed</span>
-          <span className="result-card-value">
-            {sheets.toBuy}
-            <span className="result-card-unit">pcs</span>
-          </span>
-          <span className="result-card-note">layout: {sheets.layout} · +{sheets.waste}% waste</span>
-        </div>
-        <div className="result-card-split">
-          <span className="result-card-title">Sheet Cost</span>
-          <span className="result-card-value">
-            {sheets.total !== null ? (<><span className="result-card-currency">€</span><span>{eur(sheets.total)}</span></>) : "—"}
-          </span>
-        </div>
-        <button type="button" className="ts-btn ctl-ghost result-card-print" onClick={onPrint} disabled={!ready}
-          title={ready ? "Take-off sheet — opens the print dialog, where Save as PDF is" : "Enter the surface and sheet size first"}>
-          <Icon name="print" /> Take-off
-        </button>
-      </div>
+      <SheetsCard ready={ready} onPrint={onPrint} sheets={sheets.toBuy}
+        note={`layout: ${sheets.layout} · +${sheets.waste}% waste`} cost={sheets.total}
+        printTitle={ready ? "Take-off sheet — opens the print dialog, where Save as PDF is" : "Enter the surface and sheet size first"} />
     </div>
   );
 }
