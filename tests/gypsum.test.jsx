@@ -78,6 +78,16 @@ describe("the gypsum page", () => {
     expect(screen.getByText("Joint filler (0.25 kg/m)")).toBeTruthy();
   });
 
+  it("offers row order by fixing direction", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    fireEvent.click(screen.getByText("R1 right"));
+    expect(sheetsNeeded()).toBe("12");
+    fireEvent.click(screen.getByText("Horizontal"));
+    expect(screen.getByText("R1 bottom")).toBeTruthy();
+    expect(screen.queryByText("R1 right")).toBeNull();
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();

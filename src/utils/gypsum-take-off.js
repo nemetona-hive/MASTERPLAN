@@ -89,13 +89,18 @@ export function lanePieces(span, sheetL, laneIndex, start = 0) {
  * and from the sheet count. A piece the opening only overlaps stays: it is
  * hung and cut around.
  *
+ * `rowStart` is which side lane 1 (R1) starts from, as on Pattern Layouts:
+ * "top" puts it at the top fixed horizontally and at the left fixed
+ * vertically; "bottom" at the bottom or the right. The ripped last lane ends
+ * up on the other side, and the first-lane strip below starts from R1's side.
+ *
  * `firstLane` (mm) keeps the first full board off the corner so its edge lands
  * on a stud: with studs at 600 centres, 600 puts it on the first stud after
  * the corner stud. Fixed vertically, the surface starts with a strip that
  * wide; fixed horizontally, every lane's first piece is that long (see
  * `lanePieces`). Ignored unless it is shorter than the board's side it cuts.
  */
-export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0 }) {
+export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top" }) {
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
@@ -140,20 +145,23 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
      Lanes are placed the way the screen draws them: vertical columns from the
      left with the first piece at the top, horizontal rows from the top. */
   const pieces = [];
+  const reversed = rowStart === "bottom";
   const inside = rect => openings.some(o =>
     rect.x >= o.x - EPS && rect.y >= o.y - EPS &&
     rect.x + rect.w <= o.x + o.w + EPS && rect.y + rect.h <= o.y + o.h + EPS);
-  let laneStart = 0;
+  let laneStart = reversed ? across : 0;
   const rows = fullRows.map((row, lane) => {
+    if (reversed) laneStart -= row.h;
+    const at = laneStart;
+    if (!reversed) laneStart += row.h;
     const segs = row.segs.filter(seg => {
       const rect = vertical
-        ? { x: laneStart, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size }
-        : { x: seg.x, y: laneStart, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size };
+        ? { x: at, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size }
+        : { x: seg.x, y: at, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size };
       if (inside(rect)) return false;
       pieces.push(rect);
       return true;
     });
-    laneStart += row.h;
     return { ...row, segs };
   });
 
@@ -173,6 +181,8 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
       simW: laneLength, simH: across,
       PPi: sheetL, PLa: sheetW,
       direction: vertical ? "V" : "H",
+      /* The side R1 is drawn on; the 2D view reads it as its `rowStart`. */
+      rowStart: reversed ? "bottom" : "top",
       exactRows: true,
       palClasses: ["color-s1"],
       /* Drawn over the pieces, in surface mm. */
@@ -286,7 +296,7 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm, firstOffset, fullBoards
+    skimRate, skimMm, firstOffset, fullBoards, rowStart
   } = fields;
 
   const room = mode !== "wall";
@@ -297,6 +307,7 @@ export function buildGypsumTakeOff(fields) {
   const glued = fixing === "glue";
   const layerCount = !glued && String(layers) === "2" ? 2 : 1;
   const fix = orientation === "H" ? "H" : "V";
+  const start = rowStart === "bottom" ? "bottom" : "top";
 
   const dimsReady = room
     ? [lenMm, widMm, heightMm].every(supplied)
@@ -361,7 +372,7 @@ export function buildGypsumTakeOff(fields) {
 
   const laidOut = sheetReady && !tooLarge
     ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
-        firstLane: s.wall ? offset : 0 }) }))
+        firstLane: s.wall ? offset : 0, rowStart: start }) }))
     : surfaces.map(s => ({ ...s, layout: null }));
 
   /* Pack one face layer; a second layer is the same count again (its joints
@@ -449,6 +460,7 @@ export function buildGypsumTakeOff(fields) {
               : { length: num(wallW), width: 0, height: num(wallH), ceiling: false })
       : null,
     orientation: fix,
+    rowStart: start,
     firstOffset: offset || null,
     fixing: glued ? "glue" : "screw",
     layers: layerCount,

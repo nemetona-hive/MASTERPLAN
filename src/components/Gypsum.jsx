@@ -32,7 +32,7 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false };
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top" };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
 
@@ -42,6 +42,7 @@ export const newRoom = (id, mode = "room") =>
 export const roomFrom = (source, id, mode) => ({
   ...newRoom(id, mode),
   orientation: source.orientation, layers: source.layers, fixing: source.fixing, fullBoards: Boolean(source.fullBoards),
+  rowStart: source.rowStart === "bottom" ? "bottom" : "top",
   ...Object.fromEntries(ACTIVE.map(key => [key, source[key] ?? null])),
   job: { ...source.job, ...Object.fromEntries(SURFACE_FIELDS.map(name => [name, ""])), openings: [] }
 });
@@ -177,7 +178,8 @@ function LayoutSection({ takeOff, view3d, setView3d }) {
                   {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
                 </span>
               </div>
-              <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }} maxHeight={460} />
+              <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}
+                rowStart={s.layout.meta.rowStart} maxHeight={460} />
             </Stack>
           ))}
         </Stack>
@@ -345,6 +347,7 @@ export function SheetGypsum({ projectName = "" }) {
   const [layers, setLayers] = roomState("layers");
   const [fixing, setFixing] = roomState("fixing");          // "screw" | "glue"
   const [fullBoards, setFullBoards] = roomState("fullBoards");
+  const [rowStart, setRowStart] = roomState("rowStart");
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
 
@@ -411,7 +414,7 @@ export function SheetGypsum({ projectName = "" }) {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards,
+      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
       adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
@@ -505,6 +508,12 @@ export function SheetGypsum({ projectName = "" }) {
               value={val("sheetL")} min={100} onChange={productChange(board, "sheetL")} req={req("sheetL")} />
             <SegGroup label="Fixing direction" value={orientation} onChange={setOrientation}
               options={[["V", "Vertical"], ["H", "Horizontal"]]} />
+            {/* Which side lane 1 starts from, as on Pattern Layouts. */}
+            <SegGroup label={orientation === "V" ? "Column order" : "Row order"} value={rowStart === "bottom" ? "bottom" : "top"}
+              onChange={setRowStart}
+              options={orientation === "V"
+                ? [["top", "R1 left"], ["bottom", "R1 right"]]
+                : [["top", "R1 top"], ["bottom", "R1 bottom"]]} />
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
             {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
             {/* Full boards: every piece, cut or not, is a board bought. */}

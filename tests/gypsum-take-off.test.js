@@ -53,6 +53,28 @@ describe("one surface", () => {
     }
   });
 
+  it("starts R1 from the far side when asked, ripped lane on the near side", () => {
+    // 3000 wide, 1200 sheets fixed vertically: 1200, 1200, 600.
+    const left = layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V" });
+    const right = layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", rowStart: "bottom" });
+    expect(left.pieces.map(p => [p.lane, p.x, p.w])).toEqual([[0, 0, 1200], [1, 1200, 1200], [2, 2400, 600]]);
+    expect(right.pieces.map(p => [p.lane, p.x, p.w])).toEqual([[0, 1800, 1200], [1, 600, 1200], [2, 0, 600]]);
+    expect(right.meta.rowStart).toBe("bottom");
+    // Horizontal: R1 at the bottom of a 2600 wall, the 200 rip at the top.
+    const bottom = layoutSurface({ w: 2000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H", rowStart: "bottom" });
+    expect(bottom.pieces.map(p => [p.lane, p.y, p.h])).toEqual([[0, 1400, 1200], [1, 200, 1200], [2, 0, 200]]);
+  });
+
+  it("drops whichever piece the opening covers once R1 has moved", () => {
+    // A 1200-wide opening over the right-hand 1200 of a 3000 wall, full height.
+    const opening = { x: 1800, y: 0, w: 1200, h: 2600 };
+    const right = layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", openings: [opening], rowStart: "bottom" });
+    expect(right.pieces.map(p => p.lane)).toEqual([1, 2]);
+    const left = layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", openings: [opening] });
+    // R1 left: the opening covers the 600 rip (2400–3000) instead.
+    expect(left.pieces.map(p => p.lane)).toEqual([0, 1]);
+  });
+
   it("swaps axes for horizontal fixing", () => {
     const l = layoutSurface({ w: 4000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H" });
     expect(l.lanes).toBe(3);

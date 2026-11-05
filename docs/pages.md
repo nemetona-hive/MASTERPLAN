@@ -173,6 +173,13 @@ a second layer. All figures, and the diagrams, come from
   first and last ones included: no offcut reuse, no doubling up of strips
   (`packSheets(…, { fullBoards })`). The drawing is unchanged; only the count
   is. The on-screen and printed notes say which rule the count used.
+- **Row order** (per room, `rowStart`, Pattern Layouts' control): R1 top or
+  bottom fixed horizontally, R1 left or right fixed vertically. R1 is the first
+  full lane; the ripped last lane lands on the other side, and a first panel
+  offset strip starts from R1's side. The model places the lanes
+  (`layoutSurface({ rowStart })`), so openings, the 3D view and the printed
+  drawing follow; the 2D view reads `meta.rowStart`. Same count either way
+  unless an opening covers a different piece.
 - **End joints** only exist where a lane is longer than a sheet. Alternate
   lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
   moves the lane's joint instead of leaving a sliver.
@@ -189,7 +196,7 @@ a second layer. All figures, and the diagrams, come from
 - **First panel offset (mm)** keeps the first full board off the corner, so
   its edge lands on a stud: with studs at 600 centres, 600 puts it on the
   first stud after the corner stud. Fixed vertically, each wall starts with a
-  strip that wide at its left corner (as seen from inside). Fixed
+  strip that wide at R1's corner (left with R1 left, as seen from inside). Fixed
   horizontally, every row's first piece is that long, and alternate rows
   still start half a board further on, counted from it (600, then 1900 with
   2600 boards), so end joints stay staggered; the 300 mm sliver rule still
