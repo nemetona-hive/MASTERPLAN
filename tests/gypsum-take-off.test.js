@@ -86,9 +86,9 @@ describe("one surface", () => {
     expect(left.pieces.map(p => [p.lane, p.x, p.w])).toEqual([[0, 0, 1200], [1, 1200, 1200], [2, 2400, 600]]);
     expect(right.pieces.map(p => [p.lane, p.x, p.w])).toEqual([[0, 1800, 1200], [1, 600, 1200], [2, 0, 600]]);
     expect(right.meta.rowStart).toBe("bottom");
-    // Horizontal: R1 at the bottom of a 2600 wall, the 200 rip at the top.
-    const bottom = layoutSurface({ w: 2000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H", rowStart: "bottom" });
-    expect(bottom.pieces.map(p => [p.lane, p.y, p.h])).toEqual([[0, 1400, 1200], [1, 200, 1200], [2, 0, 200]]);
+    // Horizontal: R1 at the bottom of a 3000 wall, the 600 rip at the top.
+    const bottom = layoutSurface({ w: 2000, h: 3000, sheetW: 1200, sheetL: 2600, orientation: "H", rowStart: "bottom" });
+    expect(bottom.pieces.map(p => [p.lane, p.y, p.h])).toEqual([[0, 1800, 1200], [1, 600, 1200], [2, 0, 600]]);
   });
 
   it("drops whichever piece the opening covers once R1 has moved", () => {
@@ -99,6 +99,21 @@ describe("one surface", () => {
     const left = layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V", openings: [opening] });
     // R1 left: the opening covers the 600 rip (2400–3000) instead.
     expect(left.pieces.map(p => p.lane)).toEqual([0, 1]);
+  });
+
+  it("never rips the last lane under the minimum: it shares with the first", () => {
+    // 2600 high in 1250 boards, fixed horizontally: 1250, 1250, 100 → 675, 1250, 675.
+    const h = layoutSurface({ w: 4000, h: 2600, sheetW: 1250, sheetL: 2500, orientation: "H" });
+    expect(h.rows.map(r => r.h)).toEqual([675, 1250, 675]);
+    expect(h.rows[0].segs.every(s => s.type === "cut")).toBe(true);
+    // 3800 wide fixed vertically: 1250 ×3 + 50 → 650, 1250, 1250, 650.
+    const v = layoutSurface({ w: 3800, h: 2600, sheetW: 1250, sheetL: 2600, orientation: "V" });
+    expect(v.rows.map(r => r.h)).toEqual([650, 1250, 1250, 650]);
+    // A first panel offset strip is kept; the lane before the last shares.
+    const o = layoutSurface({ w: 3150, h: 2600, sheetW: 1250, sheetL: 2600, orientation: "V", firstLane: 600 });
+    expect(o.rows.map(r => r.h)).toEqual([600, 1250, 650, 650]);
+    // A remainder of 300 or more is left alone.
+    expect(layoutSurface({ w: 3000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "V" }).rows.map(r => r.h)).toEqual([1200, 1200, 600]);
   });
 
   it("swaps axes for horizontal fixing", () => {
@@ -197,8 +212,9 @@ describe("the gypsum take-off", () => {
     const h = fields({ orientation: "H", sheetW: "1250", sheetL: "2500" });
     const key = buildGypsumTakeOff(h).surfaces[0].layout.laneKey;
     const picked = { "wall-ac": { key, lanes: [2] } };
-    // Fixed horizontally, R3 is the 100 top strip: 0.4 m² a wall, two walls.
-    expect(buildGypsumTakeOff({ ...h, excluded: picked }).area.excluded).toBe(0.8);
+    // Fixed horizontally, R3 is the top strip: 1250 + 100 shared as 675 each,
+    // so 0.675 × 4 m a wall, two walls.
+    expect(buildGypsumTakeOff({ ...h, excluded: picked }).area.excluded).toBe(5.4);
     // Fixed vertically it would be a whole column; the choice no longer applies.
     const v = buildGypsumTakeOff({ ...h, orientation: "V", excluded: picked });
     expect(v.area.excluded).toBe(0);
@@ -378,7 +394,7 @@ describe("the gypsum take-off", () => {
       // board further on, 600 + 1300 = 1900, then 2600 and 500.
       expect(lanePieces(5000, 2600, 0, 600)).toEqual([600, 2600, 1800]);
       expect(lanePieces(5000, 2600, 1, 600)).toEqual([1900, 2600, 500]);
-      const lay = layoutSurface({ w: 5000, h: 2600, sheetW: 1200, sheetL: 2600, orientation: "H", firstLane: 600 });
+      const lay = layoutSurface({ w: 5000, h: 2400, sheetW: 1200, sheetL: 2600, orientation: "H", firstLane: 600 });
       const firstFull = lay.pieces.find(p => p.type === "full" && p.lane === 0);
       expect(firstFull.x).toBe(600);
       // A wall one board covers needs no joint, so no offset either.

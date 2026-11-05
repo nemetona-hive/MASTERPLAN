@@ -252,8 +252,11 @@ a second layer. All figures, and the diagrams, come from
   is trimmed below 300, or below nothing. A staggered lane whose start wraps
   past a board (offset 1300 + 1250 in 2500s = 50) starts at 300 instead. An
   offset typed under 300 on an unstaggered lane is kept: it was asked for.
-  The rule is along a lane only; across the lanes the last one is ripped to
-  what is left, however narrow (an open question, not yet decided).
+  The same minimum holds across the lanes: a last lane that would be ripped
+  under 300 shares its width with the first lane, both ripped to half the
+  two (2600 high in 1250s: 675 · 1250 · 675, not 1250 · 1250 · 100). With a
+  first panel offset strip — the user's — the lane before the last shares
+  instead. Decided 2026-11-05.
 - **Openings** are a list (`+ Door` / `+ Window`): wall A–D, `x` from the
   wall's left end *as seen from inside*, width, height, and a sill for a
   window. Room walls are A back, then clockwise seen from above (B right, C
@@ -305,8 +308,13 @@ a second layer. All figures, and the diagrams, come from
   that times the rate. Openings change it only through the joints of the
   pieces they remove.
 - **Two layers** double sheets and screws, and the board joints filled. Tape is face layer only.
+  **Kept (decided 2026-11-05):** both layers take the same screws per m²,
+  though an inner layer often takes fewer in practice.
   Tape = board joints from the layout, plus four internal corners and, with a
-  ceiling, the ceiling angle.
+  ceiling, the ceiling angle. **Kept (decided 2026-11-05):** joint length is
+  taken before openings drop pieces, as a stand-in for taping round an
+  opening's own edges; and the corners always count all four at full wall
+  height, rows left out or not.
 - **No joint filler, no joint figures.** A room with no filler rate (no
   per-metre or per-mm rate typed or picked) shows no filler rows and no tape,
   on screen and on its printed sheet. `tape.needed` in the model is the one

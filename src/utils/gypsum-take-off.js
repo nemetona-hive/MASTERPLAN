@@ -145,6 +145,20 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     lanes.push(Math.min(sheetW, across - pos));
     pos += sheetW;
   }
+  /* The same minimum across the lanes as along them: a last lane ripped
+     under MIN_END_PIECE (1250 + 100 on a 2600 wall fixed horizontally)
+     shares its width with the first lane instead, both ripped to half the
+     two — 675 + 675. A first-lane offset strip is the user's, so with one
+     the lane before the last shares instead. */
+  const lastLane = lanes.length - 1;
+  const strip = lanes.length > 0 && vertical && firstLane > EPS && firstLane < sheetW - EPS;
+  const partner = strip ? lastLane - 1 : 0;
+  if (lastLane >= 1 && partner >= (strip ? 1 : 0) && partner < lastLane &&
+      lanes[lastLane] > EPS && lanes[lastLane] < MIN_END_PIECE - EPS) {
+    const half = (lanes[partner] + lanes[lastLane]) / 2;
+    lanes[partner] = half;
+    lanes[lastLane] = half;
+  }
   const laneKey = [vertical ? "V" : "H", Math.round(laneLength), ...lanes.map(l => Math.round(l))].join("|");
   const skip = new Set(Array.isArray(skipLanes) ? skipLanes
     : skipLanes && skipLanes.key === laneKey && Array.isArray(skipLanes.lanes) ? skipLanes.lanes : []);
