@@ -105,6 +105,20 @@ describe("the gypsum page", () => {
     expect(pick()).toBe("");
   });
 
+  it("starts each wall on a full panel when asked", () => {
+    render(<SheetGypsum />);
+    type("input-gyp-lenMm", 5130);
+    type("input-gyp-widMm", 3000);
+    type("input-gyp-heightMm", 2500);
+    type("input-gyp-sheetW", 1250);
+    type("input-gyp-sheetL", 2500);
+    fireEvent.click(screen.getByText("Horizontal"));
+    const labels = () => [...document.querySelector(".gyp-surface").querySelectorAll(".layout-svg-label")].map(t => t.textContent).slice(0, 3);
+    expect(labels()).toEqual(["2330", "2500", "300"]);
+    fireEvent.click(screen.getByText("Full panel"));
+    expect(labels()).toEqual(["2500", "2330", "300"]);
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();

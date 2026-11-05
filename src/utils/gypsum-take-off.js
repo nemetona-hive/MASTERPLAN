@@ -56,8 +56,15 @@ const round = (value, places) => {
  * `start` (mm) makes the lane's first piece that long, so the first full board
  * begins on a stud rather than at the corner; alternate lanes still begin half
  * a sheet further on, counted from there, which keeps the end joints apart.
+ *
+ * A remainder under MIN_END_PIECE is made up from the piece before it. By
+ * default that is the lane's first piece (one cut at the corner, every board
+ * after it whole). `fullStart` keeps the first piece as it is and trims the
+ * last whole board instead, so a lane that starts on a full board still does:
+ * 5130 in 2500s is 2330 · 2500 · 300 by default, 2500 · 2330 · 300 with it.
+ * With no whole board to trim it falls back to the first piece.
  */
-export function lanePieces(span, sheetL, laneIndex, start = 0) {
+export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false) {
   if (span <= sheetL + EPS) return [span];
   const stagger = laneIndex % 2 === 1 ? sheetL * STAGGER : 0;
   let first = start > EPS ? start + stagger : (stagger || sheetL);
@@ -66,8 +73,13 @@ export function lanePieces(span, sheetL, laneIndex, start = 0) {
   const rest = span - first;
   const full = Math.floor((rest + EPS) / sheetL);
   let last = rest - full * sheetL;
-  if (last > EPS && last < MIN_END_PIECE) {
-    first -= MIN_END_PIECE - last;
+  const short = last > EPS && last < MIN_END_PIECE ? MIN_END_PIECE - last : 0;
+  if (short && fullStart && full > 0) {
+    const pieces = [first, ...Array(full - 1).fill(sheetL), sheetL - short, MIN_END_PIECE];
+    return pieces;
+  }
+  if (short) {
+    first -= short;
     last = MIN_END_PIECE;
   }
   const pieces = [first, ...Array(full).fill(sheetL)];
@@ -100,7 +112,7 @@ export function lanePieces(span, sheetL, laneIndex, start = 0) {
  * wide; fixed horizontally, every lane's first piece is that long (see
  * `lanePieces`). Ignored unless it is shorter than the board's side it cuts.
  */
-export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top" }) {
+export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top", fullStart = false }) {
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
@@ -117,7 +129,7 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
   const fullRows = lanes.map((laneW, laneIndex) => {
     let x = 0;
     const start = !vertical && firstLane > EPS && firstLane < sheetL - EPS ? firstLane : 0;
-    const segs = lanePieces(laneLength, sheetL, laneIndex, start).map(len => {
+    const segs = lanePieces(laneLength, sheetL, laneIndex, start, fullStart).map(len => {
       const whole = Math.abs(len - sheetL) < EPS && Math.abs(laneW - sheetW) < EPS;
       /* `label` is what the diagrams print on the piece: its width across the
          wall — the lane's width fixed vertically, its own length fixed
@@ -296,7 +308,7 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm, firstOffset, fullBoards, rowStart
+    skimRate, skimMm, firstOffset, fullBoards, rowStart, fullStart
   } = fields;
 
   const room = mode !== "wall";
@@ -372,7 +384,7 @@ export function buildGypsumTakeOff(fields) {
 
   const laidOut = sheetReady && !tooLarge
     ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
-        firstLane: s.wall ? offset : 0, rowStart: start }) }))
+        firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart) }) }))
     : surfaces.map(s => ({ ...s, layout: null }));
 
   /* Pack one face layer; a second layer is the same count again (its joints
@@ -461,6 +473,7 @@ export function buildGypsumTakeOff(fields) {
       : null,
     orientation: fix,
     rowStart: start,
+    fullStart: Boolean(fullStart),
     firstOffset: offset || null,
     fixing: glued ? "glue" : "screw",
     layers: layerCount,

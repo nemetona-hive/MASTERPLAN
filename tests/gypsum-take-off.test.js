@@ -28,6 +28,16 @@ describe("lane pieces", () => {
     expect(pieces).toEqual([2700 - MIN_END_PIECE, MIN_END_PIECE]);
     expect(pieces.reduce((a, b) => a + b, 0)).toBe(2700);
   });
+
+  it("keeps a full panel at the start when asked, trimming the last whole board", () => {
+    // The 5130 wall in 2500 boards: a 130 end would be a sliver.
+    expect(lanePieces(5130, 2500, 0)).toEqual([2330, 2500, 300]);
+    expect(lanePieces(5130, 2500, 0, 0, true)).toEqual([2500, 2330, 300]);
+    // A staggered lane still starts half a board in.
+    expect(lanePieces(5130, 2500, 1, 0, true)).toEqual([1250, 2500, 1380]);
+    // No whole board after the first to trim: the first one gives way.
+    expect(lanePieces(2700, 2600, 0, 0, true)).toEqual([2700 - MIN_END_PIECE, MIN_END_PIECE]);
+  });
 });
 
 describe("one surface", () => {

@@ -32,7 +32,7 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top" };
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
 
@@ -42,7 +42,7 @@ export const newRoom = (id, mode = "room") =>
 export const roomFrom = (source, id, mode) => ({
   ...newRoom(id, mode),
   orientation: source.orientation, layers: source.layers, fixing: source.fixing, fullBoards: Boolean(source.fullBoards),
-  rowStart: source.rowStart === "bottom" ? "bottom" : "top",
+  rowStart: source.rowStart === "bottom" ? "bottom" : "top", fullStart: Boolean(source.fullStart),
   ...Object.fromEntries(ACTIVE.map(key => [key, source[key] ?? null])),
   job: { ...source.job, ...Object.fromEntries(SURFACE_FIELDS.map(name => [name, ""])), openings: [] }
 });
@@ -365,6 +365,7 @@ export function SheetGypsum({ projectName = "" }) {
   const [fixing, setFixing] = roomState("fixing");          // "screw" | "glue"
   const [fullBoards, setFullBoards] = roomState("fullBoards");
   const [rowStart, setRowStart] = roomState("rowStart");
+  const [fullStart, setFullStart] = roomState("fullStart");
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
   /* Which control cards are collapsed, by card id: the page's, not a room's,
@@ -439,7 +440,7 @@ export function SheetGypsum({ projectName = "" }) {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart,
+      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
       adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
@@ -539,6 +540,10 @@ export function SheetGypsum({ projectName = "" }) {
               options={orientation === "V"
                 ? [["top", "R1 left"], ["bottom", "R1 right"]]
                 : [["top", "R1 top"], ["bottom", "R1 bottom"]]} />
+            {/* Where a lane's short end is made up: the first board, or the
+                last whole one so each wall starts on a full panel. */}
+            <SegGroup label="Wall start" value={fullStart ? "full" : "trim"} onChange={v => setFullStart(v === "full")}
+              options={[["trim", "Trim first"], ["full", "Full panel"]]} />
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
             {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
             {/* Full boards: every piece, cut or not, is a board bought. */}

@@ -195,6 +195,14 @@ a second layer. All figures, and the diagrams, come from
   (`layoutSurface({ rowStart })`), so openings, the 3D view and the printed
   drawing follow; the 2D view reads `meta.rowStart`. Same count either way
   unless an opening covers a different piece.
+- **Wall start: Trim first / Full panel** (per room, `fullStart`). A lane end
+  under `MIN_END_PIECE` is made up from another piece. Trim first (the
+  default) takes it from the lane's first piece, so a 5130 wall in 2500
+  boards is 2330 · 2500 · 300. Full panel keeps the first piece and trims the
+  last whole board: 2500 · 2330 · 300. Staggered lanes still start half a
+  board in, a first panel offset still sets the first piece, and a lane with
+  no whole board to trim falls back to trimming the first
+  (`lanePieces(…, fullStart)`).
 - **End joints** only exist where a lane is longer than a sheet. Alternate
   lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
   moves the lane's joint instead of leaving a sliver.
