@@ -71,10 +71,10 @@ const presetName = (presets, idx) => (idx !== null && idx !== undefined ? preset
 
 /* The job's rooms and walls. The list shows once there is a second entry;
    until then the card is the name and the ways to add one. */
-function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onDelete, deleteArmed, disarmDelete }) {
+function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onDelete, deleteArmed, disarmDelete, fold }) {
   const name = entries[roomIndex].name;
   return (
-    <ControlPanel id="control-gyp-rooms" title="Rooms" noToggle className="form-section-card">
+    <ControlPanel id="control-gyp-rooms" title="Rooms" className="form-section-card" {...fold("control-gyp-rooms")}>
       <Stack gap={3} className="ctrl-list">
         {rooms.length > 1 && (
           <div className="gyp-room-list" role="group" aria-label="Rooms and walls">
@@ -112,9 +112,9 @@ function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd
 
 /* Doors and windows. Labels (D1, W1…) and each one's status are the model's
    (`readOpenings`), in the list's own order. */
-function OpeningsPanel({ openings, read, onWall, onAdd, onUpdate, onRemove }) {
+function OpeningsPanel({ openings, read, onWall, onAdd, onUpdate, onRemove, fold }) {
   return (
-    <ControlPanel id="control-gyp-openings" title="Openings (mm)" noToggle className="form-section-card">
+    <ControlPanel id="control-gyp-openings" title="Openings (mm)" className="form-section-card" {...fold("control-gyp-openings")}>
       <Stack gap={3} className="ctrl-list">
         {openings.map((o, i) => {
           const { label, status } = read[i] || {};
@@ -350,6 +350,14 @@ export function SheetGypsum({ projectName = "" }) {
   const [rowStart, setRowStart] = roomState("rowStart");
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
+  /* Which control cards are collapsed, by card id: the page's, not a room's,
+     so switching rooms keeps the column as it was. Session state, so a
+     project (local mode) saves it with everything else. */
+  const [closed, setClosed] = useSessionState(KEY("closed"), {});
+  const fold = id => ({
+    open: !closed?.[id],
+    setOpen: open => setClosed(current => ({ ...current, [id]: !open }))
+  });
 
   /* Every typed field in one object, so reset and the model call do not repeat
      the list. A setter per field is derived from it. */
@@ -467,13 +475,13 @@ export function SheetGypsum({ projectName = "" }) {
         <RoomsPanel rooms={rooms} entries={entries} room={room} roomIndex={roomIndex}
           onSelect={selectRoom} onRename={name => updateRoom(room.id, () => ({ name }))}
           onAdd={addRoom} onDuplicate={duplicateRoom} onDelete={deleteRoom}
-          deleteArmed={deleteArmed} disarmDelete={disarmDelete} />
+          deleteArmed={deleteArmed} disarmDelete={disarmDelete} fold={fold} />
 
         {/* Keyed by the room, so switching remounts the fields: each reads the
             new room's values, and field undo cannot carry one room's typing
             into another. */}
         <React.Fragment key={room.id}>
-        <ControlPanel id="control-gyp-surface" title="Surface" noToggle className="form-section-card">
+        <ControlPanel id="control-gyp-surface" title="Surface" className="form-section-card" {...fold("control-gyp-surface")}>
           <Stack gap={3} className="ctrl-list">
             <SegGroup label="What to board" value={mode} onChange={setMode}
               options={[["room", "Room"], ["wall", "Single wall"]]} />
@@ -497,9 +505,9 @@ export function SheetGypsum({ projectName = "" }) {
         <OpeningsPanel openings={job.openings || []} read={takeOff.openings.list} onWall={mode === "room"}
           onAdd={kind => setOpenings(list => [...list, { ...NEW_OPENING[kind], id: list.reduce((m, o) => Math.max(m, o.id), 0) + 1 }])}
           onUpdate={(id, key, value) => setOpenings(list => list.map(o => (o.id === id ? { ...o, [key]: value } : o)))}
-          onRemove={id => setOpenings(list => list.filter(o => o.id !== id))} />
+          onRemove={id => setOpenings(list => list.filter(o => o.id !== id))} fold={fold} />
 
-        <ControlPanel id="control-gyp-board" title="Board" noToggle className="form-section-card"
+        <ControlPanel id="control-gyp-board" title="Board" className="form-section-card" {...fold("control-gyp-board")}
           headerDetail={presetHeader(board)}>
           <Stack gap={3} className="ctrl-list">
             <PresetField library={board} field="sheetW" id="input-gyp-sheetW" label="Sheet width (mm)" labelIcon="arrow-h"
@@ -540,7 +548,7 @@ export function SheetGypsum({ projectName = "" }) {
         {libraryError(board)}
 
         {glued && <>
-          <ControlPanel id="control-gyp-adhesive" title="Adhesive" noToggle className="form-section-card"
+          <ControlPanel id="control-gyp-adhesive" title="Adhesive" className="form-section-card" {...fold("control-gyp-adhesive")}
             headerDetail={presetHeader(adhesive)}>
             <Stack gap={3} className="ctrl-list">
               <PresetField library={adhesive} field="adhesiveRate" id="input-gyp-adhesiveRate" label="Adhesive (kg/m²)"
@@ -552,7 +560,7 @@ export function SheetGypsum({ projectName = "" }) {
           {libraryError(adhesive)}
         </>}
 
-        <ControlPanel id="control-gyp-filler" title="Joint Filler" noToggle className="form-section-card"
+        <ControlPanel id="control-gyp-filler" title="Joint Filler" className="form-section-card" {...fold("control-gyp-filler")}
           headerDetail={presetHeader(filler)}>
           <Stack gap={3} className="ctrl-list">
             <PresetField library={filler} field="compoundRate" id="input-gyp-compoundRate" label="Joint filler (kg/m of joint)"

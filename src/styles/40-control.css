@@ -24,6 +24,13 @@
 	gap: var(--form-field-gap);
 }
 
+/* A collapsed panel's body. The rule above outranks the UA's [hidden], so
+   without this the empty body stays a flex item and the panel keeps a
+   field gap of blank space under its header. */
+.data-control .control-panel .panel-data[hidden] {
+	display: none;
+}
+
 /* Reusable form-section-card: a card establishes the visual group; the
    fields within it share label, row and action metrics. */
 .data-control .form-section-card,
@@ -43,6 +50,14 @@
 	line-height: var(--lh-tight);
 	color: var(--form-section-fg);
 	letter-spacing: 0.12em;
+}
+
+/* A collapsible card's header is a disclosure: it takes the card's field step
+   (md on desktop) rather than the panel disclosure's lg, so a card reads the
+   same height whether it folds or not. The phone's touch floor still applies
+   (80-mobile.css sets min-height). */
+.data-control .control-panel.form-section-card .panel-head.disclosure {
+	--ctl-h: var(--form-control-h);
 }
 
 .data-control .form-section-card .panel-data,

@@ -161,6 +161,13 @@ a second layer. All figures, and the diagrams, come from
     room's object, so typing in one room does not lay the others out again;
     editing a preset list lays them all out, since product names come from it.
     Keep room updates immutable, or the cache serves a stale take-off.
+- **Control cards fold.** Each card in the control column (Rooms, Surface,
+  Openings, Board, Adhesive, Joint Filler) collapses from its header. Which
+  are closed is the page's, not a room's (`Gypsum.jsx:closed`, card id →
+  `true`), so switching rooms keeps the column as it was, and being session
+  state a local-mode project autosaves it. A folded card's header keeps its
+  preset name. A collapsible form card's header takes the field step
+  (`--form-control-h`), so a card is the same height folded or not.
 - **The layout is the count.** Each surface is cut into lanes of board width
   (vertical fixing: columns up the wall; horizontal: rows along it), each lane
   into pieces, and the pieces are packed first-fit-decreasing back into stock

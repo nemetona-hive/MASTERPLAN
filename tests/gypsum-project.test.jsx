@@ -114,6 +114,24 @@ const fillRoom = (len = 4000) => {
 const withDrafts = (drafts, ui) => <SessionDraftContext.Provider value={drafts}>{ui}</SessionDraftContext.Provider>;
 
 describe("the gypsum page's rooms", () => {
+  it("collapses a control card, keeps it collapsed across rooms, and saves it with the project", () => {
+    const drafts = new DraftStore();
+    const { unmount } = render(withDrafts(drafts, <SheetGypsum />));
+    const head = () => document.querySelector("#control-gyp-board .panel-head");
+    expect(head().getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(head());
+    expect(head().getAttribute("aria-expanded")).toBe("false");
+    expect(document.getElementById("input-gyp-sheetW")).toBeNull();
+    fireEvent.click(screen.getByText("Room", { selector: "#control-gyp-rooms button" }));
+    expect(head().getAttribute("aria-expanded")).toBe("false");
+    expect(drafts.get("Gypsum.jsx:closed")).toEqual({ "control-gyp-board": true });
+    unmount();
+    render(withDrafts(drafts, <SheetGypsum />));
+    expect(head().getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(head());
+    expect(document.getElementById("input-gyp-sheetW")).toBeTruthy();
+  });
+
   it("keeps each room's values and switches between them", () => {
     render(<SheetGypsum />);
     fillRoom(4000);
