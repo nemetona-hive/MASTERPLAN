@@ -16,7 +16,7 @@ import { ControlPanel, Icon, Modal, Stack, useTimedState } from "../shared.jsx";
  * keystroke is noise. A failed save is the one state you need to see, so it
  * turns the name to the danger colour and says why under it.
  *
- * The dialog does five things: start a project from what is on screen, open
+ * The dialog does five things: start a blank project, open
  * one, close the open one (its values stay on screen and stop saving), rename
  * one (in place: Enter saves, Escape cancels), and delete one (two clicks; the
  * file goes to `_personal/projects/.trash/`).
@@ -48,6 +48,7 @@ function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreat
   // Two-click confirms, each disarming itself, as Global Reset does.
   const [armedDelete, armDelete, disarmDelete] = useTimedState(null, 4000);
   const [armedOpen, armOpen, disarmOpen] = useTimedState(null, 4000);
+  const [armedCreate, armCreate, disarmCreate] = useTimedState(false, 4000);
 
   const run = async action => {
     setBusy(true);
@@ -58,8 +59,13 @@ function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreat
   };
 
   const show = () => { setOpen(true); setError(""); setRenaming(null); onRefresh(); };
+  /* A new project starts blank, so it clears the page. With a project open
+     that is already saved; with none, typed values would be lost, so that
+     case asks first, as opening one does. */
   const create = async e => {
     e.preventDefault();
+    if (!project && scratchHasValues && !armedCreate) { armCreate(true); return; }
+    disarmCreate();
     if (await run(() => onCreate(name))) { setName(""); setOpen(false); }
   };
   /* Opening replaces what is on screen. With a project open that is already
@@ -115,14 +121,13 @@ function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreat
             {saveError && <p role="alert" className="input-error">Not saved: {saveError}</p>}
 
             <form onSubmit={create}>
-              <label className="project-lbl" htmlFor="project-new-name">
-                {project ? "New project from what is on screen" : "Save what is on screen as a project"}
-              </label>
+              <label className="project-lbl" htmlFor="project-new-name">New blank project</label>
               <div className="project-new-row">
                 <input id="project-new-name" className="num-input" type="text" autoComplete="off" maxLength={80}
                   value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
-                <button type="submit" className="ts-btn" disabled={busy || !name.trim()}>
-                  <Icon name="plus" /> Create
+                <button type="submit" className="ts-btn" disabled={busy || !name.trim()} onBlur={disarmCreate}
+                  aria-label={armedCreate ? "Confirm create — clears the values on screen" : undefined}>
+                  {armedCreate ? "Clear screen?" : <><Icon name="plus" /> Create</>}
                 </button>
               </div>
             </form>

@@ -128,6 +128,26 @@ describe("a page's projects", () => {
     expect(puts[0].data.drafts).toEqual(pageDrafts(drafts, "gypsum"));
   });
 
+  it("starts a new project blank, clearing only its own page", async () => {
+    const server = fakeServer({
+      kitchen: { id: "kitchen", name: "Kitchen", page: "gypsum", drafts: { "Gypsum.jsx:rooms": ["saved"] }, app: {} }
+    });
+    const drafts = new DraftStore([["Concrete.jsx:lenMm", "4000"]]);
+    const api = mount(drafts);
+    await waitFor(() => expect(api.current.available).toBe(true));
+    await act(() => api.current.forPage("gypsum").open("kitchen"));
+    const epoch = api.current.epochs.gypsum;
+    await act(() => api.current.forPage("gypsum").create("Hall"));
+    const made = server.calls.filter(c => c.method === "POST").at(-1).data;
+    expect(made).toMatchObject({ name: "Hall", page: "gypsum", drafts: {} });
+    expect(drafts.get("Gypsum.jsx:rooms")).toBe(undefined);
+    expect(drafts.get("Concrete.jsx:lenMm")).toBe("4000");
+    expect(api.current.forPage("gypsum").project.name).toBe("Hall");
+    expect(api.current.epochs.gypsum).toBe(epoch + 1);
+    // The project it left keeps what it had.
+    expect(server.store.kitchen.drafts).toEqual({ "Gypsum.jsx:rooms": ["saved"] });
+  });
+
   it("splits a project from before, and reopens each part where it was open", async () => {
     localStorage.setItem("masterplan.project", "old");
     const server = fakeServer({

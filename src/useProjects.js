@@ -180,12 +180,20 @@ export function useProjects({ drafts, appState, applyAppState, appDefaults = {} 
     scratchHasValues: Object.keys(pageDrafts(drafts, page)).length > 0
       || Object.entries(pageApp(appState, page)).some(([key, value]) => JSON.stringify(value) !== JSON.stringify(appDefaults[key])),
     refresh,
+    /* A new project starts blank: none of this page's drafts, and its share
+       of App's state at the defaults — the page as a fresh load shows it.
+       The open project is saved first; the page is then cleared and
+       remounted (its epoch), as opening one does, which also drops undo. */
     async create(name) {
       await saverFor(page).flush();
-      const doc = await createProject({ name, ...snapshot(page) });
+      const blank = { page, drafts: {}, app: pageApp(appDefaults, page) };
+      const doc = await createProject({ name, ...blank });
+      drafts.replaceWhere(key => pageOfDraft(key) === page, {});
+      applyAppState(page, blank.app);
       setOpenProject(page, { id: doc.id, name: doc.name });
-      saverFor(page).markSaved({ name: doc.name, page, drafts: doc.drafts, app: doc.app });
+      saverFor(page).markSaved({ name: doc.name, ...blank });
       setError(page, null);
+      setEpochs(all => ({ ...all, [page]: (all[page] || 0) + 1 }));
       rememberProject(page, doc.id);
       await refresh();
     },

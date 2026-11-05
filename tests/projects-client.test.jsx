@@ -121,8 +121,29 @@ describe("a page's project section", () => {
     expect(screen.getByText("No project")).toBeTruthy();
   });
 
-  it("creates a project from what is on screen", async () => {
+  it("creates a blank project", async () => {
     const p = props();
+    render(<ProjectMenu {...p} />);
+    fireEvent.click(screen.getByText("Projects"));
+    expect(screen.getByText("New blank project")).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText("Name"), { target: { value: "Bathroom" } });
+    fireEvent.click(screen.getByText("Create"));
+    await waitFor(() => expect(p.onCreate).toHaveBeenCalledWith("Bathroom"));
+  });
+
+  it("asks before a blank project clears unsaved values", async () => {
+    const p = props({ scratchHasValues: true });
+    render(<ProjectMenu {...p} />);
+    fireEvent.click(screen.getByText("Projects"));
+    fireEvent.change(screen.getByPlaceholderText("Name"), { target: { value: "Bathroom" } });
+    fireEvent.click(screen.getByText("Create"));
+    expect(p.onCreate).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText("Clear screen?"));
+    await waitFor(() => expect(p.onCreate).toHaveBeenCalledWith("Bathroom"));
+  });
+
+  it("does not ask with a project open: its values are saved", async () => {
+    const p = props({ scratchHasValues: true, project: { id: "kitchen", name: "Kitchen" } });
     render(<ProjectMenu {...p} />);
     fireEvent.click(screen.getByText("Projects"));
     fireEvent.change(screen.getByPlaceholderText("Name"), { target: { value: "Bathroom" } });

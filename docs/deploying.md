@@ -222,6 +222,15 @@ nodes that are gone, so Ctrl+Z cannot carry one project's values into another.
 With no project open on the page, opening one would replace unsaved work there,
 so it asks (two clicks). Each page's last project is reopened on load.
 
+**Creating a project starts it blank (decided 2026-11-05).** It used to copy
+what was on screen. Now the new file holds none of the page's drafts and its
+share of `app` at the defaults, and the page is cleared the way opening does
+it: `replaceWhere` with nothing, `applyAppState` with the defaults, an epoch
+bump. The project that was open is flushed first and keeps its values. With
+no project open, typed values would be lost, so Create asks first ("Clear
+screen?", two clicks), as Open does. There is no longer a way to save typed
+values into a new project; type them into one instead.
+
 **Renaming** changes the name, never the id: the file keeps the slug it was
 created with, so `kitchen.json` can hold "Kitchen floor 2". That keeps an open
 project saving to the same file, and it has no rename-on-disk to get wrong. The
