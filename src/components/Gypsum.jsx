@@ -164,8 +164,8 @@ const describePiece = (pick, vertical) => {
   return `R${rowIndex + 1} · ${seg.type === "full" ? "full board" : "cut"} · ${vertical ? `${across} × ${along}` : `${along} × ${across}`} mm`;
 };
 
-/* One surface's drawing. Selecting a board in it puts that board in the
-   head in place of the counts; clearing it brings the counts back. */
+/* One surface's drawing. Selecting a board in it names that board in the
+   head beside the surface's name; the counts stay on the right. */
 function SurfaceDrawing({ surface: s, vertical }) {
   const [picked, setPicked] = React.useState(null);
   const onSelect = React.useCallback(pick => setPicked(pick ? describePiece(pick, vertical) : null), [vertical]);
@@ -173,8 +173,9 @@ function SurfaceDrawing({ surface: s, vertical }) {
     <Stack gap={2} className="gyp-surface">
       <div className="gyp-surface-head">
         <span className="gyp-surface-name">{s.label}</span>
-        <span className="gyp-surface-meta" aria-live="polite">
-          {picked || <>{s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}</>}
+        <span className="gyp-surface-meta gyp-surface-pick" aria-live="polite">{picked}</span>
+        <span className="gyp-surface-meta gyp-surface-count">
+          {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
         </span>
       </div>
       <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}
