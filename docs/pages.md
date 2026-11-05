@@ -188,7 +188,9 @@ a second layer. All figures, and the diagrams, come from
   15 screen pixels on every drawing (`LayoutVisualization` measures each
   drawing's on-screen scale; drawing units alone made a 5800 wall's labels
   larger than a 5130 wall's), capped by the room between neighbouring
-  labels rather than by the thinnest row. Click, Enter or
+  labels rather than by the thinnest row. The board sizes inside the pieces
+  follow the same measured scale at 12 px, and show only where they fit at
+  that size (a 100 mm strip's pieces go unlabelled; selecting one names it). Click, Enter or
   Space leaves that
   lane out of the job — already boarded, or someone
   else's — and again puts it back. Kept per room by surface id, with the

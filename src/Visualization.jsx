@@ -127,6 +127,8 @@ export function LayoutEmptyState({ message, steps, visual = "mosaic" }) {
 
 
 
+/* A piece's number on screen, once the drawing's scale is measured. */
+const PIECE_LABEL_PX = 12;
 /* Capital height of the row-label face, as a share of its size. */
 const CAP_HEIGHT = 0.72;
 
@@ -511,15 +513,24 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
               <rect key={r.key} x={r.x + chartX} y={r.y + chartY} width={r.w} height={r.h} className="layout-svg-row-bg" />
             ))}
             {rects.map(rect => {
+              const text = rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : String(rect.seg.label ?? Math.round(rect.seg.w));
+              /* Once the scale is measured (the gypsum page) a piece's number
+                 is PIECE_LABEL_PX on screen on every drawing, and shows only
+                 where it fits in its piece at that size. */
+              const pieceFs = pxPerUnit ? PIECE_LABEL_PX / pxPerUnit : null;
               const isHighlighted = hoveredType && rect.type === hoveredType;
               const isSelected = selectedKey === rect.key || (selectedSourceId && rect.sourceId === selectedSourceId);
               /* A piece whose middle is inside an opening keeps its label to
                  itself: the opening's own label sits there, over it. */
               const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
-              const hw = Math.max(vW, vH) * 0.03, hh = Math.max(vW, vH) * 0.015;
+              const hw = pieceFs ? text.length * pieceFs * 0.31 : Math.max(vW, vH) * 0.03;
+              const hh = pieceFs ? pieceFs * 0.6 : Math.max(vW, vH) * 0.015;
+              const fits = pieceFs
+                ? rect.w > (text.length * 0.62 + 0.8) * pieceFs && rect.h > pieceFs * 1.3
+                : rect.w > vW * 0.045 && rect.h > vH * 0.035;
               const underOpening = (result.meta.openings || []).some(o =>
                 cx + hw > o.x && cx - hw < o.x + o.w && cy + hh > o.y && cy - hh < o.y + o.h);
-              const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035 && !underOpening && !rect.row.excluded;
+              const showLabel = showSegmentText && fits && !underOpening && !rect.row.excluded;
               return (
                 <g key={rect.key} className={rect.sourceId ? "viz-seg is-linked" : "viz-seg"}
                   onClick={e => { e.stopPropagation(); handleSegClick(rect); }}
@@ -534,10 +545,11 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                   </rect>
                   {showLabel && (
                     <text x={rect.x + chartX + rect.w / 2} y={rect.y + chartY + rect.h / 2}
-                      textAnchor="middle" dominantBaseline="middle" className="layout-svg-label">
+                      textAnchor="middle" dominantBaseline="middle" className="layout-svg-label"
+                      style={pieceFs ? { fontSize: pieceFs } : undefined}>
                       {/* A segment may carry its own label (Gypsum: the piece's width);
                           otherwise its length along the row. */}
-                      {rect.type === "gap" ? `\u2205${Math.round(rect.seg.w)}` : (rect.seg.label ?? Math.round(rect.seg.w))}
+                      {text}
                     </text>
                   )}
                 </g>
