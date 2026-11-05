@@ -416,12 +416,23 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   const laneLabelFontSize = Number.isFinite(minRowLabelLane)
     ? Math.floor(minRowLabelLane / ((maxRowLabelChars + (onRowToggle && isV ? 2 : 0)) * 0.68))
     : baseLabelFontSize;
-  const labelFontSize = showRowLabels ? Math.max(10, Math.min(baseLabelFontSize, laneLabelFontSize)) : 0;
-  /* Fixed horizontally the labels sit in a left margin; a checkbox before
-     each (onRowToggle) needs its width as well. */
-  const labelMargin = showRowLabels
-    ? Math.round(labelFontSize * (!isV && onRowToggle ? Math.max(3.6, 1.5 + maxRowLabelChars * 0.62 + 1.3) : 3.6))
-    : 0;
+  /* With checkboxes (onRowToggle) the labels are a control, so they are
+     sized by the room between neighbouring labels rather than by the
+     thinnest lane: a 100 mm strip beside 1250 rows used to shrink every
+     label to fit inside it. */
+  const sortedMids = groupBands.map(b => b.mid).sort((a, b) => a - b);
+  const bandGap = sortedMids.slice(1).reduce((min, mid, i) => Math.min(min, mid - sortedMids[i]), Infinity);
+  const toggleFontSize = Math.round(Math.min(Math.max(vW, vH) * 0.022,
+    Number.isFinite(bandGap) ? (isV ? bandGap / ((maxRowLabelChars + 2) * 0.66) : bandGap / 1.3) : Infinity));
+  const labelFontSize = !showRowLabels ? 0
+    : Math.max(10, onRowToggle ? toggleFontSize : Math.min(baseLabelFontSize, laneLabelFontSize));
+  /* Fixed horizontally the labels sit in a left margin; with checkboxes it
+     holds a column of boxes, then the labels left-aligned after them. */
+  const toggleCol = { pad: labelFontSize * 0.5, box: labelFontSize * 0.9, gap: labelFontSize * 0.4 };
+  const labelMargin = !showRowLabels ? 0
+    : !isV && onRowToggle
+      ? Math.round(toggleCol.pad * 2 + toggleCol.box + toggleCol.gap + maxRowLabelChars * labelFontSize * 0.62)
+      : Math.round(labelFontSize * (isV && onRowToggle ? 1.9 : 3.6));
   const chartX = !isV ? labelMargin : 0;
   const chartY = isV ? labelMargin : 0;
   const totalVW = vW + chartX;
@@ -531,12 +542,20 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                     className="layout-svg-row-label">{band.label}</text>
                 );
               }
-              const box = fs * 0.85, gap = fs * 0.35, textW = band.label.length * fs * 0.62;
+              const { pad, box, gap } = toggleCol;
+              const textW = band.label.length * fs * 0.62;
               const total = box + gap + textW;
-              // Fixed horizontally the label ends where it always did; vertically the pair is centred on the column.
-              const boxX = isV ? band.mid + chartX - total / 2 : textX - textW - gap - box;
-              const boxY = isV ? textY - fs * 0.35 - box / 2 : textY - box / 2;
-              const labelX = isV ? boxX + box + gap : textX;
+              /* Fixed horizontally: one column of boxes at the margin's left,
+                 labels left-aligned after them, each kept inside the drawing
+                 even when its lane is thinner than the label (a 100 strip at
+                 the top). Vertically: the pair centred over its column, kept
+                 inside the drawing's width the same way. */
+              const midY = Math.min(Math.max(band.mid + chartY, box / 2 + fs * 0.15), totalVH - box / 2 - fs * 0.15);
+              const midX = Math.min(Math.max(band.mid + chartX, total / 2 + pad), totalVW - total / 2 - pad);
+              const boxX = isV ? midX - total / 2 : pad;
+              const boxY = isV ? textY - fs * 0.35 - box / 2 : midY - box / 2;
+              const labelX = boxX + box + gap;
+              const labelY = isV ? textY : midY;
               const on = !band.excluded;
               const toggle = () => onRowToggle(band.lane);
               return (
@@ -553,8 +572,8 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                     <path className="layout-svg-check-mark"
                       d={`M${boxX + box * 0.22} ${boxY + box * 0.52} L${boxX + box * 0.42} ${boxY + box * 0.72} L${boxX + box * 0.8} ${boxY + box * 0.3}`} />
                   )}
-                  <text x={labelX} y={textY} fontSize={fs} style={{ fontSize: fs }}
-                    textAnchor={isV ? "start" : "end"} dominantBaseline={isV ? "auto" : "middle"}
+                  <text x={labelX} y={labelY} fontSize={fs} style={{ fontSize: fs }}
+                    textAnchor="start" dominantBaseline={isV ? "auto" : "middle"}
                     className={"layout-svg-row-label" + (on ? "" : " is-excluded")}>{band.label}</text>
                 </g>
               );
