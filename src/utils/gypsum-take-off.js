@@ -57,34 +57,41 @@ const round = (value, places) => {
  * begins on a stud rather than at the corner; alternate lanes still begin half
  * a sheet further on, counted from there, which keeps the end joints apart.
  *
+ * A staggered lane whose start wraps past a board would begin on a sliver
+ * (offset 1300 + 1250 in 2500s is 50); its first joint moves out to
+ * MIN_END_PIECE instead. An offset typed that short on a lane that is not
+ * staggered is what was asked for, and stays.
+ *
  * A remainder under MIN_END_PIECE is made up from the piece before it. By
  * default that is the lane's first piece (one cut at the corner, every board
  * after it whole). `fullStart` keeps the first piece as it is and trims the
  * last whole board instead, so a lane that starts on a full board still does:
  * 5130 in 2500s is 2330 · 2500 · 300 by default, 2500 · 2330 · 300 with it.
+ * A first piece too short to give that much (a short offset) is kept the same
+ * way, so no piece is ever trimmed below the minimum — or below nothing.
  * With no whole board to trim it falls back to the first piece.
  */
 export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false) {
   if (span <= sheetL + EPS) return [span];
   const stagger = laneIndex % 2 === 1 ? sheetL * STAGGER : 0;
+  const asked = start > EPS && !stagger;
   let first = start > EPS ? start + stagger : (stagger || sheetL);
   if (first > sheetL + EPS) first -= sheetL;
+  if (!asked && first < MIN_END_PIECE - EPS) first = Math.min(MIN_END_PIECE, sheetL);
   if (first >= span - EPS) return [span];
   const rest = span - first;
   const full = Math.floor((rest + EPS) / sheetL);
-  let last = rest - full * sheetL;
+  const last = rest - full * sheetL;
   const short = last > EPS && last < MIN_END_PIECE ? MIN_END_PIECE - last : 0;
-  if (short && fullStart && full > 0) {
-    const pieces = [first, ...Array(full - 1).fill(sheetL), sheetL - short, MIN_END_PIECE];
+  if (!short) {
+    const pieces = [first, ...Array(full).fill(sheetL)];
+    if (last > EPS) pieces.push(last);
     return pieces;
   }
-  if (short) {
-    first -= short;
-    last = MIN_END_PIECE;
+  if (full > 0 && (fullStart || first - short < MIN_END_PIECE - EPS)) {
+    return [first, ...Array(full - 1).fill(sheetL), sheetL - short, MIN_END_PIECE];
   }
-  const pieces = [first, ...Array(full).fill(sheetL)];
-  if (last > EPS) pieces.push(last);
-  return pieces;
+  return [first - short, ...Array(full).fill(sheetL), MIN_END_PIECE];
 }
 
 /**
@@ -111,6 +118,13 @@ export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false
  * drawings can show them; every count here leaves them out. `excludedArea`
  * (mm²) is their area less any opening in it, for the area figures.
  *
+ * A lane is only a number, so a choice made on one layout means another lane
+ * on the next: R3 is the top strip fixed horizontally and a whole column
+ * fixed vertically. `skipLanes` may therefore come as `{ key, lanes }`, where
+ * `key` is the `laneKey` of the layout it was picked on — direction, lane
+ * length and every lane's width — and it applies only while that still
+ * matches. A bare array applies as it is.
+ *
  * `firstLane` (mm) keeps the first full board off the corner so its edge lands
  * on a stud: with studs at 600 centres, 600 puts it on the first stud after
  * the corner stud. Fixed vertically, the surface starts with a strip that
@@ -118,7 +132,6 @@ export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false
  * `lanePieces`). Ignored unless it is shorter than the board's side it cuts.
  */
 export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top", fullStart = false, skipLanes = [] }) {
-  const skip = new Set(skipLanes);
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
@@ -132,6 +145,9 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     lanes.push(Math.min(sheetW, across - pos));
     pos += sheetW;
   }
+  const laneKey = [vertical ? "V" : "H", Math.round(laneLength), ...lanes.map(l => Math.round(l))].join("|");
+  const skip = new Set(Array.isArray(skipLanes) ? skipLanes
+    : skipLanes && skipLanes.key === laneKey && Array.isArray(skipLanes.lanes) ? skipLanes.lanes : []);
   const fullRows = lanes.map((laneW, laneIndex) => {
     let x = 0;
     const start = !vertical && firstLane > EPS && firstLane < sheetL - EPS ? firstLane : 0;
@@ -198,6 +214,7 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     laneLength,
     lanes: lanes.length,
     joints: edgeJoints + endJoints,
+    laneKey,
     excludedArea,
     full: rows.reduce((n, row) => n + (row.excluded ? 0 : row.segs.filter(s => s.type === "full").length), 0),
     cut: rows.reduce((n, row) => n + (row.excluded ? 0 : row.segs.filter(s => s.type === "cut").length), 0),
@@ -220,10 +237,12 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
 }
 
 /**
- * Packs every piece into stock sheets: whole pieces are a sheet each; cut
- * pieces go first-fit-decreasing into sheet lengths, grouped by lane width,
- * because the strip left after ripping a narrow lane is no use for a full one.
- * A narrow lane can come several to a sheet (two 600 strips from one 1200).
+ * Packs every piece into stock sheets: whole pieces are a sheet each. Cut
+ * pieces go first-fit-decreasing into strips a sheet long, one lane width
+ * each — a strip is what a board is ripped into, then cut across. The strips
+ * then go first-fit-decreasing across the sheet's width, so strips of
+ * different widths share a board when they fit side by side: two 600s, or a
+ * 400 and an 800, from one 1200. A full-width strip is a board of its own.
  *
  * `fullBoards` buys a whole board for every piece, cut or not: offcuts are
  * not reused and strips are not doubled up, for a crew that does not keep
@@ -242,7 +261,7 @@ export function packSheets(pieces, sheetW, sheetL, { fullBoards = false } = {}) 
     if (!byWidth.has(key)) byWidth.set(key, []);
     byWidth.get(key).push(piece.w);
   }
-  let cutSheets = 0;
+  const strips = [];
   for (const [laneW, lengths] of byWidth) {
     const bins = [];
     for (const len of lengths.sort((a, b) => b - a)) {
@@ -250,9 +269,15 @@ export function packSheets(pieces, sheetW, sheetL, { fullBoards = false } = {}) 
       if (bin) bin.left -= len;
       else bins.push({ left: sheetL - len });
     }
-    const stripsPerSheet = Math.max(1, Math.floor((sheetW + EPS) / laneW));
-    cutSheets += Math.ceil(bins.length / stripsPerSheet);
+    for (let i = 0; i < bins.length; i++) strips.push(Math.min(laneW, sheetW));
   }
+  const boards = [];
+  for (const width of strips.sort((a, b) => b - a)) {
+    const board = boards.find(b => b.left + EPS >= width);
+    if (board) board.left -= width;
+    else boards.push({ left: sheetW - width });
+  }
+  const cutSheets = boards.length;
   return { whole, cutSheets, total: whole + cutSheets };
 }
 
@@ -277,7 +302,8 @@ export const JOINT_FILL_MM_M = 0.34;
  * which, so the page can show the figure it worked out.
  */
 export function jointFillerRate(perMetre, perMm) {
-  if (given(perMetre)) return { rate: num(perMetre), derived: false };
+  /* A rate of 0 is no filler, not a filler that weighs nothing. */
+  if (given(perMetre) && num(perMetre) > 0) return { rate: num(perMetre), derived: false };
   if (given(perMm) && num(perMm) > 0) return { rate: round(num(perMm) * JOINT_FILL_MM_M, 3), derived: true };
   return { rate: null, derived: false };
 }
@@ -489,6 +515,9 @@ export function buildGypsumTakeOff(fields) {
   const invalid = openingsRead.filter(o => o.status === "invalid");
   const sheetValid = sheetReady && SW <= SL;
   const ready = dimsReady && sheetValid && !tooLarge && gross > 0 && toBuy > 0;
+  /* Nothing to buy because every row is left out, not because of a field. */
+  const allLeftOut = laidOut.some(s => s.layout && s.layout.rows.some(r => r.excluded)) &&
+    laidOut.every(s => !s.layout || s.layout.rows.every(r => r.excluded || !r.segs.length));
 
   return {
     ready,
@@ -497,6 +526,7 @@ export function buildGypsumTakeOff(fields) {
       : !sheetReady ? "Enter the sheet width and length."
       : !sheetValid ? "Sheet width cannot be more than its length."
       : tooLarge ? "That surface is too large to lay out — check the dimensions."
+      : allLeftOut ? "Every row is left out — click a row label to include it again."
       : "Enter valid dimensions to finish the estimate.",
     warning: misfits.length
       ? `${misfits.map(o => room ? `${o.label} (wall ${o.wall})` : o.label).join(", ")} ${misfits.length === 1 ? "does" : "do"} not fit on ${misfits.length === 1 ? "its" : "their"} wall and ${misfits.length === 1 ? "is" : "are"} left out.`

@@ -29,6 +29,22 @@ describe("lane pieces", () => {
     expect(pieces.reduce((a, b) => a + b, 0)).toBe(2700);
   });
 
+  it("never trims a short offset piece below the minimum, or below nothing", () => {
+    // Offset 100 on a 2700 row in 2500s: the 100 end is made up from the
+    // whole board, not from the 100 piece (which went to −100).
+    const pieces = lanePieces(2700, 2500, 0, 100);
+    expect(pieces).toEqual([100, 2300, 300]);
+    expect(Math.min(...pieces)).toBeGreaterThan(0);
+  });
+
+  it("does not start a staggered row on a sliver when the offset wraps past a board", () => {
+    // 1300 + 1250 in 2500s wrapped to 50; the joint moves out to the minimum.
+    const pieces = lanePieces(5800, 2500, 1, 1300);
+    expect(pieces[0]).toBe(MIN_END_PIECE);
+    expect(pieces.reduce((a, b) => a + b, 0)).toBe(5800);
+    expect(Math.min(...pieces)).toBeGreaterThanOrEqual(MIN_END_PIECE);
+  });
+
   it("keeps a full panel at the start when asked, trimming the last whole board", () => {
     // The 5130 wall in 2500 boards: a 130 end would be a sliver.
     expect(lanePieces(5130, 2500, 0)).toEqual([2330, 2500, 300]);
@@ -104,6 +120,13 @@ describe("packing", () => {
     expect(packSheets([piece, piece], 1200, 2500).total).toBe(1);
   });
 
+  it("rips strips of different widths from one board when they fit side by side", () => {
+    expect(packSheets([{ type: "cut", w: 2600, laneW: 400 }, { type: "cut", w: 2600, laneW: 800 }], 1200, 2600).total).toBe(1);
+    expect(packSheets([{ type: "cut", w: 2600, laneW: 300 }, { type: "cut", w: 2600, laneW: 900 }], 1200, 2600).total).toBe(1);
+    // 700 + 600 is wider than the board.
+    expect(packSheets([{ type: "cut", w: 2600, laneW: 700 }, { type: "cut", w: 2600, laneW: 600 }], 1200, 2600).total).toBe(2);
+  });
+
   it("does not put a full-width piece in a ripped sheet", () => {
     expect(packSheets([{ type: "cut", w: 1000, laneW: 600 }, { type: "cut", w: 1000, laneW: 1200 }], 1200, 2600).total).toBe(2);
   });
@@ -116,6 +139,12 @@ describe("packing", () => {
 });
 
 describe("the gypsum take-off", () => {
+  it("treats a joint filler rate of 0 as no filler", () => {
+    const t = buildGypsumTakeOff(fields({ compoundRate: "0" }));
+    expect([t.compound.rate, t.tape.needed]).toEqual([null, false]);
+    expect(jointFillerRate("0", "1.1")).toEqual({ rate: 0.374, derived: true });
+  });
+
   it("counts sheets from the layout", () => {
     const t = buildGypsumTakeOff(fields());
     // 4000 wall: 1200, 1200, 1200, 400 → 3 whole + one 400 strip (×2 walls).
@@ -162,6 +191,24 @@ describe("the gypsum take-off", () => {
     expect(t.screws.count).toBeLessThan(all.screws.count);
     // R3 still meets the 400 strip, so that joint is kept.
     expect(t.tape.joints).toBe(all.tape.joints);
+  });
+
+  it("forgets rows left out on another layout of the surface", () => {
+    const h = fields({ orientation: "H", sheetW: "1250", sheetL: "2500" });
+    const key = buildGypsumTakeOff(h).surfaces[0].layout.laneKey;
+    const picked = { "wall-ac": { key, lanes: [2] } };
+    // Fixed horizontally, R3 is the 100 top strip: 0.4 m² a wall, two walls.
+    expect(buildGypsumTakeOff({ ...h, excluded: picked }).area.excluded).toBe(0.8);
+    // Fixed vertically it would be a whole column; the choice no longer applies.
+    const v = buildGypsumTakeOff({ ...h, orientation: "V", excluded: picked });
+    expect(v.area.excluded).toBe(0);
+    expect(v.surfaces[0].layout.rows.some(r => r.excluded)).toBe(false);
+  });
+
+  it("says every row is left out rather than asking for dimensions", () => {
+    const t = buildGypsumTakeOff(fields({ mode: "wall", wallW: "2400", wallH: "2600", excluded: { wall: [0, 1] } }));
+    expect(t.ready).toBe(false);
+    expect(t.issue).toMatch(/Every row is left out/);
   });
 
   it("does not count an opening's area twice when it sits in a row left out", () => {

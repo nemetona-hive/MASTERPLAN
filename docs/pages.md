@@ -180,15 +180,24 @@ a second layer. All figures, and the diagrams, come from
 - **Rows can be left out.** A row label (R1, R2…) in a surface's 2D drawing
   is a switch (`LayoutVisualization`'s optional `onRowToggle`): click or
   Enter leaves that lane out of the job — already boarded, or someone
-  else's — and again puts it back. Kept per room by surface id and lane
-  (`excluded: { "wall-ac": [3] }`); a surface whose id changes (a wall split
-  from its twin by an opening) starts with none left out. A left-out lane
+  else's — and again puts it back. Kept per room by surface id, with the
+  `laneKey` of the layout the rows were picked on (`excluded: { "wall-ac":
+  { key, lanes: [3] } }`; key = direction, lane length, every lane's width).
+  A lane is only a number — R3 is the top strip fixed horizontally and a
+  whole column fixed vertically — so once the key stops matching (direction,
+  board width, surface size or offset changed) the choice is dropped, not
+  carried onto other rows. A surface whose id changes (a wall split from its
+  twin by an opening) also starts with none left out. Leave every row out and
+  the page says so instead of asking for dimensions. A left-out lane
   stays in `rows`/`pieces` marked `excluded`, drawn dashed and unfilled (2D,
   print) or not at all (3D), and every count drops it: sheets, its own
   boards, full/cut, end joints. Its long-edge joint stays where it meets a
   lane still in. Its area less any opening in it (`excludedArea`) comes off
   net, so screws, adhesive and skim follow; Calculation Details and the
-  printed facts show it as *Rows left out*.
+  printed facts show it as *Rows left out*. **Kept as is:** an opening with
+  no position on a wall with rows left out still comes off the whole area —
+  the model cannot know whether it sits in a left-out row — so net can come
+  out low (never below zero). Place the opening to make it exact.
 - **Selecting a board names it.** Clicking a piece in a surface's 2D
   drawing names it in that surface's head, after the surface name: lane,
   full or cut, and its size across × up the surface (`R4 · cut · 400 × 2600
@@ -206,9 +215,13 @@ a second layer. All figures, and the diagrams, come from
   (`--form-control-h`), so a card is the same height folded or not.
 - **The layout is the count.** Each surface is cut into lanes of board width
   (vertical fixing: columns up the wall; horizontal: rows along it), each lane
-  into pieces, and the pieces are packed first-fit-decreasing back into stock
-  sheets, per lane width — a ripped strip's sheet cannot also supply a full
-  width piece, but two 600 strips come from one 1200 sheet. Waste % goes on
+  into pieces, and the pieces are packed back into stock sheets in two
+  steps (`packSheets`): cut pieces of one lane width go first-fit-decreasing
+  into strips a sheet long, then the strips go first-fit-decreasing across
+  the sheet's width. Two 600s, or a 400 and an 800, come from one 1200 board;
+  a full-width strip is a board of its own. A narrow piece is never cut from
+  the leftover length of a wider strip, so the count errs high, not low.
+  Waste % goes on
   top for breakage, not cutting, so it defaults to **5**, not the reference
   site's 10 (that 10 stood in for cutting it did not model).
 - **Cut pieces: Reuse offcuts / Full board each** (per room, `fullBoards`).
@@ -233,7 +246,14 @@ a second layer. All figures, and the diagrams, come from
   (`lanePieces(…, fullStart)`).
 - **End joints** only exist where a lane is longer than a sheet. Alternate
   lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
-  moves the lane's joint instead of leaving a sliver.
+  moves the lane's joint instead of leaving a sliver. The trim comes off the
+  first piece unless that would take it under the minimum (a short first
+  panel offset), when it comes off the last whole board instead — no piece
+  is trimmed below 300, or below nothing. A staggered lane whose start wraps
+  past a board (offset 1300 + 1250 in 2500s = 50) starts at 300 instead. An
+  offset typed under 300 on an unstaggered lane is kept: it was asked for.
+  The rule is along a lane only; across the lanes the last one is ripped to
+  what is left, however narrow (an open question, not yet decided).
 - **Openings** are a list (`+ Door` / `+ Window`): wall A–D, `x` from the
   wall's left end *as seen from inside*, width, height, and a sill for a
   window. Room walls are A back, then clockwise seen from above (B right, C
@@ -274,7 +294,8 @@ a second layer. All figures, and the diagrams, come from
   Knauf's own figure for Fill & Finish Light on the joints of 1250 mm board,
   0.2 + 0.1 kg/m² over about 0.8 m of joint per m² = 0.375 kg/m, divided by
   its 1.1 kg/m² per mm. The page says the worked-out rate under the field.
-  A stated per-metre rate always wins (`jointFillerRate`).
+  A stated per-metre rate always wins (`jointFillerRate`). A rate of 0 is no
+  filler: the joint and tape rows stay hidden.
 - **Surface skim (mm)** is a job field: a full-surface skim (Knauf's Q4, at
   least 1 mm) over the face layer's net area at `skimRate`. It adds to the
   joint filler, in the same bags. Knauf's quality levels stop at Q4.

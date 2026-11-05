@@ -33,7 +33,8 @@ const NEW_OPENING = {
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
 const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false, offcutsPerSurface: false,
-  /* Rows left out of the job, by surface id → lane indexes. */
+  /* Rows left out of the job: surface id → { key, lanes }, `key` being the
+     layout's `laneKey` they were picked on (see layoutSurface). */
   excluded: {} };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
@@ -184,7 +185,7 @@ function SurfaceDrawing({ surface: s, vertical, onRowToggle }) {
       </div>
       <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}
         rowStart={s.layout.meta.rowStart} maxHeight={460} onSelect={onSelect}
-        onRowToggle={lane => onRowToggle(s.id, lane)} />
+        onRowToggle={lane => onRowToggle(s.id, s.layout.laneKey, lane)} />
     </Stack>
   );
 }
@@ -382,10 +383,13 @@ export function SheetGypsum({ projectName = "" }) {
   const [fullStart, setFullStart] = roomState("fullStart");
   const [offcutsPerSurface, setOffcutsPerSurface] = roomState("offcutsPerSurface");
   const [, setExcluded] = roomState("excluded");
-  const toggleRow = (surfaceId, lane) => setExcluded(current => {
-    const lanes = (current && current[surfaceId]) || [];
+  /* A choice made on another layout of this surface no longer names the
+     same rows, so it is dropped rather than carried over. */
+  const toggleRow = (surfaceId, key, lane) => setExcluded(current => {
+    const held = current && current[surfaceId];
+    const lanes = held && held.key === key && Array.isArray(held.lanes) ? held.lanes : [];
     const next = lanes.includes(lane) ? lanes.filter(l => l !== lane) : [...lanes, lane].sort((a, b) => a - b);
-    return { ...current, [surfaceId]: next };
+    return { ...current, [surfaceId]: { key, lanes: next } };
   });
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
