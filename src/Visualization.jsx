@@ -127,6 +127,9 @@ export function LayoutEmptyState({ message, steps, visual = "mosaic" }) {
 
 
 
+/* Capital height of the row-label face, as a share of its size. */
+const CAP_HEIGHT = 0.72;
+
 function buildLayoutSvgRects(result, orderedRows, rowStart) {
   const { surfaceW, surfaceH, simW, simH, direction, s4, useS4Colors, palClasses, PPi, PLa, hasJoints, exactRows } = result.meta;
   const isV = direction === "V";
@@ -557,9 +560,14 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
               const midY = Math.min(Math.max(band.mid + chartY, box / 2 + fs * 0.15), totalVH - box / 2 - fs * 0.15);
               const midX = Math.min(Math.max(band.mid + chartX, total / 2 + pad), totalVW - total / 2 - pad);
               const boxX = isV ? midX - total / 2 : pad;
-              const boxY = isV ? textY - fs * 0.35 - box / 2 : midY - box / 2;
+              /* Box and label share one centre line. The label sits on its
+                 baseline, half a capital's height below that line, so "R1"
+                 (all capitals) is centred on the box — "middle" would centre
+                 lowercase height and leave the capitals riding high. */
+              const cy = isV ? textY - fs * 0.35 : midY;
+              const boxY = cy - box / 2;
               const labelX = boxX + box + gap;
-              const labelY = isV ? textY : midY;
+              const labelY = cy + fs * CAP_HEIGHT / 2;
               const on = !band.excluded;
               const toggle = () => onRowToggle(band.lane);
               return (
@@ -577,7 +585,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                       d={`M${boxX + box * 0.22} ${boxY + box * 0.52} L${boxX + box * 0.42} ${boxY + box * 0.72} L${boxX + box * 0.8} ${boxY + box * 0.3}`} />
                   )}
                   <text x={labelX} y={labelY} fontSize={fs} style={{ fontSize: fs }}
-                    textAnchor="start" dominantBaseline={isV ? "auto" : "middle"}
+                    textAnchor="start" dominantBaseline="alphabetic"
                     className={"layout-svg-row-label" + (on ? "" : " is-excluded")}>{band.label}</text>
                 </g>
               );
