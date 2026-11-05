@@ -145,6 +145,22 @@ same rule stated twice.
 ## Visualization
 
 - `LayoutVisualization` — renders row-by-row or strip view depending on `result.meta.visualization`.
+  Props beyond `result`: `rowStart` ("top"/"bottom" — which side R1 is drawn
+  on), `maxHeight`, `onLargePreview`, `alwaysShowLabels`, and two optional
+  ones only the Gypsum page passes:
+  - `onSelect(pick | null)` — told the selected piece (`{ seg, row, rowIndex }`)
+    after every render, and null once nothing is selected or the piece is no
+    longer drawn. Keep a primitive from it (a string): the parent's state
+    update then bails out instead of re-rendering in a loop, since the result
+    object is usually rebuilt each render.
+  - `onRowToggle(lane)` — turns each row label into a checkbox
+    (`role="checkbox"`, ticked unless `row.excluded`). Passing it also
+    switches the labels, piece numbers and door/window names to fixed screen
+    pixels (the component measures its own scale with a ResizeObserver after
+    every render) and adds edge padding; without it everything is sized in
+    drawing units, as Pattern Layouts has it.
+  `meta.exactRows` draws each row at its real width (Gypsum, to scale);
+  without it H mode gives every row a standard lane (below).
 - **Large Preview Modal**: Full-screen analytical dashboard.
   - **Live Synchronization**: Edits to material or surface inputs within the modal reflect immediately in the visualization and stats.
   - **Dashboard Layout**: Uses a 3-column split (Material/Surface, Layout Engine, and Detailed Statistics).
