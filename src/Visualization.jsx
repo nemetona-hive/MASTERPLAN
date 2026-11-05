@@ -477,6 +477,32 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   const totalVW = vW + chartX;
   const totalVH = vH + chartY + edgePad;
   const aspectRatio = totalVW / totalVH;
+  /* Where each row checkbox sits along the drawing's edge (onRowToggle):
+     over its row's middle, kept inside the drawing, and kept clear of its
+     neighbours — a 130 mm last column used to push its pair against the one
+     before. Two sweeps: forwards so none overlaps the one before it, then
+     back from the far edge so none runs off it; a pair moves only as far as
+     it has to. */
+  const toggleSpots = new Map();
+  if (onRowToggle && showRowLabels) {
+    const fs = labelFontSize;
+    const { pad, box, gap } = toggleCol;
+    const span = band => (isV ? box + gap + band.label.length * fs * 0.62 : box);
+    const space = fs * (isV ? 1.2 : 0.3);
+    const lo = band => (isV ? span(band) / 2 + pad : box / 2 + fs * 0.15);
+    const hi = band => (isV ? totalVW - span(band) / 2 - pad : totalVH - box / 2 - fs * 0.15);
+    const order = [...groupBands].sort((a, b) => a.mid - b.mid);
+    const at = order.map(band => Math.min(Math.max(band.mid + (isV ? chartX : chartY), lo(band)), hi(band)));
+    for (let i = 1; i < order.length; i++) {
+      at[i] = Math.max(at[i], at[i - 1] + (span(order[i - 1]) + span(order[i])) / 2 + space);
+    }
+    for (let i = order.length - 1; i >= 0; i--) {
+      const limit = i === order.length - 1 ? hi(order[i]) : at[i + 1] - (span(order[i]) + span(order[i + 1])) / 2 - space;
+      at[i] = Math.min(at[i], limit);
+    }
+    order.forEach((band, i) => toggleSpots.set(band.lane, at[i]));
+  }
+
   const handleSegClick = (rect) => {
     if (selectedKey === rect.key) {
       setSelectedKey(null);
@@ -584,6 +610,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                 one target — a click on either, or Enter/Space on focus. */}
             {groupBands.map(band => {
               const fs = labelFontSize;
+              const spot = toggleSpots.get(band.lane);
               const textX = isV ? band.mid + chartX : chartX - (fs * 0.5);
               const textY = isV ? chartY - (fs * 0.5) : band.mid + chartY;
               if (!onRowToggle) {
@@ -601,8 +628,8 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                  even when its lane is thinner than the label (a 100 strip at
                  the top). Vertically: the pair centred over its column, kept
                  inside the drawing's width the same way. */
-              const midY = Math.min(Math.max(band.mid + chartY, box / 2 + fs * 0.15), totalVH - box / 2 - fs * 0.15);
-              const midX = Math.min(Math.max(band.mid + chartX, total / 2 + pad), totalVW - total / 2 - pad);
+              const midY = isV ? 0 : spot;
+              const midX = isV ? spot : 0;
               const boxX = isV ? midX - total / 2 : pad;
               /* Box and label share one centre line. The label sits on its
                  baseline, half a capital's height below that line, so "R1"

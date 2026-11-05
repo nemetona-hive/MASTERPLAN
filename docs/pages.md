@@ -192,7 +192,10 @@ a second layer. All figures, and the diagrams, come from
   labels rather than by the thinnest row. The board sizes inside the pieces
   follow the same measured scale at 12 px, and show only where they fit at
   that size (a 100 mm strip's pieces go unlabelled; selecting one names it).
-  Door and window names (D1, W1) are 15 px, the row labels' size. Click, Enter or
+  Door and window names (D1, W1) are 15 px, the row labels' size.
+  The checkboxes are spread along the edge so none crowds the next: each
+  sits over its row, inside the drawing, and moves aside only as far as it
+  must (a 130 mm last column used to push its pair against the one before). Click, Enter or
   Space leaves that
   lane out of the job — already boarded, or someone
   else's — and again puts it back. Kept per room by surface id, with the
