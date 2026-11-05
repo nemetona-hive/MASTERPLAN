@@ -15,8 +15,9 @@ import { presetDisplayName } from "../shared.jsx";
 /* Board and opening sizes keep a half millimetre where one was typed. */
 const mm = value => mmPlaces(value, 1);
 /* A board as the Board card's header names its preset: "OSB 12mm · 1250 ×
-   2500 mm", the size left off the name when it ends in it. */
-const boardLabel = (product, width, length) => {
+   2500 mm", the size left off the name when it ends in it. The sheets and
+   the page's All Rooms rows both name boards with it. */
+export const boardLabel = (product, width, length) => {
   const name = product ? presetDisplayName(product, width, length) : "";
   return `${name ? `${name} · ` : ""}${mm(width)} × ${mm(length)} mm`;
 };

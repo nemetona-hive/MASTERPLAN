@@ -3,7 +3,7 @@ import { React } from "../react-globals.js";
 import { ControlPanel, Icon, NumInput, Row, SegGroup, Stack, useTimedState } from "../shared.jsx";
 import { LIBRARIES, ManagePresetsButton, PresetField, PresetManager, libraryFields, presetHeader, usePresetLibrary } from "./GypsumPresets.jsx";
 import { LayoutVisualization } from "../Visualization.jsx";
-import { GypsumProjectSheet, GypsumTakeOffSheet } from "./GypsumTakeOffSheet.jsx";
+import { GypsumProjectSheet, GypsumTakeOffSheet, boardLabel } from "./GypsumTakeOffSheet.jsx";
 import { GypsumRoom3D } from "./GypsumRoom3D.jsx";
 import { buildGypsumProjectTakeOff, buildGypsumTakeOff, jointFillerRate, WALLS } from "../utils/gypsum-take-off.js";
 import { eur } from "../utils/format.js";
@@ -308,7 +308,7 @@ function ProjectTotals({ project, onPrint }) {
           <Row label="Net area" value={project.area.net.toFixed(2)} unit="m²" />
           {project.boards.map(b => (
             <Row key={`${b.product}|${b.width}|${b.length}|${b.price}`} hi
-              label={`${b.product || "Board"} ${b.width} × ${b.length}`} value={b.toBuy} unit="sheets" />
+              label={`Board — ${boardLabel(b.product, b.width, b.length)}`} value={b.toBuy} unit="sheets" />
           ))}
           {project.screws.count > 0 && <Row label="Screws" value={project.screws.count} unit="pcs" />}
           {project.adhesive.map(a => <Row key={`a|${a.product}|${a.bagKg}`} {...bagged(a, "Adhesive")} />)}

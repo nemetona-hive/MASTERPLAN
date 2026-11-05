@@ -162,7 +162,7 @@ a second layer. All figures, and the diagrams, come from
     Both sheets carry the open project's name, and both name a board as the
     Board card's header names its preset (`panel-preset-meta-value`): "Board
     — OSB 12mm · 1250 × 2500 mm", in the head, the order and the project's
-    rooms table. A name ending in the size has it trimmed so it is said once
+    rooms table, and the page's All Rooms rows say the same (`boardLabel`). A name ending in the size has it trimmed so it is said once
     (`presetDisplayName` in `shared.jsx`, which the header uses too).
   - **Every room is laid out on every render, but only once per change.**
     Each room's take-off is remembered against the room object and the three
