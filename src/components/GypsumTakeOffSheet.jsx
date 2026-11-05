@@ -1,6 +1,7 @@
 import { ReactDOM } from "../react-globals.js";
 import { DocHead } from "./DocHead.jsx";
 import { eur, mm as mmPlaces, nf } from "../utils/format.js";
+import { presetDisplayName } from "../shared.jsx";
 
 /**
  * The gypsum take-off as a printed document.
@@ -13,6 +14,12 @@ import { eur, mm as mmPlaces, nf } from "../utils/format.js";
 
 /* Board and opening sizes keep a half millimetre where one was typed. */
 const mm = value => mmPlaces(value, 1);
+/* A board as the Board card's header names its preset: "OSB 12mm · 1250 ×
+   2500 mm", the size left off the name when it ends in it. */
+const boardLabel = (product, width, length) => {
+  const name = product ? presetDisplayName(product, width, length) : "";
+  return `${name ? `${name} · ` : ""}${mm(width)} × ${mm(length)} mm`;
+};
 
 /* One surface as drawn on paper: the model's piece rectangles in surface
    millimetres, scaled by the viewBox. Ink and stroke come from 99-print.css,
@@ -74,7 +81,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
   return (
     <>
       <DocHead title={`Gypsum take-off${title ? ` — ${title}` : ""}`}>
-        {projectName ? `${projectName} · ` : ""}{nf(area.net, 2)} m² net · {mm(sheet.width)} × {mm(sheet.length)} mm{product ? ` · ${product}` : ""}
+        {projectName ? `${projectName} · ` : ""}{nf(area.net, 2)} m² net · {boardLabel(product, sheet.width, sheet.length)}
       </DocHead>
 
       <section className="doc-sheet-block">
@@ -127,7 +134,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
           </thead>
           <tbody>
             <tr>
-              <td>Board {mm(sheet.width)} × {mm(sheet.length)}</td>
+              <td>Board — {boardLabel(product, sheet.width, sheet.length)}</td>
               <td>{sheets.layout} from layout, +{nf(sheets.waste)}%</td>
               <td className="doc-sheet-strong">{sheets.toBuy} sheets</td>
               {sheets.price && <><td>€{eur(sheets.price)}</td><td className="doc-sheet-strong">€{eur(sheets.total)}</td></>}
@@ -204,7 +211,7 @@ export function GypsumTakeOffSheet({ takeOff, title = "", projectName = "" }) {
   );
 }
 
-const boardName = b => `${b.product ? `${b.product} ` : "Board "}${mm(b.width)} × ${mm(b.length)}`;
+const boardName = b => `Board — ${boardLabel(b.product, b.width, b.length)}`;
 const baggedNeed = g => g.bagKg ? `${g.bags} × ${nf(g.bagKg)} kg` : `${nf(g.kg, 1)} kg`;
 
 /**
@@ -235,7 +242,7 @@ export function GypsumProjectSheet({ project, entries, projectName = "" }) {
             {project.rooms.filter(r => r.ready).map(r => (
               <tr key={r.id}>
                 <td>{r.name}</td>
-                <td>{r.product ? `${r.product}, ` : ""}{mm(r.sheet.width)} × {mm(r.sheet.length)}</td>
+                <td>{boardLabel(r.product, r.sheet.width, r.sheet.length)}</td>
                 <td>{nf(r.net, 2)} m²</td>
                 <td>{r.sheets}</td>
                 {priced && <td>{r.total !== null ? `€${eur(r.total)}` : "—"}</td>}

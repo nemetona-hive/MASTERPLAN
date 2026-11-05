@@ -949,6 +949,11 @@ export function SaveDefaultsButton({ status, onClick, disabled = false, errorMes
 
 const escapeRegExp = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/* A size preset's name without the size it often ends in, so the size is
+   not said twice beside it ("OSB 12mm 1250 × 2500" → "OSB 12mm"). */
+export const presetDisplayName = (name, width, length) => String(name ?? "").replace(new RegExp(
+  `\\s*${escapeRegExp(width)}\\s*[×x]\\s*${escapeRegExp(length)}(?:\\s*mm)?\\s*$`, "i"), "").trim();
+
 /* The chosen preset, in a form card's header: its name and what it sets.
    Shared by Pattern Layouts and Gypsum. `preset` is { name, width, length },
    or { name, detail } for a preset that is not a size (a filler's kg/m). */
@@ -958,8 +963,7 @@ export function SelectedPresetDetail({ preset }) {
   const dimensions = sized ? `${preset.width} × ${preset.length} mm` : preset.detail;
   // A size preset's name often ends in its size; that is not said twice.
   const displayName = sized
-    ? String(preset.name).replace(new RegExp(
-        `\\s*${escapeRegExp(preset.width)}\\s*[×x]\\s*${escapeRegExp(preset.length)}(?:\\s*mm)?\\s*$`, "i"), "").trim()
+    ? presetDisplayName(preset.name, preset.width, preset.length)
     : String(preset.name).trim();
   const fullTitle = displayName ? `${displayName} — ${dimensions}` : dimensions;
   return (

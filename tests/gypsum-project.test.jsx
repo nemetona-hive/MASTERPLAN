@@ -80,6 +80,8 @@ describe("the project take-off", () => {
     expect(document.querySelectorAll(".gyp-print-room")).toHaveLength(2);
     expect(document.querySelector(".doc-sheet-warn").textContent).toContain("Loft");
     expect(document.querySelectorAll(".doc-sheet")).toHaveLength(1);
+    // Boards named as the Board card's header names its preset.
+    expect(document.querySelector(".doc-sheet-table--order tbody tr td").textContent).toBe("Board — Knauf · 1200 × 2600 mm");
   });
 });
 

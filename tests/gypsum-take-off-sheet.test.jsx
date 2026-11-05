@@ -5,12 +5,13 @@ import { React } from "../src/react-globals.js";
 import { GypsumTakeOffSheet } from "../src/components/GypsumTakeOffSheet.jsx";
 import { buildGypsumTakeOff } from "../src/utils/gypsum-take-off.js";
 
-const takeOff = buildGypsumTakeOff({
+const FIELDS = {
   mode: "room", lenMm: "4200", widMm: "3100", heightMm: "2700", ceiling: true,
   openings: [{ kind: "door", wall: "B", x: "1000", w: "900", h: "2100" }],
   sheetW: "1200", sheetL: "2600", orientation: "V", layers: "1", waste: "5",
   screwRate: "13", compoundRate: "0.34", bagKg: "25", sheetPrice: "7.90", product: ""
-});
+};
+const takeOff = buildGypsumTakeOff(FIELDS);
 
 /* What @media print shows is `npm run layout`'s to check; this checks the
    sheet draws what the model says, and only that. */
@@ -42,6 +43,20 @@ describe("the printed gypsum take-off", () => {
     const rows = [...document.querySelectorAll(".doc-sheet-table")[0].querySelectorAll("tbody tr")];
     const boards = rows.map(r => Number(r.lastElementChild.textContent));
     expect(boards).toEqual(takeOff.surfaces.map(s => s.layout.boards * s.count));
+  });
+
+  it("names the board as the Board card's preset header does", () => {
+    const named = buildGypsumTakeOff({ ...FIELDS, product: "OSB 12mm 1200 × 2600" });
+    render(<GypsumTakeOffSheet takeOff={named} />);
+    const row = document.querySelector(".doc-sheet-table--order tbody tr td").textContent;
+    // The size the name ends in is said once.
+    expect(row).toBe("Board — OSB 12mm · 1200 × 2600 mm");
+    expect(document.querySelector(".doc-sheet-sub").textContent).toContain("OSB 12mm · 1200 × 2600 mm");
+  });
+
+  it("names the board by its size alone with no preset", () => {
+    render(<GypsumTakeOffSheet takeOff={takeOff} />);
+    expect(document.querySelector(".doc-sheet-table--order tbody tr td").textContent).toBe("Board — 1200 × 2600 mm");
   });
 
   it("orders joint tape with a joint filler", () => {
