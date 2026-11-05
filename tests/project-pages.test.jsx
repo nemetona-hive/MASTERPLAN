@@ -128,6 +128,27 @@ describe("a page's projects", () => {
     expect(puts[0].data.drafts).toEqual(pageDrafts(drafts, "gypsum"));
   });
 
+  it("says a page has unsaved work only once a value on it was edited", async () => {
+    fakeServer({ kitchen: { id: "kitchen", name: "Kitchen", page: "gypsum", drafts: {}, app: {} } });
+    const drafts = new DraftStore();
+    const api = mount(drafts);
+    await waitFor(() => expect(api.current.available).toBe(true));
+    const unsaved = () => api.current.forPage("gypsum").scratchHasValues();
+    act(() => { drafts.set("Gypsum.jsx:rooms", ["start"]); drafts.set("Gypsum.jsx:closed", {}); });
+    expect(unsaved()).toBe(false);
+    // Folding a card is how the page is looked at, not work.
+    act(() => { drafts.set("Gypsum.jsx:closed", { "control-gyp-board": true }); });
+    expect(unsaved()).toBe(false);
+    act(() => { drafts.set("Gypsum.jsx:rooms", ["typed"]); });
+    expect(unsaved()).toBe(true);
+    expect(api.current.forPage("concrete").scratchHasValues()).toBe(false);
+    // Open, edit, close: what stays on screen is saved in the project.
+    await act(() => api.current.forPage("gypsum").open("kitchen"));
+    act(() => { drafts.set("Gypsum.jsx:rooms", ["start"]); drafts.set("Gypsum.jsx:rooms", ["more"]); });
+    await act(() => api.current.forPage("gypsum").close());
+    expect(unsaved()).toBe(false);
+  });
+
   it("starts a new project blank, clearing only its own page", async () => {
     const server = fakeServer({
       kitchen: { id: "kitchen", name: "Kitchen", page: "gypsum", drafts: { "Gypsum.jsx:rooms": ["saved"] }, app: {} }

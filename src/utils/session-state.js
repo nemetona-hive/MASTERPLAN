@@ -13,10 +13,17 @@ export class DraftStore extends Map {
   constructor(entries) {
     super(entries);
     this.listeners = new Set();
+    this.edited = new Set();
   }
 
+  /* A key's first write is a page putting down its starting value (every
+     useSessionState writes on mount); a later write of a different value is
+     an edit. `edited` keeps the keys edited since the page was last loaded,
+     cleared or saved, so "is there unsaved work?" is not "is there a draft?". */
   set(key, value) {
-    const changed = !super.has(key) || super.get(key) !== value;
+    const had = super.has(key);
+    const changed = !had || super.get(key) !== value;
+    if (had && changed && this.edited) this.edited.add(key);
     super.set(key, value);
     // Map's constructor calls set before `listeners` exists.
     if (changed && this.listeners) for (const listener of this.listeners) listener(key);
@@ -26,6 +33,7 @@ export class DraftStore extends Map {
   /** Swap in a project's values. Pages must remount to read them. */
   replaceAll(values) {
     super.clear();
+    this.edited.clear();
     for (const [key, value] of Object.entries(values || {})) super.set(key, value);
     if (this.listeners) for (const listener of this.listeners) listener(null);
   }
@@ -34,7 +42,19 @@ export class DraftStore extends Map {
       Every other page's drafts are left as they are. */
   replaceWhere(owns, values) {
     for (const key of [...this.keys()]) if (owns(key)) super.delete(key);
+    this.markClean(owns);
     for (const [key, value] of Object.entries(values || {})) super.set(key, value);
+  }
+
+  /** Whether any key `owns` claims was edited (see `set`). */
+  hasEdits(owns) {
+    for (const key of this.edited) if (owns(key)) return true;
+    return false;
+  }
+
+  /** Forget the edits to the keys `owns` claims: they are saved, or gone. */
+  markClean(owns) {
+    for (const key of [...this.edited]) if (owns(key)) this.edited.delete(key);
   }
 
   toJSON() {

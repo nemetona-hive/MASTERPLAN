@@ -59,20 +59,22 @@ function ProjectMenu({ variant, pageTitle, projects, project, saveError, onCreat
     finally { setBusy(false); }
   };
 
+  /* Asked at the click (see useProjects): a function, or a fixed answer. */
+  const unsaved = () => (typeof scratchHasValues === "function" ? scratchHasValues() : Boolean(scratchHasValues));
   const show = () => { setOpen(true); setError(""); setRenaming(null); onRefresh(); };
   /* A new project starts blank, so it clears the page. With a project open
      that is already saved; with none, typed values would be lost, so that
      case asks first, as opening one does. */
   const create = async e => {
     e.preventDefault();
-    if (!project && scratchHasValues && !armedCreate) { armCreate(true); return; }
+    if (!project && !armedCreate && unsaved()) { armCreate(true); return; }
     disarmCreate();
     if (await run(() => onCreate(name))) { setName(""); setOpen(false); }
   };
   /* Opening replaces what is on screen. With a project open that is already
      saved; with none, it would be lost, so that case asks first. */
   const openProject = async id => {
-    if (!project && scratchHasValues && armedOpen !== id) { armOpen(id); return; }
+    if (!project && armedOpen !== id && unsaved()) { armOpen(id); return; }
     disarmOpen();
     if (await run(() => onOpen(id))) setOpen(false);
   };

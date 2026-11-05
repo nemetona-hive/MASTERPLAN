@@ -11,17 +11,28 @@
  * `app` names the App.jsx state a page is handed as props rather than holding
  * itself: Pattern Layouts' `sh`, Axial Alignment's `sym`, Golden Ratio's
  * `grItems`. The sidebar is no page's: App keeps it in localStorage, like the theme.
+ *
+ * `view` names drafts that are how the page is looked at, not what was
+ * entered: which room is on screen, folded cards, 2D or 3D. A project still
+ * saves them, but changing one is not work that replacing the page would
+ * lose, so it does not make Open or Create ask first (`isViewDraft`).
  */
 export const PROJECT_PAGES = {
   "pattern-layout": { drafts: ["SurfaceLayout.jsx:"], app: ["sh"] },
   "symmetric-layout": { drafts: ["SymmetricLayout.jsx:"], app: ["sym"] },
   concrete: { drafts: ["Concrete.jsx:"], app: [] },
-  gypsum: { drafts: ["Gypsum.jsx:"], app: [] },
+  gypsum: { drafts: ["Gypsum.jsx:"], app: [], view: ["Gypsum.jsx:room", "Gypsum.jsx:closed", "Gypsum.jsx:view3d"] },
   "pipe-wrap": { drafts: ["PipeWrapCalculator.jsx:"], app: [] },
   "golden-ratio": { drafts: ["GoldenRatio.jsx:"], app: ["grItems"] },
   guider: { drafts: ["Guider."], app: [] },
   timesheet: { drafts: ["Timesheet.jsx:"], app: [] }
 };
+
+/** Whether a draft is only a view setting (see `view` above). */
+export function isViewDraft(key) {
+  const page = pageOfDraft(key);
+  return Boolean(page && PROJECT_PAGES[page].view?.includes(key));
+}
 
 /** The page a draft key belongs to, or null. */
 export function pageOfDraft(key) {

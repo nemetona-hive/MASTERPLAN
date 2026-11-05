@@ -19,6 +19,27 @@ describe("the draft store", () => {
     expect(seen).toEqual(["a", "a"]);
   });
 
+  it("counts a key as edited only when a later write changes it", () => {
+    const store = new DraftStore([["Gypsum.jsx:rooms", ["mounted"]]]);
+    const gypsum = key => key.startsWith("Gypsum.jsx:");
+    // A page putting down its starting values is not an edit.
+    store.set("Gypsum.jsx:closed", {});
+    store.set("Gypsum.jsx:rooms", store.get("Gypsum.jsx:rooms"));
+    expect(store.hasEdits(gypsum)).toBe(false);
+    store.set("Concrete.jsx:lenMm", "1");
+    store.set("Concrete.jsx:lenMm", "2");
+    expect(store.hasEdits(gypsum)).toBe(false);
+    store.set("Gypsum.jsx:rooms", ["typed"]);
+    expect(store.hasEdits(gypsum)).toBe(true);
+    // Saved or replaced: clean again, and only for that page.
+    store.markClean(gypsum);
+    expect(store.hasEdits(gypsum)).toBe(false);
+    expect(store.hasEdits(key => key.startsWith("Concrete.jsx:"))).toBe(true);
+    store.set("Gypsum.jsx:rooms", ["again"]);
+    store.replaceWhere(gypsum, {});
+    expect(store.hasEdits(gypsum)).toBe(false);
+  });
+
   it("is replaced wholesale when a project opens", () => {
     const store = new DraftStore([["old", 1]]);
     store.replaceAll({ fresh: 2 });
@@ -142,6 +163,17 @@ describe("a page's project section", () => {
     expect(p.onCreate).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText("Clear screen?"));
     await waitFor(() => expect(p.onCreate).toHaveBeenCalledWith("Bathroom"));
+  });
+
+  it("does not ask over a page nobody has edited", async () => {
+    const unsaved = vi.fn(() => false);
+    const p = props({ scratchHasValues: unsaved });
+    render(<ProjectMenu {...p} />);
+    fireEvent.click(screen.getByText("Projects"));
+    fireEvent.click(screen.getByLabelText("Open Kitchen"));
+    await waitFor(() => expect(p.onOpen).toHaveBeenCalledWith("kitchen"));
+    // Asked at the click, not when the section rendered.
+    expect(unsaved).toHaveBeenCalled();
   });
 
   it("does not ask with a project open: its values are saved", async () => {

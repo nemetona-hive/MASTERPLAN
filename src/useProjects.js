@@ -3,7 +3,7 @@ import {
   createAutosaver, createProject, deleteProject, lastProject, listProjects,
   probeProjects, readProject, rememberProject, renameProject, saveProject, takeLegacyLastProject
 } from "./utils/projects.js";
-import { PROJECT_PAGES, pageApp, pageDrafts, pageOfApp, pageOfDraft, splitLegacyProject } from "./utils/project-pages.js";
+import { PROJECT_PAGES, isViewDraft, pageApp, pageDrafts, pageOfApp, pageOfDraft, splitLegacyProject } from "./utils/project-pages.js";
 
 /**
  * Projects for App.jsx, one set per page.
@@ -177,8 +177,13 @@ export function useProjects({ drafts, appState, applyAppState, appDefaults = {} 
     projects: projects.filter(p => p.page === page || p.unreadable),
     project: open[page] || null,
     saveError: errors[page] || "",
-    scratchHasValues: Object.keys(pageDrafts(drafts, page)).length > 0
-      || Object.entries(pageApp(appState, page)).some(([key, value]) => JSON.stringify(value) !== JSON.stringify(appDefaults[key])),
+    /* Would replacing this page lose work? Asked at the click, not the
+       render, so it is never stale. A draft counts only once it has been
+       edited: every page writes its starting values on mount, so "has a
+       draft" was true of a page nobody had touched. A view setting (a
+       folded card) is not work, and does not count. */
+    scratchHasValues: () => drafts.hasEdits(key => pageOfDraft(key) === page && !isViewDraft(key))
+      || Object.entries(pageApp(current.current.appState, page)).some(([key, value]) => JSON.stringify(value) !== JSON.stringify(appDefaults[key])),
     refresh,
     /* A new project starts blank: none of this page's drafts, and its share
        of App's state at the defaults — the page as a fresh load shows it.
@@ -204,6 +209,8 @@ export function useProjects({ drafts, appState, applyAppState, appDefaults = {} 
     },
     async close() {
       await saverFor(page).flush();
+      // What stays on screen is saved in the project just closed.
+      drafts.markClean(key => pageOfDraft(key) === page);
       setOpenProject(page, null);
       setError(page, null);
       rememberProject(page, null);

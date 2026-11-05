@@ -222,6 +222,20 @@ nodes that are gone, so Ctrl+Z cannot carry one project's values into another.
 With no project open on the page, opening one would replace unsaved work there,
 so it asks (two clicks). Each page's last project is reopened on load.
 
+**"Unsaved work" means an edited value (2026-11-05).** Every
+`useSessionState` writes its starting value on mount, so "the page has a
+draft" was true of a page nobody had touched, and Open and Create asked
+anyway. `DraftStore` now keeps `edited`: a key's first write is a starting
+value, a later write of a different value is an edit. `hasEdits(owns)` is
+the question; `replaceWhere` and closing a project (its values are saved in
+it) clear it with `markClean`. View settings are left out: a page lists them
+as `view` in `PROJECT_PAGES` (Gypsum's room on screen, folded cards, 2D/3D),
+`isViewDraft` tells them apart. App state still counts when it differs from
+its default. `scratchHasValues` is a function, asked at the click, so it
+cannot be stale. Changing a value and changing it back still asks, on the
+safe side. A page that writes a corrected value in a mount effect would count
+as edited: a browser pass over every page found none.
+
 **Creating a project starts it blank (decided 2026-11-05).** It used to copy
 what was on screen. Now the new file holds none of the page's drafts and its
 share of `app` at the defaults, and the page is cleared the way opening does
