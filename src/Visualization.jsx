@@ -127,8 +127,10 @@ export function LayoutEmptyState({ message, steps, visual = "mosaic" }) {
 
 
 
-/* A piece's number on screen, once the drawing's scale is measured. */
+/* A piece's number on screen, once the drawing's scale is measured; a door
+   or window's name (D1, W1) the size of a row label. */
 const PIECE_LABEL_PX = 12;
+const OPENING_LABEL_PX = 15;
 /* Capital height of the row-label face, as a share of its size. */
 const CAP_HEIGHT = 0.72;
 
@@ -571,7 +573,8 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                   <title>{`${o.label}: ${o.kind}, ${Math.round(o.w)} × ${Math.round(o.h)} mm`}</title>
                 </rect>
                 <text x={o.x + chartX + o.w / 2} y={o.y + chartY + o.h / 2} textAnchor="middle" dominantBaseline="middle"
-                  fontSize={Math.max(vW, vH) * 0.035} className="layout-svg-opening-label">{o.label}</text>
+                  fontSize={pxPerUnit ? OPENING_LABEL_PX / pxPerUnit : Math.max(vW, vH) * 0.035}
+                  className="layout-svg-opening-label">{o.label}</text>
               </g>
             ))}
             {/* With `onRowToggle` (the gypsum page) each row label has a

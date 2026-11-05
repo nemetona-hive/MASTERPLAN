@@ -190,7 +190,8 @@ a second layer. All figures, and the diagrams, come from
   larger than a 5130 wall's), capped by the room between neighbouring
   labels rather than by the thinnest row. The board sizes inside the pieces
   follow the same measured scale at 12 px, and show only where they fit at
-  that size (a 100 mm strip's pieces go unlabelled; selecting one names it). Click, Enter or
+  that size (a 100 mm strip's pieces go unlabelled; selecting one names it).
+  Door and window names (D1, W1) are 15 px, the row labels' size. Click, Enter or
   Space leaves that
   lane out of the job — already boarded, or someone
   else's — and again puts it back. Kept per room by surface id, with the
