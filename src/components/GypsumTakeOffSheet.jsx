@@ -155,18 +155,20 @@ function RoomTakeOff({ takeOff, title, projectName }) {
                 {sheets.price && <><td /><td /></>}
               </tr>
             )}
-            <tr>
-              <td>Joint tape</td>
-              <td>{nf(tape.joints, 1)} m joints{tape.corners > 0 ? ` + ${nf(tape.corners, 1)} m corners` : ""}</td>
-              <td className="doc-sheet-strong">{nf(tape.total, 1)} m</td>
-              {sheets.price && <><td /><td /></>}
-            </tr>
+            {tape.needed && (
+              <tr>
+                <td>Joint tape</td>
+                <td>{nf(tape.joints, 1)} m joints{tape.corners > 0 ? ` + ${nf(tape.corners, 1)} m corners` : ""}</td>
+                <td className="doc-sheet-strong">{nf(tape.total, 1)} m</td>
+                {sheets.price && <><td /><td /></>}
+              </tr>
+            )}
           </tbody>
         </table>
         <p className="doc-sheet-note">
           {sheets.fullBoards
             ? "Sheets are counted from the layout with a full board for every piece, cut or not; offcuts are not reused."
-            : "Sheets are counted from the layout with offcuts reused, so waste covers breakage rather than cutting."} Openings reduce screws. Joint filler is per metre of joint, corners included. A placed opening also removes any
+            : "Sheets are counted from the layout with offcuts reused, so waste covers breakage rather than cutting."} Openings reduce screws.{tape.needed ? " Joint filler is per metre of joint, corners included." : ""} A placed opening also removes any
           piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
           price covers board only.{fixing === "glue" ? " Glued walls are stuck in dabs onto masonry, one layer; an uneven wall takes more adhesive, and a ceiling is screwed." : ""}
         </p>
@@ -280,12 +282,14 @@ export function GypsumProjectSheet({ project, entries, projectName = "" }) {
                 {blank}
               </tr>
             ))}
-            <tr>
-              <td>Joint tape</td>
-              <td />
-              <td className="doc-sheet-strong">{nf(project.tape.total, 1)} m</td>
-              {blank}
-            </tr>
+            {project.tape.needed && (
+              <tr>
+                <td>Joint tape</td>
+                <td />
+                <td className="doc-sheet-strong">{nf(project.tape.total, 1)} m</td>
+                {blank}
+              </tr>
+            )}
           </tbody>
         </table>
         {project.cost && (

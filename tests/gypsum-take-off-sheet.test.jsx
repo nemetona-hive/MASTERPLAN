@@ -28,6 +28,20 @@ describe("the printed gypsum take-off", () => {
     expect(document.querySelector(".doc-sheet-facts").textContent).toContain("Glued walls");
   });
 
+  it("leaves joint tape off the order when no joint filler is given", () => {
+    const bare = buildGypsumTakeOff({ mode: "room", lenMm: "4200", widMm: "3100", heightMm: "2700",
+      ceiling: false, openings: [], sheetW: "1200", sheetL: "2600", orientation: "V", layers: "1", waste: "5",
+      screwRate: "13", compoundRate: "", bagKg: "", sheetPrice: "", product: "" });
+    render(<GypsumTakeOffSheet takeOff={bare} />);
+    expect(document.querySelector(".doc-sheet-table--order").textContent).not.toContain("Joint tape");
+    expect(document.querySelector(".doc-sheet").textContent).not.toContain("Joint filler");
+  });
+
+  it("orders joint tape with a joint filler", () => {
+    render(<GypsumTakeOffSheet takeOff={takeOff} />);
+    expect(document.querySelector(".doc-sheet-table--order").textContent).toContain("Joint tape");
+  });
+
     it("draws one diagram per laid-out surface", () => {
     render(<GypsumTakeOffSheet takeOff={takeOff} />);
     // Walls A+C together, B (it has the door) apart from D, and the ceiling.

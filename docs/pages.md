@@ -228,6 +228,11 @@ a second layer. All figures, and the diagrams, come from
 - **Two layers** double sheets and screws, and the board joints filled. Tape is face layer only.
   Tape = board joints from the layout, plus four internal corners and, with a
   ceiling, the ceiling angle.
+- **No joint filler, no joint figures.** A room with no filler rate (no
+  per-metre or per-mm rate typed or picked) shows no filler rows and no tape,
+  on screen and on its printed sheet. `tape.needed` in the model is the one
+  test; the project's tape adds only rooms where it is true, and its row
+  (screen and print) goes when no room has a filler.
 - The diagram is `LayoutVisualization`; the model emits rows in the
   `simulation.js` shape with `meta.exactRows`, which draws each lane at its
   real width so a ripped last lane is narrow.

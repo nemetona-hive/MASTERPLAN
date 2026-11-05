@@ -55,6 +55,17 @@ describe("the project take-off", () => {
     expect(project.cost.partial).toBe(true);
   });
 
+  it("tapes only the rooms that have a joint filler, and none when no room does", () => {
+    const filled = entry(1, "Kitchen"), bare = entry(2, "Hall", { compoundRate: "" });
+    expect(bare.takeOff.tape.needed).toBe(false);
+    const project = buildGypsumProjectTakeOff([filled, bare]);
+    expect(project.tape).toEqual({ needed: true, total: filled.takeOff.tape.total });
+    expect(buildGypsumProjectTakeOff([bare]).tape.needed).toBe(false);
+    const none = [{ ...bare, id: 1 }, { ...entry(3, "Loft", { compoundRate: "" }) }];
+    render(<GypsumProjectSheet project={buildGypsumProjectTakeOff(none)} entries={none} />);
+    expect(document.body.textContent).not.toContain("Joint tape");
+  });
+
   it("leaves an unfinished room out, and says which", () => {
     const project = buildGypsumProjectTakeOff([entry(1, "Kitchen"), entry(2, "Loft", { lenMm: "" })]);
     expect(project.readyCount).toBe(1);

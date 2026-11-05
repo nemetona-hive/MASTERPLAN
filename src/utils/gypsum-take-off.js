@@ -503,7 +503,10 @@ export function buildGypsumTakeOff(fields) {
       bagKg: bag || null,
       bags
     },
+    /* `needed`: tape is bought with a joint filler. A room with none set is
+       taped by nobody here, so every view leaves tape out with the filler. */
     tape: {
+      needed: jointRate.rate !== null || skimThickness > 0 && skimPerMm > 0,
       joints: round(boardJoints, 1),
       corners: round(corners, 1),
       total: round(boardJoints + corners, 1)
@@ -583,7 +586,9 @@ export function buildGypsumProjectTakeOff(entries) {
     screws: { count: sum(screwed, t => t.screws.count) },
     adhesive,
     filler,
-    tape: { total: round(sum(ready, t => t.tape.total), 1) },
+    /* Only rooms with a joint filler are taped (see `tape.needed`). */
+    tape: (taped => ({ needed: taped.length > 0, total: round(sum(taped, t => t.tape.total), 1) }))(
+      ready.filter(({ takeOff: t }) => t.tape.needed)),
     /* Board only, as on a room's sheet. `partial` when some boards carry no
        price, so the figure is not read as the whole order. */
     cost: priced.length ? { total: round(priced.reduce((t, b) => t + b.total, 0), 2), partial: priced.length < boards.length } : null

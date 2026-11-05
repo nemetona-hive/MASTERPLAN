@@ -193,7 +193,7 @@ function CalculationDetails({ takeOff, room }) {
   const isRoom = room.mode === "room";
   const fillerRate = compound.rate !== null ? ` (${compound.rate} kg/m)` : "";
   /* No filler rate typed or picked: the joint rows (filler and tape) go. */
-  const hasFiller = compound.rate !== null || Boolean(compound.skim);
+  const hasFiller = tape.needed;
   return (
     <div className="section unboxed">
       <div className="section-head"><span>Calculation Details</span></div>
@@ -274,7 +274,7 @@ function ProjectTotals({ project, onPrint }) {
           {project.screws.count > 0 && <Row label="Screws" value={project.screws.count} unit="pcs" />}
           {project.adhesive.map(a => <Row key={`a|${a.product}|${a.bagKg}`} {...bagged(a, "Adhesive")} />)}
           {project.filler.map(f => <Row key={`f|${f.product}|${f.bagKg}`} {...bagged(f, "Joint filler")} />)}
-          <Row label="Joint tape" value={project.tape.total.toFixed(1)} unit="m" />
+          {project.tape.needed && <Row label="Joint tape" value={project.tape.total.toFixed(1)} unit="m" />}
           {project.cost && (
             <Row label={project.cost.partial ? "Sheet cost (priced boards)" : "Sheet cost"} value={`€${eur(project.cost.total)}`} />
           )}
