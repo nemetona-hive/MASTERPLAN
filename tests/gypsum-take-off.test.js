@@ -133,6 +133,15 @@ describe("the gypsum take-off", () => {
     expect(buildGypsumTakeOff(fields({ fullBoards: true, layers: "2" })).sheets.layout).toBe(28);
   });
 
+  it("says what each surface takes on its own, which can be more than its share of the room", () => {
+    const t = buildGypsumTakeOff(fields());
+    // 4000 wall: 3 whole + a 400 strip = 4; 3000 wall: 2 whole + a 600 strip = 3.
+    expect(t.surfaces.map(s => [s.label, s.layout.boards])).toEqual([["Walls A, C", 4], ["Walls B, D", 3]]);
+    // Alone the four walls take 14; packed together the strips share boards: 12.
+    expect(t.sheets.layout).toBe(12);
+    expect(buildGypsumTakeOff(fields({ layers: "2" })).surfaces[0].layout.boards).toBe(8);
+  });
+
   it("adds waste on top and rounds up", () => {
     const t = buildGypsumTakeOff(fields({ waste: "10" }));
     expect(t.sheets.exact).toBe(13.2);

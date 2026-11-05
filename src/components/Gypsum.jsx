@@ -175,7 +175,7 @@ function SurfaceDrawing({ surface: s, vertical }) {
         <span className="gyp-surface-name">{s.label}</span>
         <span className="gyp-surface-meta gyp-surface-pick" aria-live="polite">{picked}</span>
         <span className="gyp-surface-meta gyp-surface-count">
-          {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
+          {s.layout.full} full · {s.layout.cut} cut · {s.layout.boards} board{s.layout.boards === 1 ? "" : "s"}{s.count > 1 ? " each" : ""}
         </span>
       </div>
       <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}

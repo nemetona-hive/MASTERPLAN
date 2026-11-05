@@ -95,12 +95,12 @@ describe("the gypsum page", () => {
     const pick = () => surface.querySelector(".gyp-surface-pick").textContent;
     const count = () => surface.querySelector(".gyp-surface-count").textContent;
     expect(pick()).toBe("");
-    expect(count()).toBe("3 full · 1 cut each");
+    expect(count()).toBe("3 full · 1 cut · 4 boards each");
     fireEvent.click(surface.querySelectorAll(".layout-svg-seg")[0]);
     expect(pick()).toBe("R1 · full board · 1200 × 2600 mm");
     fireEvent.click(surface.querySelectorAll(".layout-svg-seg")[3]);
     expect(pick()).toBe("R4 · cut · 400 × 2600 mm");
-    expect(count()).toBe("3 full · 1 cut each");
+    expect(count()).toBe("3 full · 1 cut · 4 boards each");
     fireEvent.click(surface.querySelectorAll(".layout-svg-seg")[3]);
     expect(pick()).toBe("");
   });

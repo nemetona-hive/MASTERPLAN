@@ -161,6 +161,11 @@ a second layer. All figures, and the diagrams, come from
     room's object, so typing in one room does not lay the others out again;
     editing a preset list lays them all out, since product names come from it.
     Keep room updates immutable, or the cache serves a stale take-off.
+- **Each surface's head counts its boards**: `3 full · 1 cut · 4 boards
+  each`. Boards is what one such wall takes on its own, every layer
+  (`layout.boards`: its pieces packed with only its own offcuts). The room's
+  sheets pack every surface together, so they can be fewer than the heads
+  added up (four walls at 4 + 3 each are 14 alone, 12 together).
 - **Selecting a board names it.** Clicking a piece in a surface's 2D
   drawing names it in that surface's head, after the surface name: lane,
   full or cut, and its size across × up the surface (`R4 · cut · 400 × 2600

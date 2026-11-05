@@ -382,9 +382,17 @@ export function buildGypsumTakeOff(fields) {
     return lanes > MAX_LANES || lanes * perLane > MAX_PIECES;
   });
 
+  /* `boards` on a layout is what one of those surfaces takes on its own,
+     every layer: its pieces packed with only its own offcuts. The room's
+     count below packs every surface together, so it can be less than these
+     added up — an offcut from one wall finishes another. */
   const laidOut = sheetReady && !tooLarge
-    ? surfaces.map(s => ({ ...s, layout: layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
-        firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart) }) }))
+    ? surfaces.map(s => {
+        const layout = layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
+          firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart) });
+        const own = packSheets(layout.rows.flatMap(row => row.segs), SW, SL, { fullBoards: Boolean(fullBoards) });
+        return { ...s, layout: { ...layout, boards: own.total * layerCount } };
+      })
     : surfaces.map(s => ({ ...s, layout: null }));
 
   /* Pack one face layer; a second layer is the same count again (its joints
