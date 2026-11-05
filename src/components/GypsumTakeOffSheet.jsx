@@ -44,8 +44,8 @@ function SurfaceDrawing({ surface, orientation, widest }) {
           const fits = p.w > fs * 2.6 && p.h > fs * 1.3 && !underOpening;
           return (
             <g key={i}>
-              <rect x={p.x} y={p.y} width={p.w} height={p.h} className={`gyp-print-piece gyp-print-piece--${p.type}`} />
-              {fits && (
+              <rect x={p.x} y={p.y} width={p.w} height={p.h} className={`gyp-print-piece gyp-print-piece--${p.excluded ? "excluded" : p.type}`} />
+              {fits && !p.excluded && (
                 <text x={p.x + p.w / 2} y={p.y + p.h / 2} fontSize={fs} textAnchor="middle"
                   dominantBaseline="central" className="gyp-print-label">{p.label ?? mm(p.len)}</text>
               )}
@@ -110,6 +110,7 @@ function RoomTakeOff({ takeOff, title, projectName }) {
               </dd>
             </div>
           )}
+          {area.excluded > 0 && <div><dt>Rows left out</dt><dd>−{nf(area.excluded, 2)} m²</dd></div>}
           <div className="doc-sheet-fact--lead"><dt>Net area</dt><dd>{nf(area.net, 2)} m²</dd></div>
           <div><dt>Fixing</dt><dd>{fixing === "glue" ? "Glued walls" : "Screwed"}, {orientation === "V" ? "vertical" : "horizontal"}, R1 {orientation === "V" ? (takeOff.rowStart === "bottom" ? "right" : "left") : (takeOff.rowStart === "bottom" ? "bottom" : "top")}, {layers} layer{layers === 1 ? "" : "s"}{takeOff.firstOffset ? `, first panel ${mm(takeOff.firstOffset)} mm from the corner` : ""}</dd></div>
         </dl>

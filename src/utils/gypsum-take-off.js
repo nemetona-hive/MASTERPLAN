@@ -106,13 +106,19 @@ export function lanePieces(span, sheetL, laneIndex, start = 0, fullStart = false
  * vertically; "bottom" at the bottom or the right. The ripped last lane ends
  * up on the other side, and the first-lane strip below starts from R1's side.
  *
+ * `skipLanes` are lane indexes left out of the job (already boarded, or not
+ * this trade's). They stay in `rows` and `pieces`, marked `excluded`, so the
+ * drawings can show them; every count here leaves them out. `excludedArea`
+ * (mm²) is their area less any opening in it, for the area figures.
+ *
  * `firstLane` (mm) keeps the first full board off the corner so its edge lands
  * on a stud: with studs at 600 centres, 600 puts it on the first stud after
  * the corner stud. Fixed vertically, the surface starts with a strip that
  * wide; fixed horizontally, every lane's first piece is that long (see
  * `lanePieces`). Ignored unless it is shorter than the board's side it cuts.
  */
-export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top", fullStart = false }) {
+export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = [], firstLane = 0, rowStart = "top", fullStart = false, skipLanes = [] }) {
+  const skip = new Set(skipLanes);
   const vertical = orientation === "V";
   const laneLength = vertical ? h : w;
   const across = vertical ? w : h;
@@ -141,15 +147,17 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
       x += len;
       return seg;
     });
-    return { segs, h: laneW };
+    return { segs, h: laneW, excluded: skip.has(laneIndex) };
   });
 
   /* Joint length on this face: the long edges between lanes, plus every end
      joint across its lane's width. This is what the tape covers. Taken
      before openings drop pieces — an opening's own edges need taping too, and
      this is the closer of the two figures to that. */
-  const edgeJoints = Math.max(0, lanes.length - 1) * laneLength;
-  const endJoints = fullRows.reduce((total, row) => total + (row.segs.length - 1) * row.h, 0);
+  /* A lane left out keeps the joint where it meets one still in — the new
+     board finishes against it — and loses the rest. */
+  const edgeJoints = lanes.slice(1).filter((_, i) => !(skip.has(i) && skip.has(i + 1))).length * laneLength;
+  const endJoints = fullRows.filter(row => !row.excluded).reduce((total, row) => total + (row.segs.length - 1) * row.h, 0);
 
   /* Every piece as a rectangle on the surface, x right and y down from the
      top-left corner, in mm. The printed sheet draws these as they are — the
@@ -162,14 +170,21 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     rect.x >= o.x - EPS && rect.y >= o.y - EPS &&
     rect.x + rect.w <= o.x + o.w + EPS && rect.y + rect.h <= o.y + o.h + EPS);
   let laneStart = reversed ? across : 0;
+  let excludedArea = 0;
+  const overlap = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) *
+    Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
   const rows = fullRows.map((row, lane) => {
     if (reversed) laneStart -= row.h;
     const at = laneStart;
     if (!reversed) laneStart += row.h;
+    if (row.excluded) {
+      const band = vertical ? { x: at, y: 0, w: row.h, h: laneLength } : { x: 0, y: at, w: laneLength, h: row.h };
+      excludedArea += band.w * band.h - openings.reduce((t, o) => t + overlap(band, o), 0);
+    }
     const segs = row.segs.filter(seg => {
       const rect = vertical
-        ? { x: at, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size }
-        : { x: seg.x, y: at, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size };
+        ? { x: at, y: seg.x, w: row.h, h: seg.w, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size, excluded: row.excluded }
+        : { x: seg.x, y: at, w: seg.w, h: row.h, len: seg.w, type: seg.type, lane, label: seg.label, size: seg.size, excluded: row.excluded };
       if (inside(rect)) return false;
       pieces.push(rect);
       return true;
@@ -183,8 +198,9 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     laneLength,
     lanes: lanes.length,
     joints: edgeJoints + endJoints,
-    full: rows.reduce((n, row) => n + row.segs.filter(s => s.type === "full").length, 0),
-    cut: rows.reduce((n, row) => n + row.segs.filter(s => s.type === "cut").length, 0),
+    excludedArea,
+    full: rows.reduce((n, row) => n + (row.excluded ? 0 : row.segs.filter(s => s.type === "full").length), 0),
+    cut: rows.reduce((n, row) => n + (row.excluded ? 0 : row.segs.filter(s => s.type === "cut").length), 0),
     meta: {
       /* The keys LayoutVisualization reads. `exactRows` makes it draw each
          lane at its real width, so a ripped last lane is drawn narrow. */
@@ -241,6 +257,9 @@ export function packSheets(pieces, sheetW, sheetL, { fullBoards = false } = {}) 
 }
 
 export const WALLS = ["A", "B", "C", "D"];
+
+/* The pieces actually hung on a surface: every lane not left out. */
+const hungSegs = layout => layout.rows.flatMap(row => (row.excluded ? [] : row.segs));
 
 /* How much filler a metre of joint holds, as a skim-equivalent: millimetres
    of thickness times metres of width. Knauf states Fill & Finish Light per m²
@@ -308,7 +327,7 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm, firstOffset, fullBoards, rowStart, fullStart
+    skimRate, skimMm, firstOffset, fullBoards, rowStart, fullStart, excluded: excludedLanes
   } = fields;
 
   const room = mode !== "wall";
@@ -389,8 +408,9 @@ export function buildGypsumTakeOff(fields) {
   const laidOut = sheetReady && !tooLarge
     ? surfaces.map(s => {
         const layout = layoutSurface({ w: s.w, h: s.h, sheetW: SW, sheetL: SL, orientation: fix, openings: s.openings,
-          firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart) });
-        const own = packSheets(layout.rows.flatMap(row => row.segs), SW, SL, { fullBoards: Boolean(fullBoards) });
+          firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart),
+          skipLanes: (excludedLanes && excludedLanes[s.id]) || [] });
+        const own = packSheets(hungSegs(layout), SW, SL, { fullBoards: Boolean(fullBoards) });
         return { ...s, layout: { ...layout, boards: own.total * layerCount } };
       })
     : surfaces.map(s => ({ ...s, layout: null }));
@@ -398,7 +418,7 @@ export function buildGypsumTakeOff(fields) {
   /* Pack one face layer; a second layer is the same count again (its joints
      are offset from the first, which moves pieces but not how many). */
   const pieces = laidOut.flatMap(s => s.layout
-    ? Array.from({ length: s.count }, () => s.layout.rows.flatMap(row => row.segs)).flat()
+    ? Array.from({ length: s.count }, () => hungSegs(s.layout)).flat()
     : []);
   const packed = packSheets(pieces, SW || 1, SL || 1, { fullBoards: Boolean(fullBoards) });
   const layoutSheets = packed.total * layerCount;
@@ -412,13 +432,16 @@ export function buildGypsumTakeOff(fields) {
   const openingArea = counted.reduce((t, o) => t + o.w * o.h, 0) / 1e6;
   const wallArea = surfaces.filter(s => s.wall).reduce((t, s) => t + s.w * s.h * s.count, 0) / 1e6;
   const openings = Math.min(wallArea, openingArea);
-  const net = Math.max(0, gross - openings);
+  /* Rows left out come off the area too: nobody screws or skims them. */
+  const leftOut = laidOut.reduce((t, s) => t + (s.layout ? s.layout.excludedArea * s.count : 0), 0) / 1e6;
+  const wallLeftOut = laidOut.filter(s => s.wall).reduce((t, s) => t + (s.layout ? s.layout.excludedArea * s.count : 0), 0) / 1e6;
+  const net = Math.max(0, gross - openings - leftOut);
   const boarded = net * layerCount;
 
   /* Glued walls take adhesive instead of screws; the ceiling, if boarded,
      is screwed either way. Openings come off the walls, so the glued area is
      the walls' net. */
-  const wallNet = Math.max(0, wallArea - openings);
+  const wallNet = Math.max(0, wallArea - openings - wallLeftOut);
   const screwedArea = (glued ? net - wallNet : net) * layerCount;
   const screws = Math.max(0, Math.ceil(screwedArea * num(screwRate) - EPS));   // max: ceil(-EPS) is -0
   const adhesiveKg = glued ? wallNet * num(adhesiveRate) : 0;
@@ -495,6 +518,7 @@ export function buildGypsumTakeOff(fields) {
     area: {
       gross: round(gross, 2),
       openings: round(openings, 2),
+      excluded: round(leftOut, 2),
       net: round(net, 2),
       boarded: round(boarded, 2)
     },

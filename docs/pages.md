@@ -168,6 +168,18 @@ a second layer. All figures, and the diagrams, come from
   added up (four walls at 4 + 3 each are 14 alone, 12 together). The printed
   Surfaces table has the same figure as a Boards column, times the surface's
   count, and its note says why the column can add up to more than the order.
+- **Rows can be left out.** A row label (R1, R2…) in a surface's 2D drawing
+  is a switch (`LayoutVisualization`'s optional `onRowToggle`): click or
+  Enter leaves that lane out of the job — already boarded, or someone
+  else's — and again puts it back. Kept per room by surface id and lane
+  (`excluded: { "wall-ac": [3] }`); a surface whose id changes (a wall split
+  from its twin by an opening) starts with none left out. A left-out lane
+  stays in `rows`/`pieces` marked `excluded`, drawn dashed and unfilled (2D,
+  print) or not at all (3D), and every count drops it: sheets, its own
+  boards, full/cut, end joints. Its long-edge joint stays where it meets a
+  lane still in. Its area less any opening in it (`excludedArea`) comes off
+  net, so screws, adhesive and skim follow; Calculation Details and the
+  printed facts show it as *Rows left out*.
 - **Selecting a board names it.** Clicking a piece in a surface's 2D
   drawing names it in that surface's head, after the surface name: lane,
   full or cut, and its size across × up the surface (`R4 · cut · 400 × 2600

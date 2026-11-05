@@ -142,6 +142,31 @@ describe("the gypsum take-off", () => {
     expect(buildGypsumTakeOff(fields({ layers: "2" })).surfaces[0].layout.boards).toBe(8);
   });
 
+  it("leaves a row out of the count and the area, but keeps it drawn", () => {
+    const all = buildGypsumTakeOff(fields());
+    // Walls A, C: lanes 1200, 1200, 1200, 400. Leave out the 400 strip (R4).
+    const t = buildGypsumTakeOff(fields({ excluded: { "wall-ac": [3] } }));
+    const ac = t.surfaces[0];
+    expect(ac.layout.rows[3].excluded).toBe(true);
+    expect(ac.layout.pieces.filter(p => p.excluded)).toHaveLength(1);
+    expect([ac.layout.full, ac.layout.cut, ac.layout.boards]).toEqual([3, 0, 3]);
+    // 10 whole + the two 600 strips on one sheet.
+    expect(t.sheets.layout).toBe(11);
+    expect(t.area.excluded).toBe(2.08);
+    expect(t.area.net).toBeCloseTo(all.area.net - 2.08, 2);
+    expect(t.screws.count).toBeLessThan(all.screws.count);
+    // R3 still meets the 400 strip, so that joint is kept.
+    expect(t.tape.joints).toBe(all.tape.joints);
+  });
+
+  it("does not count an opening's area twice when it sits in a row left out", () => {
+    const opening = [{ kind: "door", wall: "A", x: "3600", w: "400", h: "2100" }];
+    const t = buildGypsumTakeOff(fields({ openings: opening, excluded: { "wall-a": [3] } }));
+    // Wall A splits from C; its 400 strip less the door in it.
+    expect(t.area.excluded).toBeCloseTo((400 * 2600 - 400 * 2100) / 1e6, 2);
+    expect(t.area.net).toBeCloseTo(t.area.gross - t.area.openings - t.area.excluded, 2);
+  });
+
   it("adds waste on top and rounds up", () => {
     const t = buildGypsumTakeOff(fields({ waste: "10" }));
     expect(t.sheets.exact).toBe(13.2);

@@ -195,6 +195,28 @@
   letter-spacing: 0.02em;
 }
 
+/* A row label that leaves its row out of the job (the gypsum page). */
+.layout-svg-row-label.is-toggle {
+  pointer-events: auto;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .layout-svg-row-label.is-toggle:hover { fill: var(--brand); }
+}
+/* Keyboard focus as a button's; a click leaves no ring, as on a button. */
+.layout-svg-row-label.is-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.layout-svg-row-label.is-toggle:focus:not(:focus-visible) { outline: none; }
+.layout-svg-row-label.is-excluded { text-decoration: line-through; }
+
+/* A row left out: still drawn where it is, as bare wall rather than board. */
+.layout-svg-seg.is-excluded {
+  fill: var(--surface-2);
+  stroke-dasharray: 4 3;
+}
+
 @media (max-width: 1024px) {.layout-svg-label,
 .u-hide-mobile {
     display: none !important;

@@ -32,7 +32,9 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false };
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false,
+  /* Rows left out of the job, by surface id → lane indexes. */
+  excluded: {} };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
 
@@ -165,8 +167,9 @@ const describePiece = (pick, vertical) => {
 };
 
 /* One surface's drawing. Selecting a board in it names that board in the
-   head beside the surface's name; the counts stay on the right. */
-function SurfaceDrawing({ surface: s, vertical }) {
+   head beside the surface's name; the counts stay on the right. A row label
+   leaves its row out of the job, or puts it back (`onRowToggle`). */
+function SurfaceDrawing({ surface: s, vertical, onRowToggle }) {
   const [picked, setPicked] = React.useState(null);
   const onSelect = React.useCallback(pick => setPicked(pick ? describePiece(pick, vertical) : null), [vertical]);
   return (
@@ -179,13 +182,14 @@ function SurfaceDrawing({ surface: s, vertical }) {
         </span>
       </div>
       <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}
-        rowStart={s.layout.meta.rowStart} maxHeight={460} onSelect={onSelect} />
+        rowStart={s.layout.meta.rowStart} maxHeight={460} onSelect={onSelect}
+        onRowToggle={lane => onRowToggle(s.id, lane)} />
     </Stack>
   );
 }
 
 /* The 2D drawings or the 3D room, of the room on screen. */
-function LayoutSection({ takeOff, view3d, setView3d }) {
+function LayoutSection({ takeOff, view3d, setView3d, onRowToggle }) {
   const drawn = takeOff.surfaces.filter(s => s.layout);
   if (!drawn.length) return null;
   return (
@@ -198,7 +202,7 @@ function LayoutSection({ takeOff, view3d, setView3d }) {
       <div className="section-body">
         <Stack className="section-pad" gap={4}>
           {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
-          {!view3d && drawn.map(s => <SurfaceDrawing key={s.id} surface={s} vertical={takeOff.orientation === "V"} />)}
+          {!view3d && drawn.map(s => <SurfaceDrawing key={s.id} surface={s} vertical={takeOff.orientation === "V"} onRowToggle={onRowToggle} />)}
         </Stack>
       </div>
     </div>
@@ -220,6 +224,7 @@ function CalculationDetails({ takeOff, room }) {
         <Stack className="section-pad" gap={1}>
           <Row label="Surface area" value={area.gross.toFixed(2)} unit="m²" />
           {area.openings > 0 && <Row label="Openings" value={`−${area.openings.toFixed(2)}`} unit="m²" />}
+          {area.excluded > 0 && <Row label="Rows left out" value={`−${area.excluded.toFixed(2)}`} unit="m²" />}
           <Row label="Net area" value={area.net.toFixed(2)} unit="m²" />
           {takeOff.layers > 1 && <Row label="Boarded area (2 layers)" value={area.boarded.toFixed(2)} unit="m²" />}
           <Row label="Sheets from layout" value={sheets.layout} unit="pcs" />
@@ -366,6 +371,12 @@ export function SheetGypsum({ projectName = "" }) {
   const [fullBoards, setFullBoards] = roomState("fullBoards");
   const [rowStart, setRowStart] = roomState("rowStart");
   const [fullStart, setFullStart] = roomState("fullStart");
+  const [, setExcluded] = roomState("excluded");
+  const toggleRow = (surfaceId, lane) => setExcluded(current => {
+    const lanes = (current && current[surfaceId]) || [];
+    const next = lanes.includes(lane) ? lanes.filter(l => l !== lane) : [...lanes, lane].sort((a, b) => a - b);
+    return { ...current, [surfaceId]: next };
+  });
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
   /* Which control cards are collapsed, by card id: the page's, not a room's,
@@ -440,7 +451,7 @@ export function SheetGypsum({ projectName = "" }) {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart,
+      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
       adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
@@ -620,7 +631,7 @@ export function SheetGypsum({ projectName = "" }) {
           <Stack gap={5}>
             {!takeOff.ready && hasAnyInput && <p role="status" className="input-error">{takeOff.issue}</p>}
             {takeOff.warning && <p role="status" className="input-error">{takeOff.warning}</p>}
-            <LayoutSection takeOff={takeOff} view3d={view3d} setView3d={setView3d} />
+            <LayoutSection takeOff={takeOff} view3d={view3d} setView3d={setView3d} onRowToggle={toggleRow} />
             <CalculationDetails takeOff={takeOff} room={room} />
             {project && <ProjectTotals project={project} onPrint={() => setPrinting({ project, entries })} />}
           </Stack>

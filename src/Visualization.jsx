@@ -165,6 +165,8 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
         : rowPalClasses;
 
       let segClass = seg.type === "gap" ? "layout-svg-gap" : seg.type === "joint" ? "layout-svg-joint" : getSegmentClass(seg, segPalClasses);
+      // A row left out of the job (the gypsum page) is drawn, but not as board.
+      if (row.excluded) segClass += " is-excluded";
 
       const rect = {
         key: `${idx}-${segIndex}-${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.sourceId || ""}`,
@@ -236,7 +238,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
 // Row labels live inside the SVG, positioned in SVG coordinate space.
 // This guarantees they always align with the chart rows at any container size.
 
-export function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview, onSelect }) {
+export function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview, onSelect, onRowToggle }) {
   const [selectedKey, setSelectedKey] = React.useState(null);
   const [selectedSourceId, setSelectedSourceId] = React.useState(null);
   const svgIdRef = React.useRef(null);
@@ -401,7 +403,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     const label = `R${originalIdx + 1}`;
     return {
       mid: isV ? rr.x + rr.w / 2 : rr.y + rr.h / 2,
-      label
+      label,
+      lane: originalIdx,
+      excluded: Boolean(result.rows[originalIdx]?.excluded)
     };
   }) : [];
 
@@ -465,7 +469,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
               const hw = Math.max(vW, vH) * 0.03, hh = Math.max(vW, vH) * 0.015;
               const underOpening = (result.meta.openings || []).some(o =>
                 cx + hw > o.x && cx - hw < o.x + o.w && cy + hh > o.y && cy - hh < o.y + o.h);
-              const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035 && !underOpening;
+              const showLabel = showSegmentText && rect.w > vW * 0.045 && rect.h > vH * 0.035 && !underOpening && !rect.row.excluded;
               return (
                 <g key={rect.key} className={rect.sourceId ? "viz-seg is-linked" : "viz-seg"}
                   onClick={e => { e.stopPropagation(); handleSegClick(rect); }}
@@ -508,19 +512,35 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                   fontSize={Math.max(vW, vH) * 0.035} className="layout-svg-opening-label">{o.label}</text>
               </g>
             ))}
-            {groupBands.map(band => (
-              <text key={band.label}
-                x={isV ? band.mid + chartX : chartX - (labelFontSize * 0.5)}
-                y={isV ? chartY - (labelFontSize * 0.5) : band.mid + chartY}
-                fontSize={labelFontSize}
-                style={{ fontSize: labelFontSize }}
-                textAnchor={isV ? "middle" : "end"}
-                dominantBaseline={isV ? "auto" : "middle"}
-                className="layout-svg-row-label"
-              >
-                {band.label}
-              </text>
-            ))}
+            {/* With `onRowToggle` (the gypsum page) a row label is the switch
+                that leaves its row out of the job and puts it back. */}
+            {groupBands.map(band => {
+              const toggle = onRowToggle ? {
+                role: "button",
+                tabIndex: 0,
+                "aria-pressed": !band.excluded,
+                "aria-label": `${band.label}: ${band.excluded ? "left out — include it" : "included — leave it out"}`,
+                onClick: e => { e.stopPropagation(); onRowToggle(band.lane); },
+                onKeyDown: e => {
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onRowToggle(band.lane); }
+                }
+              } : {};
+              return (
+                <text key={band.label}
+                  x={isV ? band.mid + chartX : chartX - (labelFontSize * 0.5)}
+                  y={isV ? chartY - (labelFontSize * 0.5) : band.mid + chartY}
+                  fontSize={labelFontSize}
+                  style={{ fontSize: labelFontSize }}
+                  textAnchor={isV ? "middle" : "end"}
+                  dominantBaseline={isV ? "auto" : "middle"}
+                  className={"layout-svg-row-label" + (onRowToggle ? " is-toggle" : "") + (band.excluded ? " is-excluded" : "")}
+                  {...toggle}
+                >
+                  {onRowToggle && <title>{band.excluded ? "Left out — click to include" : "Click to leave this row out"}</title>}
+                  {band.label}
+                </text>
+              );
+            })}
           </svg>
         </div>
 

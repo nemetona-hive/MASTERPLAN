@@ -4861,6 +4861,26 @@ input[type="range"]:focus-visible {
   letter-spacing: 0.02em;
 }
 
+.layout-svg-row-label.is-toggle {
+  pointer-events: auto;
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .layout-svg-row-label.is-toggle:hover { fill: var(--brand); }
+}
+
+.layout-svg-row-label.is-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.layout-svg-row-label.is-toggle:focus:not(:focus-visible) { outline: none; }
+.layout-svg-row-label.is-excluded { text-decoration: line-through; }
+
+.layout-svg-seg.is-excluded {
+  fill: var(--surface-2);
+  stroke-dasharray: 4 3;
+}
+
 @media (max-width: 1024px) {.layout-svg-label,
 .u-hide-mobile {
     display: none !important;
@@ -5181,6 +5201,8 @@ input[type="range"]:focus-visible {
 	}
 	.gyp-print-label--opening { font-weight: 700; }
 	.gyp-print-piece--cut { fill: #fff; }
+
+	.gyp-print-piece--excluded { fill: #fff; stroke-dasharray: 2pt 2pt; }
 	.gyp-print-label {
 		fill: #111;
 		font-family: inherit;

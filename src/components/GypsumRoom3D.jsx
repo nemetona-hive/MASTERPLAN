@@ -84,7 +84,8 @@ function Panel({ face }) {
       style={{ width: face.w, height: face.h, marginLeft: -face.w / 2, marginTop: -face.h / 2, transform: face.transform }}>
       {surface && (
         <svg viewBox={`0 0 ${surface.width} ${surface.height}`} preserveAspectRatio="none" aria-hidden="true" className="gyp3d-svg">
-          {surface.layout.pieces.map((p, i) => (
+          {/* A row left out of the job is not drawn as board. */}
+          {surface.layout.pieces.filter(p => !p.excluded).map((p, i) => (
             <rect key={i} x={p.x} y={p.y} width={p.w} height={p.h}
               className={`layout-svg-seg ${p.type === "full" ? "color-s1" : "color-cut"}`} />
           ))}

@@ -339,6 +339,8 @@
 	}
 	.gyp-print-label--opening { font-weight: 700; }
 	.gyp-print-piece--cut { fill: #fff; }
+	/* A row left out of the job: where it is, but not board. */
+	.gyp-print-piece--excluded { fill: #fff; stroke-dasharray: 2pt 2pt; }
 	.gyp-print-label {
 		fill: #111;
 		font-family: inherit;

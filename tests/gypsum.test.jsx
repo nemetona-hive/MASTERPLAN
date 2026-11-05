@@ -119,6 +119,23 @@ describe("the gypsum page", () => {
     expect(labels()).toEqual(["2500", "2330", "300"]);
   });
 
+  it("leaves a row out from its label, and puts it back", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    const surface = document.querySelector(".gyp-surface");
+    const r4 = () => [...surface.querySelectorAll(".layout-svg-row-label")].find(t => t.textContent.endsWith("R4"));
+    expect(sheetsNeeded()).toBe("12");
+    fireEvent.click(r4());
+    expect(sheetsNeeded()).toBe("11");
+    expect(r4().getAttribute("aria-pressed")).toBe("false");
+    expect(surface.querySelectorAll(".layout-svg-seg.is-excluded")).toHaveLength(1);
+    expect(surface.querySelector(".gyp-surface-count").textContent).toBe("3 full · 0 cut · 3 boards each");
+    expect(screen.getByText("Rows left out")).toBeTruthy();
+    fireEvent.keyDown(r4(), { key: "Enter" });
+    expect(sheetsNeeded()).toBe("12");
+    expect(screen.queryByText("Rows left out")).toBeNull();
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();
