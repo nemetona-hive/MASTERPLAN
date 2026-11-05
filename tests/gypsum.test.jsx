@@ -142,8 +142,14 @@ describe("the gypsum page", () => {
     // Walls 4 + 4 + 3 + 3 alone; 12 for the room.
     expect(document.querySelector(".gyp-shared-note").textContent.replace(/\s+/g, " "))
       .toBe("Walls alone: 14 boards · shared offcuts save 2");
+    fireEvent.click(screen.getByText("Per wall"));
+    expect(sheetsNeeded()).toBe("14");
+    expect(document.querySelector(".gyp-shared-note")).toBeNull();
+    fireEvent.click(screen.getByText("Shared"));
+    expect(sheetsNeeded()).toBe("12");
     fireEvent.click(screen.getByText("Full board each"));
     expect(document.querySelector(".gyp-shared-note")).toBeNull();
+    expect(screen.queryByText("Per wall")).toBeNull();
   });
 
   it("adds a ceiling drawing when the ceiling is boarded", () => {

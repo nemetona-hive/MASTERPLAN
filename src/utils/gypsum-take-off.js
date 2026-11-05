@@ -327,7 +327,8 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm, firstOffset, fullBoards, rowStart, fullStart, excluded: excludedLanes
+    skimRate, skimMm, firstOffset, fullBoards, rowStart, fullStart, excluded: excludedLanes,
+    offcutsPerSurface
   } = fields;
 
   const room = mode !== "wall";
@@ -411,7 +412,7 @@ export function buildGypsumTakeOff(fields) {
           firstLane: s.wall ? offset : 0, rowStart: start, fullStart: Boolean(fullStart),
           skipLanes: (excludedLanes && excludedLanes[s.id]) || [] });
         const own = packSheets(hungSegs(layout), SW, SL, { fullBoards: Boolean(fullBoards) });
-        return { ...s, layout: { ...layout, boards: own.total * layerCount } };
+        return { ...s, own, layout: { ...layout, boards: own.total * layerCount } };
       })
     : surfaces.map(s => ({ ...s, layout: null }));
 
@@ -420,7 +421,16 @@ export function buildGypsumTakeOff(fields) {
   const pieces = laidOut.flatMap(s => s.layout
     ? Array.from({ length: s.count }, () => hungSegs(s.layout)).flat()
     : []);
-  const packed = packSheets(pieces, SW || 1, SL || 1, { fullBoards: Boolean(fullBoards) });
+  /* `offcutsPerSurface`: no offcut leaves its wall — each surface is bought
+     as it is boarded on its own (the `own` packs above), for a crew that
+     works wall by wall and does not carry offcuts round the room. */
+  const perSurface = Boolean(offcutsPerSurface);
+  const packed = perSurface
+    ? laidOut.reduce((t, s) => (s.own
+      ? { whole: t.whole + s.own.whole * s.count, cutSheets: t.cutSheets + s.own.cutSheets * s.count,
+          total: t.total + s.own.total * s.count }
+      : t), { whole: 0, cutSheets: 0, total: 0 })
+    : packSheets(pieces, SW || 1, SL || 1, { fullBoards: Boolean(fullBoards) });
   const layoutSheets = packed.total * layerCount;
 
   const wastePct = given(waste) ? num(waste) : 0;
@@ -531,6 +541,7 @@ export function buildGypsumTakeOff(fields) {
       full: packed.whole * layerCount,
       fromCuts: packed.cutSheets * layerCount,
       layout: layoutSheets,
+      perSurface,
       /* Every surface boarded on its own (each layout's `boards`, times its
          count), for saying what sharing offcuts between them saves. */
       separate: laidOut.reduce((t, s) => t + (s.layout ? s.layout.boards * s.count : 0), 0),

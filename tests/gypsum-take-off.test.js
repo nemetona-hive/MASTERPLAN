@@ -140,6 +140,10 @@ describe("the gypsum take-off", () => {
     // Alone the four walls take 14; packed together the strips share boards: 12.
     expect(t.sheets.layout).toBe(12);
     expect(t.sheets.separate).toBe(14);
+    // Offcuts kept to their own wall: the order is the walls alone.
+    const own = buildGypsumTakeOff(fields({ offcutsPerSurface: true }));
+    expect([own.sheets.layout, own.sheets.full, own.sheets.fromCuts, own.sheets.perSurface]).toEqual([14, 10, 4, true]);
+    expect(buildGypsumTakeOff(fields({ offcutsPerSurface: true, layers: "2" })).sheets.layout).toBe(28);
     expect(buildGypsumTakeOff(fields({ layers: "2" })).surfaces[0].layout.boards).toBe(8);
   });
 

@@ -32,7 +32,7 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false,
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false, offcutsPerSurface: false,
   /* Rows left out of the job, by surface id → lane indexes. */
   excluded: {} };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
@@ -45,6 +45,7 @@ export const roomFrom = (source, id, mode) => ({
   ...newRoom(id, mode),
   orientation: source.orientation, layers: source.layers, fixing: source.fixing, fullBoards: Boolean(source.fullBoards),
   rowStart: source.rowStart === "bottom" ? "bottom" : "top", fullStart: Boolean(source.fullStart),
+  offcutsPerSurface: Boolean(source.offcutsPerSurface),
   ...Object.fromEntries(ACTIVE.map(key => [key, source[key] ?? null])),
   job: { ...source.job, ...Object.fromEntries(SURFACE_FIELDS.map(name => [name, ""])), openings: [] }
 });
@@ -205,7 +206,7 @@ function LayoutSection({ takeOff, view3d, setView3d, onRowToggle }) {
           {!view3d && drawn.map(s => <SurfaceDrawing key={s.id} surface={s} vertical={takeOff.orientation === "V"} onRowToggle={onRowToggle} />)}
           {/* The heads count each surface alone; the room shares offcuts, so
               say so when that is why their sum is more than the room's. */}
-          {!view3d && takeOff.sheets.separate > takeOff.sheets.layout && (
+          {!view3d && !takeOff.sheets.perSurface && takeOff.sheets.separate > takeOff.sheets.layout && (
             <p className="gyp-surface-meta gyp-shared-note">
               {takeOff.surfaces.some(s => s.id === "ceiling") ? "Surfaces" : "Walls"} alone: {takeOff.sheets.separate} boards ·
               shared offcuts save {takeOff.sheets.separate - takeOff.sheets.layout}
@@ -253,7 +254,7 @@ function CalculationDetails({ takeOff, room }) {
 
           <div className="pw-formula-wrap pw-formula-wrap--lead">
             <span className="pw-formula-text">
-              Sheets are counted from the layout{takeOff.sheets.fullBoards ? ", a full board for every piece, cut or not," : ", offcuts reused,"} then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it.{hasFiller ? " Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness." : ""}
+              Sheets are counted from the layout{takeOff.sheets.fullBoards ? ", a full board for every piece, cut or not," : takeOff.sheets.perSurface ? ", offcuts reused on their own wall only," : ", offcuts reused,"} then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it.{hasFiller ? " Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness." : ""}
             </span>
           </div>
           {hasFiller && (
@@ -379,6 +380,7 @@ export function SheetGypsum({ projectName = "" }) {
   const [fullBoards, setFullBoards] = roomState("fullBoards");
   const [rowStart, setRowStart] = roomState("rowStart");
   const [fullStart, setFullStart] = roomState("fullStart");
+  const [offcutsPerSurface, setOffcutsPerSurface] = roomState("offcutsPerSurface");
   const [, setExcluded] = roomState("excluded");
   const toggleRow = (surfaceId, lane) => setExcluded(current => {
     const lanes = (current && current[surfaceId]) || [];
@@ -459,7 +461,7 @@ export function SheetGypsum({ projectName = "" }) {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded,
+      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded, offcutsPerSurface: r.offcutsPerSurface,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
       adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
@@ -568,6 +570,13 @@ export function SheetGypsum({ projectName = "" }) {
             {/* Full boards: every piece, cut or not, is a board bought. */}
             <SegGroup label="Cut pieces" value={fullBoards ? "full" : "reuse"} onChange={v => setFullBoards(v === "full")}
               options={[["reuse", "Reuse offcuts"], ["full", "Full board each"]]} />
+            {/* Where offcuts may go: anywhere in the room, or only their own
+                wall. Nothing to share with a full board each. */}
+            {!fullBoards && mode === "room" && (
+              <SegGroup label="Offcuts" value={offcutsPerSurface ? "surface" : "shared"}
+                onChange={v => setOffcutsPerSurface(v === "surface")}
+                options={[["shared", "Shared"], ["surface", ceiling ? "Per surface" : "Per wall"]]} />
+            )}
             {/* Glued is one layer on walls; the model enforces it, so the choice
                 is not offered rather than offered and ignored. */}
             <SegGroup label="Fixing method" value={fixing} onChange={setFixing}

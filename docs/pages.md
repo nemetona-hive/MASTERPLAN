@@ -168,7 +168,13 @@ a second layer. All figures, and the diagrams, come from
   added up (four walls at 4 + 3 each are 14 alone, 12 together). When they
   are, a line under the 2D drawings says so — "Walls alone: 14 boards ·
   shared offcuts save 2" (`sheets.separate`), "Surfaces" with a ceiling — so
-  the heads and the card do not look like they disagree. The printed
+  the heads and the card do not look like they disagree.
+- **Offcuts: Shared / Per wall** (rooms only, per room, `offcutsPerSurface`;
+  "Per surface" once the ceiling is boarded). Shared packs every surface
+  together, as above. Per wall keeps each offcut on its own wall: Sheets
+  Needed, waste, cost, the order and the project totals use the walls-alone
+  count (`sheets.layout` = `sheets.separate`), and the savings line goes. Not
+  offered with Full board each, where there is nothing to share. The printed
   Surfaces table has the same figure as a Boards column, times the surface's
   count, and its note says why the column can add up to more than the order.
 - **Rows can be left out.** A row label (R1, R2…) in a surface's 2D drawing
