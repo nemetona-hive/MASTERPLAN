@@ -252,11 +252,12 @@ a second layer. All figures, and the diagrams, come from
   is trimmed below 300, or below nothing. A staggered lane whose start wraps
   past a board (offset 1300 + 1250 in 2500s = 50) starts at 300 instead. An
   offset typed under 300 on an unstaggered lane is kept: it was asked for.
-  The same minimum holds across the lanes: a last lane that would be ripped
-  under 300 shares its width with the first lane, both ripped to half the
-  two (2600 high in 1250s: 675 · 1250 · 675, not 1250 · 1250 · 100). With a
-  first panel offset strip — the user's — the lane before the last shares
-  instead. Decided 2026-11-05.
+  The rule is along a lane only; across the lanes the last one is ripped to
+  what is left, however narrow (a 100 strip at the top of a 2600 wall in
+  1250s). **Kept (decided 2026-11-05):** sharing that width with the first
+  lane (675 · 1250 · 675) was tried and reverted — it left R1 with no whole
+  board and changed every layout. Leave the strip out with its row label
+  instead if it is not wanted.
 - **Openings** are a list (`+ Door` / `+ Window`): wall A–D, `x` from the
   wall's left end *as seen from inside*, width, height, and a sill for a
   window. Room walls are A back, then clockwise seen from above (B right, C
