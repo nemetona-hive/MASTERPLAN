@@ -414,10 +414,14 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   const minRowLabelLane = rowRects.reduce((min, rr) => Math.min(min, isV ? rr.w : rr.h), Infinity);
   const baseLabelFontSize = Math.round((isV ? vH : vW) * 0.016);
   const laneLabelFontSize = Number.isFinite(minRowLabelLane)
-    ? Math.floor(minRowLabelLane / (maxRowLabelChars * 0.68))
+    ? Math.floor(minRowLabelLane / ((maxRowLabelChars + (onRowToggle && isV ? 2 : 0)) * 0.68))
     : baseLabelFontSize;
   const labelFontSize = showRowLabels ? Math.max(10, Math.min(baseLabelFontSize, laneLabelFontSize)) : 0;
-  const labelMargin = showRowLabels ? Math.round(labelFontSize * 3.6) : 0;
+  /* Fixed horizontally the labels sit in a left margin; a checkbox before
+     each (onRowToggle) needs its width as well. */
+  const labelMargin = showRowLabels
+    ? Math.round(labelFontSize * (!isV && onRowToggle ? Math.max(3.6, 1.5 + maxRowLabelChars * 0.62 + 1.3) : 3.6))
+    : 0;
   const chartX = !isV ? labelMargin : 0;
   const chartY = isV ? labelMargin : 0;
   const totalVW = vW + chartX;
@@ -512,33 +516,47 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                   fontSize={Math.max(vW, vH) * 0.035} className="layout-svg-opening-label">{o.label}</text>
               </g>
             ))}
-            {/* With `onRowToggle` (the gypsum page) a row label is the switch
-                that leaves its row out of the job and puts it back. */}
+            {/* With `onRowToggle` (the gypsum page) each row label has a
+                checkbox before it: ticked while the row counts, empty (and
+                the label struck out) once it is left out. Box and label are
+                one target — a click on either, or Enter/Space on focus. */}
             {groupBands.map(band => {
-              const toggle = onRowToggle ? {
-                role: "button",
-                tabIndex: 0,
-                "aria-pressed": !band.excluded,
-                "aria-label": `${band.label}: ${band.excluded ? "left out — include it" : "included — leave it out"}`,
-                onClick: e => { e.stopPropagation(); onRowToggle(band.lane); },
-                onKeyDown: e => {
-                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onRowToggle(band.lane); }
-                }
-              } : {};
+              const fs = labelFontSize;
+              const textX = isV ? band.mid + chartX : chartX - (fs * 0.5);
+              const textY = isV ? chartY - (fs * 0.5) : band.mid + chartY;
+              if (!onRowToggle) {
+                return (
+                  <text key={band.label} x={textX} y={textY} fontSize={fs} style={{ fontSize: fs }}
+                    textAnchor={isV ? "middle" : "end"} dominantBaseline={isV ? "auto" : "middle"}
+                    className="layout-svg-row-label">{band.label}</text>
+                );
+              }
+              const box = fs * 0.85, gap = fs * 0.35, textW = band.label.length * fs * 0.62;
+              const total = box + gap + textW;
+              // Fixed horizontally the label ends where it always did; vertically the pair is centred on the column.
+              const boxX = isV ? band.mid + chartX - total / 2 : textX - textW - gap - box;
+              const boxY = isV ? textY - fs * 0.35 - box / 2 : textY - box / 2;
+              const labelX = isV ? boxX + box + gap : textX;
+              const on = !band.excluded;
+              const toggle = () => onRowToggle(band.lane);
               return (
-                <text key={band.label}
-                  x={isV ? band.mid + chartX : chartX - (labelFontSize * 0.5)}
-                  y={isV ? chartY - (labelFontSize * 0.5) : band.mid + chartY}
-                  fontSize={labelFontSize}
-                  style={{ fontSize: labelFontSize }}
-                  textAnchor={isV ? "middle" : "end"}
-                  dominantBaseline={isV ? "auto" : "middle"}
-                  className={"layout-svg-row-label" + (onRowToggle ? " is-toggle" : "") + (band.excluded ? " is-excluded" : "")}
-                  {...toggle}
-                >
-                  {onRowToggle && <title>{band.excluded ? "Left out — click to include" : "Click to leave this row out"}</title>}
-                  {band.label}
-                </text>
+                <g key={band.label} className={"layout-svg-row-toggle" + (on ? "" : " is-excluded")}
+                  role="checkbox" tabIndex={0} aria-checked={on}
+                  aria-label={`${band.label} counted`}
+                  onClick={e => { e.stopPropagation(); toggle(); }}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}>
+                  <title>{on ? "Counted — click to leave this row out" : "Left out — click to count it again"}</title>
+                  <rect className="layout-svg-row-hit" x={boxX - fs * 0.25} y={boxY - fs * 0.25}
+                    width={total + fs * 0.5} height={box + fs * 0.5} rx={fs * 0.2} />
+                  <rect className="layout-svg-check" x={boxX} y={boxY} width={box} height={box} rx={box * 0.18} />
+                  {on && (
+                    <path className="layout-svg-check-mark"
+                      d={`M${boxX + box * 0.22} ${boxY + box * 0.52} L${boxX + box * 0.42} ${boxY + box * 0.72} L${boxX + box * 0.8} ${boxY + box * 0.3}`} />
+                  )}
+                  <text x={labelX} y={textY} fontSize={fs} style={{ fontSize: fs }}
+                    textAnchor={isV ? "start" : "end"} dominantBaseline={isV ? "auto" : "middle"}
+                    className={"layout-svg-row-label" + (on ? "" : " is-excluded")}>{band.label}</text>
+                </g>
               );
             })}
           </svg>

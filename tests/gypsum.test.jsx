@@ -123,11 +123,16 @@ describe("the gypsum page", () => {
     render(<SheetGypsum />);
     fillRoom();
     const surface = document.querySelector(".gyp-surface");
-    const r4 = () => [...surface.querySelectorAll(".layout-svg-row-label")].find(t => t.textContent.endsWith("R4"));
+    const r4 = () => [...surface.querySelectorAll(".layout-svg-row-toggle")].find(t => t.textContent.endsWith("R4"));
     expect(sheetsNeeded()).toBe("12");
-    fireEvent.click(r4());
+    expect(r4().getAttribute("aria-checked")).toBe("true");
+    expect(r4().querySelector(".layout-svg-check-mark")).toBeTruthy();
+    // The box itself is the target as much as the label.
+    fireEvent.click(r4().querySelector(".layout-svg-check"));
     expect(sheetsNeeded()).toBe("11");
-    expect(r4().getAttribute("aria-pressed")).toBe("false");
+    expect(r4().getAttribute("aria-checked")).toBe("false");
+    expect(r4().querySelector(".layout-svg-check-mark")).toBeNull();
+    expect(r4().querySelector(".layout-svg-row-label.is-excluded")).toBeTruthy();
     expect(surface.querySelectorAll(".layout-svg-seg.is-excluded")).toHaveLength(1);
     expect(surface.querySelector(".gyp-surface-count").textContent).toBe("3 full · 0 cut · 3 boards each");
     expect(screen.getByText("Rows left out")).toBeTruthy();

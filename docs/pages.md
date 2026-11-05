@@ -177,9 +177,11 @@ a second layer. All figures, and the diagrams, come from
   offered with Full board each, where there is nothing to share. The printed
   Surfaces table has the same figure as a Boards column, times the surface's
   count, and its note says why the column can add up to more than the order.
-- **Rows can be left out.** A row label (R1, R2…) in a surface's 2D drawing
-  is a switch (`LayoutVisualization`'s optional `onRowToggle`): click or
-  Enter leaves that lane out of the job — already boarded, or someone
+- **Rows can be left out.** Each row label (R1, R2…) in a surface's 2D drawing
+  has a checkbox before it (`LayoutVisualization`'s optional `onRowToggle`):
+  ticked while the row counts, empty with the label struck out once left
+  out; box and label are one target. Click, Enter or Space leaves that
+  lane out of the job — already boarded, or someone
   else's — and again puts it back. Kept per room by surface id, with the
   `laneKey` of the layout the rows were picked on (`excluded: { "wall-ac":
   { key, lanes: [3] } }`; key = direction, lane length, every lane's width).

@@ -4862,19 +4862,41 @@ input[type="range"]:focus-visible {
   letter-spacing: 0.02em;
 }
 
-.layout-svg-row-label.is-toggle {
-  pointer-events: auto;
-  cursor: pointer;
+.layout-svg-row-toggle { cursor: pointer; outline: none; }
+.layout-svg-row-hit {
+  fill: transparent;
+  pointer-events: all;
+  stroke: none;
+  vector-effect: non-scaling-stroke;
+}
+.layout-svg-row-toggle:focus-visible .layout-svg-row-hit {
+  stroke: var(--brand);
+  stroke-width: 2;
+}
+.layout-svg-check {
+  fill: transparent;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.layout-svg-row-toggle:not(.is-excluded) .layout-svg-check {
+  fill: var(--btn-active-bg);
+  stroke: var(--btn-active-bg);
+}
+.layout-svg-check-mark {
+  fill: none;
+  stroke: var(--btn-active-fg);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
 }
 @media (hover: hover) {
-  .layout-svg-row-label.is-toggle:hover { fill: var(--brand); }
+  .layout-svg-row-toggle:hover .layout-svg-row-label { fill: var(--brand); }
+  .layout-svg-row-toggle:hover .layout-svg-check { stroke: var(--brand); }
 }
-
-.layout-svg-row-label.is-toggle:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
-}
-.layout-svg-row-label.is-toggle:focus:not(:focus-visible) { outline: none; }
 .layout-svg-row-label.is-excluded { text-decoration: line-through; }
 
 .layout-svg-seg.is-excluded {
