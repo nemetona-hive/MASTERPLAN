@@ -331,7 +331,7 @@ export function jointFillerRate(perMetre, perMm) {
  * size) or "misfit" (placed, but runs off its wall). The last two take no
  * part in anything except the warning that names them.
  */
-export function readOpenings(list, { room, wallSize }) {
+export function readOpenings(list, { room, wallSize, skipWalls = [] }) {
   const counters = { door: 0, window: 0 };
   return (Array.isArray(list) ? list : []).map(o => {
     const kind = o.kind === "window" ? "window" : "door";
@@ -343,6 +343,8 @@ export function readOpenings(list, { room, wallSize }) {
     const placed = given(o.x);
     const x = num(o.x);
     const base = { label, kind, wall, w, h, sill, x: placed ? x : null };
+    /* On a wall left out of the room: kept in the list, counted nowhere. */
+    if (room && skipWalls.includes(wall)) return { ...base, status: "skipped" };
     if (!(w > 0 && h > 0)) return { ...base, status: given(o.w) || given(o.h) ? "invalid" : "empty" };
     const size = wallSize(wall);
     if (size && (w > size.w + EPS || sill + h > size.h + EPS)) return { ...base, status: "misfit" };
@@ -364,7 +366,7 @@ export function buildGypsumTakeOff(fields) {
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
     skimRate, skimMm, firstOffset, firstRow: firstRowAsk, fullBoards, rowStart, fullStart, excluded: excludedLanes,
-    offcutsPerSurface
+    offcutsPerSurface, excludedWalls
   } = fields;
 
   const room = mode !== "wall";
@@ -387,14 +389,17 @@ export function buildGypsumTakeOff(fields) {
      in. Each wall's openings sit in its own frame: x from its left end as seen
      from inside, y down from its top. */
   const L = num(lenMm), W = num(widMm), H = num(heightMm);
+  /* Walls left out of a room (already boarded, or not this trade's): not
+     laid out, drawn, counted or bought for, and their openings with them. */
+  const skipWalls = room && Array.isArray(excludedWalls) ? WALLS.filter(w => excludedWalls.includes(w)) : [];
   const wallDims = !dimsReady ? []
-    : room ? [["A", L, H], ["B", W, H], ["C", L, H], ["D", W, H]]
+    : room ? [["A", L, H], ["B", W, H], ["C", L, H], ["D", W, H]].filter(([id]) => !skipWalls.includes(id))
     : [["A", num(wallW), num(wallH)]];
   const wallSize = letter => {
     const found = wallDims.find(([id]) => id === letter);
     return found ? { w: found[1], h: found[2] } : null;
   };
-  const openingsRead = readOpenings(openingList, { room, wallSize });
+  const openingsRead = readOpenings(openingList, { room, wallSize, skipWalls });
   const counted = openingsRead.filter(o => o.status === "ok" || o.status === "unplaced");
   const placed = openingsRead.filter(o => o.status === "ok");
 
@@ -501,7 +506,11 @@ export function buildGypsumTakeOff(fields) {
      taped. Board joints come from the layout; a room adds its four internal
      corners and, with a ceiling, the ceiling-to-wall angle. */
   const boardJoints = laidOut.reduce((t, s) => t + (s.layout ? s.layout.joints * s.count : 0), 0) / 1000;
-  const corners = room && dimsReady ? (4 * H + (ceiling ? 2 * (L + W) : 0)) / 1000 : 0;
+  /* A corner is taped where either of its walls is boarded — a new board
+     still finishes against a wall left out. The ceiling angle runs round the
+     whole room whichever walls are boarded. */
+  const cornerCount = WALLS.filter((w, i) => !skipWalls.includes(w) || !skipWalls.includes(WALLS[(i + 1) % 4])).length;
+  const corners = room && dimsReady ? (cornerCount * H + (ceiling ? 2 * (L + W) : 0)) / 1000 : 0;
 
   /* Joint filler is given per metre of joint, as the makers give it (Knauf
      Uniflott: 0.25 kg per m of joint), not per m² of board. Filled: every
@@ -540,6 +549,7 @@ export function buildGypsumTakeOff(fields) {
       : !sheetReady ? "Enter the sheet width and length."
       : !sheetValid ? "Sheet width cannot be more than its length."
       : tooLarge ? "That surface is too large to lay out — check the dimensions."
+      : room && skipWalls.length === 4 && !ceiling ? "Every wall is left out — include one, or board the ceiling."
       : allLeftOut ? "Every row is left out — click a row label to include it again."
       : "Enter valid dimensions to finish the estimate.",
     warning: misfits.length
@@ -562,6 +572,7 @@ export function buildGypsumTakeOff(fields) {
     fullStart: Boolean(fullStart),
     firstOffset: offset || null,
     firstRow: firstRow || null,
+    excludedWalls: skipWalls,
     fixing: glued ? "glue" : "screw",
     layers: layerCount,
     sheet: { width: SW || null, length: SL || null },

@@ -524,4 +524,44 @@ describe("openings", () => {
     expect(t.warning).toBe(null);
     expect(t.openings.doors).toBe(0);
   });
+
+  describe("walls left out", () => {
+    it("drops a wall from the layout, area and order, with its openings", () => {
+      const all = buildGypsumTakeOff(fields());
+      const t = buildGypsumTakeOff(fields({ excludedWalls: ["B"],
+        openings: [{ kind: "door", wall: "B", x: "500", w: "900", h: "2100" }] }));
+      expect(t.ready).toBe(true);
+      expect(t.surfaces.map(s => s.label)).toEqual(["Walls A, C", "Wall D"]);
+      expect(t.area.gross).toBeCloseTo((2 * 4000 + 3000) * 2600 / 1e6, 2);
+      // The door on B comes off nothing: its wall is not boarded.
+      expect(t.area.openings).toBe(0);
+      expect(t.openings.list[0].status).toBe("skipped");
+      expect(t.sheets.toBuy).toBeLessThan(all.sheets.toBuy);
+      expect(t.excludedWalls).toEqual(["B"]);
+    });
+
+    it("tapes a corner while either of its walls is boarded", () => {
+      // B and C out: A–B and C–D each keep one boarded wall, B–C has none.
+      const t = buildGypsumTakeOff(fields({ excludedWalls: ["C", "B"] }));
+      expect(t.tape.corners).toBeCloseTo(3 * 2600 / 1000, 3);
+      expect(t.excludedWalls).toEqual(["B", "C"]);
+    });
+
+    it("says so when every wall is left out and there is no ceiling", () => {
+      const t = buildGypsumTakeOff(fields({ excludedWalls: ["A", "B", "C", "D"] }));
+      expect(t.ready).toBe(false);
+      expect(t.issue).toMatch(/Every wall is left out/);
+      const lid = buildGypsumTakeOff(fields({ excludedWalls: ["A", "B", "C", "D"], ceiling: true }));
+      expect(lid.ready).toBe(true);
+      expect(lid.surfaces.map(s => s.id)).toEqual(["ceiling"]);
+      expect(lid.tape.corners).toBeCloseTo(2 * 7000 / 1000, 3);
+    });
+
+    it("ignores the list for a single wall", () => {
+      const t = buildGypsumTakeOff(fields({ mode: "wall", wallW: "3000", wallH: "2600", excludedWalls: ["A"] }));
+      expect(t.ready).toBe(true);
+      expect(t.excludedWalls).toEqual([]);
+    });
+  });
 });
+

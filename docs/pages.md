@@ -177,6 +177,18 @@ a second layer. All figures, and the diagrams, come from
   offered with Full board each, where there is nothing to share. The printed
   Surfaces table has the same figure as a Boards column, times the surface's
   count, and its note says why the column can add up to more than the order.
+- **Walls can be left out** (rooms only, per room, `excludedWalls`, added
+  2026-11-05). A Wall A–D toggle row under the wall height; a lit wall is
+  boarded, and each one turns off on its own. A wall left out is dropped
+  before the walls are grouped, so it is not laid out, drawn (2D, 3D,
+  print) or counted anywhere: area, sheets, screws, adhesive, filler, the
+  order and the project totals. Its openings stay in the list with status
+  `skipped` and come off nothing. An internal corner is still taped while
+  either of its walls is boarded (the new board finishes against the one
+  left out); the ceiling angle stays the whole perimeter. Every wall out
+  with no ceiling says so instead of asking for dimensions. The printed
+  facts list them as *Walls left out*. A wall left out is not a row left
+  out: those stay drawn, dashed — a wall left out is simply not there.
 - **Rows can be left out.** Each row label (R1, R2…) in a surface's 2D drawing
   has a checkbox before it (`LayoutVisualization`'s optional `onRowToggle`):
   ticked while the row counts, empty with the label struck out once left

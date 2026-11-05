@@ -33,6 +33,8 @@ const NEW_OPENING = {
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
 const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false, offcutsPerSurface: false,
+  /* Room walls left out of the job, by letter: none to start. */
+  excludedWalls: [],
   /* Rows left out of the job: surface id → { key, lanes }, `key` being the
      layout's `laneKey` they were picked on (see layoutSurface). */
   excluded: {} };
@@ -382,6 +384,11 @@ export function SheetGypsum({ projectName = "" }) {
   const [rowStart, setRowStart] = roomState("rowStart");
   const [fullStart, setFullStart] = roomState("fullStart");
   const [offcutsPerSurface, setOffcutsPerSurface] = roomState("offcutsPerSurface");
+  const [excludedWalls, setExcludedWalls] = roomState("excludedWalls");
+  const toggleWall = letter => setExcludedWalls(current => {
+    const list = Array.isArray(current) ? current : [];
+    return list.includes(letter) ? list.filter(w => w !== letter) : [...list, letter].sort();
+  });
   const [, setExcluded] = roomState("excluded");
   /* A choice made on another layout of this surface no longer names the
      same rows, so it is dropped rather than carried over. */
@@ -466,6 +473,7 @@ export function SheetGypsum({ projectName = "" }) {
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
       ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded, offcutsPerSurface: r.offcutsPerSurface,
+      excludedWalls: r.excludedWalls,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
       adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
@@ -541,6 +549,16 @@ export function SheetGypsum({ projectName = "" }) {
               <SegGroup label="Ceiling" value={ceiling ? "on" : "off"} onChange={v => setCeiling(v === "on")}
                 options={[["off", "Walls only"], ["on", "Walls + ceiling"]]} />
               {num("heightMm", "Wall height (mm)", { min: 1, req: req("heightMm") })}
+              {/* Each wall on or off, independently: a lit wall is boarded. */}
+              <div className="seg-group" role="group" aria-label="Walls to board">
+                {WALLS.map(w => {
+                  const on = !(excludedWalls || []).includes(w);
+                  return (
+                    <button key={w} type="button" className={"ctrl-dir" + (on ? " on" : "")} aria-pressed={on}
+                      onClick={() => toggleWall(w)}>Wall {w}</button>
+                  );
+                })}
+              </div>
             </>}
           </Stack>
         </ControlPanel>

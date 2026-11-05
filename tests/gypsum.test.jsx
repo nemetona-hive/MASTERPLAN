@@ -282,9 +282,22 @@ describe("the gypsum page", () => {
     expect(screen.getByText("Walls A, C")).toBeTruthy();
     expect(document.querySelectorAll(".layout-svg-opening")).toHaveLength(0);
     fireEvent.change(document.querySelector("[id$='-x']"), { target: { value: "500" } });
-    expect(screen.getByText("Wall A")).toBeTruthy();
-    expect(screen.getByText("Wall C")).toBeTruthy();
+    expect(screen.getByText("Wall A", { selector: ".gyp-surface-name" })).toBeTruthy();
+    expect(screen.getByText("Wall C", { selector: ".gyp-surface-name" })).toBeTruthy();
     expect(document.querySelectorAll(".layout-svg-opening")).toHaveLength(1);
+  });
+
+  it("leaves a wall out of the room and back in", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    const before = Number(sheetsNeeded());
+    fireEvent.click(screen.getByRole("button", { name: "Wall B" }));
+    expect(screen.getByRole("button", { name: "Wall B" }).getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByText("Wall D", { selector: ".gyp-surface-name" })).toBeTruthy();
+    expect(Number(sheetsNeeded())).toBeLessThan(before);
+    fireEvent.click(screen.getByRole("button", { name: "Wall B" }));
+    expect(screen.getByText("Walls B, D")).toBeTruthy();
+    expect(Number(sheetsNeeded())).toBe(before);
   });
 
   it("moves an opening to another wall", () => {
@@ -293,7 +306,7 @@ describe("the gypsum page", () => {
     fireEvent.click(screen.getByText("Window"));
     fireEvent.change(document.querySelector("[id$='-x']"), { target: { value: "500" } });
     fireEvent.click(screen.getByRole("button", { name: "B" }));
-    expect(screen.getByText("Wall B")).toBeTruthy();
+    expect(screen.getByText("Wall B", { selector: ".gyp-surface-name" })).toBeTruthy();
     expect(screen.getByText("Walls A, C")).toBeTruthy();
   });
 
