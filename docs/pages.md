@@ -180,7 +180,13 @@ a second layer. All figures, and the diagrams, come from
 - **Rows can be left out.** Each row label (R1, R2…) in a surface's 2D drawing
   has a checkbox before it (`LayoutVisualization`'s optional `onRowToggle`):
   ticked while the row counts, empty with the label struck out once left
-  out; box and label are one target. Click, Enter or Space leaves that
+  out; box and label are one target. Fixed horizontally the boxes are one
+  column in the left margin with the labels after them, and the drawing
+  gets a strip of space above and below so an edge row's label (a 100 mm
+  top strip) clears the frame; the wall stays to scale — Pattern Layouts'
+  full-height bands for thin rows were declined for that reason. Labels are
+  sized by the room between them, not by the thinnest row. Click, Enter or
+  Space leaves that
   lane out of the job — already boarded, or someone
   else's — and again puts it back. Kept per room by surface id, with the
   `laneKey` of the layout the rows were picked on (`excluded: { "wall-ac":

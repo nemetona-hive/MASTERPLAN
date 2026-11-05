@@ -422,7 +422,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
      label to fit inside it. */
   const sortedMids = groupBands.map(b => b.mid).sort((a, b) => a - b);
   const bandGap = sortedMids.slice(1).reduce((min, mid, i) => Math.min(min, mid - sortedMids[i]), Infinity);
-  const toggleFontSize = Math.round(Math.min(Math.max(vW, vH) * 0.022,
+  const toggleFontSize = Math.round(Math.min(Math.max(vW, vH) * 0.017,
     Number.isFinite(bandGap) ? (isV ? bandGap / ((maxRowLabelChars + 2) * 0.66) : bandGap / 1.3) : Infinity));
   const labelFontSize = !showRowLabels ? 0
     : Math.max(10, onRowToggle ? toggleFontSize : Math.min(baseLabelFontSize, laneLabelFontSize));
@@ -433,10 +433,14 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     : !isV && onRowToggle
       ? Math.round(toggleCol.pad * 2 + toggleCol.box + toggleCol.gap + maxRowLabelChars * labelFontSize * 0.62)
       : Math.round(labelFontSize * (isV && onRowToggle ? 1.9 : 3.6));
+  /* Fixed horizontally with checkboxes, a strip of space above and below
+     the drawing, so a row label at an edge — a 100 mm strip at the top —
+     sits clear of the frame. The wall itself stays to scale. */
+  const edgePad = showRowLabels && !isV && onRowToggle ? Math.round(labelFontSize * 0.9) : 0;
   const chartX = !isV ? labelMargin : 0;
-  const chartY = isV ? labelMargin : 0;
+  const chartY = isV ? labelMargin : edgePad;
   const totalVW = vW + chartX;
-  const totalVH = vH + chartY;
+  const totalVH = vH + chartY + edgePad;
   const aspectRatio = totalVW / totalVH;
   const handleSegClick = (rect) => {
     if (selectedKey === rect.key) {
