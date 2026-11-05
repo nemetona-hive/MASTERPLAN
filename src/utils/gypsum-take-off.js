@@ -247,12 +247,20 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
 }
 
 /**
- * Packs every piece into stock sheets: whole pieces are a sheet each. Cut
- * pieces go first-fit-decreasing into strips a sheet long, one lane width
- * each — a strip is what a board is ripped into, then cut across. The strips
- * then go first-fit-decreasing across the sheet's width, so strips of
- * different widths share a board when they fit side by side: two 600s, or a
- * 400 and an 800, from one 1200. A full-width strip is a board of its own.
+ * Packs every piece into stock sheets: whole pieces are a sheet each. The
+ * cut pieces are packed two ways and the fewer boards wins:
+ *
+ * - Strips: pieces of one lane width go first-fit-decreasing into strips a
+ *   sheet long — a strip is what a board is ripped into, then cut across.
+ *   The strips then go first-fit-decreasing across the sheet's width, so two
+ *   600s, or a 400 and an 800, come from one 1200 board.
+ * - Cuts (`packCuts`): each piece goes into the tightest leftover rectangle
+ *   on any board, so a narrow piece can be ripped from what a wider one left
+ *   (a 1300 × 1200 and a 1300 × 600 from one 1200 × 2600; strips take two).
+ *
+ * Neither is always better, so taking the fewer means the count never comes
+ * out above what strips alone gave. A piece keeps its length along the
+ * board's length; boards are not turned.
  *
  * `fullBoards` buys a whole board for every piece, cut or not: offcuts are
  * not reused and strips are not doubled up, for a crew that does not keep
@@ -287,8 +295,44 @@ export function packSheets(pieces, sheetW, sheetL, { fullBoards = false } = {}) 
     if (board) board.left -= width;
     else boards.push({ left: sheetW - width });
   }
-  const cutSheets = boards.length;
+  const cut = pieces.filter(piece => piece.type !== "full");
+  const cutSheets = Math.min(boards.length, packCuts(cut, sheetW, sheetL));
   return { whole, cutSheets, total: whole + cutSheets };
+}
+
+/**
+ * Guillotine packing: how many boards the cut pieces take when each one goes
+ * in the tightest free rectangle on any board opened so far (a new board if
+ * none holds it). Placing a piece in a corner leaves an L, cut straight
+ * through one way or the other — whichever keeps the larger offcut whole.
+ * Pieces go widest first, then longest.
+ */
+function packCuts(pieces, sheetW, sheetL) {
+  const free = [];
+  let boards = 0;
+  const sorted = pieces.map(p => ({ w: Math.min(p.laneW, sheetW), l: p.w }))
+    .sort((a, b) => b.w - a.w || b.l - a.l);
+  for (const piece of sorted) {
+    let best = -1;
+    for (let i = 0; i < free.length; i++) {
+      const r = free[i];
+      if (r.w + EPS >= piece.w && r.l + EPS >= piece.l && (best < 0 || r.w * r.l < free[best].w * free[best].l)) best = i;
+    }
+    let r;
+    if (best < 0) { boards++; r = { w: sheetW, l: sheetL }; }
+    else r = free.splice(best, 1)[0];
+    const side = r.w - piece.w, end = r.l - piece.l;
+    /* Rip first: a strip beside the piece the board's full length, and the
+       end of the piece's own strip. Cut across first: the end the board's
+       full width, and the bit beside the piece. */
+    const rip = [{ w: side, l: r.l }, { w: piece.w, l: end }];
+    const across = [{ w: r.w, l: end }, { w: side, l: piece.l }];
+    const largest = parts => Math.max(...parts.map(p => p.w * p.l));
+    for (const part of largest(rip) >= largest(across) ? rip : across) {
+      if (part.w > EPS && part.l > EPS) free.push(part);
+    }
+  }
+  return boards;
 }
 
 export const WALLS = ["A", "B", "C", "D"];

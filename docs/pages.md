@@ -245,12 +245,17 @@ a second layer. All figures, and the diagrams, come from
   (`--form-control-h`), so a card is the same height folded or not.
 - **The layout is the count.** Each surface is cut into lanes of board width
   (vertical fixing: columns up the wall; horizontal: rows along it), each lane
-  into pieces, and the pieces are packed back into stock sheets in two
-  steps (`packSheets`): cut pieces of one lane width go first-fit-decreasing
-  into strips a sheet long, then the strips go first-fit-decreasing across
-  the sheet's width. Two 600s, or a 400 and an 800, come from one 1200 board;
-  a full-width strip is a board of its own. A narrow piece is never cut from
-  the leftover length of a wider strip, so the count errs high, not low.
+  into pieces, and the pieces are packed back into stock sheets
+  (`packSheets`). Whole pieces are a board each; the cut ones are packed two
+  ways and the fewer boards wins. Strips: pieces of one lane width go
+  first-fit-decreasing into strips a sheet long, then the strips across the
+  sheet's width (two 600s, or a 400 and an 800, from one 1200). Cuts
+  (`packCuts`, added 2026-11-05): each piece into the tightest leftover
+  rectangle on any board, guillotine-split, so a narrow piece is ripped from
+  what a wider one left (1300 × 1200 + 1300 × 600 from one 1200 × 2600;
+  strips alone took two; a 4000 × 3000 × 2700 room fixed vertically went 15
+  → 14). Taking the fewer means no count rose. Pieces keep their length
+  along the board; no kerf is allowed for, so an exact half is a clean cut.
   Waste % goes on
   top for breakage, not cutting, so it defaults to **5**, not the reference
   site's 10 (that 10 stood in for cutting it did not model).

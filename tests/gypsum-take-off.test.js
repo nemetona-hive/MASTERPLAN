@@ -150,8 +150,26 @@ describe("packing", () => {
     expect(packSheets([{ type: "cut", w: 2600, laneW: 700 }, { type: "cut", w: 2600, laneW: 600 }], 1200, 2600).total).toBe(2);
   });
 
-  it("does not put a full-width piece in a ripped sheet", () => {
-    expect(packSheets([{ type: "cut", w: 1000, laneW: 600 }, { type: "cut", w: 1000, laneW: 1200 }], 1200, 2600).total).toBe(2);
+  it("rips a narrow piece from what a wider one left", () => {
+    // 1000 cut across a 1200 × 2600 leaves 1200 × 1600: the 600 comes from it.
+    expect(packSheets([{ type: "cut", w: 1000, laneW: 600 }, { type: "cut", w: 1000, laneW: 1200 }], 1200, 2600).total).toBe(1);
+    expect(packSheets([{ type: "cut", w: 1300, laneW: 1200 }, { type: "cut", w: 1300, laneW: 600 }], 1200, 2600).total).toBe(1);
+    // Too much for one board either way: 1300 × 1200 + 1400 × 600.
+    expect(packSheets([{ type: "cut", w: 1300, laneW: 1200 }, { type: "cut", w: 1400, laneW: 600 }], 1200, 2600).total).toBe(2);
+  });
+
+  it("never counts fewer boards than the pieces' area takes", () => {
+    // Pseudo-random piece sets: a pack that cheats would come in under area.
+    let seed = 7;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const widths = [1200, 1200, 600, 400, 800, 300, 900];
+    for (let run = 0; run < 200; run++) {
+      const pieces = Array.from({ length: 1 + Math.floor(rand() * 14) }, () =>
+        ({ type: "cut", laneW: widths[Math.floor(rand() * widths.length)], w: 300 + Math.round(rand() * 2300) }));
+      const area = pieces.reduce((t, p) => t + p.laneW * p.w, 0);
+      const { total } = packSheets(pieces, 1200, 2600);
+      expect(total).toBeGreaterThanOrEqual(Math.ceil(area / (1200 * 2600) - 1e-9));
+    }
   });
 
   it("buys a whole board for every piece when asked, cut ones too", () => {
