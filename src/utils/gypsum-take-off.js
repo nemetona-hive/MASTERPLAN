@@ -531,6 +531,9 @@ export function buildGypsumTakeOff(fields) {
       full: packed.whole * layerCount,
       fromCuts: packed.cutSheets * layerCount,
       layout: layoutSheets,
+      /* Every surface boarded on its own (each layout's `boards`, times its
+         count), for saying what sharing offcuts between them saves. */
+      separate: laidOut.reduce((t, s) => t + (s.layout ? s.layout.boards * s.count : 0), 0),
       /* Every piece bought as a whole board (`packSheets`). */
       fullBoards: Boolean(fullBoards),
       waste: wastePct,

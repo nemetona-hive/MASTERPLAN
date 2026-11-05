@@ -136,6 +136,16 @@ describe("the gypsum page", () => {
     expect(screen.queryByText("Rows left out")).toBeNull();
   });
 
+  it("says what shared offcuts save when the walls alone add up to more", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    // Walls 4 + 4 + 3 + 3 alone; 12 for the room.
+    expect(document.querySelector(".gyp-shared-note").textContent.replace(/\s+/g, " "))
+      .toBe("Walls alone: 14 boards · shared offcuts save 2");
+    fireEvent.click(screen.getByText("Full board each"));
+    expect(document.querySelector(".gyp-shared-note")).toBeNull();
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();

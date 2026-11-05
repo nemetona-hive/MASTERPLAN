@@ -139,6 +139,7 @@ describe("the gypsum take-off", () => {
     expect(t.surfaces.map(s => [s.label, s.layout.boards])).toEqual([["Walls A, C", 4], ["Walls B, D", 3]]);
     // Alone the four walls take 14; packed together the strips share boards: 12.
     expect(t.sheets.layout).toBe(12);
+    expect(t.sheets.separate).toBe(14);
     expect(buildGypsumTakeOff(fields({ layers: "2" })).surfaces[0].layout.boards).toBe(8);
   });
 

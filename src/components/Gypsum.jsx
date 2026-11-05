@@ -203,6 +203,14 @@ function LayoutSection({ takeOff, view3d, setView3d, onRowToggle }) {
         <Stack className="section-pad" gap={4}>
           {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
           {!view3d && drawn.map(s => <SurfaceDrawing key={s.id} surface={s} vertical={takeOff.orientation === "V"} onRowToggle={onRowToggle} />)}
+          {/* The heads count each surface alone; the room shares offcuts, so
+              say so when that is why their sum is more than the room's. */}
+          {!view3d && takeOff.sheets.separate > takeOff.sheets.layout && (
+            <p className="gyp-surface-meta gyp-shared-note">
+              {takeOff.surfaces.some(s => s.id === "ceiling") ? "Surfaces" : "Walls"} alone: {takeOff.sheets.separate} boards ·
+              shared offcuts save {takeOff.sheets.separate - takeOff.sheets.layout}
+            </p>
+          )}
         </Stack>
       </div>
     </div>

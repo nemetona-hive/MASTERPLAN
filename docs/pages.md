@@ -165,7 +165,10 @@ a second layer. All figures, and the diagrams, come from
   each`. Boards is what one such wall takes on its own, every layer
   (`layout.boards`: its pieces packed with only its own offcuts). The room's
   sheets pack every surface together, so they can be fewer than the heads
-  added up (four walls at 4 + 3 each are 14 alone, 12 together). The printed
+  added up (four walls at 4 + 3 each are 14 alone, 12 together). When they
+  are, a line under the 2D drawings says so — "Walls alone: 14 boards ·
+  shared offcuts save 2" (`sheets.separate`), "Surfaces" with a ceiling — so
+  the heads and the card do not look like they disagree. The printed
   Surfaces table has the same figure as a Boards column, times the surface's
   count, and its note says why the column can add up to more than the order.
 - **Rows can be left out.** A row label (R1, R2…) in a surface's 2D drawing

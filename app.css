@@ -4356,6 +4356,7 @@ input[type="range"]:focus-visible {
 .gyp-surface-name { font-weight: var(--fw-semi); color: var(--text); }
 .gyp-surface-meta { font-family: var(--mono); font-size: var(--fs-md); color: var(--text-muted); }
 .gyp-surface-count { margin-left: auto; }
+.gyp-shared-note { margin: 0; }
 
 .gyp-room-list {
 	display: flex;
