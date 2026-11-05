@@ -185,7 +185,10 @@ a second layer. All figures, and the diagrams, come from
   gets a strip of space above and below so an edge row's label (a 100 mm
   top strip) clears the frame; the wall stays to scale — Pattern Layouts'
   full-height bands for thin rows were declined for that reason. Labels are
-  sized by the room between them, not by the thinnest row. Click, Enter or
+  15 screen pixels on every drawing (`LayoutVisualization` measures each
+  drawing's on-screen scale; drawing units alone made a 5800 wall's labels
+  larger than a 5130 wall's), capped by the room between neighbouring
+  labels rather than by the thinnest row. Click, Enter or
   Space leaves that
   lane out of the job — already boarded, or someone
   else's — and again puts it back. Kept per room by surface id, with the

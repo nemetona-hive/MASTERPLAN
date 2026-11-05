@@ -245,6 +245,31 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   const [selectedKey, setSelectedKey] = React.useState(null);
   const [selectedSourceId, setSelectedSourceId] = React.useState(null);
   const svgIdRef = React.useRef(null);
+  /* Screen pixels per drawing unit, measured (onRowToggle only). Labels are
+     drawn in drawing units, so without it a 5800 wall's labels come out
+     larger than a 5130 wall's at the same on-screen scale. Measured after
+     every render — the label margin is part of the viewBox, so the scale
+     moves with the label size and settles in a render or two — and on
+     resize; stored only when it moves more than 1%, which ends the loop.
+     jsdom measures nothing and keeps the fallback size. */
+  const svgRef = React.useRef(null);
+  const [pxPerUnit, setPxPerUnit] = React.useState(null);
+  React.useLayoutEffect(() => {
+    const svg = svgRef.current;
+    if (!onRowToggle || !svg) return undefined;
+    const measure = () => {
+      const box = svg.viewBox && svg.viewBox.baseVal;
+      const rect = svg.getBoundingClientRect();
+      if (!box || !box.width || !box.height || !rect.width || !rect.height) return;
+      const scale = Math.min(rect.width / box.width, rect.height / box.height);
+      setPxPerUnit(prev => (prev && Math.abs(prev - scale) / prev < 0.01 ? prev : scale));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(svg);
+    return () => observer.disconnect();
+  });
   if (!svgIdRef.current) {
     svgIdRef.current = `layout-svg-${Math.random().toString(36).slice(2, 10)}`;
   }
@@ -425,7 +450,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
      label to fit inside it. */
   const sortedMids = groupBands.map(b => b.mid).sort((a, b) => a - b);
   const bandGap = sortedMids.slice(1).reduce((min, mid, i) => Math.min(min, mid - sortedMids[i]), Infinity);
-  const toggleFontSize = Math.round(Math.min(Math.max(vW, vH) * 0.017,
+  /* 15 screen pixels once measured; before that, a share of the drawing. */
+  const TOGGLE_LABEL_PX = 15;
+  const toggleFontSize = Math.round(Math.min(pxPerUnit ? TOGGLE_LABEL_PX / pxPerUnit : Math.max(vW, vH) * 0.017,
     Number.isFinite(bandGap) ? (isV ? bandGap / ((maxRowLabelChars + 2) * 0.66) : bandGap / 1.3) : Infinity));
   const labelFontSize = !showRowLabels ? 0
     : Math.max(10, onRowToggle ? toggleFontSize : Math.min(baseLabelFontSize, laneLabelFontSize));
@@ -466,6 +493,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
             </button>
           )}
           <svg
+            ref={svgRef}
             viewBox={`0 0 ${totalVW} ${totalVH}`}
             preserveAspectRatio="xMidYMid meet"
             role="img"
