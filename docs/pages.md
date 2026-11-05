@@ -161,6 +161,13 @@ a second layer. All figures, and the diagrams, come from
     room's object, so typing in one room does not lay the others out again;
     editing a preset list lays them all out, since product names come from it.
     Keep room updates immutable, or the cache serves a stale take-off.
+- **Selecting a board names it.** Clicking a piece in a surface's 2D
+  drawing puts it in that surface's head in place of the counts: lane, full
+  or cut, and its size across × up the surface (`R4 · cut · 400 × 2600 mm`).
+  Clicking it again, or the empty drawing, brings the counts back. The
+  drawing reports the selection through `LayoutVisualization`'s optional
+  `onSelect`, again whenever the drawing changes, and drops a selection whose
+  piece is no longer drawn.
 - **Control cards fold.** Each card in the control column (Rooms, Surface,
   Openings, Board, Adhesive, Joint Filler) collapses from its header. Which
   are closed is the page's, not a room's (`Gypsum.jsx:closed`, card id →

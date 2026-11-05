@@ -156,6 +156,33 @@ function OpeningsPanel({ openings, read, onWall, onAdd, onUpdate, onRemove, fold
   );
 }
 
+/* A selected board, as its surface's head shows it: lane, kind, and its size
+   across × up the surface, whichever way the lanes run. */
+const describePiece = (pick, vertical) => {
+  const { seg, rowIndex } = pick;
+  const along = Math.round(seg.w), across = Math.round(seg.laneW);
+  return `R${rowIndex + 1} · ${seg.type === "full" ? "full board" : "cut"} · ${vertical ? `${across} × ${along}` : `${along} × ${across}`} mm`;
+};
+
+/* One surface's drawing. Selecting a board in it puts that board in the
+   head in place of the counts; clearing it brings the counts back. */
+function SurfaceDrawing({ surface: s, vertical }) {
+  const [picked, setPicked] = React.useState(null);
+  const onSelect = React.useCallback(pick => setPicked(pick ? describePiece(pick, vertical) : null), [vertical]);
+  return (
+    <Stack gap={2} className="gyp-surface">
+      <div className="gyp-surface-head">
+        <span className="gyp-surface-name">{s.label}</span>
+        <span className="gyp-surface-meta" aria-live="polite">
+          {picked || <>{s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}</>}
+        </span>
+      </div>
+      <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}
+        rowStart={s.layout.meta.rowStart} maxHeight={460} onSelect={onSelect} />
+    </Stack>
+  );
+}
+
 /* The 2D drawings or the 3D room, of the room on screen. */
 function LayoutSection({ takeOff, view3d, setView3d }) {
   const drawn = takeOff.surfaces.filter(s => s.layout);
@@ -170,18 +197,7 @@ function LayoutSection({ takeOff, view3d, setView3d }) {
       <div className="section-body">
         <Stack className="section-pad" gap={4}>
           {view3d && <GypsumRoom3D room={takeOff.room} surfaces={takeOff.surfaces} />}
-          {!view3d && drawn.map(s => (
-            <Stack key={s.id} gap={2} className="gyp-surface">
-              <div className="gyp-surface-head">
-                <span className="gyp-surface-name">{s.label}</span>
-                <span className="gyp-surface-meta">
-                  {s.layout.full} full · {s.layout.cut} cut{s.count > 1 ? " each" : ""}
-                </span>
-              </div>
-              <LayoutVisualization result={{ ...s.layout, stats: { full: s.layout.full, cut: s.layout.cut } }}
-                rowStart={s.layout.meta.rowStart} maxHeight={460} />
-            </Stack>
-          ))}
+          {!view3d && drawn.map(s => <SurfaceDrawing key={s.id} surface={s} vertical={takeOff.orientation === "V"} />)}
         </Stack>
       </div>
     </div>

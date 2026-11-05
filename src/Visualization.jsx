@@ -236,7 +236,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
 // Row labels live inside the SVG, positioned in SVG coordinate space.
 // This guarantees they always align with the chart rows at any container size.
 
-export function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview }) {
+export function LayoutVisualization({ result, hoveredType, setHoveredType, rowStart = "top", alwaysShowLabels = false, maxHeight = 420, onLargePreview, onSelect }) {
   const [selectedKey, setSelectedKey] = React.useState(null);
   const [selectedSourceId, setSelectedSourceId] = React.useState(null);
   const svgIdRef = React.useRef(null);
@@ -303,6 +303,17 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     }
     return lines;
   }, [orderedRows, rowRects, isV]);
+
+  /* `onSelect` (the gypsum page) hears which piece is selected: its segment
+     and row, or null. Told again whenever the drawing changes, so a caller
+     never shows a piece that has since moved or gone — a selected key no
+     longer drawn is dropped. A caller should keep a primitive from it (a
+     string), so telling it the same thing again changes nothing. */
+  const selectedRect = selectedKey ? rects.find(r => r.key === selectedKey) || null : null;
+  React.useEffect(() => {
+    if (selectedKey && !selectedRect) { setSelectedKey(null); setSelectedSourceId(null); }
+    if (onSelect) onSelect(selectedRect ? { seg: selectedRect.seg, row: selectedRect.row, rowIndex: selectedRect.rowIndex } : null);
+  }, [selectedRect, selectedKey, onSelect]);
 
   // ── Strip layout (special case) ──
   if (result.meta.visualization === "strip") {

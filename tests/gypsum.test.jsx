@@ -88,6 +88,21 @@ describe("the gypsum page", () => {
     expect(screen.queryByText("R1 right")).toBeNull();
   });
 
+  it("names a selected board in its surface's head, and the counts once it is cleared", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    const surface = document.querySelector(".gyp-surface");
+    const meta = () => surface.querySelector(".gyp-surface-meta").textContent;
+    expect(meta()).toBe("3 full · 1 cut each");
+    const pieces = surface.querySelectorAll(".layout-svg-seg");
+    fireEvent.click(pieces[0]);
+    expect(meta()).toBe("R1 · full board · 1200 × 2600 mm");
+    fireEvent.click(surface.querySelectorAll(".layout-svg-seg")[3]);
+    expect(meta()).toBe("R4 · cut · 400 × 2600 mm");
+    fireEvent.click(surface.querySelectorAll(".layout-svg-seg")[3]);
+    expect(meta()).toBe("3 full · 1 cut each");
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();
