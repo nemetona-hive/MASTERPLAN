@@ -138,6 +138,9 @@ preset selector composes `ctl-ghost`, while Apply keeps the raised `num-btn`
 tier. Their text is part of the button, not a separate hint that can drift from
 the action.
 Disclosure headers are native buttons with `aria-expanded` and `aria-controls`.
+They draw no ring and no hover wash, as MONEYFLOW's heads do: a folding
+heading is not a thing to push. Only the +/− chip answers hover
+(`.panel-head:hover .sys-head-toggle`); focus is `button:focus-visible`.
 Print actions sit beside disclosure buttons, never inside them. Input-level
 keyboard handling runs before App's bubbling Enter-to-commit listener so an open
 preset list can consume Enter without an early blur.

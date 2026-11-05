@@ -1327,6 +1327,7 @@ select:-webkit-autofill {
 
 .data-control .control-panel.form-section-card .panel-head.disclosure {
 	--ctl-h: var(--form-control-h);
+	padding-inline: 0;
 }
 
 .data-control .form-section-card .panel-data,
@@ -2939,6 +2940,8 @@ input[type="range"]:focus-visible {
 
 .data-control .control-panel .panel-head.disclosure,
 .section-head.disclosure {
+  background: transparent;
+  box-shadow: none;
   height: var(--ctl-h);
   padding-block: 0;
 	padding-inline: var(--sp-3);

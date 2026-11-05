@@ -731,7 +731,7 @@ function Collapsible({ id, title, headerDetail = null, bg, open: openProp, setOp
     <div id={id} className={[classes[0], headerDetail && "control-panel--has-header-detail", className].filter(Boolean).join(" ")}>
       {noToggle
         ? <div className={classes[1]} style={bg ? { background: bg } : undefined}>{titleContent}</div>
-        : <button type="button" className={`${classes[1]} disclosure ctl-ghost`}
+        : <button type="button" className={`${classes[1]} disclosure`}
             aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>
             {titleContent}
           </button>}

@@ -147,8 +147,14 @@ input[type="range"]:focus-visible {
   font-size: var(--fs-sm);
 }
 
+/* A collapsible head is a heading that folds, not a thing to push, so it
+   draws no ring and no wash — MONEYFLOW's head, kept a native button here.
+   Its +/− chip is what answers the pointer (.panel-head:hover
+   .sys-head-toggle), and the keyboard gets button:focus-visible. */
 .data-control .control-panel .panel-head.disclosure,
 .section-head.disclosure {
+  background: transparent;
+  box-shadow: none;
   height: var(--ctl-h);
   padding-block: 0;
 	padding-inline: var(--sp-3);
