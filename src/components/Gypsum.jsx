@@ -32,7 +32,7 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw" };
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false };
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
 
@@ -41,7 +41,7 @@ export const newRoom = (id, mode = "room") =>
   ({ id, name: "", ...SETTINGS, mode, job: blankJob(), ...Object.fromEntries(ACTIVE.map(key => [key, null])) });
 export const roomFrom = (source, id, mode) => ({
   ...newRoom(id, mode),
-  orientation: source.orientation, layers: source.layers, fixing: source.fixing,
+  orientation: source.orientation, layers: source.layers, fixing: source.fixing, fullBoards: Boolean(source.fullBoards),
   ...Object.fromEntries(ACTIVE.map(key => [key, source[key] ?? null])),
   job: { ...source.job, ...Object.fromEntries(SURFACE_FIELDS.map(name => [name, ""])), openings: [] }
 });
@@ -217,7 +217,7 @@ function CalculationDetails({ takeOff, room }) {
 
           <div className="pw-formula-wrap pw-formula-wrap--lead">
             <span className="pw-formula-text">
-              Sheets are counted from the layout, offcuts reused, then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness.
+              Sheets are counted from the layout{takeOff.sheets.fullBoards ? ", a full board for every piece, cut or not," : ", offcuts reused,"} then waste added. Openings reduce screws; a placed one also drops any piece wholly inside it. Joint filler is per metre of joint: every board joint (each layer) plus the corners. A filler given only per 1 mm is counted as 1 mm over a 340 mm strip of joint; a surface skim covers the net area at that thickness.
             </span>
           </div>
           <div className="pw-formula-wrap">
@@ -338,6 +338,7 @@ export function SheetGypsum({ projectName = "" }) {
   const [orientation, setOrientation] = roomState("orientation");
   const [layers, setLayers] = roomState("layers");
   const [fixing, setFixing] = roomState("fixing");          // "screw" | "glue"
+  const [fullBoards, setFullBoards] = roomState("fullBoards");
   const glued = fixing === "glue";
   const [view3d, setView3d] = useSessionState(KEY("view3d"), false);
 
@@ -404,7 +405,7 @@ export function SheetGypsum({ projectName = "" }) {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing,
+      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
       adhesiveProduct: presetName(adhesive.presets, r.activeAdhesive)
@@ -500,6 +501,9 @@ export function SheetGypsum({ projectName = "" }) {
               options={[["V", "Vertical"], ["H", "Horizontal"]]} />
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}
             {num("firstOffset", "First panel offset (mm)", { max: 10000 })}
+            {/* Full boards: every piece, cut or not, is a board bought. */}
+            <SegGroup label="Cut pieces" value={fullBoards ? "full" : "reuse"} onChange={v => setFullBoards(v === "full")}
+              options={[["reuse", "Reuse offcuts"], ["full", "Full board each"]]} />
             {/* Glued is one layer on walls; the model enforces it, so the choice
                 is not offered rather than offered and ignored. */}
             <SegGroup label="Fixing method" value={fixing} onChange={setFixing}

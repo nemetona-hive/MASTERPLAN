@@ -164,8 +164,9 @@ function RoomTakeOff({ takeOff, title, projectName }) {
           </tbody>
         </table>
         <p className="doc-sheet-note">
-          Sheets are counted from the layout with offcuts reused, so waste covers breakage rather
-          than cutting. Openings reduce screws. Joint filler is per metre of joint, corners included. A placed opening also removes any
+          {sheets.fullBoards
+            ? "Sheets are counted from the layout with a full board for every piece, cut or not; offcuts are not reused."
+            : "Sheets are counted from the layout with offcuts reused, so waste covers breakage rather than cutting."} Openings reduce screws. Joint filler is per metre of joint, corners included. A placed opening also removes any
           piece lying wholly inside it; a piece it only crosses is hung whole and cut out. The
           price covers board only.{fixing === "glue" ? " Glued walls are stuck in dabs onto masonry, one layer; an uneven wall takes more adhesive, and a ceiling is screwed." : ""}
         </p>

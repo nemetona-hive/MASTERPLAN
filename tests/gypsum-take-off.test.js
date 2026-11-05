@@ -75,6 +75,12 @@ describe("packing", () => {
   it("does not put a full-width piece in a ripped sheet", () => {
     expect(packSheets([{ type: "cut", w: 1000, laneW: 600 }, { type: "cut", w: 1000, laneW: 1200 }], 1200, 2600).total).toBe(2);
   });
+
+  it("buys a whole board for every piece when asked, cut ones too", () => {
+    const strip = { type: "cut", w: 2600, laneW: 600 };
+    const packed = packSheets([strip, strip, { type: "full", w: 2600, laneW: 1200 }], 1200, 2600, { fullBoards: true });
+    expect(packed).toEqual({ whole: 1, cutSheets: 2, total: 3 });
+  });
 });
 
 describe("the gypsum take-off", () => {
@@ -85,6 +91,14 @@ describe("the gypsum take-off", () => {
     // Whole: 3·2 + 2·2 = 10. Strips: 400 ×2 → 1 sheet, 600 ×2 → 1 sheet.
     expect(t.sheets.layout).toBe(12);
     expect(t.ready).toBe(true);
+  });
+
+  it("counts every cut piece as a full board when asked", () => {
+    // Same room: 10 whole + 400 ×2 + 600 ×2 = 14 pieces, a board each.
+    const t = buildGypsumTakeOff(fields({ fullBoards: true }));
+    expect(t.sheets.layout).toBe(14);
+    expect(t.sheets.fullBoards).toBe(true);
+    expect(buildGypsumTakeOff(fields({ fullBoards: true, layers: "2" })).sheets.layout).toBe(28);
   });
 
   it("adds waste on top and rounds up", () => {

@@ -186,10 +186,18 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
  * pieces go first-fit-decreasing into sheet lengths, grouped by lane width,
  * because the strip left after ripping a narrow lane is no use for a full one.
  * A narrow lane can come several to a sheet (two 600 strips from one 1200).
+ *
+ * `fullBoards` buys a whole board for every piece, cut or not: offcuts are
+ * not reused and strips are not doubled up, for a crew that does not keep
+ * them or a job that wants spare board on site.
  */
-export function packSheets(pieces, sheetW, sheetL) {
+export function packSheets(pieces, sheetW, sheetL, { fullBoards = false } = {}) {
   let whole = 0;
   const byWidth = new Map();
+  if (fullBoards) {
+    for (const piece of pieces) if (piece.type === "full") whole++;
+    return { whole, cutSheets: pieces.length - whole, total: pieces.length };
+  }
   for (const piece of pieces) {
     if (piece.type === "full") { whole++; continue; }
     const key = Math.round(piece.laneW * 1000) / 1000;
@@ -278,7 +286,7 @@ export function buildGypsumTakeOff(fields) {
     sheetW, sheetL, orientation, layers, waste,
     screwRate, compoundRate, bagKg, sheetPrice, product,
     fixing, adhesiveRate, adhesiveBagKg, fillerProduct, adhesiveProduct,
-    skimRate, skimMm, firstOffset
+    skimRate, skimMm, firstOffset, fullBoards
   } = fields;
 
   const room = mode !== "wall";
@@ -361,7 +369,7 @@ export function buildGypsumTakeOff(fields) {
   const pieces = laidOut.flatMap(s => s.layout
     ? Array.from({ length: s.count }, () => s.layout.rows.flatMap(row => row.segs)).flat()
     : []);
-  const packed = packSheets(pieces, SW || 1, SL || 1);
+  const packed = packSheets(pieces, SW || 1, SL || 1, { fullBoards: Boolean(fullBoards) });
   const layoutSheets = packed.total * layerCount;
 
   const wastePct = given(waste) ? num(waste) : 0;
@@ -466,6 +474,8 @@ export function buildGypsumTakeOff(fields) {
       full: packed.whole * layerCount,
       fromCuts: packed.cutSheets * layerCount,
       layout: layoutSheets,
+      /* Every piece bought as a whole board (`packSheets`). */
+      fullBoards: Boolean(fullBoards),
       waste: wastePct,
       exact: round(sheetsExact, 2),
       toBuy,

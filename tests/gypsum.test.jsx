@@ -57,6 +57,15 @@ describe("the gypsum page", () => {
     expect(document.querySelectorAll(".gyp-surface svg[role='img']")).toHaveLength(2);
   });
 
+  it("counts a full board for every piece when asked", () => {
+    render(<SheetGypsum />);
+    fillRoom();
+    fireEvent.click(screen.getByText("Full board each"));
+    expect(sheetsNeeded()).toBe("14");
+    fireEvent.click(screen.getByText("Reuse offcuts"));
+    expect(sheetsNeeded()).toBe("12");
+  });
+
   it("adds a ceiling drawing when the ceiling is boarded", () => {
     render(<SheetGypsum />);
     fillRoom();

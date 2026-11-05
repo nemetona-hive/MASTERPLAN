@@ -168,6 +168,11 @@ a second layer. All figures, and the diagrams, come from
   width piece, but two 600 strips come from one 1200 sheet. Waste % goes on
   top for breakage, not cutting, so it defaults to **5**, not the reference
   site's 10 (that 10 stood in for cutting it did not model).
+- **Cut pieces: Reuse offcuts / Full board each** (per room, `fullBoards`).
+  Full board each buys a whole board for every piece in the layout, the cut
+  first and last ones included: no offcut reuse, no doubling up of strips
+  (`packSheets(…, { fullBoards })`). The drawing is unchanged; only the count
+  is. The on-screen and printed notes say which rule the count used.
 - **End joints** only exist where a lane is longer than a sheet. Alternate
   lanes start half a sheet apart; a remainder under `MIN_END_PIECE` (300 mm)
   moves the lane's joint instead of leaving a sliver.
