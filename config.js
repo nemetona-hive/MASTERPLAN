@@ -299,15 +299,15 @@ const DEFAULT_GYPSUM_PRESETS = [
     "name": "Knauf GKB 12.5",
     "sheetW": 1200,
     "sheetL": 2600,
-    "screwRate": 20,
+    "screwRate": 15,
     "sheetPrice": 10
   },
   {
-    "name": "",
-    "sheetW": "",
-    "sheetL": "",
-    "screwRate": "",
-    "sheetPrice": ""
+    "name": "OSB 12mm",
+    "sheetW": 1250,
+    "sheetL": 2500,
+    "screwRate": 10,
+    "sheetPrice": 18
   },
   {
     "name": "",
