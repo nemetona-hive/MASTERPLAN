@@ -45,11 +45,11 @@ The source detector returned 9 warnings: layout-transition (6), side-tab (2), da
 
 ## Priority issues
 
-1. **P1 — Mobile result is buried.** At 390×844, four dimensions and two Manage Presets controls consume the first viewport. Once inputs are ready, Settings is open by default and adds a long control section before Pattern Layouts. Collapse advanced settings on phone until requested, add a visible route to the result, and keep the preview close to required dimensions. Suggested command: `$impeccable layout` or `$impeccable adapt`.
-2. **P1 — Invalid layout reads as a cheaper option.** In the 300×600 material / 1390×2200 surface example, LONG-SHORT reports `0 pcs` beside valid 19/20/21 piece comparisons because its default long piece is 2400mm. The header should show `Unavailable` plus the reason, with no numeric purchase count or enabled PDF action. Suggested command: `$impeccable clarify` or `$impeccable harden`.
-3. **P2 — Home offers labels instead of decisions.** Seven equal cards mirror the sidebar. Add each tool's short task description from config.js and establish one clear starting point or task grouping. Suggested command: `$impeccable clarify` or `$impeccable distill`.
-4. **P2 — Dimension controls require interpretation.** Repeated chevron and checkmark buttons beside each input have accessible names but no persistent visible cue for what they do. Make their action discoverable in a compact text label, inline hint, or first-use affordance. Suggested command: `$impeccable clarify`.
-5. **P3 — Functional microtype is too small.** Browser inspection found roughly 9–10px dimension and helper labels in Pattern Layouts. Raise the smallest functional text step while checking desktop and phone density. Suggested command: `$impeccable typeset`.
+1. **P1 — Mobile result is buried.** At 390×844, four dimensions and two Manage Presets controls consume the first viewport. Once inputs are ready, Settings is open by default and adds a long control section before Pattern Layouts. Collapse advanced settings on phone until requested, add a visible route to the result, and keep the preview close to required dimensions.
+2. **P1 — Invalid layout reads as a cheaper option.** In the 300×600 material / 1390×2200 surface example, LONG-SHORT reports `0 pcs` beside valid 19/20/21 piece comparisons because its default long piece is 2400mm. The header should show `Unavailable` plus the reason, with no numeric purchase count or enabled PDF action.
+3. **P2 — Home offers labels instead of decisions.** Seven equal cards mirror the sidebar. Add each tool's short task description from config.js and establish one clear starting point or task grouping.
+4. **P2 — Dimension controls require interpretation.** Repeated chevron and checkmark buttons beside each input have accessible names but no persistent visible cue for what they do. Make their action discoverable in a compact text label, inline hint, or first-use affordance.
+5. **P3 — Functional microtype is too small.** Browser inspection found roughly 9–10px dimension and helper labels in Pattern Layouts. Raise the smallest functional text step while checking desktop and phone density.
 
 ## Persona red flags
 

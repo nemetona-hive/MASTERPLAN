@@ -209,8 +209,7 @@ and answers the endpoint with a no-op.
 - No CSS-in-JS except inline style for dynamic values; use className strings
 - Local persistence uses `saveStaticDefaults` for dev-mode configuration updates.
 - CSS class names follow BEM-ish patterns: block, block-element, modifier
-- `AGENTS.md` holds the shared agent rules and `CLAUDE.md` starts with
-  `@AGENTS.md`, so a rule is edited once. `.claude/rules/*.md` are short
+- `CLAUDE.md` holds the rules that apply everywhere. `.claude/rules/*.md` are short
   path-scoped pointers into the topic files; they never carry a second copy.
 
 ## What does NOT exist yet (possible future work)
