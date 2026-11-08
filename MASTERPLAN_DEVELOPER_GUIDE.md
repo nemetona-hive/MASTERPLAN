@@ -20,6 +20,7 @@ Read this page, then the topic file your change touches.
 | [Pages and routing](docs/pages.md) | adding a page or changing the nav |
 | [Documents the app produces](docs/exports.md) | changing a printed sheet, a report model, or the manifest |
 | [Deploying, and what is kept](docs/deploying.md) | pushing, wondering where state goes, or touching projects (local mode) |
+| [Restoring on a clean WSL](docs/restore.md) | the folder was restored from a backup onto a fresh Windows/WSL install and the app must run again |
 
 ## Architecture
 
