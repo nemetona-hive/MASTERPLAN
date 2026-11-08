@@ -67,9 +67,11 @@ None of these come back with the folder. Each is rebuilt or re-entered below.
 
 `launch-hidden.vbs` and `run.bat` both hardcode the distro, and the `.vbs` also
 hardcodes the path, so the shortcut breaks if either differs. Check with
-`wsl.exe -l -v` from PowerShell and `pwd` in WSL:
+`echo $WSL_DISTRO_NAME` (or `wsl.exe -l -v` from PowerShell) and `pwd` in WSL:
 
-- distro name is exactly `Ubuntu` (`wsl.exe -d Ubuntu`, in both files)
+- distro name is exactly `Ubuntu-26.04` (`wsl.exe -d Ubuntu-26.04`, in both
+  files). The name follows the install: an Ubuntu 26.04 install is named
+  `Ubuntu-26.04`, not `Ubuntu`, so check it rather than assume it.
 - the repo is at `/home/nemetona/NEMETONA-hive/MASTERPLAN` (user `nemetona`;
   only the `.vbs` has this path, `run.bat` works it out)
 
@@ -248,7 +250,17 @@ npx playwright install --with-deps chromium
 npm run layout && npm run test:browser
 ```
 
-`--with-deps` runs apt, so it asks for sudo. The restore is done when `layout`
+`--with-deps` runs apt, so it asks for sudo. Run it from this folder, as above,
+so it uses the project's pinned Playwright; from anywhere else `npx` fetches
+the latest one and downloads a second, unused set of browsers. And **not** as
+`sudo npx playwright install-deps chromium`: `sudo` drops the nvm `PATH`, root
+finds no `npx`, and nothing is installed. If Chromium still will not start,
+`ldd ~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell | grep 'not found'`
+names the missing libraries (on Ubuntu 26.04: `libnss3`, `libnssutil3`,
+`libnspr4`, `libasound`). The browser build is shared with MONEYFLOW and
+VLOGBOOK, so if either is already restored, it is already there.
+
+The restore is done when `layout`
 prints `Layout checks clean` and `verify` exits 0. If any run leaves
 `config.js` modified, show `git diff config.js` before doing anything else.
 

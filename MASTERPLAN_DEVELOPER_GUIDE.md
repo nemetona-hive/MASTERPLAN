@@ -62,7 +62,7 @@ The shortcut is a three-part chain, matching MONEYFLOW and VLOGBOOK:
 
 ```
 Desktop\MASTERPLAN.lnk  ->  wscript.exe  %LOCALAPPDATA%\MASTERPLAN\launch-hidden.vbs
-                                            -> wsl.exe -d Ubuntu --cd <repo> -e bash ./run.sh
+                                            -> wsl.exe -d Ubuntu-26.04 --cd <repo> -e bash ./run.sh
 ```
 
 Two constraints explain the shape. A `.lnk` has no "hidden" window style — only
