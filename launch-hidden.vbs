@@ -14,4 +14,4 @@
 ' Source of truth for this file is the repo. The shortcut points at the copy in
 ' %LOCALAPPDATA%\MASTERPLAN\ because a .vbs on a \\wsl.localhost\... UNC path sits
 ' in an untrusted zone and trips Windows' security prompt, exactly like run.bat.
-CreateObject("WScript.Shell").Run "wsl.exe -d Ubuntu --cd /home/nemetona/NEMETONA-hive/MASTERPLAN -e bash ./run.sh", 0, False
+CreateObject("WScript.Shell").Run "wsl.exe -d Ubuntu-26.04 --cd /home/nemetona/NEMETONA-hive/MASTERPLAN -e bash ./run.sh", 0, False

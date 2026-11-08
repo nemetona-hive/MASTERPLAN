@@ -10,14 +10,14 @@ if errorlevel 1 (
 )
 
 for %%I in ("%~dp0.") do set "WINDOWS_DIR=%%~fI"
-for /f "delims=" %%I in ('wsl.exe -d Ubuntu -e wslpath -u "%WINDOWS_DIR%"') do set "WSL_DIR=%%I"
+for /f "delims=" %%I in ('wsl.exe -d Ubuntu-26.04 -e wslpath -u "%WINDOWS_DIR%"') do set "WSL_DIR=%%I"
 if not defined WSL_DIR (
     echo Could not translate the MASTERPLAN folder path into a WSL path.
     pause
     exit /b 1
 )
 
-wsl.exe -d Ubuntu --cd "%WSL_DIR%" -e bash ./run.sh
+wsl.exe -d Ubuntu-26.04 --cd "%WSL_DIR%" -e bash ./run.sh
 set "EXIT_CODE=%ERRORLEVEL%"
 
 if not "%EXIT_CODE%"=="0" (
