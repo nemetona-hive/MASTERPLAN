@@ -105,8 +105,11 @@ describe("the gypsum page", () => {
     expect(pick()).toBe("");
   });
 
-  it("starts each wall on a full panel when asked", () => {
+  it("starts each wall on a full panel, and trims the first board when asked", () => {
     render(<SheetGypsum />);
+    const trim = () => screen.getByText("Trim first");
+    // Nothing laid out yet: nothing for Trim first to decide.
+    expect(trim().disabled).toBe(true);
     type("input-gyp-lenMm", 5130);
     type("input-gyp-widMm", 3000);
     type("input-gyp-heightMm", 2500);
@@ -114,9 +117,18 @@ describe("the gypsum page", () => {
     type("input-gyp-sheetL", 2500);
     fireEvent.click(screen.getByText("Horizontal"));
     const labels = () => [...document.querySelector(".gyp-surface").querySelectorAll(".layout-svg-label")].map(t => t.textContent).slice(0, 3);
-    expect(labels()).toEqual(["2330", "2500", "300"]);
-    fireEvent.click(screen.getByText("Full panel"));
     expect(labels()).toEqual(["2500", "2330", "300"]);
+    expect(trim().disabled).toBe(false);
+    fireEvent.click(trim());
+    expect(labels()).toEqual(["2330", "2500", "300"]);
+    // A wall that ends on 300 or more leaves nothing to trim: Full panel shows,
+    // and the room's choice comes back with a length that needs it again.
+    type("input-gyp-lenMm", 5400);
+    type("input-gyp-widMm", 2400);
+    expect(trim().disabled).toBe(true);
+    expect(screen.getByText("Full panel").getAttribute("aria-pressed")).toBe("true");
+    type("input-gyp-lenMm", 5130);
+    expect(trim().getAttribute("aria-pressed")).toBe("true");
   });
 
   it("leaves a row out from its label, and puts it back", () => {

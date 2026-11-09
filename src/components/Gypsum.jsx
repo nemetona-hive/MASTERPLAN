@@ -31,7 +31,7 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: false, offcutsPerSurface: false,
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: true, offcutsPerSurface: false,
   /* Room walls left out of the job, by letter: none to start. */
   excludedWalls: [],
   /* Rows left out of the job: surface id → { key, lanes }, `key` being the
@@ -630,7 +630,13 @@ export function SheetGypsum({ projectName = "" }) {
                 horizontally with an offset, the offset is the first piece and
                 is never trimmed, so there is nothing left to choose. */}
             {!(orientation === "H" && takeOff.firstOffset) && (
-              <SegGroup label="Wall start" value={fullStart ? "full" : "trim"} onChange={v => setFullStart(v === "full")}
+              /* Full panel unless a wall ends short of MIN_END_PIECE and the
+                 first board could give it: only then is there a choice, so
+                 only then is Trim first offered. A room that chose it keeps
+                 the choice for when it applies again. */
+              <SegGroup label="Wall start" value={fullStart || !takeOff.trimApplies ? "full" : "trim"}
+                onChange={v => setFullStart(v === "full")}
+                disabled={takeOff.trimApplies ? {} : { trim: "No wall ends in a piece under 300 mm for the first board to make up" }}
                 options={[["trim", "Trim first"], ["full", "Full panel"]]} />
             )}
             {/* Vertical: a strip at the corner. Horizontal: each row's first piece. */}

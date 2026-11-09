@@ -795,12 +795,14 @@ export function Row({ label, value, unit, hi, danger, hoverType, hoveredType, se
  * text, for a switch in a heading. `onChange` hears only a change: picking the
  * option already chosen does nothing, so a caller's undo step is not spent on it.
  */
-export function SegGroup({ id, value, options, onChange, label, inline = false }) {
+/* `disabled` maps an option to why it cannot be chosen right now; the reason
+   is the button's title. */
+export function SegGroup({ id, value, options, onChange, label, inline = false, disabled = {} }) {
   return (
     <div id={id} className={"seg-group" + (inline ? " seg-group--inline" : "")} role="group" aria-label={label}>
       {options.map(([option, text, name]) => (
         <button key={option} type="button" className={"ctrl-dir" + (value === option ? " on" : "")}
-          aria-pressed={value === option} aria-label={name}
+          aria-pressed={value === option} aria-label={name} disabled={Boolean(disabled[option])} title={disabled[option] || undefined}
           onClick={() => { if (value !== option) onChange(option); }}>{text}</button>
       ))}
     </div>

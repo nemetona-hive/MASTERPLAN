@@ -54,6 +54,20 @@ describe("lane pieces", () => {
     // No whole board after the first to trim: the first one gives way.
     expect(lanePieces(2700, 2600, 0, 0, true)).toEqual([2700 - MIN_END_PIECE, MIN_END_PIECE]);
   });
+
+  it("says whether Wall start has anything to decide", () => {
+    const h = over => buildGypsumTakeOff(fields({ heightMm: "2500", sheetW: "1250", sheetL: "2500", orientation: "H", ...over }));
+    expect(h({ lenMm: "5130" }).trimApplies).toBe(true);
+    // Every wall ends on 300 or more: no trim either way.
+    expect(h({ lenMm: "5400", widMm: "2400" }).trimApplies).toBe(false);
+    // A row left out does not count: the 5130 walls' rows, all excluded.
+    const row = h({ lenMm: "5130" });
+    const excluded = Object.fromEntries(row.surfaces.filter(s => s.width === 5130)
+      .map(s => [s.id, { key: s.layout.laneKey, lanes: [0, 1] }]));
+    expect(h({ lenMm: "5130", excluded }).trimApplies).toBe(false);
+    // Nothing laid out, nothing to decide.
+    expect(h({ lenMm: "" }).trimApplies).toBe(false);
+  });
 });
 
 describe("one surface", () => {

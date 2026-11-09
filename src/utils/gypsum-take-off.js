@@ -173,8 +173,13 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
       x += len;
       return seg;
     });
-    return { segs, h: laneW, excluded: skip.has(laneIndex) };
+    return { segs, h: laneW, excluded: skip.has(laneIndex), start };
   });
+  /* Whether Wall start has anything to decide here: a lane still in the job
+     whose pieces come out differently trimming the first or a whole board. */
+  const trimApplies = fullRows.some((row, laneIndex) => !row.excluded &&
+    lanePieces(laneLength, sheetL, laneIndex, row.start, false).join() !==
+    lanePieces(laneLength, sheetL, laneIndex, row.start, true).join());
 
   /* Joint length on this face: the long edges between lanes, plus every end
      joint across its lane's width. This is what the tape covers. Taken
@@ -226,6 +231,7 @@ export function layoutSurface({ w, h, sheetW, sheetL, orientation, openings = []
     joints: edgeJoints + endJoints,
     laneKey,
     excludedArea,
+    trimApplies,
     full: rows.reduce((n, row) => n + (row.excluded ? 0 : row.segs.filter(s => s.type === "full").length), 0),
     cut: rows.reduce((n, row) => n + (row.excluded ? 0 : row.segs.filter(s => s.type === "cut").length), 0),
     meta: {
@@ -616,6 +622,9 @@ export function buildGypsumTakeOff(fields) {
     orientation: fix,
     rowStart: start,
     fullStart: Boolean(fullStart),
+    /* Wall start makes a difference on at least one surface (layoutSurface's
+       `trimApplies`). The page offers Trim first only then. */
+    trimApplies: laidOut.some(s => Boolean(s.layout && s.layout.trimApplies)),
     firstOffset: offset || null,
     firstRow: firstRow || null,
     excludedWalls: skipWalls,

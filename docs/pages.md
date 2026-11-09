@@ -295,11 +295,20 @@ a second layer. All figures, and the diagrams, come from
   (`layoutSurface({ rowStart })`), so openings, the 3D view and the printed
   drawing follow; the 2D view reads `meta.rowStart`. Same count either way
   unless an opening covers a different piece.
-- **Wall start: Trim first / Full panel** (per room, `fullStart`). A lane end
-  under `MIN_END_PIECE` is made up from another piece. Trim first (the
-  default) takes it from the lane's first piece, so a 5130 wall in 2500
-  boards is 2330 · 2500 · 300. Full panel keeps the first piece and trims the
-  last whole board: 2500 · 2330 · 300. Staggered lanes still start half a
+- **Wall start: Full panel / Trim first** (per room, `fullStart`). A lane end
+  under `MIN_END_PIECE` is made up from another piece. Full panel (the page's
+  default since 2026-11-09, the user's call) keeps the first piece and trims
+  the last whole board, so a 5130 wall in 2500 boards is 2500 · 2330 · 300.
+  Trim first takes it from the lane's first piece: 2330 · 2500 · 300.
+  `lanePieces` and `layoutSurface` still default to trimming the first when
+  `fullStart` is not passed; the page always passes it.
+  - **Trim first is offered only when it changes something**
+    (`takeOff.trimApplies`): some lane still in the job comes out differently
+    either way. Otherwise the button is disabled, with its reason as the
+    title, and Full panel shows as chosen, which is what the layout is anyway.
+    A room that chose Trim first keeps the choice, and it comes back when a
+    change of size needs a trim again. Rooms saved before the default changed
+    hold `fullStart: false` and so stay on Trim first where it applies. Staggered lanes still start half a
   board in, and a lane with no whole board to trim falls back to trimming the
   first (`lanePieces(…, fullStart)`). **A first panel offset is never
   trimmed (decided 2026-11-05):** it is a stud measurement, so with one set
