@@ -38,8 +38,11 @@ npm run deploy:check     # fetches <site>/version.js and compares to local
 **The id is a content hash, not a timestamp, and that is load-bearing.**
 `scripts/build-version.js` hashes `index.html`, the three classic scripts it
 loads by hand — `config.js`, `simulation.js`, `themes.js` — and the generated
-`components.js`, `app.css` and two font subsets: everything a visitor loads that
-this repo owns, which is wider than what the build generates. The three are the
+`components.js`, `app.css` and the Font Awesome subset, plus `vendor/fonts/` —
+`fonts.css` and every woff2 beside it, read from the folder so a new face cannot
+be forgotten: everything a visitor loads that this repo owns, which is wider
+than what the build generates. Before the fonts were listed, a font-only deploy
+kept the old id. The three are the
 app as much as the bundle is (defaults and the page registry, the layout maths,
 the theme tokens), so hashing only generated files would let a deploy that
 changed any of them pass `deploy:check` as already live. `githooks/pre-commit`
