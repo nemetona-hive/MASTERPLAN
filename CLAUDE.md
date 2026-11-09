@@ -59,7 +59,7 @@ derives it:
   the markup. See [controls](docs/controls.md).
 - **Type** is a token too: `font-family` is `var(--mono|--sans|--font-ui)` or
   `inherit`, `font-weight` a `--fw-*` token. A form control that states no
-  family draws in the browser's Arial. Font files are declared only in
+  family draws in the browser's Arial, which only `npm run layout` sees. Font files are declared only in
   `vendor/fonts/fonts.css`, which `npm run fonts:check` holds to the binaries.
   See [type faces](docs/theme.md#type-faces).
 - **Printed documents** are built from a **report model** (`utils/cut-list.js`,

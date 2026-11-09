@@ -843,6 +843,8 @@ html, .nav, .data-control, .data-preview, .page-scroll {
 	min-width: 0;
 	padding: 0 var(--ctl-pad-x-md);
 	gap: var(--sp-1);
+
+	font-family: var(--font-ui);
 	font-size: var(--fs-sm);
 	font-weight: var(--fw-med);
 }

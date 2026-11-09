@@ -210,6 +210,10 @@
 	min-width: 0;
 	padding: 0 var(--ctl-pad-x-md);
 	gap: var(--sp-1);
+	/* A <button> does not inherit body's face — without this the label drew
+	   in the browser's Arial, the one word in the app off the three faces.
+	   Chrome, so --font-ui, as the nav. */
+	font-family: var(--font-ui);
 	font-size: var(--fs-sm);
 	font-weight: var(--fw-med);
 }

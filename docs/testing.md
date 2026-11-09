@@ -15,7 +15,7 @@ browser layout gate and the browser journeys.
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
 | `npm run audit:ui` | hardcoded colour, a literal font family or weight, a word painted in an edge token, text dimmed with opacity, control edges/heights/hover recipes, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
 | `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
-| `npm run layout` | where a box actually landed, what a word was actually painted in, whether a dialog keeps the keyboard — in a real browser |
+| `npm run layout` | where a box actually landed, what a word was actually painted in, which face drew it, whether a dialog keeps the keyboard — in a real browser |
 | `npm run theme:check` | contrast ratios across all three themes |
 | `npm run fonts:check` | `vendor/fonts/fonts.css` against the binaries: weights each file can draw, subsets, duplicate files, required letters ([type faces](theme.md#type-faces)) |
 | `npm run perf:check` | download budgets for the two committed bundles |

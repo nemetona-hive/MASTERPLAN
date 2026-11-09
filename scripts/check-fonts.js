@@ -27,15 +27,15 @@
  *   ERROR  a weight descriptor the file cannot draw
  *   ERROR  a subset that does not offer every weight the family's other
  *          subsets do — bold ž would switch face mid-word
- *   ERROR  a --fw-* weight with no face (up to the family's CEILING), or
- *          upright faces reaching past the heaviest --fw-* token
+ *   ERROR  a --fw-* weight with no face, or upright faces reaching past
+ *          the heaviest --fw-* token — a weight nothing asks for
  *   ERROR  a REQUIRED character no face of a family draws
  *   ERROR  a font token (--mono, --sans, --font-ui) whose first family has
  *          no @font-face
  *
  * Ported from MONEYFLOW's scripts/check-fonts.js. Differences: the tokens
  * live in 00-base.css, and the required set carries what MASTERPLAN's cut
- * lists and take-offs print (× ° Ø ± ¼ ² ³).
+ * lists and take-offs print (× ° Ø ± ¼ ² ³) and the Greek it shows (α φ π).
  *
  * Usage: npm run fonts:check      (exit 1 if any ERROR)
  */
@@ -49,36 +49,25 @@ const ROOT = path.resolve(__dirname, "..");
 const FONT_DIR = path.join(ROOT, "vendor", "fonts");
 const TOKEN_CSS = path.join(ROOT, "src", "styles", "00-base.css");
 
-/* The heaviest upright weight a family is deliberately declared to. A family
-   absent here must reach the heaviest --fw-* token exactly.
-
-   JetBrains Mono's files reach 800, but its faces have always stopped at
-   600, so every --fw-bold figure draws semibold — the weight the app's
-   figures were tuned against. Raising it is a visual change to every bold
-   figure and to the printed sheets — sketch it, then change it here AND in
-   fonts.css, which is the point of writing it down twice. */
-const CEILING = { "JetBrains Mono": 600 };
-
 /* Characters every face family has to draw itself. ASCII, the letters of
    the language the data is written in (Estonian: õ ä ö ü, and š ž in
    names), the typography the formatters emit — the dashes and ellipsis in
    empty cells, the minus, € on take-offs — and what the cut lists, take-offs
    and calculators print beside a figure: × between dimensions, ° on angles,
    Ø on pipes, ± on tolerances, ¼ on the timesheet, ² and ³ on areas and
-   volumes.
+   volumes. And the Greek the app shows: α on the downpipe guider, φ in
+   "Golden Ratio φ", π in the pipe-wrap formula.
 
-   Deliberately absent, because no latin or latin-ext subset of any of the
-   three faces carries them and the system face is where they come from:
+   Deliberately absent, because no subset of any of the three faces
+   carries them and the system face is where they come from:
      → ↔ ≈ ✓ ◇ ⅓ ⅔   arrows and symbols (cut list headers, the Guider, the
                        gypsum skim rate, the step marker, the pattern names)
-     α φ π            Greek — the downpipe guider, "Golden Ratio φ", the
-                       pipe-wrap diagram. A greek subset exists for all
-                       three families; vendoring it is a visible change.
      ⚫ and friends    the theme icons, which are emoji. */
 const REQUIRED = [
   ...Array.from({ length: 0x7f - 0x20 }, (_, i) => String.fromCharCode(0x20 + i)).join(""),
   "õÕäÄöÖüÜšŠžŽ",
-  "€–—‘’“”…·×°−Ø±¼²³"
+  "€–—‘’“”…·×°−Ø±¼²³",
+  "αφπ"
 ].join("");
 
 /* --------------------------------------------------------------- parsing */
@@ -132,7 +121,7 @@ function parseTokens(css) {
 
 /* ---------------------------------------------------------------- checks */
 
-function checkFonts({ fontDir = FONT_DIR, tokenCss = TOKEN_CSS, ceiling: ceilings = CEILING } = {}) {
+function checkFonts({ fontDir = FONT_DIR, tokenCss = TOKEN_CSS } = {}) {
   const findings = [];
   const error = (where, message) => findings.push({ where, message });
 
@@ -204,19 +193,15 @@ function checkFonts({ fontDir = FONT_DIR, tokenCss = TOKEN_CSS, ceiling: ceiling
     }
 
     if (style === "normal" && own.length) {
-      /* Exactly the scale (or the family's declared ceiling), not more. A
-         face that stops short clamps the heavier tokens in silence; a face
-         reaching past it declares weights nothing in src/ can ask for. */
-      const heaviest = Math.max(...scale);
-      const ceiling = ceilings[family] ?? heaviest;
-      const missing = scale.filter(w => w <= ceiling && !covers(w));
+      /* Exactly the scale, not more. A face that stops short clamps the
+         heavier tokens in silence — JetBrains Mono stopped at 600 and every
+         --fw-bold figure drew semibold. A face reaching past it declares
+         weights nothing in src/ can ask for. */
+      const missing = scale.filter(w => !covers(w));
       if (missing.length) error(label, `no face draws --fw-* weight ${missing.join(", ")} — it would be clamped to a lighter one`);
       const top = Math.max(...own.map(f => f.weight.max));
-      if (ceilings[family] !== undefined && top !== ceiling) {
-        error(label, `faces reach ${top} but CEILING in scripts/check-fonts.js says ${ceiling} — change both deliberately`);
-      } else if (top > heaviest) {
-        error(label, `faces reach ${top}, past the heaviest --fw-* token (${heaviest})`);
-      }
+      const heaviest = Math.max(...scale);
+      if (top > heaviest) error(label, `faces reach ${top}, past the heaviest --fw-* token (${heaviest})`);
     }
 
     const undrawn = [];
@@ -237,7 +222,7 @@ function checkFonts({ fontDir = FONT_DIR, tokenCss = TOKEN_CSS, ceiling: ceiling
   return { findings, faces: faces.length, files: onDisk.length, families: familyNames, styles: groups.length };
 }
 
-module.exports = { checkFonts, parseFaces, parseTokens, parseUnicodeRange, REQUIRED, CEILING };
+module.exports = { checkFonts, parseFaces, parseTokens, parseUnicodeRange, REQUIRED };
 
 if (require.main === module) {
   const { findings, faces, files, families } = checkFonts();

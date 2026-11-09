@@ -190,9 +190,8 @@ html, body, #root {
 
 	/* The weight scale. Every font-weight in src/ is one of these (audit:ui
 	   enforces it), and every family in vendor/fonts/fonts.css draws each of
-	   them up to its ceiling (fonts:check enforces that). JetBrains Mono's
-	   ceiling is 600, so --fw-bold on a figure draws at 600: see fonts.css
-	   before raising it. There is no 800: no face here could draw it. */
+	   them and reaches no further (fonts:check enforces that). There is no
+	   800: no face here could draw it. */
 	--fw-reg:   400;
 	--fw-med:   500;
 	--fw-semi:  600;

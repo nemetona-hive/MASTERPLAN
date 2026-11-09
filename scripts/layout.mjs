@@ -65,7 +65,30 @@ const ratio = (a, b) => {
 };
 const over = (fg, bg, alpha) => fg.map((c, i) => c * alpha + bg[i] * (1 - alpha));
 
-const PAGES = ["home", "pattern-layout", "symmetric-layout", "concrete",
+/* Runs in the page. Every visible word under `scope` — text nodes and form
+   field values — whose computed font-family is not one of the three family
+   tokens as :root resolves them. Compared without quotes or spaces, since
+   the computed value re-quotes what the token wrote. */
+function offTheFaces(scope) {
+  const norm = v => v.replace(/["'\s]/g, "").toLowerCase();
+  const root = getComputedStyle(document.documentElement);
+  const faces = new Set(["--mono", "--sans", "--font-ui"].map(t => norm(root.getPropertyValue(t))));
+  const out = new Map();
+  const consider = (el, text) => {
+    if (!text.trim() || !el.getClientRects().length) return;
+    const cs = getComputedStyle(el);
+    if (cs.visibility === "hidden" || faces.has(norm(cs.fontFamily))) return;
+    const cls = String(el.getAttribute("class") || el.tagName.toLowerCase());
+    if (!out.has(cls)) out.set(cls, { cls, family: cs.fontFamily, text: text.trim().slice(0, 30) });
+  };
+  const base = document.querySelector(scope) || document.body;
+  const walker = document.createTreeWalker(base, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.parentElement) consider(n.parentElement, n.textContent);
+  for (const el of base.querySelectorAll("input, textarea, select")) consider(el, el.value || el.placeholder || "");
+  return [...out.values()];
+}
+
+const PAGES = ["home","pattern-layout", "symmetric-layout", "concrete",
   "pipe-wrap", "golden-ratio", "guider", "timesheet"];
 
 const THEMES = ["graphite", "verdant"];
@@ -167,6 +190,16 @@ async function run() {
       });
       if (!railOff.length) pass();
       else for (const one of railOff) fail("nav-off-its-step", one, `#${id}: .nav-btn ${one}`);
+
+      /* ── 3c. every word is in one of the three faces ───────────────────────
+       * audit:ui holds every font-family DECLARATION to a token, and cannot see
+       * a declaration that is missing. A form control is the case that bites:
+       * a <button> takes the browser's own font rather than body's, so the
+       * header theme toggle drew "Graphite" in Arial — a face never vendored —
+       * until 2026-11-09. Only the computed style knows. */
+      const offFace = await page.evaluate(offTheFaces, "#root");
+      if (!offFace.length) pass();
+      else for (const one of offFace) fail("text-off-the-faces", one.cls, `#${id}: ${one.cls} in ${one.family} — "${one.text}"`);
 
       /* ── 4. what a word was actually painted in ───────────────────────────
        * Walks real text nodes, composites the authored colour and every
@@ -302,6 +335,11 @@ async function run() {
     if (/rgb\(17, 17, 17\)/.test(printed.ink) && /rgb\(255, 255, 255\)/.test(printed.paper)) pass();
     else fail("print-not-ink-on-paper", "doc-sheet",
       `ink ${printed.ink} on ${printed.paper}`);
+
+    // The sheet is set in --sans, and nothing on it may leave the three faces.
+    const printOff = await page.evaluate(offTheFaces, ".doc-sheet");
+    if (!printOff.length) pass();
+    else for (const one of printOff) fail("text-off-the-faces", `print ${one.cls}`, `print: ${one.cls} in ${one.family} — "${one.text}"`);
     await page.emulateMedia({ media: "screen" });
 
     if (errors.length) {

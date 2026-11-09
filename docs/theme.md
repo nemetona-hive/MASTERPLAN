@@ -43,14 +43,15 @@ no font request off the machine:
 |---|---|---|
 | `--mono` | JetBrains Mono | **Data and controls**: inputs, field labels, data rows, results' small print, segmented controls, buttons, the SVG layout labels |
 | `--sans` | IBM Plex Sans | **Content**: the `body` face — page and card titles, result figures, the home wordmark, and **every printed document** (`.doc-sheet` sets it) |
-| `--font-ui` | Inter | **Chrome**: the nav labels, and nothing else today |
+| `--font-ui` | Inter | **Chrome**: the nav labels and the header's theme toggle |
 
 Text that sets no family inherits `--sans` from `body` — except a form control.
 A `<button>`, `<input>` or `<select>` takes the browser's own font unless a
 rule gives it one, and that font is Arial: a control that forgets to state a
-family draws in a face that was never vendored. No stylesheet check can see a
-declaration that is missing, which is why the inventory below is done in a
-browser.
+family draws in a face that was never vendored. The header's theme toggle did,
+until 2026-11-09. No stylesheet check can see a declaration that is missing, so
+`npm run layout` checks the computed face of every visible word on every page
+and on the printed sheet (`text-off-the-faces`).
 
 Every `font-family` in `src/` is one of the three tokens or `inherit`, with no
 literal fallback inside the `var()`, and every `font-weight` is a `--fw-*`
@@ -72,12 +73,15 @@ bold parent.
 not generated — but `build-version.js` hashes it and every woff2 beside it, so
 a font-only deploy moves the build id.
 
-- **Two subsets per family**, split as Google Fonts splits them: `latin` and
-  `latin-ext`. The browser fetches latin-ext only when a page draws one of its
-  letters. It is not optional — Estonian names carry š and ž, and before
-  latin-ext was vendored those two letters were drawn by a system face between
-  letters of JetBrains Mono in a room-name field, and on the take-off it
-  printed.
+- **Three subsets per family**, split as Google Fonts splits them: `latin`,
+  `latin-ext` and `greek`. The browser fetches a subset only when a page draws
+  one of its letters. latin-ext is not optional — Estonian names carry š and ž,
+  and before it was vendored those two letters were drawn by a system face
+  between letters of JetBrains Mono in a room-name field, and on the take-off
+  it printed. greek carries `φ` ("Golden Ratio φ"), `π` (pipe wrap) and `α`
+  (downpipe guider). Because the φ is in the nav, Inter's greek file (8 KB)
+  loads on every page; Plex's (19.5 KB) on Home, JetBrains Mono's (9 KB) on the
+  three pages that draw Greek in mono.
 - **Plex and JetBrains Mono are variable fonts**, so each subset is **one**
   face with a weight range (`font-weight: 400 700`), never one face per weight.
   They used to be declared per weight over byte-identical copies, and a
@@ -89,16 +93,20 @@ a font-only deploy moves the build id.
   file comes from fonts.gstatic.com (2.211; Google trims the axis to 400–800 and
   drops HVAR, 9 KB lighter than @fontsource's); every other file is @fontsource
   5.3.0 (Plex 3.201, JetBrains Mono 2.211, Inter 4.001). The OFL licence for
-  each family sits beside its files. MONEYFLOW ships the same bytes.
-- **No italic face.** One surface sets italic — the cut list's Gap chip, in
-  print — and Chrome slants the upright Plex for it.
+  each family sits beside its files. The latin and latin-ext files are the same
+  bytes MONEYFLOW ships; MONEYFLOW has no greek.
+- **No italic face, on purpose.** One surface sets italic — the cut list's Gap
+  chip, in print — and Chrome slants the upright Plex for it. A real Plex
+  italic was sketched on 2026-11-09 and declined: 50 KB for one word, and the
+  sheet calls `window.print()` one frame after it mounts, so a file fetched on
+  demand could miss the printout and fall back to the slant anyway.
 
-**JetBrains Mono stops at 600.** Its files reach 800, but its faces are
-declared 400–600, so every `--fw-bold` figure draws semibold — the weight the
-figures were tuned against. Measured in Chromium (canvas ink per weight): 600
-and 700 draw the same pixels. Raising it is a visible change to every bold
-figure; it is written down twice on purpose, in `fonts.css` and in `CEILING`
-in `scripts/check-fonts.js`, and the check fails if the two disagree.
+**Every family draws exactly the weight scale, 400–700.** JetBrains Mono's
+faces used to stop at 600, so every `--fw-bold` figure drew semibold without
+anything saying so — measured in Chromium, 600 and 700 drew the same ink. It
+was raised to 700 on 2026-11-09 after a side-by-side sketch; the file reaches
+800, but no token asks for it. Mono advance widths are the same at every
+weight, so no column moved, and print is set in Plex, so no printed sheet did.
 
 **Why the files are not subset here**, the way `build-icons.js` subsets Font
 Awesome. Measured with `subset-font` on 2026-11-09: re-subsetting a file to
@@ -110,16 +118,13 @@ only when a page draws š or ž. A few KB does not buy a generated step, a
 committed output for `pre-push` to police, and bytes that move when harfbuzz
 does. Google's split stays.
 
-**What falls back to a system face, by design.** No latin or latin-ext subset
-of these faces carries them:
+**What falls back to a system face, by design.** No Google subset of these
+faces carries them:
 
 - arrows and symbols: `→` (cut-list headers and rows, the Guider), `↔` (the
   Guider), `≈` (gypsum skim rate), `✓` (the step marker), `◇` (theme fallback
-  icon), `⅓ ⅔` (pattern names);
-- Greek: `φ` ("Golden Ratio φ" in the nav and on its home card), `π` (pipe
-  wrap), `α` (downpipe guider). A greek subset exists for all three families;
-  vendoring it would change how those letters look, so it is a design decision,
-  not a gap;
+  icon), `⅓ ⅔` (pattern names). Drawing them in-face would mean subsetting the
+  full upstream fonts, the step weighed and declined above;
 - the theme icons, which are emoji.
 
 **The inventory.** Done in Chromium through `npm run layout`'s static server:
@@ -128,23 +133,23 @@ three printed documents under print media, with the family, weight and style
 the cascade computed and the fonts DevTools reports actually drawing each node
 (`CSS.getPlatformFontsForNode`). That is how the Arial button, the clamped mono
 bold and the fallbacks above were found; the stylesheets show none of them.
+`text-off-the-faces` in `npm run layout` keeps the first of those from coming
+back.
 
 `npm run fonts:check` (in `verify`, and through `tests/check-fonts.test.js` in
 pre-commit, which triggers on `vendor/fonts`) reads the woff2 binaries with
 `scripts/woff2.js` and holds `fonts.css` to them: every file exists and is
 used, no two files are identical, each face's family and weight are ones its
 file can draw, every subset of a family offers the same weights, every `--fw-*`
-weight has an upright face up to the family's ceiling and no face reaches past
-it, and a fixed set of required letters (ASCII, õ ä ö ü š ž, € – — … the
-quotes, and the × ° Ø ± ¼ ² ³ the documents print) is drawn by each family
-itself.
+weight has an upright face and no face reaches past the heaviest, and a fixed
+set of required letters (ASCII, õ ä ö ü š ž, € – — … the quotes, the
+× ° Ø ± ¼ ² ³ the documents print, and α φ π) is drawn by each family itself.
 
 **To add a weight or a family:** copy the subset files from the `@fontsource` /
 `@fontsource-variable` package of the **same font version** (check the md5 of
 the latin file you already have against the package's), declare them in
 `fonts.css` with the package's `unicode-range`, and run `npm run fonts:check`.
-A new token weight also needs every family to draw it, or a `CEILING` entry
-saying why not.
+A new token weight needs every family to draw it.
 
 ## Browser autofill
 

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
-const { checkFonts, parseFaces, parseUnicodeRange, CEILING } = require("../scripts/check-fonts.js");
+const { checkFonts, parseFaces, parseUnicodeRange } = require("../scripts/check-fonts.js");
 const { describeFont } = require("../scripts/woff2.js");
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -26,7 +26,7 @@ describe("describeFont", () => {
   });
 
   it("reads Google's trimmed JetBrains Mono axis", () => {
-    // fonts.gstatic.com cuts the axis to 400–800; the ceiling is a declaration.
+    // fonts.gstatic.com cuts the axis to 400–800; faces declare 400–700.
     expect(describeFont(path.join(VENDOR, "jetbrainsmono-latin-wght.woff2")).weight).toEqual({ min: 400, max: 800 });
   });
 
@@ -72,9 +72,9 @@ describe("checkFonts", () => {
     const copy = file => fs.copyFileSync(path.join(VENDOR, file), path.join(dir, file));
     const face = (family, weight, file, extra = "") =>
       `@font-face { font-family: '${family}'; font-weight: ${weight}; src: url(${file}); ${extra} }\n`;
-    const run = (css, ceiling = CEILING) => {
+    const run = css => {
       fs.writeFileSync(path.join(dir, "fonts.css"), css);
-      return checkFonts({ fontDir: dir, tokenCss: TOKENS, ceiling }).findings.map(f => `${f.where}: ${f.message}`).join("\n");
+      return checkFonts({ fontDir: dir, tokenCss: TOKENS }).findings.map(f => `${f.where}: ${f.message}`).join("\n");
     };
 
     beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), "mp-fonts-")); });
@@ -98,6 +98,11 @@ describe("checkFonts", () => {
       expect(run(face("IBM Plex Sans", 400, "inter-latin-400.woff2"))).toMatch(/the file is "Inter"/);
     });
 
+    it("catches a missing greek subset as an undrawn φ", () => {
+      copy("inter-latin-400.woff2");
+      expect(run(face("Inter", 400, "inter-latin-400.woff2"))).toMatch(/no face draws .*"φ"/);
+    });
+
     it("catches a missing latin-ext subset as undrawn letters", () => {
       copy("ibmplexsans-latin-wght.woff2");
       expect(run(face("IBM Plex Sans", "400 700", "ibmplexsans-latin-wght.woff2"))).toMatch(/no face draws "š"/);
@@ -118,21 +123,14 @@ describe("checkFonts", () => {
     });
 
     it("catches a face that stops short of the weight scale", () => {
-      copy("ibmplexsans-latin-ext-wght.woff2");
-      expect(run(face("IBM Plex Sans", "400 600", "ibmplexsans-latin-ext-wght.woff2"))).toMatch(/no face draws --fw-\* weight 700/);
+      // JetBrains Mono at 400 600 is how every --fw-bold figure drew semibold.
+      copy("jetbrainsmono-latin-ext-wght.woff2");
+      expect(run(face("JetBrains Mono", "400 600", "jetbrainsmono-latin-ext-wght.woff2"))).toMatch(/no face draws --fw-\* weight 700/);
     });
 
     it("catches a face reaching past the weight scale", () => {
       copy("jetbrainsmono-latin-ext-wght.woff2"); // its axis reaches 800
-      expect(run(face("JetBrains Mono", "400 800", "jetbrainsmono-latin-ext-wght.woff2"), {})).toMatch(/past the heaviest/);
-    });
-
-    it("holds a declared ceiling both ways", () => {
-      copy("jetbrainsmono-latin-ext-wght.woff2");
-      const at = w => run(face("JetBrains Mono", `400 ${w}`, "jetbrainsmono-latin-ext-wght.woff2"), { "JetBrains Mono": 600 });
-      expect(at(600)).not.toMatch(/CEILING|--fw-\* weight/);
-      expect(at(700)).toMatch(/CEILING in scripts\/check-fonts\.js says 600/);
-      expect(at(500)).toMatch(/no face draws --fw-\* weight 600/);
+      expect(run(face("JetBrains Mono", "400 800", "jetbrainsmono-latin-ext-wght.woff2"))).toMatch(/past the heaviest/);
     });
   });
 });
