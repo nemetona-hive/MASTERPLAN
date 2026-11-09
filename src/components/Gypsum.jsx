@@ -15,15 +15,14 @@ const KEY = name => `Gypsum.jsx:${name}`;
 /* Every product field, across the board, filler and adhesive libraries. */
 const PRODUCT_FIELDS = Object.values(LIBRARIES).flatMap(libraryFields);
 /* The fields that describe the surface itself, by mode. A room added from
-   another keeps everything else — board, fixing, filler, waste — and starts
+   another keeps everything else — board, fixing, filler — and starts
    these empty, since two rooms are rarely one size but are usually one order. */
 const DIMS = { room: ["lenMm", "widMm", "heightMm"], wall: ["wallW", "wallH"] };
 const SURFACE_FIELDS = [...DIMS.room, ...DIMS.wall];
 
-/* Fields that begin empty, and those that begin at a sensible value. Opening
-   sizes are standard enough to prefill; job dimensions never are. */
+/* Fields that begin empty. Opening sizes are standard enough to prefill (below);
+   job dimensions never are. */
 const EMPTY = [...SURFACE_FIELDS, "skimMm", "firstOffset", "firstRow", ...PRODUCT_FIELDS];
-const PREFILLED = { waste: "5" };
 /* A new opening starts at a common size; its position starts empty, and an
    opening with no position still comes off the area — it is just not drawn. */
 const NEW_OPENING = {
@@ -41,7 +40,7 @@ const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", 
 /* Which preset each library has applied: per room (see usePresetLibrary). */
 const ACTIVE = Object.values(LIBRARIES).map(lib => lib.activeKey);
 
-const blankJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), ...PREFILLED, openings: [] });
+const blankJob = () => ({ ...Object.fromEntries(EMPTY.map(name => [name, ""])), openings: [] });
 export const newRoom = (id, mode = "room") =>
   ({ id, name: "", ...SETTINGS, mode, job: blankJob(), ...Object.fromEntries(ACTIVE.map(key => [key, null])) });
 export const roomFrom = (source, id, mode) => ({
@@ -70,6 +69,14 @@ function legacyRoom(drafts) {
   if (drafts.has(KEY("job"))) room.job = { ...blankJob(), ...drafts.get(KEY("job")) };
   return room;
 }
+/* Waste is the job's, one figure for every room, and starts at none. It was a
+   room's own field (prefilled 5) before; a project saved then opens with the
+   first room's value, so its figures do not change on opening. A room's old
+   `job.waste` is left in place and never read: the job's figure overrides it. */
+const legacyWaste = list => {
+  const held = list.find(r => r.job.waste !== undefined && r.job.waste !== "");
+  return held ? held.job.waste : "0";
+};
 const validRooms = list => Array.isArray(list) && list.length > 0 && list.every(r => r && r.job);
 const presetName = (presets, idx) => (idx !== null && idx !== undefined ? presets[idx]?.name || "" : "");
 
@@ -77,7 +84,7 @@ const presetName = (presets, idx) => (idx !== null && idx !== undefined ? preset
 
 /* The job's rooms and walls. The list shows once there is a second entry;
    until then the card is the name and the ways to add one. */
-function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onMove, onDelete, deleteArmed, disarmDelete, fold }) {
+function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onMove, onDelete, deleteArmed, disarmDelete, waste, onWaste, fold }) {
   const name = entries[roomIndex].name;
   return (
     <ControlPanel id="control-gyp-rooms" title="Rooms" className="form-section-card" {...fold("control-gyp-rooms")}>
@@ -121,6 +128,9 @@ function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd
             </button>
           )}
         </div>
+        {/* The job's, not the room's: one figure added to every room. */}
+        <NumInput id="input-gyp-waste" label={rooms.length > 1 ? "Waste, all rooms (%)" : "Waste (%)"}
+          value={waste} min={0} max={100} onChange={onWaste} />
       </Stack>
     </ControlPanel>
   );
@@ -388,6 +398,7 @@ export function SheetGypsum({ projectName = "" }) {
   const [currentId, setCurrentId] = useSessionState(KEY("room"), null);
   const room = rooms.find(r => r.id === currentId) || rooms[0];
   const roomIndex = rooms.indexOf(room);
+  const [waste, setWaste] = useSessionState(KEY("waste"), () => legacyWaste(rooms));
 
   const updateRoom = (id, change) => setRooms(current =>
     (validRooms(current) ? current : rooms).map(r => (r.id === id ? { ...r, ...change(r) } : r)));
@@ -456,6 +467,8 @@ export function SheetGypsum({ projectName = "" }) {
     if (!resetArmed) { armReset(true); return; }
     disarmReset();
     updateRoom(room.id, r => ({ ...newRoom(r.id), name: r.name }));
+    /* Waste is the job's: only the reset of a job of one room is global. */
+    if (rooms.length === 1) setWaste("0");
     setView3d(false);
   };
 
@@ -500,12 +513,12 @@ export function SheetGypsum({ projectName = "" }) {
      lists: an edit replaces only its own room's object, so typing in one room
      does not lay every other room out again. */
   const cache = React.useRef(new WeakMap());
-  const lists = [board.presets, filler.presets, adhesive.presets];
+  const lists = [board.presets, filler.presets, adhesive.presets, waste];
   const takeOffOf = r => {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded, offcutsPerSurface: r.offcutsPerSurface,
+      ...r.job, waste, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded, offcutsPerSurface: r.offcutsPerSurface,
       excludedWalls: r.excludedWalls,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
@@ -529,7 +542,7 @@ export function SheetGypsum({ projectName = "" }) {
     const frame = requestAnimationFrame(() => window.print());
     return () => cancelAnimationFrame(frame);
   }, [printing]);
-  React.useEffect(() => { setPrinting(null); }, [storedRooms, room.id, board.presets, filler.presets, adhesive.presets]);
+  React.useEffect(() => { setPrinting(null); }, [storedRooms, room.id, board.presets, filler.presets, adhesive.presets, waste]);
 
   const hasAnyInput = [...DIMS[mode === "wall" ? "wall" : "room"], ...PRODUCT_FIELDS].some(name => val(name) !== "");
   const req = name => hasAnyInput && val(name) === "";
@@ -559,7 +572,7 @@ export function SheetGypsum({ projectName = "" }) {
         <RoomsPanel rooms={rooms} entries={entries} room={room} roomIndex={roomIndex}
           onSelect={selectRoom} onRename={name => updateRoom(room.id, () => ({ name }))}
           onAdd={addRoom} onDuplicate={duplicateRoom} onMove={moveRoom} onDelete={deleteRoom}
-          deleteArmed={deleteArmed} disarmDelete={disarmDelete} fold={fold} />
+          deleteArmed={deleteArmed} disarmDelete={disarmDelete} waste={waste} onWaste={setWaste} fold={fold} />
 
         {/* Keyed by the room, so switching remounts the fields: each reads the
             new room's values, and field undo cannot carry one room's typing
@@ -649,10 +662,7 @@ export function SheetGypsum({ projectName = "" }) {
             {/* Glued walls take no screws; a boarded ceiling still does. */}
             {(!glued || (mode === "room" && ceiling)) &&
               productNum(board, "screwRate", glued ? "Ceiling screws (pcs/m²)" : "Screws (pcs/m²)")}
-            <div className="pw-grid-2col">
-              {productNum(board, "sheetPrice", "Sheet price (€)")}
-              {num("waste", "Waste (%)", { max: 100 })}
-            </div>
+            {productNum(board, "sheetPrice", "Sheet price (€)")}
             <ManagePresetsButton library={board} />
           </Stack>
         </ControlPanel>

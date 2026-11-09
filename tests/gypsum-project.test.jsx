@@ -94,10 +94,10 @@ describe("rooms and walls", () => {
 
   it("starts an added room with the materials of the one it came from, not its size", () => {
     const source = { ...newRoom(1), fixing: "glue", activePreset: 1,
-      job: { ...newRoom(1).job, lenMm: "4000", sheetW: "1200", waste: "10", openings: [{ id: 1, kind: "door" }] } };
+      job: { ...newRoom(1).job, lenMm: "4000", sheetW: "1200", screwRate: "18", openings: [{ id: 1, kind: "door" }] } };
     const added = roomFrom(source, 2, "wall");
     expect(added).toMatchObject({ id: 2, mode: "wall", fixing: "glue", activePreset: 1, name: "" });
-    expect(added.job).toMatchObject({ lenMm: "", sheetW: "1200", waste: "10", openings: [] });
+    expect(added.job).toMatchObject({ lenMm: "", sheetW: "1200", screwRate: "18", openings: [] });
   });
 });
 
@@ -202,6 +202,35 @@ describe("the gypsum page's rooms", () => {
     expect(order()).toEqual(["Wall 1", "Room 1", "Kitchen"]);
     expect(screen.getByText("All Rooms").closest(".section").textContent.indexOf("Room 1"))
       .toBeLessThan(screen.getByText("All Rooms").closest(".section").textContent.indexOf("Kitchen"));
+  });
+
+  it("adds one waste figure to every room, starting at none", () => {
+    render(<SheetGypsum />);
+    fillRoom(4000);
+    const waste = () => document.getElementById("input-gyp-waste");
+    expect(waste().value).toBe("0");
+    expect(document.querySelector(".gyp-result-wrap .result-card-note").textContent).toContain("+0% waste");
+    fireEvent.click(screen.getByText("Duplicate"));
+    expect(screen.getByText("Waste, all rooms (%)")).toBeTruthy();
+    type("input-gyp-waste", 10);
+    expect(document.querySelector(".gyp-result-wrap .result-card-note").textContent).toContain("+10% waste");
+    fireEvent.click(screen.getByRole("button", { name: /^Room 1/ }));
+    expect(waste().value).toBe("10");
+    expect(document.querySelector(".gyp-result-wrap .result-card-note").textContent).toContain("+10% waste");
+    // Resetting one room of several leaves the job's waste alone.
+    fireEvent.click(screen.getByText("Reset Room"));
+    fireEvent.click(screen.getByText("Confirm reset?"));
+    expect(waste().value).toBe("10");
+  });
+
+  it("opens a project saved with waste per room at its first room's figure", () => {
+    const drafts = new DraftStore();
+    drafts.set("Gypsum.jsx:rooms", [
+      { ...newRoom(1), job: { ...newRoom(1).job, waste: "" } },
+      { ...newRoom(2), job: { ...newRoom(2).job, waste: "7" } }
+    ]);
+    render(withDrafts(drafts, <SheetGypsum />));
+    expect(document.getElementById("input-gyp-waste").value).toBe("7");
   });
 
   it("keeps the applied preset per room", () => {

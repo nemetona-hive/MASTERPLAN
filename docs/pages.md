@@ -130,7 +130,8 @@ a second layer. All figures, and the diagrams, come from
   they are the project's catalogue, so `usePresetLibrary` takes `active` and
   `setActive` from the page instead of storing them itself.
   - The Rooms card: the list (once there are two), the name, `+ Room`,
-    `+ Wall`, Duplicate, Delete (two clicks, never the last one). An unnamed
+    `+ Wall`, Duplicate, Move up / down, Delete (two clicks, never the last
+    one), and the job's waste. An unnamed
     entry is called "Room 2" or "Wall 1" (`roomLabel`), worked out, not
     stored, so switching an entry's mode renames it. An added entry keeps the
     materials of the one on screen and starts its size and openings empty
@@ -271,8 +272,16 @@ a second layer. All figures, and the diagrams, come from
   → 14). Taking the fewer means no count rose. Pieces keep their length
   along the board; no kerf is allowed for, so an exact half is a clean cut.
   Waste % goes on
-  top for breakage, not cutting, so it defaults to **5**, not the reference
-  site's 10 (that 10 stood in for cutting it did not model).
+  top for breakage, not cutting, so it defaults to **0**: the layout already
+  counts every cut, and the reference site's 10 stood in for cutting it did not
+  model. It was 5 until the user set 0 as the default (2026-11-09).
+- **Waste is the job's, not a room's** (`Gypsum.jsx:waste`, a field in the
+  Rooms card, "Waste, all rooms (%)" once there are two). One figure goes on
+  every room's take-off, so it is set once for the project rather than room by
+  room; the user asked for it that way. It was each room's `job.waste`, and a
+  project saved then opens at its first room's figure (`legacyWaste`), so its
+  sheets do not change on opening. Reset Room leaves it; the Global Reset of a
+  job of one room sets it back to 0.
 - **Cut pieces: Reuse offcuts / Full board each** (per room, `fullBoards`).
   Full board each buys a whole board for every piece in the layout, the cut
   first and last ones included: no offcut reuse, no doubling up of strips
