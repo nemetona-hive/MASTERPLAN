@@ -86,6 +86,13 @@ compose it with a base that carries a height or with `.ctl-sm`. With only a
 tier class the width falls back to 32px and the height to the glyph — a 32×19
 pill, not a square.
 
+**A disabled `.ctrl-dir` is dimmed with `opacity` and takes no hover or
+press** (`40-control.css`) — the one place opacity dims a control, for the
+reason `docs/theme.md` gives under the header pair. It is for an option that
+exists but cannot apply right now: a list's move arrows at its ends, a
+`SegGroup` option given a reason in `disabled` (Gypsum's Trim first). Disable
+rather than hide when hiding would shift the controls beside it.
+
 `.ctrl-dir`'s `flex: 1` assumes a row (`.seg-group`, or a `Stack
 direction="row"`) — it lets siblings share the width axis and leaves height
 alone. Stood in a plain column `Stack` instead, `flex: 1`'s `flex-basis: 0%`
