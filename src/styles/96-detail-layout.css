@@ -393,6 +393,12 @@
 	flex-wrap: wrap;
 	gap: var(--sp-2);
 }
+/* Move up / down: squared off the row's lg step, and kept square rather than
+   sharing the width as the worded .ctrl-dir buttons do (flex: 1). */
+.gyp-room-actions > .ctl-icon {
+	--ctl-h: var(--ctl-h-lg);
+	flex: none;
+}
 /* The line between the rooms' own counts and the project's totals. */
 .gyp-total-rule {
 	height: 1px;
@@ -687,7 +693,9 @@
 }
 .project-bar-name.is-none { color: var(--text-muted); font-weight: var(--fw-reg); }
 .project-bar-name.is-error { color: var(--danger); }
-.project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
+/* Wider than the base .mp-modal cap (680px): project names are addresses, and
+   at 34rem a two-part one wrapped beside its date and actions. */
+.project-modal { width: min(52rem, calc(100vw - 2 * var(--sp-4))); max-width: none; }
 .project-lbl {
 	display: block;
 	margin-bottom: var(--sp-1);

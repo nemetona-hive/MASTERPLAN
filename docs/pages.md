@@ -136,6 +136,11 @@ a second layer. All figures, and the diagrams, come from
     materials of the one on screen and starts its size and openings empty
     (`roomFrom`): rooms are rarely one size and usually one order. Duplicate
     copies everything.
+  - Move up / Move down (once there are two) swap the room on screen with its
+    neighbour, and it stays on screen; at either end its arrow is disabled, not
+    hidden, so the pair keeps its place in the row. The list's order is the
+    All Rooms list's and the printed project sheet's. An unnamed entry's
+    number is its place among its kind, so moving one renumbers it.
   - The field cards are keyed by the room, so switching remounts them. Each
     field reads the new room's value, and field undo cannot carry one room's
     typing into another.

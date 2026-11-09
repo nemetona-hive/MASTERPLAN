@@ -221,7 +221,16 @@
 	}
 }
 
-.seg-group .ctrl-dir.on {
+.seg-group /* A list's move arrows at its ends (Gypsum's rooms). Dimmed with opacity, the
+   one place that is right (docs/theme.md): a disabled control is meant to fall
+   below the contrast a live one owes. No hover and no press, so it does not
+   offer what it will not do. */
+.ctrl-dir:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ctrl-dir.on {
   background: var(--btn-active-bg);
   color: var(--btn-active-fg);
   font-weight: var(--fw-med);
@@ -259,7 +268,7 @@
 }
 
 @media (hover: hover) {
-	.ctrl-dir:hover:not(.on) {
+	.ctrl-dir:hover:not(.on):not(:disabled) {
 	  background: var(--ctl-hover-bg);
 	  box-shadow: var(--ctl-hover);
 	  color: var(--text);

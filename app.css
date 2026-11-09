@@ -1473,7 +1473,13 @@ select:-webkit-autofill {
 	}
 }
 
-.seg-group .ctrl-dir.on {
+.seg-group
+.ctrl-dir:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ctrl-dir.on {
   background: var(--btn-active-bg);
   color: var(--btn-active-fg);
   font-weight: var(--fw-med);
@@ -1501,7 +1507,7 @@ select:-webkit-autofill {
 }
 
 @media (hover: hover) {
-	.ctrl-dir:hover:not(.on) {
+	.ctrl-dir:hover:not(.on):not(:disabled) {
 	  background: var(--ctl-hover-bg);
 	  box-shadow: var(--ctl-hover);
 	  color: var(--text);
@@ -4379,6 +4385,11 @@ input[type="range"]:focus-visible {
 	gap: var(--sp-2);
 }
 
+.gyp-room-actions > .ctl-icon {
+	--ctl-h: var(--ctl-h-lg);
+	flex: none;
+}
+
 .gyp-total-rule {
 	height: 1px;
 	margin: var(--sp-2) 0;
@@ -4647,7 +4658,8 @@ input[type="range"]:focus-visible {
 }
 .project-bar-name.is-none { color: var(--text-muted); font-weight: var(--fw-reg); }
 .project-bar-name.is-error { color: var(--danger); }
-.project-modal { width: min(34rem, calc(100vw - 2 * var(--sp-4))); }
+
+.project-modal { width: min(52rem, calc(100vw - 2 * var(--sp-4))); max-width: none; }
 .project-lbl {
 	display: block;
 	margin-bottom: var(--sp-1);

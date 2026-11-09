@@ -77,7 +77,7 @@ const presetName = (presets, idx) => (idx !== null && idx !== undefined ? preset
 
 /* The job's rooms and walls. The list shows once there is a second entry;
    until then the card is the name and the ways to add one. */
-function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onDelete, deleteArmed, disarmDelete, fold }) {
+function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd, onDuplicate, onMove, onDelete, deleteArmed, disarmDelete, fold }) {
   const name = entries[roomIndex].name;
   return (
     <ControlPanel id="control-gyp-rooms" title="Rooms" className="form-section-card" {...fold("control-gyp-rooms")}>
@@ -103,6 +103,16 @@ function RoomsPanel({ rooms, entries, room, roomIndex, onSelect, onRename, onAdd
           <button type="button" className="ctrl-dir" onClick={() => onAdd("room")}><Icon name="plus" /> Room</button>
           <button type="button" className="ctrl-dir" onClick={() => onAdd("wall")}><Icon name="plus" /> Wall</button>
           <button type="button" className="ctrl-dir" onClick={onDuplicate} aria-label={`Duplicate ${name}`}>Duplicate</button>
+          {/* Disabled at the ends rather than hidden, so the pair keeps its
+              place in the row whichever room is on screen. */}
+          {rooms.length > 1 && (
+            <>
+              <button type="button" className="ctrl-dir ctl-icon" onClick={() => onMove(-1)} disabled={roomIndex === 0}
+                aria-label={`Move ${name} up`} title="Move up"><Icon name="arrow-up" /></button>
+              <button type="button" className="ctrl-dir ctl-icon" onClick={() => onMove(1)} disabled={roomIndex === rooms.length - 1}
+                aria-label={`Move ${name} down`} title="Move down"><Icon name="arrow-down" /></button>
+            </>
+          )}
           {rooms.length > 1 && (
             <button type="button" className={"ctrl-dir ctl-danger" + (deleteArmed ? " is-armed" : "")}
               onClick={onDelete} onBlur={disarmDelete}
@@ -466,6 +476,18 @@ export function SheetGypsum({ projectName = "" }) {
     setRooms(rest);
     setCurrentId(rest[Math.min(roomIndex, rest.length - 1)].id);
   };
+  /* A swap with the neighbour: the room on screen moves and stays on screen.
+     The order is the All Rooms list's and the printed sheet's, and an unnamed
+     entry's number is its place, so "Room 2" moved up becomes "Room 1". */
+  const moveRoom = delta => {
+    const to = roomIndex + delta;
+    if (to < 0 || to >= rooms.length) return;
+    disarmDelete();
+    const next = [...rooms];
+    next[roomIndex] = rooms[to];
+    next[to] = room;
+    setRooms(next);
+  };
   const selectRoom = id => { disarmDelete(); setCurrentId(id); };
 
   /* A hand edit of a product field means the values are no longer the
@@ -536,7 +558,7 @@ export function SheetGypsum({ projectName = "" }) {
         <ProjectSection />
         <RoomsPanel rooms={rooms} entries={entries} room={room} roomIndex={roomIndex}
           onSelect={selectRoom} onRename={name => updateRoom(room.id, () => ({ name }))}
-          onAdd={addRoom} onDuplicate={duplicateRoom} onDelete={deleteRoom}
+          onAdd={addRoom} onDuplicate={duplicateRoom} onMove={moveRoom} onDelete={deleteRoom}
           deleteArmed={deleteArmed} disarmDelete={disarmDelete} fold={fold} />
 
         {/* Keyed by the room, so switching remounts the fields: each reads the

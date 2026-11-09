@@ -62,7 +62,10 @@ const ICONS = {
   "unlock": "fa-solid fa-lock-open",
   // Dimension arrows
   "arrow-h": "fa-solid fa-arrows-left-right",
-  "arrow-v": "fa-solid fa-arrows-up-down"
+  "arrow-v": "fa-solid fa-arrows-up-down",
+  // Reorder (Gypsum rooms)
+  "arrow-up": "fa-solid fa-arrow-up",
+  "arrow-down": "fa-solid fa-arrow-down"
 };
 
 const PAL_CLASSES = {

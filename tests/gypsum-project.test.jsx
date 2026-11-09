@@ -180,6 +180,30 @@ describe("the gypsum page's rooms", () => {
     expect(document.getElementById("input-gyp-room-name").value).toBe("Kitchen");
   });
 
+  it("moves the room on screen up and down the list, and keeps it on screen", () => {
+    render(<SheetGypsum />);
+    fireEvent.change(document.getElementById("input-gyp-room-name"), { target: { value: "Kitchen" } });
+    expect(screen.queryByRole("button", { name: "Move Kitchen up" })).toBe(null);
+    fireEvent.click(screen.getByText("Room", { selector: "#control-gyp-rooms button" }));
+    fireEvent.click(screen.getByText("Wall", { selector: "#control-gyp-rooms button" }));
+    const order = () => [...screen.getByRole("group", { name: "Rooms and walls" }).querySelectorAll(".gyp-room-name")]
+      .map(el => el.textContent);
+    expect(order()).toEqual(["Kitchen", "Room 2", "Wall 1"]);
+    // The last entry cannot go further down.
+    expect(screen.getByRole("button", { name: "Move Wall 1 down" }).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Move Wall 1 up" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move Wall 1 up" }));
+    expect(order()).toEqual(["Wall 1", "Kitchen", "Room 2"]);
+    expect(screen.getByRole("button", { name: "Move Wall 1 up" }).disabled).toBe(true);
+    expect(document.getElementById("input-gyp-wallW")).toBeTruthy();
+    // An unnamed room's number is its place among rooms, so it follows the move.
+    fireEvent.click(screen.getByRole("button", { name: /^Room 2/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Move Room 2 up" }));
+    expect(order()).toEqual(["Wall 1", "Room 1", "Kitchen"]);
+    expect(screen.getByText("All Rooms").closest(".section").textContent.indexOf("Room 1"))
+      .toBeLessThan(screen.getByText("All Rooms").closest(".section").textContent.indexOf("Kitchen"));
+  });
+
   it("keeps the applied preset per room", () => {
     render(<SheetGypsum />);
     fireEvent.click(screen.getAllByTitle("Presets")[0]);
