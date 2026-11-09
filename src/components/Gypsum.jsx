@@ -31,7 +31,12 @@ const NEW_OPENING = {
 };
 
 /* A room or wall's own settings, beside its `job` of typed fields. */
-const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", fullStart: true, offcutsPerSurface: false,
+const SETTINGS = { mode: "room", ceiling: false, orientation: "V", layers: "1", fixing: "screw", fullBoards: false, rowStart: "top", trimFirst: false, offcutsPerSurface: false,
+  /* Wall start. Stored as `trimFirst`, not the model's `fullStart`: rooms
+     saved while Trim first was the default hold `fullStart: false` whether or
+     not anyone chose it, and have no `trimFirst`, so they open on Full panel
+     like a new room (the user's call, 2026-11-09). Their `fullStart` is never
+     read. */
   /* Room walls left out of the job, by letter: none to start. */
   excludedWalls: [],
   /* Rows left out of the job: surface id → { key, lanes }, `key` being the
@@ -46,7 +51,7 @@ export const newRoom = (id, mode = "room") =>
 export const roomFrom = (source, id, mode) => ({
   ...newRoom(id, mode),
   orientation: source.orientation, layers: source.layers, fixing: source.fixing, fullBoards: Boolean(source.fullBoards),
-  rowStart: source.rowStart === "bottom" ? "bottom" : "top", fullStart: Boolean(source.fullStart),
+  rowStart: source.rowStart === "bottom" ? "bottom" : "top", trimFirst: Boolean(source.trimFirst),
   offcutsPerSurface: Boolean(source.offcutsPerSurface),
   ...Object.fromEntries(ACTIVE.map(key => [key, source[key] ?? null])),
   job: { ...source.job, ...Object.fromEntries(SURFACE_FIELDS.map(name => [name, ""])), openings: [] }
@@ -410,7 +415,7 @@ export function SheetGypsum({ projectName = "" }) {
   const [fixing, setFixing] = roomState("fixing");          // "screw" | "glue"
   const [fullBoards, setFullBoards] = roomState("fullBoards");
   const [rowStart, setRowStart] = roomState("rowStart");
-  const [fullStart, setFullStart] = roomState("fullStart");
+  const [trimFirst, setTrimFirst] = roomState("trimFirst");
   const [offcutsPerSurface, setOffcutsPerSurface] = roomState("offcutsPerSurface");
   const [excludedWalls, setExcludedWalls] = roomState("excludedWalls");
   const toggleWall = letter => setExcludedWalls(current => {
@@ -514,7 +519,7 @@ export function SheetGypsum({ projectName = "" }) {
     const hit = cache.current.get(r);
     if (hit && hit.lists.every((list, i) => list === lists[i])) return hit.takeOff;
     const takeOff = buildGypsumTakeOff({
-      ...r.job, waste, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: r.fullStart, excluded: r.excluded, offcutsPerSurface: r.offcutsPerSurface,
+      ...r.job, waste, mode: r.mode, ceiling: r.ceiling, orientation: r.orientation, layers: r.layers, fixing: r.fixing, fullBoards: r.fullBoards, rowStart: r.rowStart, fullStart: !r.trimFirst, excluded: r.excluded, offcutsPerSurface: r.offcutsPerSurface,
       excludedWalls: r.excludedWalls,
       product: presetName(board.presets, r.activePreset),
       fillerProduct: presetName(filler.presets, r.activeFiller),
@@ -634,8 +639,8 @@ export function SheetGypsum({ projectName = "" }) {
                  first board could give it: only then is there a choice, so
                  only then is Trim first offered. A room that chose it keeps
                  the choice for when it applies again. */
-              <SegGroup label="Wall start" value={fullStart || !takeOff.trimApplies ? "full" : "trim"}
-                onChange={v => setFullStart(v === "full")}
+              <SegGroup label="Wall start" value={trimFirst && takeOff.trimApplies ? "trim" : "full"}
+                onChange={v => setTrimFirst(v === "trim")}
                 disabled={takeOff.trimApplies ? {} : { trim: "No wall ends in a piece under 300 mm for the first board to make up" }}
                 options={[["trim", "Trim first"], ["full", "Full panel"]]} />
             )}

@@ -2,7 +2,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { render, fireEvent, screen } from "@testing-library/react";
 import { React } from "../src/react-globals.js";
-import { SheetGypsum } from "../src/components/Gypsum.jsx";
+import { SheetGypsum, newRoom } from "../src/components/Gypsum.jsx";
+import { DraftStore, SessionDraftContext } from "../src/utils/session-state.js";
 
 /* The page's wiring: modes, presets, the diagram and the result card. The
    arithmetic is `tests/gypsum-take-off.test.js`. */
@@ -129,6 +130,18 @@ describe("the gypsum page", () => {
     expect(screen.getByText("Full panel").getAttribute("aria-pressed")).toBe("true");
     type("input-gyp-lenMm", 5130);
     expect(trim().getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("opens a room saved while Trim first was the default on Full panel", () => {
+    const drafts = new DraftStore();
+    const old = { ...newRoom(1), fullStart: false, orientation: "H",
+      job: { ...newRoom(1).job, lenMm: "5130", widMm: "3000", heightMm: "2500", sheetW: "1250", sheetL: "2500" } };
+    delete old.trimFirst;
+    drafts.set("Gypsum.jsx:rooms", [old]);
+    render(<SessionDraftContext.Provider value={drafts}><SheetGypsum /></SessionDraftContext.Provider>);
+    expect(screen.getByText("Full panel").getAttribute("aria-pressed")).toBe("true");
+    const labels = [...document.querySelector(".gyp-surface").querySelectorAll(".layout-svg-label")].map(t => t.textContent).slice(0, 3);
+    expect(labels).toEqual(["2500", "2330", "300"]);
   });
 
   it("leaves a row out from its label, and puts it back", () => {

@@ -307,8 +307,13 @@ a second layer. All figures, and the diagrams, come from
     either way. Otherwise the button is disabled, with its reason as the
     title, and Full panel shows as chosen, which is what the layout is anyway.
     A room that chose Trim first keeps the choice, and it comes back when a
-    change of size needs a trim again. Rooms saved before the default changed
-    hold `fullStart: false` and so stay on Trim first where it applies. Staggered lanes still start half a
+    change of size needs a trim again.
+  - **Stored as `trimFirst`, not `fullStart`.** Rooms saved while Trim first
+    was the default hold `fullStart: false` whether anyone chose it or not.
+    The user wanted those on Full panel too, and an absent `trimFirst` means
+    Full panel, so they open on it with no migration step; their old
+    `fullStart` is never read. The page passes the model `fullStart:
+    !trimFirst`. Staggered lanes still start half a
   board in, and a lane with no whole board to trim falls back to trimming the
   first (`lanePieces(…, fullStart)`). **A first panel offset is never
   trimmed (decided 2026-11-05):** it is a stud measurement, so with one set
