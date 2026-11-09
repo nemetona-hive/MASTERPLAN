@@ -59,6 +59,12 @@ describe("build-version", () => {
     for (const rel of HASHED_FILES) {
       expect(fs.existsSync(path.join(ROOT, rel)), rel).toBe(true);
     }
+    // index.html loads fonts.css, which loads every woff2 beside it. A
+    // font-only deploy once kept the old id because none of them were here.
+    const fonts = fs.readdirSync(path.join(ROOT, "vendor", "fonts"))
+      .filter(f => f === "fonts.css" || f.endsWith(".woff2"));
+    expect(fonts.length).toBeGreaterThan(1);
+    for (const f of fonts) expect(HASHED_FILES).toContain(`vendor/fonts/${f}`);
   });
 
   it("folds the path in, so two files swapping contents do not collide", () => {

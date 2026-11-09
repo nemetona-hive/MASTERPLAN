@@ -73,9 +73,13 @@ fi
 # what is installed; a commit touching only those used to skip every check.
 # The generated files are outputs and never triggers; they are what rebuilding
 # produces.
+#
+# vendor/fonts is a trigger because tests/check-fonts.test.js holds fonts.css
+# to the binaries beside it, and build-version.js hashes them: a font swap
+# touches nothing else, and would otherwise skip both.
 if git diff --cached --quiet -- src config.js simulation.js themes.js index.html \
-    manifest.webmanifest assets scripts tests githooks package.json package-lock.json \
-    eslint.config.mjs vitest.config.mjs; then
+    manifest.webmanifest assets vendor/fonts scripts tests githooks package.json \
+    package-lock.json eslint.config.mjs vitest.config.mjs; then
   exit 0
 fi
 

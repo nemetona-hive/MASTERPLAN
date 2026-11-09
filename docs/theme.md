@@ -34,6 +34,118 @@ because GitHub Pages serves the tree directly.
 98-layout-svg.css      SVG layout visualisation
 ```
 
+## Type faces
+
+Three faces, one role each, all self-hosted in `vendor/fonts/` — the app makes
+no font request off the machine:
+
+| Token | Face | Role, as the browser inventory found it |
+|---|---|---|
+| `--mono` | JetBrains Mono | **Data and controls**: inputs, field labels, data rows, results' small print, segmented controls, buttons, the SVG layout labels |
+| `--sans` | IBM Plex Sans | **Content**: the `body` face — page and card titles, result figures, the home wordmark, and **every printed document** (`.doc-sheet` sets it) |
+| `--font-ui` | Inter | **Chrome**: the nav labels, and nothing else today |
+
+Text that sets no family inherits `--sans` from `body` — except a form control.
+A `<button>`, `<input>` or `<select>` takes the browser's own font unless a
+rule gives it one, and that font is Arial: a control that forgets to state a
+family draws in a face that was never vendored. No stylesheet check can see a
+declaration that is missing, which is why the inventory below is done in a
+browser.
+
+Every `font-family` in `src/` is one of the three tokens or `inherit`, with no
+literal fallback inside the `var()`, and every `font-weight` is a `--fw-*`
+token (400 / 500 / 600 / 700) or `inherit`. `audit:ui`'s `type-token` check
+enforces both, in stylesheets, inline styles and SVG attributes. There is no
+800: `--fw-black` drew 700 everywhere it was used, because no face goes past
+it, and was removed.
+
+`b` and `strong` are left on the UA's relative `bolder`. MONEYFLOW pinned them,
+because there `bolder` inside a bold parent computed 900; here both uses
+(`GypsumTakeOffSheet`'s wall captions and `ProjectMenu`'s open project) sit in
+regular text and compute 700. Pin them in `00-base.css` the day one lands in a
+bold parent.
+
+### The files behind the faces
+
+`vendor/fonts/fonts.css` is the only place a font file is declared.
+`index.html` loads it before `app.css`; it is not part of the build, and it is
+not generated — but `build-version.js` hashes it and every woff2 beside it, so
+a font-only deploy moves the build id.
+
+- **Two subsets per family**, split as Google Fonts splits them: `latin` and
+  `latin-ext`. The browser fetches latin-ext only when a page draws one of its
+  letters. It is not optional — Estonian names carry š and ž, and before
+  latin-ext was vendored those two letters were drawn by a system face between
+  letters of JetBrains Mono in a room-name field, and on the take-off it
+  printed.
+- **Plex and JetBrains Mono are variable fonts**, so each subset is **one**
+  face with a weight range (`font-weight: 400 700`), never one face per weight.
+  They used to be declared per weight over byte-identical copies, and a
+  calculator page fetched the Plex file twice and the JetBrains Mono file three
+  times.
+- **Inter is static**, one file per weight per subset, the exact upstream 4.001
+  subsets.
+- **Provenance**, each file byte-identical to its source: JetBrains Mono's latin
+  file comes from fonts.gstatic.com (2.211; Google trims the axis to 400–800 and
+  drops HVAR, 9 KB lighter than @fontsource's); every other file is @fontsource
+  5.3.0 (Plex 3.201, JetBrains Mono 2.211, Inter 4.001). The OFL licence for
+  each family sits beside its files. MONEYFLOW ships the same bytes.
+- **No italic face.** One surface sets italic — the cut list's Gap chip, in
+  print — and Chrome slants the upright Plex for it.
+
+**JetBrains Mono stops at 600.** Its files reach 800, but its faces are
+declared 400–600, so every `--fw-bold` figure draws semibold — the weight the
+figures were tuned against. Measured in Chromium (canvas ink per weight): 600
+and 700 draw the same pixels. Raising it is a visible change to every bold
+figure; it is written down twice on purpose, in `fonts.css` and in `CEILING`
+in `scripts/check-fonts.js`, and the check fails if the two disagree.
+
+**Why the files are not subset here**, the way `build-icons.js` subsets Font
+Awesome. Measured with `subset-font` on 2026-11-09: re-subsetting a file to
+its own cmap saves 1–2 KB (4–8%), and cutting it to the latin + latin-ext
+range saves 3–6 KB more. User-typed text — project, room and preset names — can
+hold any letter, so a subset cannot go below that range, and merging the two
+subsets would make every visit download the latin-ext glyphs that today load
+only when a page draws š or ž. A few KB does not buy a generated step, a
+committed output for `pre-push` to police, and bytes that move when harfbuzz
+does. Google's split stays.
+
+**What falls back to a system face, by design.** No latin or latin-ext subset
+of these faces carries them:
+
+- arrows and symbols: `→` (cut-list headers and rows, the Guider), `↔` (the
+  Guider), `≈` (gypsum skim rate), `✓` (the step marker), `◇` (theme fallback
+  icon), `⅓ ⅔` (pattern names);
+- Greek: `φ` ("Golden Ratio φ" in the nav and on its home card), `π` (pipe
+  wrap), `α` (downpipe guider). A greek subset exists for all three families;
+  vendoring it would change how those letters look, so it is a design decision,
+  not a gap;
+- the theme icons, which are emoji.
+
+**The inventory.** Done in Chromium through `npm run layout`'s static server:
+every visible text node and form field on every page and Guider entry, plus the
+three printed documents under print media, with the family, weight and style
+the cascade computed and the fonts DevTools reports actually drawing each node
+(`CSS.getPlatformFontsForNode`). That is how the Arial button, the clamped mono
+bold and the fallbacks above were found; the stylesheets show none of them.
+
+`npm run fonts:check` (in `verify`, and through `tests/check-fonts.test.js` in
+pre-commit, which triggers on `vendor/fonts`) reads the woff2 binaries with
+`scripts/woff2.js` and holds `fonts.css` to them: every file exists and is
+used, no two files are identical, each face's family and weight are ones its
+file can draw, every subset of a family offers the same weights, every `--fw-*`
+weight has an upright face up to the family's ceiling and no face reaches past
+it, and a fixed set of required letters (ASCII, õ ä ö ü š ž, € – — … the
+quotes, and the × ° Ø ± ¼ ² ³ the documents print) is drawn by each family
+itself.
+
+**To add a weight or a family:** copy the subset files from the `@fontsource` /
+`@fontsource-variable` package of the **same font version** (check the md5 of
+the latin file you already have against the package's), declare them in
+`fonts.css` with the package's `unicode-range`, and run `npm run fonts:check`.
+A new token weight also needs every family to draw it, or a `CEILING` entry
+saying why not.
+
 ## Browser autofill
 
 Browser history remains available for fields, but Chromium paints an autofilled

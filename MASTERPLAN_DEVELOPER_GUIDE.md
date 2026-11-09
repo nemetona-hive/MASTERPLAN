@@ -15,7 +15,7 @@ Read this page, then the topic file your change touches.
 | [Checks](docs/testing.md) | trusting a green run — each gate sees a different thing, and one of them needs a browser |
 | [Controls and buttons](docs/controls.md) | adding or restyling anything clickable |
 | [Layout, spacing and mobile](docs/layout.md) | changing a page's shape, or anything below 768px |
-| [Stylesheets and the theme](docs/theme.md) | writing CSS, or touching a colour |
+| [Stylesheets, the theme and the type faces](docs/theme.md) | writing CSS, touching a colour, or a font file, family or weight |
 | [Shared components](docs/components.md) | reaching for a primitive, a modal, an icon, or the SVG |
 | [Pages and routing](docs/pages.md) | adding a page or changing the nav |
 | [Documents the app produces](docs/exports.md) | changing a printed sheet, a report model, or the manifest |
@@ -49,6 +49,13 @@ place before `components.js` reads `window.React`. `src/react-globals.js` re-exp
 globals so source files can `import { React } from "./react-globals.js"` like
 any other module. This is also why the build sets `jsxFactory` to
 `React.createElement` rather than importing the react package.
+
+The type faces are vendored too, and are not part of the build:
+`vendor/fonts/fonts.css` declares JetBrains Mono, IBM Plex Sans and Inter
+over the woff2 files beside it (latin + latin-ext, OFL licences alongside),
+and `index.html` loads it before `app.css`. `npm run fonts:check`
+(`scripts/check-fonts.js`, reading the binaries through `scripts/woff2.js`)
+holds the declarations to the files. See [type faces](docs/theme.md#type-faces).
 
 Everything that lives *outside* `src/` — `config.js`, `simulation.js`,
 `themes.js` — is still loaded as its own `<script>` and reached as a bare

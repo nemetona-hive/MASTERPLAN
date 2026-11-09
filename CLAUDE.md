@@ -42,7 +42,7 @@ with a no-op. After deliberately using a **Save Defaults** control under
 
 ## These are token systems — don't hand-write what they generate
 
-Three areas where writing a value directly is the mistake, because the system
+Four areas where writing a value directly is the mistake, because the system
 derives it:
 
 - **Colour** comes from a theme token, never a literal — `--text`,
@@ -57,6 +57,11 @@ derives it:
   height — not stating one is the same mistake, because the box then comes out
   as padding plus line-height. Compose `ctl-ghost` / `ctl-sm` / `ctl-icon` in
   the markup. See [controls](docs/controls.md).
+- **Type** is a token too: `font-family` is `var(--mono|--sans|--font-ui)` or
+  `inherit`, `font-weight` a `--fw-*` token. A form control that states no
+  family draws in the browser's Arial. Font files are declared only in
+  `vendor/fonts/fonts.css`, which `npm run fonts:check` holds to the binaries.
+  See [type faces](docs/theme.md#type-faces).
 - **Printed documents** are built from a **report model** (`utils/cut-list.js`,
   `utils/take-off.js`), and a renderer derives nothing of its own. A figure
   computed twice is a screen and a printout that disagree — over how many bags

@@ -171,9 +171,12 @@ html, body, #root {
 	--row-hl-radius: 8px;
 	--row-hl-fade:   background 0.2s ease;
 
-	--mono:        'JetBrains Mono', monospace;
-	--sans:        'IBM Plex Sans', sans-serif;
-	--font-ui:     'Inter', 'IBM Plex Sans', sans-serif;
+	/* Three faces, one role each — docs/theme.md#type-faces. The files and
+	   their weights live in vendor/fonts/fonts.css; every font-family in
+	   src/ is one of these three or inherit (audit:ui enforces it). */
+	--mono:        'JetBrains Mono', monospace;   /* data: figures, inputs, results */
+	--sans:        'IBM Plex Sans', sans-serif;   /* content: body, titles, print */
+	--font-ui:     'Inter', 'IBM Plex Sans', sans-serif; /* chrome: nav, heads */
 	--row-h:       33px;
 
 	/* Typography scale */
@@ -185,11 +188,15 @@ html, body, #root {
 	--fs-xxl: 28px;
 	--sticky-offset: 43px;
 
+	/* The weight scale. Every font-weight in src/ is one of these (audit:ui
+	   enforces it), and every family in vendor/fonts/fonts.css draws each of
+	   them up to its ceiling (fonts:check enforces that). JetBrains Mono's
+	   ceiling is 600, so --fw-bold on a figure draws at 600: see fonts.css
+	   before raising it. There is no 800: no face here could draw it. */
 	--fw-reg:   400;
 	--fw-med:   500;
 	--fw-semi:  600;
 	--fw-bold:  700;
-	--fw-black: 800;
 
 	--lh-none:    1;
 	--lh-tight:   1.25;
@@ -272,7 +279,6 @@ body {
 .u-fw-med   { font-weight: var(--fw-med); }
 .u-fw-semi  { font-weight: var(--fw-semi); }
 .u-fw-bold  { font-weight: var(--fw-bold); }
-.u-fw-black { font-weight: var(--fw-black); }
 
 .u-mono { font-family: var(--mono); }
 .u-sans { font-family: var(--sans); }

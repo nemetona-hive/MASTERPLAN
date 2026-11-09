@@ -135,7 +135,6 @@ html, body, #root {
 	--fw-med:   500;
 	--fw-semi:  600;
 	--fw-bold:  700;
-	--fw-black: 800;
 
 	--lh-none:    1;
 	--lh-tight:   1.25;
@@ -206,7 +205,6 @@ body {
 .u-fw-med   { font-weight: var(--fw-med); }
 .u-fw-semi  { font-weight: var(--fw-semi); }
 .u-fw-bold  { font-weight: var(--fw-bold); }
-.u-fw-black { font-weight: var(--fw-black); }
 
 .u-mono { font-family: var(--mono); }
 .u-sans { font-family: var(--sans); }
@@ -2979,7 +2977,8 @@ input[type="range"]:focus-visible {
 .home-brand-name {
 	font-family: var(--sans);
 	font-size: clamp(var(--fs-lg), 4vw, 2.5rem);
-	font-weight: var(--fw-black);
+
+	font-weight: var(--fw-bold);
 	letter-spacing: -0.02em;
 	color: var(--color-primary);
 	line-height: var(--lh-none);
@@ -4999,7 +4998,7 @@ input[type="range"]:focus-visible {
 		padding: 6mm 6mm 0;
 		background: #fff;
 		color: #111;
-		font-family: var(--sans, system-ui, sans-serif);
+		font-family: var(--sans);
 		font-size: 9.5pt;
 		line-height: 1.45;
 	}
@@ -5017,7 +5016,7 @@ input[type="range"]:focus-visible {
 	.doc-sheet-title {
 		margin: 0;
 		font-size: 15pt;
-		font-weight: 700;
+		font-weight: var(--fw-bold);
 		letter-spacing: 0.02em;
 	}
 
@@ -5052,7 +5051,7 @@ input[type="range"]:focus-visible {
 	.doc-sheet-h2 {
 		margin: 0 0 2mm;
 		font-size: 8pt;
-		font-weight: 700;
+		font-weight: var(--fw-bold);
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
 		color: #555;
@@ -5100,7 +5099,7 @@ input[type="range"]:focus-visible {
 	}
 
 	.doc-sheet-fact--lead dd {
-		font-weight: 700;
+		font-weight: var(--fw-bold);
 		font-size: 13pt;
 	}
 
@@ -5130,7 +5129,7 @@ input[type="range"]:focus-visible {
 	.doc-sheet-table tr { break-inside: avoid; }
 
 	.cut-ref-cell {
-		font-weight: 700;
+		font-weight: var(--fw-bold);
 		width: 14mm;
 	}
 
@@ -5155,7 +5154,7 @@ input[type="range"]:focus-visible {
 	}
 
 	.cut-piece--full { border-color: #bbb; }
-	.cut-piece--cut { border-color: #111; border-width: 1pt; font-weight: 700; }
+	.cut-piece--cut { border-color: #111; border-width: 1pt; font-weight: var(--fw-bold); }
 	.cut-piece--offcut { border-color: #111; border-style: dashed; }
 	.cut-piece--edge { border-color: #111; }
 
@@ -5163,12 +5162,12 @@ input[type="range"]:focus-visible {
 
 	.cut-ref {
 		font-size: 7pt;
-		font-weight: 700;
+		font-weight: var(--fw-bold);
 		color: #555;
 	}
 
 	.doc-sheet-strong {
-		font-weight: 700;
+		font-weight: var(--fw-bold);
 		font-size: 11pt;
 	}
 
@@ -5232,7 +5231,7 @@ input[type="range"]:focus-visible {
 		stroke-dasharray: 3pt 2pt;
 		vector-effect: non-scaling-stroke;
 	}
-	.gyp-print-label--opening { font-weight: 700; }
+	.gyp-print-label--opening { font-weight: var(--fw-bold); }
 	.gyp-print-piece--cut { fill: #fff; }
 
 	.gyp-print-piece--excluded { fill: #fff; stroke-dasharray: 2pt 2pt; }

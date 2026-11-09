@@ -13,10 +13,11 @@ browser layout gate and the browser journeys.
 | Command | What it guards |
 |---|---|
 | `npm test` | behaviour — parsers, layout maths, primitives, nav interaction |
-| `npm run audit:ui` | hardcoded colour, a word painted in an edge token, text dimmed with opacity, control edges/heights/hover recipes, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
+| `npm run audit:ui` | hardcoded colour, a literal font family or weight, a word painted in an edge token, text dimmed with opacity, control edges/heights/hover recipes, dead CSS classes (`-- --unused` to list them), markup naming a class no stylesheet defines (`-- --undefined` to re-read the reviewed ones), JS/CSS breakpoint drift |
 | `npm run lint` | stale hook dependencies, hooks called conditionally, names that stopped existing |
 | `npm run layout` | where a box actually landed, what a word was actually painted in, whether a dialog keeps the keyboard — in a real browser |
 | `npm run theme:check` | contrast ratios across all three themes |
+| `npm run fonts:check` | `vendor/fonts/fonts.css` against the binaries: weights each file can draw, subsets, duplicate files, required letters ([type faces](theme.md#type-faces)) |
 | `npm run perf:check` | download budgets for the two committed bundles |
 | `npm run build` | rebuilds `components.js`, `app.css`, the icon subset and `version.js` |
 | `npm run icon` | regenerates `masterplan.ico` and the installable app's PNGs — by hand, not part of the build |
@@ -32,6 +33,7 @@ browser layout gate and the browser journeys.
 |---|---|
 | Source logic, calculations or shared behaviour | `npm test`, then `npm run build` |
 | CSS, theme, layout, controls or printed sheets | `npm run build`, `npm run audit:ui`, `npm run theme:check`, `npm run layout` |
+| A font file, a face or a weight token | `npm run fonts:check`, `npm run build`, `npm run layout` |
 | A page, route or user journey | `npm run build`, `npm run test:browser`, plus relevant unit tests |
 | Deployment | `npm run verify`, then `npm run deploy:check` after pushing |
 
@@ -142,7 +144,7 @@ failed at random. `buildId(root)` takes a root for exactly this: probe a copy.
 
 Git hooks live in `githooks/` and are wired by `core.hooksPath`, which
 `npm install` sets via `prepare`. `pre-commit` fires on a staged change to `src/`, the classic scripts,
-`index.html`, the manifest, `assets/`, `scripts/`, `tests/`, `githooks/` or the
+`index.html`, the manifest, `assets/`, `vendor/fonts/`, `scripts/`, `tests/`, `githooks/` or the
 package and lint config. It rebuilds, refuses the commit if the rebuild moved a
 committed output that is not staged (stage it and commit again), then blocks on
 a UI audit error or a test failure. `pre-push` matters more here than in most repos:

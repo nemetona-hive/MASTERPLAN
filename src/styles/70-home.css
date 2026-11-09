@@ -30,7 +30,8 @@
 .home-brand-name {
 	font-family: var(--sans);
 	font-size: clamp(var(--fs-lg), 4vw, 2.5rem);
-	font-weight: var(--fw-black);
+	/* Was --fw-black (800). Plex stops at 700, so it always drew 700. */
+	font-weight: var(--fw-bold);
 	letter-spacing: -0.02em;
 	color: var(--color-primary);
 	line-height: var(--lh-none);

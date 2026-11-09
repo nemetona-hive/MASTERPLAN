@@ -321,6 +321,69 @@ for (const file of markupFiles) {
   }
 }
 
+/* ------------------------------------------- 1e. type comes from the tokens
+ * Three faces and a four-step weight scale (docs/theme.md#type-faces), and
+ * vendor/fonts/fonts.css ships exactly the files that draw them. A literal
+ * family names a face that was never vendored, and draws in whatever the
+ * visitor's machine has. A literal weight sidesteps the scale that
+ * fonts:check proves every family can draw: the print sheet's eight
+ * `font-weight: 700` read the same as the token today and stop reading the
+ * same the day the scale moves. A literal fallback inside the var() —
+ * `var(--sans, system-ui, sans-serif)` — is the same mistake in a
+ * parenthesis: it can only ever apply if the token is gone.
+ *
+ * Allowed: var(--mono | --sans | --font-ui) or inherit for a family,
+ * var(--fw-*) or inherit for a weight. Custom-property definitions are where
+ * the literals are supposed to live, so `--mono: 'JetBrains Mono'` is not a
+ * finding. Ported from MONEYFLOW's audit (2e).
+ *
+ * What this cannot see is a family that is never set: a <button> takes the
+ * UA's font, not body's, unless a rule gives it one. Only a browser sees
+ * that — the inventory in docs/theme.md#type-faces is how it was found. */
+
+const FAMILY_OK = /^(var\(--(mono|sans|font-ui)\)|inherit)(\s*!important)?$/;
+const WEIGHT_OK = /^(var\(--fw-[\w-]+\)|inherit)(\s*!important)?$/;
+
+for (const file of cssFiles) {
+  const text = stripComments(fs.readFileSync(file, "utf8"));
+  text.split("\n").forEach((code, i) => {
+    if (/^\s*--[\w-]+\s*:/.test(code)) return;
+    for (const m of code.matchAll(/(?<![\w-])font-family\s*:\s*([^;}]+)/g)) {
+      if (!FAMILY_OK.test(m[1].trim())) {
+        add("ERROR", "type-token", file, i + 1,
+          `font-family: ${m[1].trim()} — use var(--mono), var(--sans) or var(--font-ui), with no fallback.`);
+      }
+    }
+    for (const m of code.matchAll(/(?<![\w-])font-weight\s*:\s*([^;}]+)/g)) {
+      if (!WEIGHT_OK.test(m[1].trim())) {
+        add("ERROR", "type-token", file, i + 1,
+          `font-weight: ${m[1].trim()} — use a --fw-* token.`);
+      }
+    }
+    for (const m of code.matchAll(/(?<![\w-])font\s*:\s*([^;}]+)/g)) {
+      if (m[1].trim() !== "inherit") {
+        add("ERROR", "type-token", file, i + 1,
+          `font: ${m[1].trim()} — the shorthand carries a literal family and weight; set font-family and font-weight from their tokens.`);
+      }
+    }
+  });
+}
+
+// Inline styles and SVG attributes: the same properties, camel-cased.
+for (const file of markupFiles) {
+  if (!/\.jsx?$/.test(file)) continue;
+  const text = stripComments(fs.readFileSync(file, "utf8"));
+  text.split("\n").forEach((code, i) => {
+    for (const m of code.matchAll(/\bfont(Family|Weight)\s*[:=]\s*\{?\s*(['"`])([^'"`]*)\2/g)) {
+      const ok = m[1] === "Family" ? FAMILY_OK : WEIGHT_OK;
+      if (!ok.test(m[3].trim())) {
+        add("ERROR", "type-token", file, i + 1,
+          `font${m[1]}: '${m[3]}' in markup — use the token, as the stylesheets do.`);
+      }
+    }
+  });
+}
+
 /* ----------------------------------------------------------- 2. unused CSS
  * Substring search against all markup, matching how these classes are actually
  * built (template strings, concatenation). Heuristic by nature: a name that is
