@@ -223,14 +223,14 @@ describe("the gypsum page's rooms", () => {
     expect(waste().value).toBe("10");
   });
 
-  it("opens a project saved with waste per room at its first room's figure", () => {
+  it("opens a project saved with waste per room at 0, whatever its rooms held", () => {
     const drafts = new DraftStore();
     drafts.set("Gypsum.jsx:rooms", [
-      { ...newRoom(1), job: { ...newRoom(1).job, waste: "" } },
+      { ...newRoom(1), job: { ...newRoom(1).job, waste: "5" } },
       { ...newRoom(2), job: { ...newRoom(2).job, waste: "7" } }
     ]);
     render(withDrafts(drafts, <SheetGypsum />));
-    expect(document.getElementById("input-gyp-waste").value).toBe("7");
+    expect(document.getElementById("input-gyp-waste").value).toBe("0");
   });
 
   it("keeps the applied preset per room", () => {

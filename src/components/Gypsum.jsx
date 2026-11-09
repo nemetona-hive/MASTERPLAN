@@ -69,14 +69,6 @@ function legacyRoom(drafts) {
   if (drafts.has(KEY("job"))) room.job = { ...blankJob(), ...drafts.get(KEY("job")) };
   return room;
 }
-/* Waste is the job's, one figure for every room, and starts at none. It was a
-   room's own field (prefilled 5) before; a project saved then opens with the
-   first room's value, so its figures do not change on opening. A room's old
-   `job.waste` is left in place and never read: the job's figure overrides it. */
-const legacyWaste = list => {
-  const held = list.find(r => r.job.waste !== undefined && r.job.waste !== "");
-  return held ? held.job.waste : "0";
-};
 const validRooms = list => Array.isArray(list) && list.length > 0 && list.every(r => r && r.job);
 const presetName = (presets, idx) => (idx !== null && idx !== undefined ? presets[idx]?.name || "" : "");
 
@@ -398,7 +390,11 @@ export function SheetGypsum({ projectName = "" }) {
   const [currentId, setCurrentId] = useSessionState(KEY("room"), null);
   const room = rooms.find(r => r.id === currentId) || rooms[0];
   const roomIndex = rooms.indexOf(room);
-  const [waste, setWaste] = useSessionState(KEY("waste"), () => legacyWaste(rooms));
+  /* Waste is the job's, one figure for every room, and starts at none. It was
+     a room's own field (prefilled 5) before; a project saved then opens at 0
+     too, by the user's choice. A room's old `job.waste` is never read: the
+     job's figure overrides it in the take-off. */
+  const [waste, setWaste] = useSessionState(KEY("waste"), "0");
 
   const updateRoom = (id, change) => setRooms(current =>
     (validRooms(current) ? current : rooms).map(r => (r.id === id ? { ...r, ...change(r) } : r)));

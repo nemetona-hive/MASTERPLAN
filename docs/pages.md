@@ -278,9 +278,10 @@ a second layer. All figures, and the diagrams, come from
 - **Waste is the job's, not a room's** (`Gypsum.jsx:waste`, a field in the
   Rooms card, "Waste, all rooms (%)" once there are two). One figure goes on
   every room's take-off, so it is set once for the project rather than room by
-  room; the user asked for it that way. It was each room's `job.waste`, and a
-  project saved then opens at its first room's figure (`legacyWaste`), so its
-  sheets do not change on opening. Reset Room leaves it; the Global Reset of a
+  room; the user asked for it that way. It was each room's `job.waste`; a project
+  saved then opens at 0 as well, and its rooms' old figures are ignored. That
+  changes an old project's sheet count on opening, deliberately: the user chose
+  0 over carrying each project's 5 forward (2026-11-09). Reset Room leaves it; the Global Reset of a
   job of one room sets it back to 0.
 - **Cut pieces: Reuse offcuts / Full board each** (per room, `fullBoards`).
   Full board each buys a whole board for every piece in the layout, the cut
