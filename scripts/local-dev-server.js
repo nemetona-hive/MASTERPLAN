@@ -2,9 +2,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const vm = require('node:vm');
-const { randomUUID } = require('node:crypto');
 const { parseMeasurement } = require('../src/utils/measurements.cjs');
 const { createProjectStore } = require('./project-store.js');
+const { writeFileAtomic } = require('./write-atomic.js');
 
 const PORT = 3005;
 // Bind loopback only. /api/save-defaults writes straight to config.js and has
@@ -258,30 +258,6 @@ const MIME_TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "te
   ".json": "application/json", ".map": "application/json", ".webmanifest": "application/manifest+json",
   ".woff2": "font/woff2", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
-function writeFileAtomic(file, contents, io = fs) {
-  const temp = `${file}.${randomUUID()}.tmp`;
-  let descriptor, failure;
-  try {
-    descriptor = io.openSync(temp, "wx", io.statSync(file).mode & 0o777);
-    io.writeFileSync(descriptor, contents, "utf8");
-    io.fsyncSync(descriptor);
-    io.closeSync(descriptor);
-    descriptor = undefined;
-    io.renameSync(temp, file);
-    // Windows cannot open directories for fsync; rename still prevents a
-    // partially written source file being observed there.
-    if (process.platform !== "win32") {
-      const dir = io.openSync(path.dirname(file), "r");
-      try { io.fsyncSync(dir); } finally { io.closeSync(dir); }
-    }
-  } catch (err) { failure = err; }
-  finally {
-    try { if (descriptor !== undefined) io.closeSync(descriptor); } catch (err) { failure ||= err; }
-    try { io.unlinkSync(temp); } catch (err) { if (err.code !== "ENOENT") failure ||= err; }
-  }
-  if (failure) throw failure;
-}
-
 function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
   const root = io.realpathSync(rootDir);
   const projects = createProjectStore({ rootDir: root, io, ...(now ? { now } : {}) });
@@ -291,8 +267,9 @@ function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
     res.end(JSON.stringify(payload));
   };
 
-  /* A JSON body, capped, then `done(payload)`; replies itself on any failure. */
-  const readJson = (req, res, done) => {
+  /* A JSON body, capped, then `done(payload)`; replies itself on any failure.
+     Both the projects routes and the defaults save read their body here. */
+  const readJson = (req, res, done, { tooLarge = "Over the 256 KiB request limit" } = {}) => {
     if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") {
       reply(res, 415, { error: "Send application/json" }); return;
     }
@@ -303,7 +280,7 @@ function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
     req.on("data", chunk => {
       if (ended) return;
       size += chunk.length;
-      if (size > MAX_BODY_BYTES) { ended = true; reply(res, 413, { error: "Over the 256 KiB request limit" }); return; }
+      if (size > MAX_BODY_BYTES) { ended = true; reply(res, 413, { error: tooLarge }); return; }
       chunks.push(Buffer.from(chunk));
     });
     req.on("end", () => {
@@ -337,30 +314,8 @@ function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
   return (req, res) => {
     if (!isLocalRequest(req)) { reply(res, 403, { error: "Local requests only" }); return; }
     if (req.method === "POST" && req.url === "/api/save-defaults") {
-      if (req.headers["content-type"]?.split(";")[0].trim() !== "application/json") {
-        reply(res, 415, { error: "Send application/json" }); return;
-      }
-      let size = 0, ended = false;
-      const chunks = [];
-      req.on("aborted", () => { ended = true; });
-      req.on("error", () => { if (!ended) { ended = true; reply(res, 400, { error: "Incomplete request" }); } });
-      req.on("data", chunk => {
-        if (ended) return;
-        size += chunk.length;
-        if (size > MAX_BODY_BYTES) {
-          ended = true;
-          reply(res, 413, { error: "Defaults exceed the 256 KiB request limit" });
-          return;
-        }
-        chunks.push(Buffer.from(chunk));
-      });
-      req.on("end", () => {
-        if (ended) return;
-        ended = true;
+      readJson(req, res, payload => {
         try {
-          let payload;
-          try { payload = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
-          catch { throwValidationError("Invalid JSON"); }
           if (!payload || typeof payload !== "object" || Array.isArray(payload)) throwValidationError("Expected an object");
           const { key, value } = payload;
           if (!Object.hasOwn(DEFAULT_WRITES, key)) throwValidationError("Unknown save key");
@@ -370,12 +325,13 @@ function createRequestHandler({ rootDir = ROOT_DIR, io = fs, now } = {}) {
           const next = replaceConstant(io.readFileSync(file, "utf8"), DEFAULT_WRITES[key], validated);
           if (!next) throw new Error("Could not locate the defaults in config.js");
           new vm.Script(next); // Never replace the previous valid source with invalid JavaScript.
-          writeFileAtomic(file, next, io);
+          // A tracked source file keeps its own mode.
+          writeFileAtomic(file, next, { io, mode: io.statSync(file).mode & 0o777 });
           reply(res, 200, { success: true, key });
         } catch (err) {
           reply(res, err.statusCode || 500, { error: err.statusCode ? err.message : "Could not save defaults. The previous file is retained if replacement did not complete." });
         }
-      });
+      }, { tooLarge: "Defaults exceed the 256 KiB request limit" });
       return;
     }
     const route = req.url.split("?")[0];

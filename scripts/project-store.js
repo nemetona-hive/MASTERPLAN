@@ -25,7 +25,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { randomUUID } = require("node:crypto");
+const { writeFileAtomic } = require("./write-atomic.js");
 
 const VERSION = 1;
 const ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -91,31 +91,9 @@ function createProjectStore({ rootDir, io = fs, now = () => new Date() }) {
     return path.join(dir, `${id}.json`);
   };
 
-  /* New or existing file alike, which is why this is not the dev server's
-     writeFileAtomic: that one copies the mode of a file that must already
-     exist. Project files are private, so 0600. */
-  function writeAtomic(file, contents) {
-    io.mkdirSync(path.dirname(file), { recursive: true });
-    const temp = `${file}.${randomUUID()}.tmp`;
-    let descriptor, failure;
-    try {
-      descriptor = io.openSync(temp, "wx", 0o600);
-      io.writeFileSync(descriptor, contents, "utf8");
-      io.fsyncSync(descriptor);
-      io.closeSync(descriptor);
-      descriptor = undefined;
-      io.renameSync(temp, file);
-      if (process.platform !== "win32") {
-        const handle = io.openSync(path.dirname(file), "r");
-        try { io.fsyncSync(handle); } finally { io.closeSync(handle); }
-      }
-    } catch (err) { failure = err; }
-    finally {
-      try { if (descriptor !== undefined) io.closeSync(descriptor); } catch (err) { failure ||= err; }
-      try { io.unlinkSync(temp); } catch (err) { if (err.code !== "ENOENT") failure ||= err; }
-    }
-    if (failure) throw failure;
-  }
+  /* New or existing file alike, so its folder is made on demand. Project
+     files are private, so 0600. */
+  const writeAtomic = (file, contents) => writeFileAtomic(file, contents, { io, mode: 0o600, makeDir: true });
 
   /* Refuse a symlink anywhere a project is read or written: the folder is
      private data, and a link would let a save land outside it. */
