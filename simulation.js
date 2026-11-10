@@ -397,6 +397,10 @@ function makeStats(rows) {
   return { full, cut, total: full + cut };
 }
 
+/* A sum of typed widths, to the 0.01 mm a field accepts: 502.59 summed from
+   its pieces is 502.59000000000003, and the row printed every digit. */
+const roundMm = value => Math.round(value * 100) / 100;
+
 function computeS0(state) {
   const roomWidth = Number(state.roomWidth), panelWidth = Number(state.panelWidth);
   const { oneFullEdge } = state;
@@ -468,7 +472,7 @@ function computeS0(state) {
         { label: L.totalToBuy,   value: totalToBuy,   unit: "pcs", hi: true },
         { label: L.gap,           value: fmt.decimal(gap), unit: "mm" },
         { label: L.gapTotal,      value: fmt.decimal(gapTotal), unit: "mm" },
-        { label: L.layoutLength, value: layoutLength, unit: "mm" },
+        { label: L.layoutLength, value: roundMm(layoutLength), unit: "mm" },
         { label: L.roomGap,      value: fmt.decimal(roomGap), unit: "mm" }
       ],
       // A custom opening cut and a closing remainder are independent pieces.
@@ -520,7 +524,7 @@ function computeS0(state) {
 	  { label: L.totalToBuy,   value: totalToBuy,   unit: "pcs", hi: true },
 	  { label: L.gap,          value: fmt.decimal(gap), unit: "mm" },
 	  { label: L.gapTotal,     value: fmt.decimal(gapTotal), unit: "mm" },
-	  { label: L.layoutLength, value: layoutLength, unit: "mm" },
+	  { label: L.layoutLength, value: roundMm(layoutLength), unit: "mm" },
 	  { label: L.roomGap,      value: fmt.decimal(roomGap), unit: "mm" }
 	],
 	meta: { edgeWidth, panelWidth, roomWidth, gap, gapCount, visualization: "strip" }

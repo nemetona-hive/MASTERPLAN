@@ -259,6 +259,14 @@ describe("computeS0", () => {
     expect(result.summaryRows.find(row => row.label === SUMMARY_LABELS.s0.layoutLength)).toMatchObject({ value: 3200, unit: "mm" });
   });
 
+  it("states the layout length without float noise", () => {
+    // Summed from its pieces, 502.59 came out as 502.59000000000003.
+    for (const oneFullEdge of [false, true]) {
+      const result = computeS0({ roomWidth: 502.59, panelWidth: 300, gap: 0.1, oneFullEdge });
+      expect(result.summaryRows.find(row => row.label === SUMMARY_LABELS.s0.layoutLength).value).toBe(502.59);
+    }
+  });
+
   it("starts flush with one full edge when asked", () => {
     const result = computeS0({ roomWidth: 3200, panelWidth: 500, oneFullEdge: true });
     expect(result.valid).toBe(true);
