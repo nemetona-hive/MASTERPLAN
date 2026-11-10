@@ -760,10 +760,14 @@ export const ControlPanel = (props) => <Collapsible {...props} variant="panel" /
    toggleOnTap: false where a tap already means something else. On the layout
    segments it means select, and the <g> above them handles that — a second
    meaning for the same tap would fire both at once, so the highlight stands
-   aside there and lets selection speak. */
-export function linkedHighlightProps(type, hoveredType, setHoveredType, { toggleOnTap = true } = {}) {
+   aside there and lets selection speak.
+
+   hover: the canHover() answer, for a caller binding many elements in one
+   render — a layout drawing has thousands of segments, and asking matchMedia
+   once per segment was a measurable share of every hover. */
+export function linkedHighlightProps(type, hoveredType, setHoveredType, { toggleOnTap = true, hover } = {}) {
   if (!type || !setHoveredType) return {};
-  if (canHover()) {
+  if (hover ?? canHover()) {
     return {
       onMouseEnter: () => setHoveredType(type),
       onMouseLeave: () => setHoveredType(null)

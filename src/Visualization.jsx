@@ -1,5 +1,5 @@
 import { React } from "./react-globals.js";
-import { Icon, linkedHighlightProps, Row, Stack } from "./shared.jsx";
+import { Icon, canHover, linkedHighlightProps, Row, Stack } from "./shared.jsx";
 
 export function PanelSummary({ rows, hoveredType, setHoveredType, grouped = false, groupTitles = ["Material", "Placement"] }) {
   const renderRows = summaryRows => summaryRows.map((row, i) => (
@@ -509,6 +509,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     order.forEach((band, i) => toggleSpots.set(band.lane, at[i]));
   }
 
+  // Asked once for the whole drawing, not once per segment.
+  const hoverable = canHover();
+
   const handleSegClick = (rect) => {
     if (selectedKey === rect.key) {
       setSelectedKey(null);
@@ -574,7 +577,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                     x={rect.x + chartX} y={rect.y + chartY} width={rect.w} height={rect.h}
                     className={`layout-svg-seg ${rect.segClass}${rect.isCarry ? " is-carry" : ""}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
                     style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
-                    {...linkedHighlightProps(rect.hoverKey, hoveredType, setHoveredType, { toggleOnTap: false })}
+                    {...linkedHighlightProps(rect.hoverKey, hoveredType, setHoveredType, { toggleOnTap: false, hover: hoverable })}
                   >
                     <title>{`${rect.seg.size || `${Math.round(rect.seg.w)}mm`} - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`}</title>
                   </rect>
