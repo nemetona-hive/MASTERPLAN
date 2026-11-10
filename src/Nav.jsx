@@ -237,7 +237,7 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
             are. It left because it was the only thing in the nav that acted on
             the whole app rather than on where you are in it. */}
         <div className="nav-bottom">
-          <NavBuildStamp navOpen={navOpen} mobile={mobile} />
+          <NavBuildStamp page={page} navOpen={navOpen} mobile={mobile} />
         </div>
 
       </nav>
@@ -251,11 +251,11 @@ export function AppNav({ page, setPage, navOpen, setNavOpen, mobileMenuOpen, set
    Desktop rail only, and only while expanded: the collapsed strip is 60px and
    this is the one thing in the nav with no icon to shrink to. On mobile the
    nav is a drawer that is shut by default, which would put the stamp two taps
-   away — it lives in the Home page footer there instead (Home.jsx), visible
-   without opening anything. */
-function NavBuildStamp({ navOpen, mobile }) {
+   away. Home carries its own copy in the footer at every width (Home.jsx), so
+   the rail leaves it out there rather than show the id twice. */
+function NavBuildStamp({ page, navOpen, mobile }) {
   const id = getBuildId();
-  if (!id || mobile || !navOpen) return null;
+  if (!id || mobile || !navOpen || page === "home") return null;
   return (
     <div className="nav-build" title={`Build ${id} — compare with 'npm run deploy:check'`}>
       build {id}

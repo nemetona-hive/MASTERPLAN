@@ -238,12 +238,11 @@
 	text-transform: uppercase;
 }
 
-/* Build stamp — mobile only. The desktop rail carries its own copy, pinned to
-   the bottom of the nav; below the breakpoint that rail becomes a drawer that
-   is shut by default, so the stamp moves here where it needs no interaction to
-   read. Exactly one of the two is ever displayed. */
+/* Build stamp, under NEMETONA HIVE at every width. Readable here without
+   opening or expanding anything: the desktop rail drops its copy when
+   collapsed, and on mobile the rail is a drawer that is shut by default. The
+   rail leaves its copy out on Home (Nav.jsx), so exactly one is displayed. */
 .home-build {
-	display: none;
 	font-family: var(--mono);
 	font-size: var(--fs-xs);
 	/* Full strength, not thinned. At 65% toward transparent this was 2.49:1 /
@@ -309,7 +308,6 @@
 	}
 
 	.home-build {
-		display: block;
 		order: 12;
 	}
 

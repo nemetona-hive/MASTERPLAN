@@ -231,7 +231,7 @@ describe("AppNav", () => {
     // The whole point is being able to read the deployed id off the page and
     // compare it with `npm run deploy:check`, so it has to actually render.
     it("shows the build id from version.js when expanded", () => {
-      const { container } = render(<AppNav {...props({ navOpen: true })} />);
+      const { container } = render(<AppNav {...props({ page: "concrete", navOpen: true })} />);
       const stamp = container.querySelector(".nav-build");
       expect(stamp).not.toBeNull();
       expect(stamp.textContent).toContain(BUILD.id);
@@ -251,9 +251,17 @@ describe("AppNav", () => {
     it("sits last in the nav's bottom section", () => {
       // .nav-bottom carries margin-top:auto and .nav fills the rail, so last
       // child of that section is the floor of the sidebar.
-      const { container } = render(<AppNav {...props({ navOpen: true })} />);
+      const { container } = render(<AppNav {...props({ page: "concrete", navOpen: true })} />);
       const bottom = container.querySelector(".nav-bottom");
       expect(bottom.lastElementChild.className).toContain("nav-build");
+    });
+
+    it("stays out of the rail on Home, which shows its own", () => {
+      // Home's footer carries the stamp at every width (home.test.jsx), so an
+      // expanded rail there would show the id twice.
+      const { container } = render(<AppNav {...props({ page: "home", navOpen: true })} />);
+      expect(container.querySelector(".nav-build")).toBeNull();
+      expect(container.querySelector(".nav-bottom").children).toHaveLength(0);
     });
 
     it("disappears when the nav collapses", () => {

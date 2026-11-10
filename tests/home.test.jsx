@@ -33,9 +33,8 @@ describe("SheetHome", () => {
   });
 
   describe("build stamp", () => {
-    // This is mobile's only copy — the nav rail's is hidden below the
-    // breakpoint, and the drawer it would live in is shut by default. A media
-    // query in 70-home.css does the showing, so it is in the DOM either way.
+    // Shown at every width. On mobile it is the only copy (the drawer is shut
+    // by default); on desktop the rail leaves its copy out on Home.
     it("renders the build id from version.js", () => {
       const { container } = render(<SheetHome setPage={vi.fn()} />);
       const stamp = container.querySelector(".home-build");
@@ -43,20 +42,12 @@ describe("SheetHome", () => {
       expect(stamp.textContent).toContain(BUILD.id);
     });
 
-    it("is displayed only below the mobile breakpoint", () => {
-      // The invariant the two copies rest on: exactly one is ever on screen.
-      // The rail's copy is gated in JS (NavBuildStamp bails when mobile), this
-      // one in CSS — so if the default here stopped being `none`, desktop would
-      // show the stamp twice and nothing else would catch it.
+    it("is displayed at every width", () => {
+      // Desktop reads it here too: the rail drops its copy when collapsed, and
+      // leaves it out on Home (nav.test.jsx), so this is the only one shown.
       const css = fs.readFileSync(
         path.resolve(import.meta.dirname, "..", "src", "styles", "70-home.css"), "utf8");
-      const mobileAt = css.indexOf("@media (max-width: 768px)");
-      expect(mobileAt).toBeGreaterThan(-1);
-
-      const base = css.slice(0, mobileAt);
-      const mobile = css.slice(mobileAt);
-      expect(base).toMatch(/\.home-build\s*\{[^}]*display:\s*none/);
-      expect(mobile).toMatch(/\.home-build\s*\{[^}]*display:\s*block/);
+      expect(css).not.toMatch(/\.home-build\s*\{[^}]*display:\s*none/);
     });
 
     it("renders the page when version.js never loaded", () => {

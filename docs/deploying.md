@@ -8,19 +8,18 @@ A push is the deploy, and nothing on the far side reports back, so the app
 carries a build id: `version.js` defines a `BUILD` global, read through
 `getBuildId()` in `shared.jsx`.
 
-It is displayed in **two mutually exclusive places, one per breakpoint** —
-never both at once:
+It is displayed in **two places, never both at once**:
 
 | | Where | Gated by |
 |---|---|---|
-| Desktop | bottom of the nav rail | JS — `NavBuildStamp` bails when `mobile`, and when the rail is collapsed (the strip is 60px and this is the one nav item with no icon to shrink to) |
-| Mobile | Home page footer, under `NEMETONA HIVE` | CSS — `.home-build` is `display: none` until the mobile media query, so it re-evaluates on resize without the component tracking the viewport |
+| Home page, every width | footer, under `NEMETONA HIVE` | always shown — `.home-build` has no `display: none` at any width |
+| Every other page, desktop | bottom of the nav rail | JS — `NavBuildStamp` bails on Home (which shows its own), when `mobile`, and when the rail is collapsed (the strip is 60px and this is the one nav item with no icon to shrink to) |
 
-Mobile does not use the nav for this: the drawer is shut by default, which puts
-the stamp two taps behind a hamburger for anyone who does not already know it is
-there. A test in `home.test.jsx` reads `70-home.css` to pin the exclusion — if
-that default stopped being `none`, desktop would render the stamp twice and
-nothing else would catch it.
+Home carries it at every width so it can be read without expanding or opening
+anything: a collapsed rail drops its copy, and on mobile the rail is a drawer
+that is shut by default. The rail stepping aside on Home is what keeps it to one
+copy; `nav.test.jsx` pins that, and `home.test.jsx` reads `70-home.css` to pin
+that the footer copy is never hidden.
 
 The rail's copy only reaches the bottom because `.nav` takes `flex: 1`: it is a
 column flex item in `.page-side` with no height of its own, so without that it

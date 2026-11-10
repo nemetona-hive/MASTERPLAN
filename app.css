@@ -3181,7 +3181,6 @@ input[type="range"]:focus-visible {
 }
 
 .home-build {
-	display: none;
 	font-family: var(--mono);
 	font-size: var(--fs-xs);
 
@@ -3239,7 +3238,6 @@ input[type="range"]:focus-visible {
 	}
 
 	.home-build {
-		display: block;
 		order: 12;
 	}
 
