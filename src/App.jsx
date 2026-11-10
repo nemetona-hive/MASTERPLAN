@@ -66,8 +66,6 @@ function LogoLayer({ className, filter }) {
 
 // ── App root ──────────────────────────────────────────────────────────────────
 
-const getIsMobile = isMobileViewport;
-
 /* The sidebar as the user last set it (button or Ctrl+B): true, false, or null
    until they do. A preference of this browser, like the theme, so it lives in
    localStorage and is kept with or without a project — it belongs to no page,
@@ -90,7 +88,7 @@ const getHashPage = () => {
   return PAGES.some(p => p.id === hash) ? hash : "home";
 };
 
-function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, theme, setTheme, panelOpen, setPanelOpen, projectsAvailable, projectName }) {
+function MainPageContent({ page, setPage, sh, setSh, sym, setSym, grItems, setGrItems, panelOpen, setPanelOpen, projectsAvailable, projectName }) {
   const pageMeta = PAGES.find(pg => pg.id === page);
 
   if (page === "home") {
@@ -143,18 +141,18 @@ function App() {
   const [page, setPageState]                = useState(getHashPage);
   
   // Track mobile state reactively — updates on resize/rotate
-  const [isMobile, setIsMobile]            = React.useState(getIsMobile);
+  const [isMobile, setIsMobile]            = React.useState(isMobileViewport);
   /* Expanded only when there is room for it: mobile has its own drawer, and a
      tablet cannot afford 260px of sidebar next to a 384px control column. */
   /* Where the screen has room, the sidebar is as the user last left it. */
   const navPref = React.useRef(readNavPref());
-  const roomyNav = () => !getIsMobile() && !isCompactNavViewport() && navPref.current !== false;
+  const roomyNav = () => !isMobileViewport() && !isCompactNavViewport() && navPref.current !== false;
   const [navOpen, setNavOpen]               = React.useState(roomyNav);
   const setNavOpenByUser = value => {
     const next = typeof value === "function" ? value(navOpen) : value;
     setNavOpen(next);
     // A phone's drawer is its own thing; the choice is the desktop sidebar's.
-    if (!getIsMobile()) { navPref.current = next; writeNavPref(next); }
+    if (!isMobileViewport()) { navPref.current = next; writeNavPref(next); }
   };
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [theme, setTheme]                   = useState(() => {
@@ -373,7 +371,7 @@ function App() {
         <ProjectContext.Provider value={pageProjects}>
         <PageErrorBoundary key={pageKey}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
-          grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
+          grItems={grItems} setGrItems={setGrItems}
           panelOpen={layoutPanelsOpen} setPanelOpen={setLayoutPanelsOpen} projectsAvailable={projects.available}
           projectName={pageProjects?.project?.name || ""} />
         </PageErrorBoundary>

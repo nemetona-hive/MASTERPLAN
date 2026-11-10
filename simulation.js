@@ -302,30 +302,6 @@ function simulateJointed(W, rowDefs, PL, offset, minJ, sys, horizontalGap, start
       rows.push({ segs, h: rowDefs[i].h, jointAfter: rowDefs[i].jointAfter });
       continue;
     }
-    const off = sys === 1 ? 0 : sys === 2 ? (i % 2 === 1 ? offset * PL : 0) : (i % 3) * (PL / 3);
-    const segs = [];
-    let x = 0;
-    let pid = 0;
-    let firstWidth = i === 0 && startOff > 0 ? startOff : (off > 0 ? PL - off : PL);
-    let first = true;
-    while (x < W - 1e-7) {
-      const width = Math.min(first ? firstWidth : PL, W - x);
-      const isFull = !first && width >= PL - 1e-7 || first && off === 0 && startOff <= 0 && width >= PL - 1e-7;
-      const type = isFull ? "full" : (width >= minJ ? "cut" : "gap");
-      segs.push({ x, w: width, type, pid: isFull ? pid++ : undefined });
-      x += width;
-      first = false;
-      if (W - x <= horizontalGap + 1e-7) break;
-      if (horizontalGap > 0) {
-        segs.push({ x, w: horizontalGap, type: "joint" });
-        x += horizontalGap;
-      }
-    }
-    if (mirror) {
-      segs.forEach(s => { s.x = W - s.x - s.w; });
-      segs.reverse();
-    }
-    rows.push({ segs, h: rowDefs[i].h, jointAfter: rowDefs[i].jointAfter });
   }
   return rows;
 }

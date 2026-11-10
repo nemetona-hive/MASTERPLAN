@@ -136,50 +136,6 @@ export function useTimedState(initialValue, defaultDelay = 2500) {
   return [value, setTimedValue, clearTimedValue];
 }
 
-export function useTimedSet(defaultDelay = 600) {
-  const [values, setValues] = React.useState(() => new Set());
-  const timerRefs = React.useRef({});
-
-  React.useEffect(() => {
-    return () => Object.values(timerRefs.current).forEach(clearTimeout);
-  }, []);
-
-  const add = React.useCallback((item, delay = defaultDelay) => {
-    setValues(prev => {
-      const next = new Set(prev);
-      next.add(item);
-      return next;
-    });
-    clearTimeout(timerRefs.current[item]);
-    timerRefs.current[item] = window.setTimeout(() => {
-      setValues(prev => {
-        const next = new Set(prev);
-        next.delete(item);
-        return next;
-      });
-      delete timerRefs.current[item];
-    }, delay);
-  }, [defaultDelay]);
-
-  const remove = React.useCallback((item) => {
-    setValues(prev => {
-      const next = new Set(prev);
-      next.delete(item);
-      return next;
-    });
-    clearTimeout(timerRefs.current[item]);
-    delete timerRefs.current[item];
-  }, []);
-
-  const clear = React.useCallback(() => {
-    Object.values(timerRefs.current).forEach(clearTimeout);
-    timerRefs.current = {};
-    setValues(new Set());
-  }, []);
-
-  return [values, add, remove, clear];
-}
-
 export function useClickOutside(refs, handler, active = true) {
   /* Call sites naturally build their ref arrays inline, and handlers often
      close over current component state. Keep one listener per active period
@@ -854,11 +810,6 @@ export function useLinkedCardHighlight(groupId) {
 }
 
 /**
- * Primitive layout component to enforce spacing scale
- * @param {1|2|3|4|5|6|7|0.5} gap - Spacing level from scale
- * @param {"column"|"row"} direction - Flex direction
- */
-/**
  * Undo for a page's structural actions — the ones a button performs.
  *
  * Returns `markStep(label)`. Call it at the TOP of a mutating handler, before
@@ -897,6 +848,11 @@ export function useDocHistory({ key, snapshot, apply }) {
   return recordDocStep;
 }
 
+/**
+ * Primitive layout component to enforce spacing scale
+ * @param {1|2|3|4|5|6|7|0.5} gap - Spacing level from scale
+ * @param {"column"|"row"} direction - Flex direction
+ */
 export function Stack({ children, gap = 2, direction = "column", className = "", style = {}, as: Tag = "div", ...props }) {
   const gClass = `u-gap-${String(gap).replace('.', '')}`;
   const dClass = `u-flex-${direction === "row" ? "row" : "col"}`;

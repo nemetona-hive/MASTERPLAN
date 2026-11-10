@@ -158,7 +158,8 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
       y: isV ? 0 : visualCursor,
       w: isV ? visualRowSize : canvasW,
       h: isV ? canvasW : visualRowSize,
-      key: `row-bg-${idx}`
+      key: `row-bg-${idx}`,
+      lane: idx
     });
 
     const rowPalClasses = palClasses || PAL_CLASSES.s1;
@@ -300,9 +301,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
      derives from an absent `meta` is unread; the strip branch renders from
      `result.rows[0]` directly and never looks at them.
 
-     eslint's react-hooks/rules-of-hooks is what found this. No test covers
-     this file, and the crash needs two renders of one instance to show up, so
-     nothing else in `verify` could have. */
+     eslint's react-hooks/rules-of-hooks is what found this: the crash needs
+     two renders of one instance to show up, and no test then rendered this
+     component twice. */
   const { surfaceW, surfaceH, PPi, PLa, s4Long, s4: isS4, direction } = result.meta;
   const isV = direction === "V";
 
@@ -436,16 +437,12 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
   const showRowLabels = alwaysShowLabels || result.rows.length <= 32;
 
 
-  const groupBands = showRowLabels ? rowRects.map(rr => {
-    const originalIdx = parseInt(rr.key.replace("row-bg-", ""), 10);
-    const label = `R${originalIdx + 1}`;
-    return {
-      mid: isV ? rr.x + rr.w / 2 : rr.y + rr.h / 2,
-      label,
-      lane: originalIdx,
-      excluded: Boolean(result.rows[originalIdx]?.excluded)
-    };
-  }) : [];
+  const groupBands = showRowLabels ? rowRects.map(rr => ({
+    mid: isV ? rr.x + rr.w / 2 : rr.y + rr.h / 2,
+    label: `R${rr.lane + 1}`,
+    lane: rr.lane,
+    excluded: Boolean(result.rows[rr.lane]?.excluded)
+  })) : [];
 
   // ── SVG viewBox ──
   const maxRowLabelChars = groupBands.reduce((max, band) => Math.max(max, band.label.length), 1);
