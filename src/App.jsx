@@ -254,20 +254,6 @@ function App() {
      src/utils/field-undo.js for why it is not a hook. */
   React.useEffect(() => installFieldUndo(), []);
 
-  // Reserve the bar's measured height, including wrapping and safe-area padding.
-  React.useEffect(() => {
-    const bar = document.querySelector(".layout-split > :nth-child(2)");
-    if (!bar || typeof ResizeObserver === "undefined") return;
-    const measure = () => document.documentElement.style.setProperty("--result-bar-height",
-      `${getComputedStyle(bar).position === "fixed" ? bar.getBoundingClientRect().height : 0}px`);
-    const observer = new ResizeObserver(measure);
-    observer.observe(bar);
-    window.addEventListener("resize", measure);
-    measure();
-    return () => { observer.disconnect(); window.removeEventListener("resize", measure);
-      document.documentElement.style.removeProperty("--result-bar-height"); };
-  }, [page]);
-
   // Ctrl/Cmd+B toggles the sidebar — mobile gets its overlay menu instead
   React.useEffect(() => {
     const onToggleShortcut = e => {
@@ -312,6 +298,26 @@ function App() {
   const pageProjects = projectPage
     ? { ...projects.forPage(projectPage), title: PAGES.find(p => p.id === projectPage)?.title || "" }
     : null;
+  /* The routed page's identity: the route, and its epoch, which moves when a
+     project is opened, closed or created and remounts the page with it. */
+  const pageKey = `${page}:${projects.epochs[projectPage] || 0}`;
+
+  /* Reserve the bar's measured height, including wrapping and safe-area
+     padding. Keyed on the remount, not the route: a project opened on the
+     same page replaces the bar, and an observer left on the old, detached
+     one wrote 0px under a bar still 100px tall. */
+  React.useEffect(() => {
+    const bar = document.querySelector(".layout-split > :nth-child(2)");
+    if (!bar || typeof ResizeObserver === "undefined") return;
+    const measure = () => document.documentElement.style.setProperty("--result-bar-height",
+      `${getComputedStyle(bar).position === "fixed" ? bar.getBoundingClientRect().height : 0}px`);
+    const observer = new ResizeObserver(measure);
+    observer.observe(bar);
+    window.addEventListener("resize", measure);
+    measure();
+    return () => { observer.disconnect(); window.removeEventListener("resize", measure);
+      document.documentElement.style.removeProperty("--result-bar-height"); };
+  }, [pageKey]);
 
   return (
     <SessionDraftContext.Provider value={drafts.current}>
@@ -365,7 +371,7 @@ function App() {
         {/* The epoch remounts the page when a project is opened, so it reads
             the project's drafts — and drops the old page's undo history. */}
         <ProjectContext.Provider value={pageProjects}>
-        <PageErrorBoundary key={`${page}:${projects.epochs[projectPage] || 0}`}>
+        <PageErrorBoundary key={pageKey}>
         <MainPageContent page={page} setPage={setPage} sh={sh} setSh={setSh} sym={sym} setSym={setSym}
           grItems={grItems} setGrItems={setGrItems} theme={theme} setTheme={setTheme}
           panelOpen={layoutPanelsOpen} setPanelOpen={setLayoutPanelsOpen} projectsAvailable={projects.available}

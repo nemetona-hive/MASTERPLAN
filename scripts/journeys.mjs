@@ -258,6 +258,36 @@ try {
     return el.matches(":focus-visible") && css.outlineStyle !== "none" && parseFloat(css.outlineWidth) >= 2;
   }), "Range slider has a visible keyboard focus indicator");
   await phone.close();
+
+  /* Reopening a project remounts its page, and the fixed result bar with it.
+     The bar's height was measured only when the route changed, so after a
+     reopen the observer sat on the old, detached bar and reserved 0px under
+     a bar 100px tall, hiding the end of the page. The project routes are
+     stubbed here: the static server has none, and nothing touches disk. */
+  const tablet = await browser.newContext({ viewport: { width: 800, height: 900 } });
+  const tabletPage = await tablet.newPage();
+  tabletPage.on("pageerror", e => errors.push(e.message));
+  const project = { id: "journey", name: "Journey", page: "concrete", savedAt: "2026-01-01T00:00:00.000Z" };
+  await tabletPage.route("**/api/projects**", route => {
+    const request = route.request();
+    const body = request.method() === "GET" && new URL(request.url()).pathname === "/api/projects" ? [project]
+      : { ...project, version: 1, drafts: {}, app: {} };
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  });
+  await tabletPage.addInitScript(() => localStorage.setItem("masterplan.project.concrete", "journey"));
+  await tabletPage.goto(`${base}/#concrete`);
+  await tabletPage.getByText("Journey", { exact: true }).first().waitFor();
+  const reserved = () => tabletPage.evaluate(() => {
+    const bar = document.querySelector(".layout-split > :nth-child(2)");
+    return { reserved: parseFloat(document.documentElement.style.getPropertyValue("--result-bar-height")),
+      bar: bar.getBoundingClientRect().height, fixed: getComputedStyle(bar).position === "fixed" };
+  });
+  await tabletPage.waitForFunction(() => document.documentElement.style.getPropertyValue("--result-bar-height") !== "");
+  const after = await reserved();
+  check(after.fixed && after.bar > 0 && Math.abs(after.reserved - after.bar) < 1,
+    `A reopened project's page reserves the fixed result bar's height (${after.reserved}px for ${after.bar}px)`);
+  await tablet.close();
+
   check(!errors.length, `No application exceptions: ${errors.join("; ")}`);
   console.log(`Browser journeys passed: ${checks} assertions. Artifacts: ${output}`);
 } finally {
