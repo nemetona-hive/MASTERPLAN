@@ -31,13 +31,14 @@ export function SheetHome({ setPage, projectsAvailable = false }) {
           ))}
         </div>
 
-        {/* With projects (local mode) a page's values are kept while it has
-            a project open, so the warning says which are not. */}
-        <p className="home-note">
-          {projectsAvailable
-            ? "A page keeps its entries across a reload only while it has a project open."
-            : "Entries are kept only while this window stays open. Reloading or closing it clears them."}
-        </p>
+        {/* Only the static site, which has no projects, warns that a reload
+            clears entries. In local mode a page's values persist with its
+            project, and the note is left out. */}
+        {!projectsAvailable && (
+          <p className="home-note">
+            Entries are kept only while this window stays open. Reloading or closing it clears them.
+          </p>
+        )}
 
         <div className="home-divider" />
 

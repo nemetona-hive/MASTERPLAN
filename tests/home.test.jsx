@@ -20,6 +20,11 @@ describe("SheetHome", () => {
     expect(container.querySelector(".home-note").textContent).toMatch(/reloading/i);
   });
 
+  it("shows no note when projects are available", () => {
+    const { container } = render(<SheetHome setPage={vi.fn()} projectsAvailable />);
+    expect(container.querySelector(".home-note")).toBeNull();
+  });
+
   it("navigates on click", async () => {
     const setPage = vi.fn();
     render(<SheetHome setPage={setPage} />);
