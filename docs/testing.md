@@ -109,12 +109,14 @@ second, and a browser launch does not belong between finishing a thought and
 saving it. Run it directly after any change to layout, positioning, the control
 scale, a theme, or the print sheet.
 
-**Playwright is pinned to an exact version** (`1.62.1`), not a range, and that
-is load-bearing: it is the version whose browser build is already in
-`~/.cache/ms-playwright`, shared with MONEYFLOW. Bump it and the next run fails
-with *"Executable doesn't exist at chromium_headless_shell-…"* until
-`npx playwright install` downloads a second engine. Keep the two repos on one
-build unless there is a reason not to.
+**Playwright is pinned to an exact version** (`1.65.0`), not a range, and that
+is load-bearing: the browser build it drives must already be in
+`~/.cache/ms-playwright`. Bump it and the next run fails with *"Executable
+doesn't exist at chromium_headless_shell-…"* until `npx playwright install
+chromium` downloads that build. The cache is shared with MONEYFLOW, which is
+still on 1.62.1 (`chromium_headless_shell-1234`) beside this repo's 1.65.0
+(`-1254`); both builds stay cached while a repo still uses each. Moving
+MONEYFLOW to 1.65.0 would put the two back on one engine.
 
 **It serves the app itself, statically, on an OS-assigned port** — it does *not*
 use `scripts/local-dev-server.js`. That server exposes `/api/save-defaults`,
