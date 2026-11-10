@@ -349,6 +349,9 @@ function buildStockPlan(rows, stockLength) {
 
 // First-fit decreasing: reuse remaining stock for short pieces as well as
 // long ones. This is a feasible cutting plan, not a claim of global optimality.
+// A piece keeps its type: a long piece is "full" even when it comes out of
+// longer stock (the user's call, 2026-11-10). Its sourceId is what puts it in
+// a cut panel, so a whole stock panel is still a full piece WITHOUT one.
 function allocateS4Stock(rows, stockLength) {
   const pending = rows.flatMap(row => row.segs).filter(seg => seg.type !== "gap" && seg.type !== "joint" && seg.w < stockLength - 1e-7)
     .sort((a, b) => b.w - a.w);
@@ -356,7 +359,6 @@ function allocateS4Stock(rows, stockLength) {
   for (const seg of pending) {
     let bin = bins.find(candidate => candidate.remaining + 1e-7 >= seg.w);
     if (!bin) { bin = { id: `S${bins.length + 1}`, remaining: stockLength }; bins.push(bin); }
-    seg.type = "cut";
     seg.sourceId = bin.id;
     bin.remaining -= seg.w;
   }
@@ -594,8 +596,7 @@ function computeS4(sh) {
       { label: "Long piece",  value: fmt.decimal(s4Long),                                        unit: "mm",  hi: true },
       { label: "Short piece", value: shortPiece > 0 ? fmt.decimal(shortPiece) : "none",          unit: shortPiece > 0 ? "mm" : "", hi: true },
       { label: L.stock,       value: stockPlan.panelsToBuy,                                                    unit: "pcs", hi: true },
-      // Hover by length, not by type: cut from longer stock, every piece is a
-      // "cut" (allocateS4Stock), and "full"/"cut" would light none and all.
+      // Hover by length, the way the drawing tells the two apart.
       { label: "Long pieces", value: nLong,                                                  unit: "pcs", hoverType: "long" },
       { label: "Short pieces", value: nShort,                                                   unit: "pcs", hoverType: "short" },
       ...(hasJoints ? [

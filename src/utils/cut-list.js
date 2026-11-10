@@ -158,7 +158,11 @@ export function buildCutList(result, sh, layout) {
          had to be cut. An offcut is NOT bought — it is the other half of a
          panel already counted, and adding it is the double-count that turns a
          material order into an over-order. */
-      panelsToBuy: plan.panelsToBuy
+      panelsToBuy: plan.panelsToBuy,
+      /* Stock panels bought and placed uncut. Not `full`: a long-short long
+         piece is a full piece cut from longer stock, and counting it here
+         would print more whole panels than are bought. */
+      whole: plan.whole
     },
     /* A gap is a hole the layout could not fill, and it prints. A cut list that
        quietly omitted them is a plan that does not fit the surface, carried to

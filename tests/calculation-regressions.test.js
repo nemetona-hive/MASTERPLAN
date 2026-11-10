@@ -57,6 +57,18 @@ describe("geometry and purchasing invariants", () => {
     expect(list.panels[0].pieces[0]).toMatchObject({ width: 500, row: 1 });
   });
 
+  it("prints a long piece cut from longer stock as full, and buys no whole panel for it", () => {
+    // 2400 stock, 1200 long pieces: two long pieces come out of one panel.
+    const sh = sheet({ W: 3000, H: 1000, PPi: 2400, PLa: 200, s4Long: 1200 });
+    const result = computeS4(sh);
+    const list = buildCutList(result, sh, { id: "s4" });
+    const pieces = list.rows.flatMap(row => row.pieces);
+    expect(pieces.filter(p => p.width === 1200).every(p => p.kind === "full" && p.panel)).toBe(true);
+    expect(pieces.filter(p => p.width === 600).every(p => p.kind === "cut")).toBe(true);
+    expect(list.totals).toMatchObject({ full: 10, cut: 5, whole: 0, panelsToBuy: result.stats.stockPanels });
+    expect(list.totals.panelsToBuy).toBe(list.totals.whole + list.panels.length);
+  });
+
   it("reuses short and long pieces from the same stock", () => {
     const sh = sheet({ W: 1000, H: 400, s4Long: 600 });
     const result = computeS4(sh);

@@ -41,10 +41,9 @@ describe("row checkboxes", () => {
   });
 });
 
-/* Long-short (S4) draws and highlights a piece by its length. Cut from a
-   longer stock, every piece is typed "cut" by the stock allocation, and going
-   by type drew long and short alike and lit all of them from "Short pieces"
-   and none from "Long pieces". */
+/* Long-short (S4) draws and highlights a piece by its length. When the
+   stock allocation retyped every piece cut from longer stock as "cut", long
+   and short drew alike and "Short pieces" lit all of them. */
 describe("long-short layout", () => {
   const sh = { ...DEFAULT_SH, W: 3000, H: 1000, PPi: 2400, PLa: 200, minJ: 0, direction: "H" };
   const hoverOf = (result, label) => result.summaryRows.find(row => row.label === label).hoverType;
@@ -52,7 +51,8 @@ describe("long-short layout", () => {
 
   it("tells long from short when the long piece is shorter than the stock", () => {
     const result = computeS4({ ...sh, s4Long: 1200 });
-    expect(result.rows.flatMap(row => row.segs).every(seg => seg.type === "cut")).toBe(true);
+    // A long piece stays "full" though it comes out of longer stock.
+    expect(result.rows.flatMap(row => row.segs).every(seg => seg.type === (seg.long ? "full" : "cut"))).toBe(true);
     const { rerender } = render(<LayoutVisualization result={result} hoveredType={hoverOf(result, "Long pieces")} setHoveredType={() => {}} />);
     const lit = () => segs().filter(el => el.classList.contains("is-highlighted"));
     expect(lit()).toHaveLength(result.summaryRows.find(row => row.label === "Long pieces").value);

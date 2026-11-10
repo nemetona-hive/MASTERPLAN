@@ -73,7 +73,7 @@ export function CutListSheet({ list }) {
         <h2 className="doc-sheet-h2">Material</h2>
         <dl className="doc-sheet-facts">
           <div><dt>Piece</dt><dd>{mm(material.length)} × {mm(material.width)} mm</dd></div>
-          <div><dt>Whole panels</dt><dd>{totals.full}</dd></div>
+          <div><dt>Whole panels</dt><dd>{totals.whole}</dd></div>
           <div><dt>Panels to cut</dt><dd>{panels.length}</dd></div>
           {/* The figure somebody orders against. An offcut is deliberately not
               in it: it is the other half of a panel already counted. */}

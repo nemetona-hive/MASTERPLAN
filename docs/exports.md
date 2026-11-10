@@ -132,7 +132,11 @@ are three copies of graphite's `--bg`; a test keeps all three in step with
 
 The simulation now owns stock allocation (`stockPlan`). The cut-list model maps
 its row references into document order without reallocating pieces. A panel can
-supply more than two cuts, including S4 long and short pieces. Intentional
+supply more than two cuts, including S4 long and short pieces. An S4 long
+piece is `full` even when it comes out of longer stock (the user's call,
+2026-11-10); its panel reference is what puts it in the Cuts table. So the
+sheet's "Whole panels" is `totals.whole`, the stock plan's uncut panels, not
+`totals.full`, which would count those long pieces as panels bought whole. Intentional
 `joint` segments are layout spacing, not material, and are omitted from the
 table. Quantities exclude saw kerf and fitting allowances, explicitly stated on
 the document. Editing calculation inputs invalidates a previously staged print

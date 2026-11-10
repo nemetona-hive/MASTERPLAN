@@ -192,9 +192,9 @@ same rule stated twice.
   Pattern-layout state also carries its layout ID, because a type such as
   `full` occurs in every system and must not highlight sibling previews.
   A segment is matched on its `hoverKey`, which is its type everywhere except
-  long-short (S4): there it is `long` or `short`, and the colour follows it
-  too. S4's types belong to the stock allocation, which calls every piece a
-  `cut` once the long piece is shorter than the stock, so matching on type
+  long-short (S4): there it is `long` or `short`, the two things its summary
+  rows count, and long pieces take the S4 colour. When the stock allocation
+  still retyped long pieces cut from longer stock as `cut`, matching on type
   drew long and short alike and lit all of them from one row.
 - Pattern layout chart geometry must render real physical rows/columns, not grouped rows.
 - `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.

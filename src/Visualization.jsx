@@ -165,10 +165,10 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
     const rowPalClasses = palClasses || PAL_CLASSES.s1;
 
     row.segs.forEach((seg, segIndex) => {
-      /* Long-short: a piece is drawn and highlighted by its LENGTH. Its type
-         is the stock allocation's, and once the long piece is shorter than
-         the stock every piece is a "cut" (allocateS4Stock) — by type, long and
-         short would draw alike and one summary row would light them all. */
+      /* Long-short: a piece is drawn and highlighted as long or short, the
+         two things its summary rows count, and long pieces take the S4
+         colour. Every long piece is also "full" by type, but a full piece
+         elsewhere means a whole stock panel; length says what is meant here. */
       const s4Piece = s4 && (seg.type === "full" || seg.type === "cut");
       const hoverKey = s4Piece ? (seg.long ? "long" : "short") : seg.type;
 

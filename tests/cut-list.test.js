@@ -96,6 +96,7 @@ describe("the cut list model", () => {
          an over-order. */
       const list = buildCutList(compute(sheet()), sheet(), layout);
       expect(list.totals.panelsToBuy).toBe(list.totals.full + list.panels.length);
+      expect(list.totals.whole).toBe(list.totals.full);
       expect(list.totals.offcut).toBeGreaterThan(0);
       expect(list.totals.panelsToBuy).toBeLessThan(
         list.totals.full + list.totals.cut + list.totals.offcut);
