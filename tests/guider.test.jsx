@@ -44,6 +44,8 @@ describe("the guider page", () => {
     fireEvent.click(entry("Veksellüliti"));
     const rows = [...document.querySelectorAll(".guider-conn-row")];
     expect(rows.map(r => r.querySelector(".guider-conn-num").textContent)).toEqual(["1", "2", "3", "4", "5"]);
+    // Both wires between the switches are travellers.
+    expect(rows[1].querySelector(".guider-conn-dot--traveller")).toBeTruthy();
     expect(rows[2].querySelector(".guider-conn-dot--traveller")).toBeTruthy();
     expect(rows[4].querySelector(".guider-conn-dot--neutral")).toBeTruthy();
   });

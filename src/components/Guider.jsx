@@ -162,7 +162,7 @@ function GuiderLihtluliti() {
 
 const VEKSELLULITI_CONNECTIONS = [
   { n: "1", wire: "phase", text: "Toite faas (L) → Lüliti 1" },
-  { n: "2", wire: "phase", text: "Lüliti 1 väljund 1 ↔ Lüliti 2 sisend 1" },
+  { n: "2", wire: "traveller", text: "Lüliti 1 väljund 1 ↔ Lüliti 2 sisend 1" },
   { n: "3", wire: "traveller", text: "Lüliti 1 väljund 2 ↔ Lüliti 2 sisend 2" },
   { n: "4", wire: "phase", text: "Lüliti 2 ühisklemmilt → valgusti" },
   { n: "5", wire: "neutral", text: "Toite null (N) → valgusti nullklemmile" }
@@ -245,9 +245,10 @@ function GuiderVeksellulit() {
         <line x1="252" y1="60" x2="620" y2="60"
           stroke="var(--viz-carry)" strokeWidth="2" />
 
-        {/* ── Traveller wires ── */}
+        {/* ── Traveller wires: both in the traveller colour, whichever one the
+             levers happen to make live in the drawn position ── */}
         <line x1="185" y1="175" x2="475" y2="175"
-          stroke="var(--viz-carry)" strokeWidth="2" />
+          stroke="var(--sys-s3)" strokeWidth="2" />
         <line x1="185" y1="235" x2="475" y2="235"
           stroke="var(--sys-s3)" strokeWidth="2" />
 
