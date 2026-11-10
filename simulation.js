@@ -614,8 +614,10 @@ function computeS4(sh) {
       { label: "Long piece",  value: fmt.decimal(s4Long),                                        unit: "mm",  hi: true },
       { label: "Short piece", value: shortPiece > 0 ? fmt.decimal(shortPiece) : "none",          unit: shortPiece > 0 ? "mm" : "", hi: true },
       { label: L.stock,       value: stockPlan.panelsToBuy,                                                    unit: "pcs", hi: true },
-      { label: "Long pieces", value: nLong,                                                  unit: "pcs", hoverType: "full" },
-      { label: "Short pieces", value: nShort,                                                   unit: "pcs", hoverType: "cut" },
+      // Hover by length, not by type: cut from longer stock, every piece is a
+      // "cut" (allocateS4Stock), and "full"/"cut" would light none and all.
+      { label: "Long pieces", value: nLong,                                                  unit: "pcs", hoverType: "long" },
+      { label: "Short pieces", value: nShort,                                                   unit: "pcs", hoverType: "short" },
       ...(hasJoints ? [
         { label: "Horizontal joint gap", value: fmt.decimal(joints.horizontal), unit: "mm", hoverType: "joint" },
         { label: "Horizontal joints total", value: fmt.decimal(horizontalJointTotal), unit: "mm", hoverType: "joint" },

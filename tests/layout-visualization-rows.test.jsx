@@ -40,3 +40,34 @@ describe("row checkboxes", () => {
     expect(pairs[0][0]).toBeGreaterThanOrEqual(0);
   });
 });
+
+/* Long-short (S4) draws and highlights a piece by its length. Cut from a
+   longer stock, every piece is typed "cut" by the stock allocation, and going
+   by type drew long and short alike and lit all of them from "Short pieces"
+   and none from "Long pieces". */
+describe("long-short layout", () => {
+  const sh = { ...DEFAULT_SH, W: 3000, H: 1000, PPi: 2400, PLa: 200, minJ: 0, direction: "H" };
+  const hoverOf = (result, label) => result.summaryRows.find(row => row.label === label).hoverType;
+  const segs = () => [...document.querySelectorAll(".layout-svg-seg")];
+
+  it("tells long from short when the long piece is shorter than the stock", () => {
+    const result = computeS4({ ...sh, s4Long: 1200 });
+    expect(result.rows.flatMap(row => row.segs).every(seg => seg.type === "cut")).toBe(true);
+    const { rerender } = render(<LayoutVisualization result={result} hoveredType={hoverOf(result, "Long pieces")} setHoveredType={() => {}} />);
+    const lit = () => segs().filter(el => el.classList.contains("is-highlighted"));
+    expect(lit()).toHaveLength(result.summaryRows.find(row => row.label === "Long pieces").value);
+    expect(lit().every(el => el.classList.contains("color-s4l"))).toBe(true);
+    rerender(<LayoutVisualization result={result} hoveredType={hoverOf(result, "Short pieces")} setHoveredType={() => {}} />);
+    expect(lit()).toHaveLength(result.summaryRows.find(row => row.label === "Short pieces").value);
+    expect(lit().every(el => el.classList.contains("color-cut"))).toBe(true);
+    expect(document.querySelector(".viz-svg").getAttribute("aria-label")).toContain("10 long and 5 short pieces");
+  });
+
+  it("keeps the straight colours when the long piece is the whole stock", () => {
+    const result = computeS4({ ...sh, s4Long: 2400 });
+    render(<LayoutVisualization result={result} hoveredType={hoverOf(result, "Long pieces")} setHoveredType={() => {}} />);
+    const lit = segs().filter(el => el.classList.contains("is-highlighted"));
+    expect(lit.length).toBeGreaterThan(0);
+    expect(lit.every(el => el.classList.contains("color-s1"))).toBe(true);
+  });
+});

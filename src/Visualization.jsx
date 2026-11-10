@@ -161,23 +161,26 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
       key: `row-bg-${idx}`
     });
 
-    const rowPalClasses = s4 && useS4Colors
-      ? (row.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s)
-      : palClasses || PAL_CLASSES.s1;
-    const isS4Palette = rowPalClasses === PAL_CLASSES.s4l || rowPalClasses === PAL_CLASSES.s4s;
+    const rowPalClasses = palClasses || PAL_CLASSES.s1;
 
     row.segs.forEach((seg, segIndex) => {
-      const segPalClasses = isS4Palette && seg.type === "full" && seg.long !== undefined
-        ? (seg.long ? PAL_CLASSES.s4l : PAL_CLASSES.s4s)
-        : rowPalClasses;
+      /* Long-short: a piece is drawn and highlighted by its LENGTH. Its type
+         is the stock allocation's, and once the long piece is shorter than
+         the stock every piece is a "cut" (allocateS4Stock) — by type, long and
+         short would draw alike and one summary row would light them all. */
+      const s4Piece = s4 && (seg.type === "full" || seg.type === "cut");
+      const hoverKey = s4Piece ? (seg.long ? "long" : "short") : seg.type;
 
-      let segClass = seg.type === "gap" ? "layout-svg-gap" : seg.type === "joint" ? "layout-svg-joint" : getSegmentClass(seg, segPalClasses);
+      let segClass = seg.type === "gap" ? "layout-svg-gap" : seg.type === "joint" ? "layout-svg-joint"
+        : s4Piece ? (!seg.long ? "color-cut" : useS4Colors ? "color-s4l" : rowPalClasses[0])
+        : getSegmentClass(seg, rowPalClasses);
       // A row left out of the job (the gypsum page) is drawn, but not as board.
       if (row.excluded) segClass += " is-excluded";
 
       const rect = {
         key: `${idx}-${segIndex}-${seg.type}-${Math.round(seg.x)}-${Math.round(seg.w)}-${seg.sourceId || ""}`,
         type: seg.type,
+        hoverKey,
         sourceId: seg.sourceId,
         isCarry: !!(seg.sourceId),
         rowIndex: idx,
@@ -205,6 +208,7 @@ function buildLayoutSvgRects(result, orderedRows, rowStart) {
       rects.push({
         key: `row-joint-${idx}`,
         type: "joint",
+        hoverKey: "joint",
         sourceId: null,
         isCarry: false,
         rowIndex: idx,
@@ -423,7 +427,9 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
     `${isS4 ? "Long-short" : "Row"} layout diagram`,
     `${surfaceW} by ${surfaceH} mm surface`,
     `${result.rows.length} ${result.rows.length === 1 ? "row" : "rows"} running ${isV ? "vertically" : "horizontally"}`,
-    `${result.stats.full} full and ${result.stats.cut} cut pieces`
+    isS4
+      ? `${rects.filter(r => r.hoverKey === "long").length} long and ${rects.filter(r => r.hoverKey === "short").length} short pieces`
+      : `${result.stats.full} full and ${result.stats.cut} cut pieces`
   ].join(", ") + ".";
 
   const showSegmentText = alwaysShowLabels || result.rows.length <= 10;
@@ -547,7 +553,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                  is PIECE_LABEL_PX on screen on every drawing, and shows only
                  where it fits in its piece at that size. */
               const pieceFs = pxPerUnit ? PIECE_LABEL_PX / pxPerUnit : null;
-              const isHighlighted = hoveredType && rect.type === hoveredType;
+              const isHighlighted = hoveredType && rect.hoverKey === hoveredType;
               const isSelected = selectedKey === rect.key || (selectedSourceId && rect.sourceId === selectedSourceId);
               /* A piece whose middle is inside an opening keeps its label to
                  itself: the opening's own label sits there, over it. */
@@ -568,7 +574,7 @@ export function LayoutVisualization({ result, hoveredType, setHoveredType, rowSt
                     x={rect.x + chartX} y={rect.y + chartY} width={rect.w} height={rect.h}
                     className={`layout-svg-seg ${rect.segClass}${rect.isCarry ? " is-carry" : ""}${isHighlighted ? " is-highlighted" : ""}${isSelected ? " is-selected" : ""}`}
                     style={rect.type === "gap" ? { fill: `url(#${gapHatchId})` } : undefined}
-                    {...linkedHighlightProps(rect.type, hoveredType, setHoveredType, { toggleOnTap: false })}
+                    {...linkedHighlightProps(rect.hoverKey, hoveredType, setHoveredType, { toggleOnTap: false })}
                   >
                     <title>{`${rect.seg.size || `${Math.round(rect.seg.w)}mm`} - ${rect.type}${rect.sourceId ? ` (source: ${rect.sourceId})` : ""}`}</title>
                   </rect>
