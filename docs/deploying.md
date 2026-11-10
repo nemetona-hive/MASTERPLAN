@@ -204,6 +204,7 @@ store's: which key belongs to which page is the app's business.
 | Piece | File |
 |---|---|
 | Store: atomic write (temp, fsync, rename, fsync dir), `0600`, symlinks refused, delete → `.trash/`, `page` kept | `scripts/project-store.js` |
+| The atomic write itself, shared with the `config.js` defaults save (which keeps that file's own mode) | `scripts/write-atomic.js` |
 | Routes: `GET/POST /api/projects`, `GET/PUT/PATCH/DELETE /api/projects/:id` (PATCH renames), all behind `isLocalRequest()` — reads too, since a project is private | `scripts/local-dev-server.js` |
 | Which page owns which draft and App key; splitting an old project | `src/utils/project-pages.js` |
 | Client API, `probeProjects()`, the autosaver, last-open per page | `src/utils/projects.js` |

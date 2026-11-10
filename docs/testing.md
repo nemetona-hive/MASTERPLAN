@@ -220,6 +220,17 @@ Phone result text is checked across every theme. Concrete and multipage cut-list
 PDFs and a phone screenshot are written to the reported temporary artifact folder.
 These are Chromium checks, not physical iOS/Android or screen-reader certification.
 
+The fixture server has no project routes (it answers 204, so the app runs as
+Pages does). A journey that needs a project open stubs `/api/projects` with
+`page.route` in its own browser context, as the result-bar check does: nothing
+touches disk and the fixture stays read-only. Two traps when writing one:
+
+- `document.getAnimations()` never settles: the wordmark's wave runs forever.
+  Wait on the element you care about (`el.getAnimations({ subtree: true })`).
+- A `keepalive` request sent while the page unloads is not reliably reported
+  by `page.on("request")`. To count saves across a reload, count them in the
+  server's handler instead.
+
 `tests/setup.js` makes an unstubbed `fetch` reject with the URL it was called
 with, so a test cannot quietly reach the network; stub it with `vi.stubGlobal`.
 
