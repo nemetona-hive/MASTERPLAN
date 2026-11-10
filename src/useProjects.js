@@ -150,16 +150,21 @@ export function useProjects({ drafts, appState, applyAppState, appDefaults = {} 
   React.useEffect(() => scheduleIfOpen(grPage), [appState.grItems, open[grPage]]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
-  /* Leaving the page: save what each debounce was still holding. `keepalive`
-     lets the requests outlive the page; it is capped at 64 KiB in total,
-     which a few pages of typed numbers are far under. */
+  /* Leaving the page: save what each debounce was still holding, and only
+     that. A project's saved time means its last EDIT (the user's call,
+     2026-11-10); re-saving every open project on every reload moved it, and
+     the list's "most recently saved" order with it, with nothing changed.
+     `keepalive` lets the requests outlive the page; it is capped at 64 KiB in
+     total, which a few pages of typed numbers are far under. */
   React.useEffect(() => {
     const onHide = () => {
       for (const [page, project] of Object.entries(current.current.open)) {
+        const next = saverFor(page).unsaved();
+        if (!next) continue;
         try {
           fetch(`/api/projects/${encodeURIComponent(project.id)}`, {
             method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body(page))
+            body: JSON.stringify(next)
           }).catch(() => {});
         } catch { /* nothing more can be done on the way out */ }
       }

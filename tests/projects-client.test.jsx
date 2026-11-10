@@ -88,6 +88,20 @@ describe("the autosaver", () => {
     expect(t.save).not.toHaveBeenCalled();
   });
 
+  it("has nothing unsaved until something changes, for the save on leaving", async () => {
+    vi.useFakeTimers();
+    const t = setup();
+    t.saver.markSaved({ v: 0 });
+    expect(t.saver.unsaved()).toBeNull();
+    t.set(1);
+    expect(t.saver.unsaved()).toEqual({ v: 1 });
+    t.saver.schedule();
+    await vi.advanceTimersByTimeAsync(100);
+    t.finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(t.saver.unsaved()).toBeNull();
+  });
+
   it("reports a failed save and recovers on the next", async () => {
     const statuses = [];
     let fail = true;

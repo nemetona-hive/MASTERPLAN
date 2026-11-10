@@ -229,7 +229,11 @@ during a save is saved after it), and an unchanged body is not resent. It
 watches the *state* — a draft written, or `sh`/`sym`/`grItems` changing — not
 the actions, so undo, a preset, a reset are all saved without a list of
 triggers to keep up to date. Leaving the page sends what the debounce was
-holding with `keepalive`. A failed save turns the section's project name to `--danger`
+holding with `keepalive`, and nothing for a project with no unsaved change:
+a project's saved time is its last **edit**, not its last visit (the user's
+call, 2026-11-10). Sending every open project on every reload moved that time,
+and the dialog's most-recent-first order with it, with nothing changed
+(`unsaved()` on the autosaver). A failed save turns the section's project name to `--danger`
 with the reason under it and in the dialog; a successful one shows
 nothing (no "Saved" tag, per the quiet-UI preference).
 

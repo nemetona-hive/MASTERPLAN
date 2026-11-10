@@ -146,6 +146,12 @@ export function createAutosaver({ save, read, onStatus = () => {}, delay = AUTOS
     },
     /** What is on disk now, so the next schedule() only saves a real change. */
     markSaved(body) { lastSent = JSON.stringify(body); },
+    /** The body if it differs from the last one saved, else null: what a
+        save on the way out of the page still has to send. */
+    unsaved() {
+      const body = read();
+      return body && JSON.stringify(body) !== lastSent ? body : null;
+    },
     stop() {
       stopped = true;
       if (timer) clearTimeout(timer);
