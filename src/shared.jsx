@@ -987,11 +987,29 @@ export function SelectedPresetDetail({ preset }) {
 export function MaterialPresetDropdown({ anchorRef, presets, activePreset, onApply, field, inputId, hoveredIndex = -1, title = "Material Presets", describe }) {
   const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
 
+  /* Placed under its field, and placed again whenever anything scrolls or the
+     window resizes. Measured once, the list stayed where it opened while the
+     control column (its own scroller on desktop) carried the field away, and
+     floated over whichever controls scrolled in under it. Capture, because a
+     scroll does not bubble from the element that scrolled. */
   React.useLayoutEffect(() => {
-    if (anchorRef.current) {
+    let frame = 0;
+    const place = () => {
+      frame = 0;
+      if (!anchorRef.current) return;
       const r = anchorRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
-    }
+      const next = { top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width };
+      setPos(prev => (prev.top === next.top && prev.left === next.left && prev.width === next.width ? prev : next));
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(place); };
+    place();
+    window.addEventListener("scroll", schedule, true);
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("resize", schedule);
+    };
   }, [anchorRef]);
 
   return ReactDOM.createPortal(

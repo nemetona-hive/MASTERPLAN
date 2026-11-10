@@ -259,6 +259,32 @@ try {
   }), "Range slider has a visible keyboard focus indicator");
   await phone.close();
 
+  /* An open preset list stays under its field when the control column — its
+     own scroller on desktop — scrolls. Measured once, it stayed where it
+     opened and floated over the controls that scrolled in under it. */
+  const short = await browser.newContext({ viewport: { width: 1400, height: 600 } });
+  const shortPage = await short.newPage();
+  shortPage.on("pageerror", e => errors.push(e.message));
+  await shortPage.goto(`${base}/#gypsum`);
+  await shortPage.locator(".num-btn--presets").first().click();
+  await shortPage.locator(".rate-presets-dropdown").waitFor();
+  // The list slides 5px into place as it opens; measure once it has landed.
+  await shortPage.waitForFunction(() => document.querySelector(".rate-presets-dropdown")
+    .getAnimations({ subtree: true }).every(a => a.playState !== "running"));
+  const gapUnderField = () => shortPage.evaluate(() => {
+    const field = document.querySelector('[role="combobox"][aria-expanded="true"]');
+    return Math.round(document.querySelector(".rate-presets-dropdown").getBoundingClientRect().top - field.getBoundingClientRect().bottom);
+  });
+  const opened = await gapUnderField();
+  const scroller = await shortPage.locator("#data-control").boundingBox();
+  await shortPage.mouse.move(scroller.x + 20, scroller.y + scroller.height - 20);
+  await shortPage.mouse.wheel(0, 200);
+  await shortPage.waitForFunction(() => document.getElementById("data-control").scrollTop > 0);
+  await shortPage.waitForTimeout(100);
+  const scrolled = await gapUnderField();
+  check(scrolled === opened, `An open preset list follows its field when the column scrolls (${opened}px, then ${scrolled}px)`);
+  await short.close();
+
   /* Reopening a project remounts its page, and the fixed result bar with it.
      The bar's height was measured only when the route changed, so after a
      reopen the observer sat on the old, detached bar and reserved 0px under
