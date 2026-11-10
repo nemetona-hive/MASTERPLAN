@@ -113,10 +113,9 @@ scale, a theme, or the print sheet.
 is load-bearing: the browser build it drives must already be in
 `~/.cache/ms-playwright`. Bump it and the next run fails with *"Executable
 doesn't exist at chromium_headless_shell-…"* until `npx playwright install
-chromium` downloads that build. The cache is shared with MONEYFLOW, which is
-still on 1.62.1 (`chromium_headless_shell-1234`) beside this repo's 1.65.0
-(`-1254`); both builds stay cached while a repo still uses each. Moving
-MONEYFLOW to 1.65.0 would put the two back on one engine.
+chromium` downloads that build. The cache is shared with MONEYFLOW and
+VLOGBOOK, and all three pin the same version (`chromium_headless_shell-1254`
+since 2026-11-10), so one download serves them all. Move them together.
 
 **It serves the app itself, statically, on an OS-assigned port** — it does *not*
 use `scripts/local-dev-server.js`. That server exposes `/api/save-defaults`,
