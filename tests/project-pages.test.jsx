@@ -142,7 +142,7 @@ describe("a page's projects", () => {
     act(() => { drafts.set("Gypsum.jsx:rooms", ["typed"]); });
     expect(unsaved()).toBe(true);
     expect(api.current.forPage("concrete").scratchHasValues()).toBe(false);
-    // Open, edit, close: what stays on screen is saved in the project.
+    // Open, edit, close: the edit is saved in the project, and the page is cleared.
     await act(() => api.current.forPage("gypsum").open("kitchen"));
     act(() => { drafts.set("Gypsum.jsx:rooms", ["start"]); drafts.set("Gypsum.jsx:rooms", ["more"]); });
     await act(() => api.current.forPage("gypsum").close());
@@ -167,6 +167,47 @@ describe("a page's projects", () => {
     expect(api.current.epochs.gypsum).toBe(epoch + 1);
     // The project it left keeps what it had.
     expect(server.store.kitchen.drafts).toEqual({ "Gypsum.jsx:rooms": ["saved"] });
+  });
+
+  it("closes a project into a blank page, as a reload with none open shows it", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const server = fakeServer({
+      kitchen: { id: "kitchen", name: "Kitchen", page: "gypsum", drafts: { "Gypsum.jsx:rooms": ["saved"] }, app: {} }
+    });
+    const drafts = new DraftStore([["Concrete.jsx:lenMm", "4000"]]);
+    const api = mount(drafts);
+    await waitFor(() => expect(api.current.available).toBe(true));
+    await act(() => api.current.forPage("gypsum").open("kitchen"));
+    act(() => { drafts.set("Gypsum.jsx:rooms", ["edited"]); drafts.set("Gypsum.jsx:room", 1); });
+    const epoch = api.current.epochs.gypsum;
+    await act(() => api.current.forPage("gypsum").close());
+    // The edit reached the project before the page let it go.
+    expect(server.store.kitchen.drafts["Gypsum.jsx:rooms"]).toEqual(["edited"]);
+    expect(pageDrafts(drafts, "gypsum")).toEqual({});
+    expect(drafts.get("Concrete.jsx:lenMm")).toBe("4000");
+    expect(api.current.forPage("gypsum").project).toBe(null);
+    expect(api.current.epochs.gypsum).toBe(epoch + 1);
+    expect(localStorage.getItem("masterplan.project.gypsum")).toBe(null);
+    // Nothing more is written to the closed project.
+    const puts = server.calls.filter(c => c.method === "PUT").length;
+    act(() => { drafts.set("Gypsum.jsx:rooms", ["start"]); drafts.set("Gypsum.jsx:rooms", ["after"]); });
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(server.calls.filter(c => c.method === "PUT")).toHaveLength(puts);
+  });
+
+  it("clears the page when the open project is deleted", async () => {
+    fakeServer({
+      kitchen: { id: "kitchen", name: "Kitchen", page: "gypsum", drafts: { "Gypsum.jsx:rooms": ["saved"] }, app: {} }
+    });
+    const drafts = new DraftStore();
+    const api = mount(drafts);
+    await waitFor(() => expect(api.current.available).toBe(true));
+    await act(() => api.current.forPage("gypsum").open("kitchen"));
+    const epoch = api.current.epochs.gypsum;
+    await act(() => api.current.forPage("gypsum").remove("kitchen"));
+    expect(pageDrafts(drafts, "gypsum")).toEqual({});
+    expect(api.current.forPage("gypsum").project).toBe(null);
+    expect(api.current.epochs.gypsum).toBe(epoch + 1);
   });
 
   it("splits a project from before, and reopens each part where it was open", async () => {

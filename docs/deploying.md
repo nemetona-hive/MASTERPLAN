@@ -171,6 +171,13 @@ projects, has its own open one (remembered per page in `localStorage`, as
 `masterplan.project.<page>`), and opening one replaces only that page's values.
 The header no longer has a project control.
 
+**Closing a project clears its page (2026-11-10).** Close used to save the
+project and leave its values on screen, which read as if it were still open
+until a reload. It now saves, then puts the page back as a fresh load with no
+project shows it: none of that page's drafts, its share of App's state at the
+defaults, remounted (`clearPage` in `src/useProjects.js`). Deleting the open
+project does the same. Other pages keep their values.
+
 **The sidebar is a browser preference, not project data.** It was saved in the
 project while a project was the whole app, and per-page projects lost it for a
 moment (the user noticed the same day). It belongs to no page, so it now lives

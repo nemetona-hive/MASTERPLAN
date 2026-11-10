@@ -18,7 +18,7 @@ import { ControlPanel, Icon, Modal, Stack, useTimedState } from "../shared.jsx";
  * turns the name to the danger colour and says why under it.
  *
  * The dialog does five things: start a blank project, open
- * one, close the open one (its values stay on screen and stop saving), rename
+ * one, close the open one (it is saved, and the page clears to a fresh start), rename
  * one (in place: Enter saves, Escape cancels), and delete one (two clicks; the
  * file goes to `_personal/projects/.trash/`).
  */
