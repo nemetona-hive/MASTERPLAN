@@ -196,6 +196,14 @@ same rule stated twice.
   rows count, and long pieces take the S4 colour. When the stock allocation
   still retyped long pieces cut from longer stock as `cut`, matching on type
   drew long and short alike and lit all of them from one row.
+- A hover redraws every visible panel. On a board-sized job that is one
+  frame; on a tile-sized one (13,756 pieces across four panels, 110×200 on
+  10×10 m) it measured ~300 ms, of which ~230 ms is the browser's style and
+  paint for that many SVG elements and the rest React. **Left as it is, by
+  the user's choice (2026-11-10)**: only per-render work was trimmed (one
+  `canHover()` per drawing, not per piece). Memoising the panels would cut
+  only the React share; a real gain needs fewer elements, such as dropping
+  per-piece `<title>`s or highlighting through one attribute on the `<svg>`.
 - Pattern layout chart geometry must render real physical rows/columns, not grouped rows.
 - `rowGroups` is for label grouping only. The visible chart must use one visual row/column per real `orderedRows` item so straight layout keeps all panel boundaries visible.
 - In `direction === "V"`, the visualization keeps surface width horizontal and surface length vertical; rows render as vertical columns and segment positions use `top`/`height`.
