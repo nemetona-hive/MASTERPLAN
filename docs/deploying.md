@@ -69,7 +69,7 @@ depending on where you look at it. Measured across three deploys:
 | | Delay | What it reflects |
 |---|---|---|
 | `npm run deploy:check` | **40–50 s** | the Pages *origin* — it fetches with `cache: "no-store"` |
-| The nav footer in your browser | **up to 10 min** | whatever your browser has cached |
+| The stamp on screen (Home footer, nav rail) | **up to 10 min** | whatever your browser has cached |
 
 The gap is `cache-control: max-age=600`, which Pages sets on HTML and gives no
 way to override — there is no header configuration on Pages. Within that window
@@ -90,6 +90,19 @@ https://nemetona-hive.github.io/MASTERPLAN/?v=<build id>
 Diagnosing a deploy that really has not landed: `curl -s <site>/version.js`
 shows the id at the origin, and `curl -sI <site>/index.html` reports `age`, how
 many seconds the edge has been holding its copy.
+
+A Pages run can also fail before it starts: `gh run list` shows
+`pages-build-deployment` failed with no jobs ("likely failed because of a
+workflow file issue"), and `gh api repos/{owner}/{repo}/pages/builds/latest`
+sits at `building`. Re-running that run can then hang in `queued` indefinitely,
+and `gh run cancel` refuses it. What worked on 2026-11-10 was asking for a fresh
+build of the branch, which starts a new run and deploys the same commit:
+
+```
+gh api -X POST repos/nemetona-hive/MASTERPLAN/pages/builds
+```
+
+The hung rerun stays listed as `queued` afterwards; it is harmless.
 
 Two consequences worth knowing:
 
@@ -273,9 +286,9 @@ writes to a *tracked* file. Projects write only under `_personal/`.
 Calculator drafts stay in App memory during route navigation. Concrete, pipe wrap
 and timesheet use `useSessionState`; surface and symmetric dimensions already live
 in App. Reloading clears a page's drafts unless that page has a project open
-(local mode, above). The home page says so in a note under the page cards: on
-GitHub Pages that reloading clears them, in local mode that only a page with a
-project open keeps them. The offline banner tells users to keep the
+(local mode, above). On GitHub Pages the home page says so in a note under the
+page cards; in local mode it shows no note, since entries there persist with a
+page's project. The offline banner tells users to keep the
 loaded window open: calculations work with loaded assets, but offline reopening
 is not supported and no service worker is installed.
 
